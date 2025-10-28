@@ -1,0 +1,225 @@
+﻿<div id="mod_flashcards_container">
+  <style>
+  :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
+  .wrap{max-width:1000px;margin:0 auto;padding:18px;display:grid;gap:14px}
+  header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+  h1{margin:0;font-size:20px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .pill{padding:8px 12px;border-radius:999px;background:#0b1220;border:1px dashed #374151;color:var(--muted);font-size:13px}
+  button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radius:14px;padding:12px 16px;font-size:16px;cursor:pointer}
+  button:hover{filter:brightness(1.05)}
+  button:disabled{opacity:0.5;cursor:not-allowed}
+  button:disabled:hover{filter:none}
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}
+  select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{position:relative;background:var(--card);border:1px solid #374151;border-radius:16px;padding:16px}
+  .actionTop{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+  .front{font-size:24px;margin-bottom:10px}
+  .back{color:var(--muted);margin-bottom:12px;min-height:2.2em}
+  /* improve contrast */
+  .back{color:#e2e8f0}
+  .table td{color:#e5e7eb}
+  .table th{color:#f1f5f9}
+  textarea, input[type=search]{color:#f1f5f9}
+  textarea::placeholder{color:#64748b;opacity:0.7}
+  input[type=search]::placeholder{color:#64748b;opacity:0.7}
+  /* force high-contrast text inside inputs/selects in Moodle themes */
+  #mod_flashcards_container textarea,
+  #mod_flashcards_container input[type=search],
+  #mod_flashcards_container select,
+  #mod_flashcards_container option { color:#f1f5f9 !important; }
+  #mod_flashcards_container select { background:#0b1220; border:1px solid #374151; }
+  #mod_flashcards_container select:disabled { opacity:0.9; }
+  /* play row below content */
+  .playRow{display:flex;gap:6px;align-items:center;margin:10px 0}
+  .meta{display:flex;gap:8px;color:var(--muted);font-size:13px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .row2{display:flex;gap:10px;align-items:center;margin-top:12px}
+  .ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35)}
+  .mid{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35)}
+  .hard{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35)}
+  .hidden{display:none !important}
+  .mono{font:12px/1.2 ui-monospace,Menlo,Consolas,monospace}
+  .small{font-size:12px;color:var(--muted)}
+  textarea{width:100%;min-height:80px;border-radius:10px;padding:10px;background:#0b1220;color:#d1d5db;border:1px solid #374151}
+  label{display:inline-flex;align-items:center;gap:6px}
+  .stage{display:inline-flex;align-items:center;gap:6px;border:1px solid #374151;border-radius:999px;padding:4px 10px;background:#0b1220}
+  .stage b{font-size:12px}
+  #btnRevealNext.primary{outline:2px solid var(--mid)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{padding:8px 10px;border-radius:999px;border:1px solid #374151;background:#0b1220;color:#cbd5e1;cursor:pointer}
+  .chip.active{background:#0e223e;border-color:#4269ff}
+  .previewRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
+  audio{max-width:260px}
+  .slot{margin:6px 0}
+  .slot .tag{font-size:12px;color:#9aa3b1;margin-bottom:4px}
+  .empty{padding:28px;border:1px dashed #374151;border-radius:14px;text-align:center;color:#9aa3b1}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+  .modal>.box{max-width:960px;width:100%;max-height:85vh;overflow:auto;background:#0b1220;border:1px solid #374151;border-radius:16px;padding:16px}
+  .table{width:100%;border-collapse:collapse}
+  .table th,.table td{border-bottom:1px solid #253047;padding:8px;text-align:left;font-size:14px}
+  .table th{color:#9aa3b1;font-weight:600;position:sticky;top:0;background:#0b1220}
+  input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}
+  .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
+  .btnFile{background:#0b1220;border:1px solid #374151;border-radius:12px;padding:10px 12px}
+  .fileName{font-size:12px;color:#9aa3b1;margin-left:6px}
+  </style>
+
+  <div class="wrap">
+    <header>
+      <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
+      <div class="row">
+        <!-- intervals hidden per request -->
+        <span class="pill hidden" id="t_intervals">{{#str}} intervals, mod_flashcards {{/str}}</span>
+        <select id="langSel">
+          <option value="en">English</option>
+          <option value="no">Norsk (bokmål)</option>
+          <option value="uk">Українська</option>
+        </select>
+        <label class="pill hidden">
+          <span id="t_profile">{{#str}} profile, mod_flashcards {{/str}}</span>
+          <select id="profileSel"></select>
+          <button id="btnAddProfile" class="iconbtn" title="+">+</button>
+        </label>
+        <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
+        <!-- Export/Import removed per request -->
+      </div>
+    </header>
+
+    <div class="row hidden">
+      <select id="deckSelect"></select>
+      <button id="btnActivate">{{#str}} activate, mod_flashcards {{/str}}</button>
+      <span id="badge" class="pill">{{#str}} choose, mod_flashcards {{/str}}</span>
+      <span id="dueInfo" class="pill" data-label="{{#str}} list_due, mod_flashcards {{/str}}">{{#str}} due, mod_flashcards {{/str}}</span>
+      <label class="pill"><input id="packFile" type="file" accept="application/json"><span id="t_loadPack">{{#str}} loadpack, mod_flashcards {{/str}}</span></label>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="actionTop">
+          <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">✎</button>
+          <button id="btnDel" class="iconbtn hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">✖</button>
+        </div>
+        <video id="cam" class="hidden" autoplay playsinline muted style="width:100%;border-radius:12px"></video>
+        <div class="front" id="front"></div>
+        <div class="back" id="back"></div>
+        <div id="slotContainer"></div>
+        <div class="playRow">
+          <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">🔊</button>
+          <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">🐢</button>
+        </div>
+        <div class="meta">
+          <span id="stageBadge" class="stage hidden" style="min-width:48px;"><span id="stageEmoji"></span><b id="stageText">0</b></span>
+          <span><b>Due today:</b> <span id="due">-</span></span>
+        </div>
+        <div class="row2">
+          <button id="btnRevealNext" class="primary">{{#str}} showmore, mod_flashcards {{/str}}</button>
+          <button id="btnEasy" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
+          <button id="btnNormal" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
+          <button id="btnHard" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
+        </div>
+        <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
+      </div>
+
+      <div class="card">
+        <div class="actionTop">
+          <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button>
+        </div>
+        <div class="slot">
+          <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
+        </div>
+        <div class="slot">
+          <span class="tag" id="t_pickAudio">{{#str}} audio, mod_flashcards {{/str}}</span>
+          <div class="previewRow">
+            <input id="uAudio" type="file" accept="audio/*" capture class="hidden">
+            <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
+            <button id="btnClearAud" class="iconbtn" title="Clear">×</button>
+            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">🎙️</button>
+            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">⏹</button>
+          </div>
+          <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
+        </div>
+
+        <div class="slot">
+          <span class="tag" id="t_pickPhoto">{{#str}} image, mod_flashcards {{/str}}</span>
+          <div class="previewRow">
+            <input id="uImage" type="file" accept="image/*" capture class="hidden">
+            <button id="btnChooseImg" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="imgName" class="fileName"></span>
+            <button id="btnClearImg" class="iconbtn" title="Clear">×</button>
+            <!-- Camera controls positioned near image picker -->
+            <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">📷</button>
+            <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">📸</button>
+            <button id="btnCloseCam" class="iconbtn hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">✖</button>
+          </div>
+          <img id="imgPrev" class="media hidden" alt=""/>
+        </div>
+
+        <div class="slot">
+          <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+          <textarea id="uFront" placeholder="Front..."></textarea>
+        </div>
+        <div class="slot">
+          <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
+          <textarea id="uExplanation" placeholder="Explanation..."></textarea>
+        </div>
+        <div class="slot">
+          <span class="tag" id="t_backText">{{#str}} back, mod_flashcards {{/str}}</span>
+          <textarea id="uBack" placeholder="Back..."></textarea>
+        </div>
+
+        <div class="slot">
+          <span class="tag" id="t_order">{{#str}} order, mod_flashcards {{/str}}</span>
+          <div id="orderChips" class="chips">
+            <button class="chip" data-kind="audio"       id="chip_audio">{{#str}} audio, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="image"       id="chip_image">{{#str}} image, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="text"        id="chip_text">{{#str}} front, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="explanation" id="chip_explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="translation" id="chip_translation">{{#str}} back, mod_flashcards {{/str}}</button>
+          </div>
+          <div class="small" id="orderPreview">audio → image → text → explanation → translation</div>
+        </div>
+
+        <div class="row2">
+          <button id="btnUpdate" class="ok">Update Previous</button>
+          <button id="btnAdd" class="mid">Add as New</button>
+        </div>
+
+        <div class="mono" id="status"></div>
+        <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>
+      </div>
+    </div>
+
+    <div class="mono" id="debug"></div>
+  </div>
+
+  <div id="listModal" class="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
+        <button id="btnCloseList" class="iconbtn" title="{{#str}} close, mod_flashcards {{/str}}">✖</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}">
+        <span id="listCount" class="badge">0</span>
+      </div>
+      <div style="overflow:auto;margin-top:10px">
+        <table class="table" id="listTable">
+          <thead>
+            <tr>
+              <th id="thFront">{{#str}} list_front, mod_flashcards {{/str}}</th>
+              <th id="thDeck">{{#str}} list_deck, mod_flashcards {{/str}}</th>
+              <th id="thStage">{{#str}} list_stage, mod_flashcards {{/str}}</th>
+              <th id="thAdded">{{#str}} list_added, mod_flashcards {{/str}}</th>
+              <th id="thDue">{{#str}} list_due, mod_flashcards {{/str}}</th>
+              <th id="thPlay">{{#str}} list_play, mod_flashcards {{/str}}</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,498 @@
+{
+  "id": "lek-1",
+  "title": "Leksjon 1 — 82 kort",
+  "cards": [
+    {
+      "id": "1",
+      "front": "jeg",
+      "back": "я",
+      "audio": "audio/1C/1С-01.mp3"
+    },
+    {
+      "id": "2",
+      "front": "du",
+      "back": "ти",
+      "audio": "audio/1C/1С-02.mp3"
+    },
+    {
+      "id": "3",
+      "front": "spiser",
+      "back": "їм",
+      "audio": "audio/1C/1С-03.mp3"
+    },
+    {
+      "id": "4",
+      "front": "jeg spiser",
+      "back": "я їм",
+      "audio": "audio/1C/1С-04.mp3"
+    },
+    {
+      "id": "5",
+      "front": "frokost",
+      "back": "сніданок",
+      "audio": "audio/1C/1С-05.mp3"
+    },
+    {
+      "id": "6",
+      "front": "jeg spiser frokost",
+      "back": "я снідаю (їм сніданок)",
+      "audio": "audio/1C/1С-06.mp3"
+    },
+    {
+      "id": "7",
+      "front": "lunsj",
+      "back": "обід",
+      "audio": "audio/1C/1С-07.mp3"
+    },
+    {
+      "id": "8",
+      "front": "jeg spiser lunsj",
+      "back": "я обідаю",
+      "audio": "audio/1C/1С-08.mp3"
+    },
+    {
+      "id": "9",
+      "front": "middag",
+      "back": "вечеря",
+      "audio": "audio/1C/1С-09.mp3"
+    },
+    {
+      "id": "10",
+      "front": "jeg spiser middag",
+      "back": "я вечеряю",
+      "audio": "audio/1C/1С-10.mp3"
+    },
+    {
+      "id": "11",
+      "front": "mat",
+      "back": "їжа",
+      "audio": "audio/1C/1С-11.mp3"
+    },
+    {
+      "id": "12",
+      "front": "lager mat",
+      "back": "готувати їжу",
+      "audio": "audio/1C/1С-12.mp3"
+    },
+    {
+      "id": "13",
+      "front": "jeg lager mat",
+      "back": "я готую їжу",
+      "audio": "audio/1C/1С-13.mp3"
+    },
+    {
+      "id": "14",
+      "front": "jeg lager frokost",
+      "back": "я готую сніданок",
+      "audio": "audio/1C/1С-14.mp3"
+    },
+    {
+      "id": "15",
+      "front": "jeg lager lunsj",
+      "back": "я готую обід",
+      "audio": "audio/1C/1С-15.mp3"
+    },
+    {
+      "id": "16",
+      "front": "jeg lager middag",
+      "back": "я готую вечерю",
+      "audio": "audio/1C/1С-16.mp3"
+    },
+    {
+      "id": "17",
+      "front": "drikker",
+      "back": "п'ю",
+      "audio": "audio/1C/1С-17.mp3"
+    },
+    {
+      "id": "18",
+      "front": "jeg drikker",
+      "back": "я п'ю",
+      "audio": "audio/1C/1С-18.mp3"
+    },
+    {
+      "id": "19",
+      "front": "kaffe",
+      "back": "кава",
+      "audio": "audio/1C/1С-19.mp3"
+    },
+    {
+      "id": "20",
+      "front": "jeg drikker kaffe",
+      "back": "я п'ю каву",
+      "audio": "audio/1C/1С-20.mp3"
+    },
+    {
+      "id": "21",
+      "front": "ikke",
+      "back": "частка \"ні\"",
+      "audio": "audio/1C/1С-21.mp3"
+    },
+    {
+      "id": "22",
+      "front": "jeg drikker ikke kaffe",
+      "back": "я не п'ю каву",
+      "audio": "audio/1C/1С-22.mp3"
+    },
+    {
+      "id": "23",
+      "front": "te",
+      "back": "чай",
+      "audio": "audio/1C/1С-23.mp3"
+    },
+    {
+      "id": "24",
+      "front": "jeg drikker ikke te",
+      "back": "я не п'ю чай",
+      "audio": "audio/1C/1С-24.mp3"
+    },
+    {
+      "id": "25",
+      "front": "men",
+      "back": "але",
+      "audio": "audio/1C/1С-25.mp3"
+    },
+    {
+      "id": "26",
+      "front": "jeg drikker ikke kaffe, men jeg drikker te",
+      "back": "я не п'ю каву, але я п'ю чай",
+      "audio": "audio/1C/1С-26.mp3"
+    },
+    {
+      "id": "27",
+      "front": "snakker",
+      "back": "розмовляю",
+      "audio": "audio/1C/1С-27.mp3"
+    },
+    {
+      "id": "28",
+      "front": "jeg snakker",
+      "back": "я розмовляю",
+      "audio": "audio/1C/1С-28.mp3"
+    },
+    {
+      "id": "29",
+      "front": "ukrainsk",
+      "back": "українська",
+      "audio": "audio/1C/1С-29.mp3"
+    },
+    {
+      "id": "30",
+      "front": "jeg snakker ukrainsk",
+      "back": "я розмовляю українською",
+      "audio": "audio/1C/1С-30.mp3"
+    },
+    {
+      "id": "31",
+      "front": "jeg snakker ikke ukrainsk",
+      "back": "я не розмовляю українською",
+      "audio": "audio/1C/1С-31.mp3"
+    },
+    {
+      "id": "32",
+      "front": "engelsk",
+      "back": "англійська",
+      "audio": "audio/1C/1С-32.mp3"
+    },
+    {
+      "id": "33",
+      "front": "jeg snakker ikke engelsk",
+      "back": "я не розмовляю англійською",
+      "audio": "audio/1C/1С-33.mp3"
+    },
+    {
+      "id": "34",
+      "front": "du snakker engelsk",
+      "back": "ти розмовляєш ангійською",
+      "audio": "audio/1C/1С-34.mp3"
+    },
+    {
+      "id": "35",
+      "front": "norsk",
+      "back": "норвезька",
+      "audio": "audio/1C/1С-35.mp3"
+    },
+    {
+      "id": "36",
+      "front": "du snakker norsk",
+      "back": "ти розмовляєш норвезькою",
+      "audio": "audio/1C/1С-36.mp3"
+    },
+    {
+      "id": "37",
+      "front": "du snakker ikke norsk",
+      "back": "ти не розмовляєш норвезькою",
+      "audio": "audio/1C/1С-37.mp3"
+    },
+    {
+      "id": "38",
+      "front": "litt",
+      "back": "трошки",
+      "audio": "audio/1C/1С-38.mp3"
+    },
+    {
+      "id": "39",
+      "front": "du snakker litt norsk",
+      "back": "ти розмовляєш трошки норвезькою",
+      "audio": "audio/1C/1С-39.mp3"
+    },
+    {
+      "id": "40",
+      "front": "du snakker ikke engelsk, men du snakker litt norsk",
+      "back": "ти не розмовляєш англійською, але ти розмовляєш трошки норвезькою",
+      "audio": "audio/1C/1С-40.mp3"
+    },
+    {
+      "id": "41",
+      "front": "jeg snakker russisk",
+      "back": "я розмовляю російською",
+      "audio": "audio/1C/1С-41.mp3"
+    },
+    {
+      "id": "42",
+      "front": "og",
+      "back": "сполучник \"і\"",
+      "audio": "audio/1C/1С-42.mp3"
+    },
+    {
+      "id": "43",
+      "front": "jeg snakker ukrainsk og russisk",
+      "back": "я розмовляю українською та російською",
+      "audio": "audio/1C/1С-43.mp3"
+    },
+    {
+      "id": "44",
+      "front": "er",
+      "back": "є - дієслово \"бути\"",
+      "audio": "audio/1C/1С-44.mp3"
+    },
+    {
+      "id": "45",
+      "front": "jeg er",
+      "back": "я є",
+      "audio": "audio/1C/1С-45.mp3"
+    },
+    {
+      "id": "46",
+      "front": "ukrainer",
+      "back": "українець",
+      "audio": "audio/1C/1С-46.mp3"
+    },
+    {
+      "id": "47",
+      "front": "jeg er ukrainer",
+      "back": "я (є) українець",
+      "audio": "audio/1C/1С-47.mp3"
+    },
+    {
+      "id": "48",
+      "front": "jeg er ukrainer, og jeg snakker ukrainsk",
+      "back": "я (є) українець і я розмовляю українською",
+      "audio": "audio/1C/1С-48.mp3"
+    },
+    {
+      "id": "49",
+      "front": "jeg kommer fra Ukraina, og jeg snakker ukrainsk",
+      "back": "я з України і я розмовляю українською",
+      "audio": "audio/1C/1С-49.mp3"
+    },
+    {
+      "id": "50",
+      "front": "student",
+      "back": "студент",
+      "audio": "audio/1C/1С-50.mp3"
+    },
+    {
+      "id": "51",
+      "front": "jeg er student",
+      "back": "я (є) студент",
+      "audio": "audio/1C/1С-51.mp3"
+    },
+    {
+      "id": "52",
+      "front": "jeg er ung",
+      "back": "я (є) молодий",
+      "audio": "audio/1C/1С-52.mp3"
+    },
+    {
+      "id": "53",
+      "front": "gammel",
+      "back": "старий",
+      "audio": "audio/1C/1С-53.mp3"
+    },
+    {
+      "id": "54",
+      "front": "jeg er gammel",
+      "back": "я старий",
+      "audio": "audio/1C/1С-54.mp3"
+    },
+    {
+      "id": "55",
+      "front": "jeg er ung, og du er gammel",
+      "back": "я (є) молодий, а ти (є) старий",
+      "audio": "audio/1C/1С-55.mp3"
+    },
+    {
+      "id": "56",
+      "front": "jeg er ung, og jeg er student",
+      "back": "я молодий і я студент",
+      "audio": "audio/1C/1С-56.mp3"
+    },
+    {
+      "id": "57",
+      "front": "går",
+      "back": "йду, йдеш",
+      "audio": "audio/1C/1С-57.mp3"
+    },
+    {
+      "id": "58",
+      "front": "du går",
+      "back": "ти йдеш",
+      "audio": "audio/1C/1С-58.mp3"
+    },
+    {
+      "id": "59",
+      "front": "skole",
+      "back": "школа",
+      "audio": "audio/1C/1С-59.mp3"
+    },
+    {
+      "id": "60",
+      "front": "på skole",
+      "back": "в школу",
+      "audio": "audio/1C/1С-60.mp3"
+    },
+    {
+      "id": "61",
+      "front": "du går på skole",
+      "back": "ти ходиш в школу",
+      "audio": "audio/1C/1С-61.mp3"
+    },
+    {
+      "id": "62",
+      "front": "universitet",
+      "back": "університет",
+      "audio": "audio/1C/1С-62.mp3"
+    },
+    {
+      "id": "63",
+      "front": "du går på universitet",
+      "back": "ти ходиш в університет",
+      "audio": "audio/1C/1С-63.mp3"
+    },
+    {
+      "id": "64",
+      "front": "jeg går på skole, og du går på universitet",
+      "back": "я ходжу в школу, а ти ходиш в університет",
+      "audio": "audio/1C/1С-64.mp3"
+    },
+    {
+      "id": "65",
+      "front": "studerer",
+      "back": "вивчаю",
+      "audio": "audio/1C/1С-65.mp3"
+    },
+    {
+      "id": "66",
+      "front": "jeg studerer matematikk",
+      "back": "я вивчаю математику",
+      "audio": "audio/1C/1С-66.mp3"
+    },
+    {
+      "id": "67",
+      "front": "fysikk",
+      "back": "фізика",
+      "audio": "audio/1C/1С-67.mp3"
+    },
+    {
+      "id": "68",
+      "front": "akrobatikk",
+      "back": "акробатика",
+      "audio": "audio/1C/1С-68.mp3"
+    },
+    {
+      "id": "69",
+      "front": "musikk",
+      "back": "музика",
+      "audio": "audio/1C/1С-69.mp3"
+    },
+    {
+      "id": "70",
+      "front": "aerobic",
+      "back": "аеробіка",
+      "audio": "audio/1C/1С-70.mp3"
+    },
+    {
+      "id": "71",
+      "front": "gymnastikk",
+      "back": "фізкультура (гімнастика)",
+      "audio": "audio/1C/1С-71.mp3"
+    },
+    {
+      "id": "72",
+      "front": "politikk",
+      "back": "політика",
+      "audio": "audio/1C/1С-72.mp3"
+    },
+    {
+      "id": "73",
+      "front": "økonomi",
+      "back": "економіка",
+      "audio": "audio/1C/1С-73.mp3"
+    },
+    {
+      "id": "74",
+      "front": "du er ikke ung, du er gammel",
+      "back": "ти не молодий, ти старий",
+      "audio": "audio/1C/1С-74.mp3"
+    },
+    {
+      "id": "75",
+      "front": "lærer",
+      "back": "вчитель",
+      "audio": "audio/1C/1С-75.mp3"
+    },
+    {
+      "id": "76",
+      "front": "du er lærer",
+      "back": "ти вчитель",
+      "audio": "audio/1C/1С-76.mp3"
+    },
+    {
+      "id": "77",
+      "front": "du er gammel, og du er lærer",
+      "back": "ти старий, і ти витель",
+      "audio": "audio/1C/1С-77.mp3"
+    },
+    {
+      "id": "78",
+      "front": "jeg er ung, og jeg er student",
+      "back": "я молодий, і я студент",
+      "audio": "audio/1C/1С-78.mp3"
+    },
+    {
+      "id": "79",
+      "front": "lærer",
+      "back": "вчити",
+      "audio": "audio/1C/1С-79.mp3"
+    },
+    {
+      "id": "80",
+      "front": "jeg lærer norsk",
+      "back": "я вчу норвезьку",
+      "audio": "audio/1C/1С-80.mp3"
+    },
+    {
+      "id": "81",
+      "front": "jeg lærer norsk og engelsk på universitet",
+      "back": "я вчу норвезьку та англійську в університеті",
+      "audio": "audio/1C/1С-81.mp3"
+    },
+    {
+      "id": "82",
+      "front": "jeg lærer ukrainsk og russisk på skole",
+      "back": "я вчу українську та російську в школі",
+      "audio": "audio/1C/1С-82.mp3"
+    }
+  ]
+}
