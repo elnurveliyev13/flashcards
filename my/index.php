@@ -26,7 +26,11 @@ $PAGE->set_title(get_string('myflashcards', 'mod_flashcards'));
 $PAGE->set_heading(get_string('myflashcards', 'mod_flashcards'));
 
 // Check user's access via access_manager.
-$access = \mod_flashcards\access_manager::check_user_access($USER->id);
+// Force refresh to ensure status is current (expired enrollments detected immediately)
+$access = \mod_flashcards\access_manager::check_user_access($USER->id, true);
+
+// DEBUG: Log access info for troubleshooting
+error_log('[FLASHCARDS DEBUG] Access info for user ' . $USER->id . ': ' . print_r($access, true));
 
 // Prepare JS before header.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
@@ -35,6 +39,13 @@ $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' 
 
 // Force client profile to Moodle user id for automatic sync.
 $init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
+// Pass access information to JavaScript (with proper escaping)
+$accessjson = json_encode($access, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+if ($accessjson === false) {
+    error_log('[FLASHCARDS ERROR] Failed to encode access info to JSON: ' . json_last_error_msg());
+    $accessjson = '{"can_view":false,"can_create":false,"status":"error"}';
+}
+$init .= "window.flashcardsAccessInfo = ".$accessjson.";";
 // Global mode: no cmid, no instance - pass 0 for both.
 $init .= "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', 0, 0, '".sesskey()."', true)";
 $PAGE->requires->js_init_code($init);
@@ -45,6 +56,11 @@ echo $OUTPUT->header();
 // Show access status banner.
 if ($access['status'] === \mod_flashcards\access_manager::STATUS_GRACE) {
     $message = get_string('access_grace_message', 'mod_flashcards', $access['days_remaining']);
+    $message .= '<br><strong>' . get_string('grace_period_restrictions', 'mod_flashcards') . '</strong>';
+    $message .= '<ul>';
+    $message .= '<li>' . get_string('grace_can_review', 'mod_flashcards') . '</li>';
+    $message .= '<li>' . get_string('grace_cannot_create', 'mod_flashcards') . '</li>';
+    $message .= '</ul>';
     echo $OUTPUT->notification($message, 'warning');
 } else if ($access['status'] === \mod_flashcards\access_manager::STATUS_EXPIRED) {
     $message = get_string('access_expired_message', 'mod_flashcards');

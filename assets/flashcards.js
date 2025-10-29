@@ -460,10 +460,28 @@
       let serverDeckId = MY_DECK_ID;
       try{
         const result = await api('upsert_card', {}, 'POST', {deckId:null,cardId:id,scope:'private',payload});
-        if(result && result.deckId) {
-          serverDeckId = String(result.deckId); // Use server's deckId
+        if(result && result.ok) {
+          if(result.deckId) {
+            serverDeckId = String(result.deckId); // Use server's deckId
+          }
+        } else if(result && !result.ok) {
+          // Server rejected (e.g., grace period, no access)
+          const msg = result.error || 'Access denied. You cannot create cards during grace period or after access expires.';
+          $("#status").textContent = msg;
+          setTimeout(()=>$("#status").textContent="", 3000);
+          console.error('upsert_card rejected:', msg);
+          return; // STOP - don't save to localStorage
         }
-      }catch(e){ console.error('upsert_card error:', e); /* continue with local save */ }
+      }catch(e){
+        console.error('upsert_card error:', e);
+        // Check if it's an access error
+        if(e.message && (e.message.includes('access') || e.message.includes('grace') || e.message.includes('blocked'))) {
+          $("#status").textContent = "Access denied. Cannot create cards.";
+          setTimeout(()=>$("#status").textContent="", 3000);
+          return; // STOP - don't save to localStorage
+        }
+        // For other errors (network, etc), continue with local save
+      }
 
       // Also keep local for offline use (use server's deckId if available)
       const localDeckId = serverDeckId;
@@ -520,6 +538,10 @@
       const bg = `linear-gradient(90deg, #2196f3 ${fillPercent}%, #e0e0e0 ${fillPercent}%)`;
       return `<span class="badge" style="background:${bg};color:${textColor};padding:4px 8px;border-radius:12px;">${step}</span>`;
     }
+    // Pagination state for Cards List
+    let listCurrentPage = 1;
+    const LIST_PAGE_SIZE = 50; // Cards per page
+
     function buildListRows(){
       const tbody=$("#listTable tbody");
       tbody.innerHTML="";
@@ -531,11 +553,47 @@
           rows.push({deckTitle:d.title, deckId:d.id, id:c.id, card:c, front:c.text||c.front||"", stage:rec.step||0, added:rec.addedAt||null, due:rec.due||null});
         });
       });
+
+      // Apply search filter
       const q=$("#listSearch").value.toLowerCase();
-      const filtered=rows.filter(r=>!q || r.front.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
-      $("#listCount").textContent=filtered.length;
+      let filtered=rows.filter(r=>!q || r.front.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
+
+      // Apply due date filter
+      const dueFilter=$("#listFilterDue").value;
+      const now=today0();
+      if(dueFilter==='due'){
+        filtered=filtered.filter(r=>r.due<=now);
+      } else if(dueFilter==='future'){
+        filtered=filtered.filter(r=>r.due>now);
+      }
+
+      // Sort by due date
       filtered.sort((a,b)=> (a.due||0)-(b.due||0) );
-      filtered.forEach(async r=>{
+
+      // Update count
+      $("#listCount").textContent=filtered.length;
+
+      // Calculate pagination
+      const totalPages=Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+      if(listCurrentPage > totalPages) listCurrentPage = totalPages;
+      if(listCurrentPage < 1) listCurrentPage = 1;
+
+      const startIdx=(listCurrentPage - 1) * LIST_PAGE_SIZE;
+      const endIdx=Math.min(startIdx + LIST_PAGE_SIZE, filtered.length);
+      const paginated=filtered.slice(startIdx, endIdx);
+
+      // Show/hide pagination controls
+      if(filtered.length > LIST_PAGE_SIZE){
+        $("#listPagination").style.display="flex";
+        $("#pageInfo").textContent=`Page ${listCurrentPage} of ${totalPages}`;
+        $("#btnPagePrev").disabled = listCurrentPage <= 1;
+        $("#btnPageNext").disabled = listCurrentPage >= totalPages;
+      } else {
+        $("#listPagination").style.display="none";
+      }
+
+      // Render paginated rows
+      paginated.forEach(async r=>{
         const tr=document.createElement("tr");
         tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
@@ -594,9 +652,30 @@
         tbody.appendChild(tr);
       });
     }
-    $("#btnList").addEventListener("click",()=>{ $("#listModal").style.display="flex"; buildListRows(); });
+    $("#btnList").addEventListener("click",()=>{
+      listCurrentPage = 1; // Reset to page 1 when opening modal
+      $("#listModal").style.display="flex";
+      buildListRows();
+    });
     $("#btnCloseList").addEventListener("click",()=>{ $("#listModal").style.display="none"; });
-    $("#listSearch").addEventListener("input", buildListRows);
+    $("#listSearch").addEventListener("input", ()=>{
+      listCurrentPage = 1; // Reset to page 1 when searching
+      buildListRows();
+    });
+    $("#listFilterDue").addEventListener("change", ()=>{
+      listCurrentPage = 1; // Reset to page 1 when filtering
+      buildListRows();
+    });
+    $("#btnPagePrev").addEventListener("click", ()=>{
+      if(listCurrentPage > 1) {
+        listCurrentPage--;
+        buildListRows();
+      }
+    });
+    $("#btnPageNext").addEventListener("click", ()=>{
+      listCurrentPage++;
+      buildListRows();
+    });
 
     document.addEventListener("keydown",e=>{ if($("#listModal").style.display==="flex") return; const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||e.target.isContentEditable) return; if(e.code==="Space"){ e.preventDefault(); const br=$("#btnRevealNext"); if(br && !br.disabled) br.click(); } if(e.key==="e"||e.key==="E") rateEasy(); if(e.key==="n"||e.key==="N") rateNormal(); if(e.key==="h"||e.key==="H") rateHard(); });
 
@@ -610,6 +689,48 @@
 
     // Initialize form: disable Update button by default
     if(btnUpdate) btnUpdate.disabled = true;
+
+    // Auto-clear cache on plugin version update
+    const CACHE_VERSION = "2025102920"; // Must match version.php
+    const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
+    if (currentCacheVersion !== CACHE_VERSION) {
+      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} → ${CACHE_VERSION}. Clearing cache...`);
+      // Clear all flashcards-related localStorage keys
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('srs-v6:') || key === 'srs-profile' || key === 'srs-profiles')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+
+      // Clear IndexedDB media cache
+      try {
+        indexedDB.deleteDatabase("srs-media");
+      } catch(e) {
+        console.warn('[Flashcards] Failed to clear IndexedDB:', e);
+      }
+
+      // Set new version
+      localStorage.setItem("flashcards-cache-version", CACHE_VERSION);
+      console.log('[Flashcards] Cache cleared successfully');
+    }
+
+    // Check access permissions and hide card creation form if needed
+    if (window.flashcardsAccessInfo) {
+      const access = window.flashcardsAccessInfo;
+      console.log('[Flashcards] Access info:', access);
+
+      if (!access.can_create) {
+        // Hide card creation form during grace period or when access expired
+        const formEl = $("#cardCreationForm");
+        if (formEl) {
+          formEl.style.display = 'none';
+          console.log('[Flashcards] Card creation form hidden (can_create=false)');
+        }
+      }
+    }
 
     loadState(); (async()=>{
       await syncFromServer();

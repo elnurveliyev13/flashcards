@@ -94,6 +94,8 @@ class access_manager {
             'status' => $hasEnrolment ? self::STATUS_ACTIVE : self::STATUS_EXPIRED,
             'last_enrolment_check' => time(),
             'grace_period_days' => self::GRACE_PERIOD_DAYS,
+            'grace_period_start' => 0,  // Initialize nullable fields with 0, not null
+            'blocked_at' => 0,
             'timemodified' => time()
         ];
 
@@ -124,8 +126,9 @@ class access_manager {
         if ($hasaccess) {
             // User has active enrolment → set to active.
             $access->status = self::STATUS_ACTIVE;
-            $access->grace_period_start = null;
-            $access->blocked_at = null;
+            // Moodle requires 0 instead of null for nullable int fields
+            $access->grace_period_start = 0;
+            $access->blocked_at = 0;
         } else {
             // No active enrolment.
             if ($access->status === self::STATUS_ACTIVE) {
@@ -155,7 +158,15 @@ class access_manager {
         $access->last_enrolment_check = $now;
         $access->timemodified = $now;
 
-        $DB->update_record('flashcards_user_access', $access);
+        // DEBUG: Log before update
+        error_log('[FLASHCARDS DEBUG] Attempting to update access record: ' . print_r($access, true));
+
+        try {
+            $DB->update_record('flashcards_user_access', $access);
+        } catch (Exception $e) {
+            error_log('[FLASHCARDS ERROR] Failed to update access record: ' . $e->getMessage());
+            // Continue despite error - return current state
+        }
 
         return $access;
     }
@@ -170,6 +181,8 @@ class access_manager {
         global $DB;
 
         // Find all courses that have flashcards activity module.
+        // v0.5.14 FIX: Check BOTH ue.status=0 (user active) AND e.status=0 (enrolment method active)
+        // Previous bug: Users with expired subscription (ue.timeend passed) still had access
         $sql = "SELECT DISTINCT e.courseid
                 FROM {enrol} e
                 JOIN {user_enrolments} ue ON ue.enrolid = e.id
@@ -177,6 +190,7 @@ class access_manager {
                 JOIN {modules} m ON m.id = cm.module
                 WHERE ue.userid = :userid
                   AND ue.status = 0
+                  AND e.status = 0
                   AND m.name = 'flashcards'
                   AND (ue.timestart = 0 OR ue.timestart <= :now1)
                   AND (ue.timeend = 0 OR ue.timeend > :now2)";
@@ -218,7 +232,7 @@ class access_manager {
             case self::STATUS_GRACE:
                 $result['can_review'] = true; // Can review during grace period.
                 $result['can_create'] = false; // Cannot create new cards.
-                if ($access->grace_period_start) {
+                if ($access->grace_period_start > 0) {
                     $graceend = $access->grace_period_start + ($access->grace_period_days * 86400);
                     $result['days_remaining'] = max(0, ceil(($graceend - $now) / 86400));
                 }
@@ -290,18 +304,21 @@ class access_manager {
                 $message->subject = get_string('notification_grace_subject', 'mod_flashcards');
                 $message->fullmessage = get_string('notification_grace_message', 'mod_flashcards', self::GRACE_PERIOD_DAYS);
                 $message->fullmessagehtml = get_string('notification_grace_message_html', 'mod_flashcards', self::GRACE_PERIOD_DAYS);
+                $message->fullmessageformat = FORMAT_HTML; // Required: cannot be NULL
                 break;
 
             case 'access_expiring_soon':
                 $message->subject = get_string('notification_expiring_subject', 'mod_flashcards');
                 $message->fullmessage = get_string('notification_expiring_message', 'mod_flashcards');
                 $message->fullmessagehtml = get_string('notification_expiring_message_html', 'mod_flashcards');
+                $message->fullmessageformat = FORMAT_HTML; // Required: cannot be NULL
                 break;
 
             case 'access_expired':
                 $message->subject = get_string('notification_expired_subject', 'mod_flashcards');
                 $message->fullmessage = get_string('notification_expired_message', 'mod_flashcards');
                 $message->fullmessagehtml = get_string('notification_expired_message_html', 'mod_flashcards');
+                $message->fullmessageformat = FORMAT_HTML; // Required: cannot be NULL
                 break;
         }
 

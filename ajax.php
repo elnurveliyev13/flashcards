@@ -149,7 +149,7 @@ switch ($action) {
         break;
     case 'get_due_cards':
         // Get only cards that are due today (optimized for performance)
-        $limit = optional_param('limit', 100, PARAM_INT);
+        $limit = optional_param('limit', 1000, PARAM_INT); // Increased from 100 to 1000
         echo json_encode(['ok' => true, 'data' => get_due_cards_optimized($userid, $flashcardsid, $limit, $globalmode)]);
         break;
     case 'upsert_card':
@@ -228,6 +228,7 @@ function save_progress_batch($flashcardsid, $userid, array $records) {
         $data->due = isset($rec['due']) ? (int)$rec['due'] : 0;
         $data->addedat = isset($rec['addedAt']) ? (int)$rec['addedAt'] : 0;
         $data->lastat = isset($rec['lastAt']) ? (int)$rec['lastAt'] : 0;
+        // SYNC FIX: Accept hidden state from frontend (for shared cards user wants to hide)
         $data->hidden = empty($rec['hidden']) ? 0 : 1;
         $data->timemodified = $now;
 
@@ -296,10 +297,74 @@ function create_deck($userid, $title, $globalmode = false) {
     return ['id' => (int)$rec->id, 'title' => $rec->title, 'scope' => $rec->scope];
 }
 
+/**
+ * Ensure progress records exist for user's cards
+ * CRITICAL FIX: Cards without progress records don't appear in INNER JOIN queries
+ *
+ * @param int $userid User ID
+ * @param int $deckid Deck ID
+ * @param int|null $flashcardsid Activity instance ID (null for global mode)
+ */
+function ensure_progress_exists($userid, $deckid, $flashcardsid = null) {
+    global $DB;
+
+    // Find all cards in this deck that user should see
+    $sql = "SELECT c.*
+            FROM {flashcards_cards} c
+            WHERE c.deckid = :deckid
+              AND ((c.scope = 'private' AND c.ownerid = :ownerid)
+                   OR c.scope = 'shared')";
+
+    $cards = $DB->get_records_sql($sql, ['deckid' => $deckid, 'ownerid' => $userid]);
+
+    $now = time();
+    $created = 0;
+
+    foreach ($cards as $card) {
+        // Check if progress record exists
+        $exists = $DB->record_exists('flashcards_progress', [
+            'userid' => $userid,
+            'deckid' => $deckid,
+            'cardid' => $card->cardid
+        ]);
+
+        if (!$exists) {
+            // Create initial progress record
+            $progress = (object)[
+                'flashcardsid' => $flashcardsid,
+                'userid' => $userid,
+                'deckid' => $deckid,
+                'cardid' => $card->cardid,
+                'step' => 0,
+                'due' => $now, // Due immediately
+                'addedat' => $now,
+                'lastat' => 0,
+                'hidden' => 0,
+                'timemodified' => $now
+            ];
+
+            try {
+                $DB->insert_record('flashcards_progress', $progress);
+                $created++;
+            } catch (Exception $e) {
+                // Ignore duplicates (race condition)
+                error_log("Failed to create progress for card {$card->cardid}: " . $e->getMessage());
+            }
+        }
+    }
+
+    if ($created > 0) {
+        error_log("Flashcards: Created {$created} missing progress records for user {$userid} in deck {$deckid}");
+    }
+}
+
 function get_deck_cards($userid, $deckid, $offset = 0, $limit = 100, $globalmode = false) {
     global $DB;
     // Verify deck exists (no course check in global mode)
     $DB->get_record('flashcards_decks', ['id' => $deckid], '*', MUST_EXIST);
+
+    // CRITICAL FIX: Ensure progress records exist before querying
+    ensure_progress_exists($userid, $deckid, null);
 
     // Get cards with pagination
     $sql = "SELECT * FROM {flashcards_cards} WHERE deckid = :deckid ORDER BY id ASC";
@@ -321,7 +386,7 @@ function get_deck_cards($userid, $deckid, $offset = 0, $limit = 100, $globalmode
     return $out;
 }
 
-function get_due_cards_optimized($userid, $flashcardsid = null, $limit = 100, $globalmode = false) {
+function get_due_cards_optimized($userid, $flashcardsid = null, $limit = 1000, $globalmode = false) {
     global $DB;
 
     $now = time();
@@ -355,26 +420,27 @@ function get_due_cards_optimized($userid, $flashcardsid = null, $limit = 100, $g
             'now' => $now
         ];
     } else {
-        // Activity mode: get cards for specific flashcards activity
-        if (!$flashcardsid) {
-            throw new coding_exception('flashcardsid required for activity mode in get_due_cards_optimized');
-        }
-
-        // In activity mode, show cards from decks linked to this activity's course
-        // AND cards that have progress linked to this specific flashcardsid
+        // Activity mode: access is controlled by enrollment/capabilities,
+        // but show ALL cards user has access to (same as global mode).
+        // The flashcardsid is only used for access control, NOT for filtering cards.
+        // This ensures users see all their cards regardless of which activity they're viewing.
         $sql = "SELECT c.*, p.step, p.due, p.addedat, p.lastat, d.scope as deck_scope
                 FROM {flashcards_cards} c
                 INNER JOIN {flashcards_progress} p ON p.deckid = c.deckid AND p.cardid = c.cardid
                 INNER JOIN {flashcards_decks} d ON d.id = c.deckid
                 WHERE p.userid = :userid
-                  AND p.flashcardsid = :flashcardsid
                   AND p.due <= :now
                   AND p.hidden = 0
+                  AND ((d.scope = 'private' AND (d.userid IS NULL OR d.userid = :userid2))
+                       OR d.scope = 'shared')
+                  AND ((c.scope = 'private' AND c.ownerid = :ownerid)
+                       OR c.scope = 'shared')
                 ORDER BY p.due ASC, c.id ASC";
 
         $params = [
             'userid' => $userid,
-            'flashcardsid' => $flashcardsid,
+            'userid2' => $userid,
+            'ownerid' => $userid,
             'now' => $now
         ];
     }
@@ -509,7 +575,22 @@ function delete_card($userid, $deckid, $cardid, $globalmode = false, $context = 
         throw new moodle_exception('access_denied', 'mod_flashcards');
     }
 
-    $DB->delete_records('flashcards_cards', ['id' => $rec->id]);
+    // CRITICAL FIX: Different deletion behavior for private vs shared cards
+    if ($rec->scope === 'private' && (int)$rec->ownerid === (int)$userid) {
+        // User deleting their OWN private card → actually delete from database
+        $DB->delete_records('flashcards_cards', ['id' => $rec->id]);
+        // Delete ALL progress records for this card (not just current user)
+        // Rationale: Card no longer exists, so all progress references are orphaned
+        $DB->delete_records('flashcards_progress', ['deckid' => $deckid, 'cardid' => $cardid]);
+    } else {
+        // User "deleting" a SHARED card → just hide it for this user
+        // Card remains in database, but marked as hidden in progress
+        $DB->set_field('flashcards_progress', 'hidden', 1, [
+            'deckid' => $deckid,
+            'cardid' => $cardid,
+            'userid' => $userid
+        ]);
+    }
 }
 
 // TEST MODE: Using minutes instead of days for quick testing

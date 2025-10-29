@@ -66,6 +66,9 @@ $string['access_expired_title'] = 'Flashcards access has expired';
 $string['access_expired_message'] = 'You no longer have access to flashcards. Please enrol in a course to regain access.';
 $string['access_grace_message'] = 'You can review your cards for {$a} more days. Enrol in a course to create new cards.';
 $string['access_create_blocked'] = 'You cannot create new cards without an active course enrolment.';
+$string['grace_period_restrictions'] = 'During grace period:';
+$string['grace_can_review'] = '✓ You CAN review existing cards';
+$string['grace_cannot_create'] = '✗ You CANNOT create new cards';
 
 // Notifications
 $string['messageprovider:grace_period_started'] = 'Flashcards grace period started';

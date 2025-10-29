@@ -123,7 +123,7 @@
         <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
       </div>
 
-      <div class="card">
+      <div class="card" id="cardCreationForm">
         <div class="actionTop">
           <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button>
         </div>
@@ -200,8 +200,13 @@
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
         <button id="btnCloseList" class="iconbtn" title="{{#str}} close, mod_flashcards {{/str}}">✖</button>
       </div>
-      <div class="row" style="margin-top:10px">
-        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}">
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="flex:1;min-width:200px">
+        <select id="listFilterDue" style="padding:6px">
+          <option value="all">All cards</option>
+          <option value="due">Due only</option>
+          <option value="future">Future only</option>
+        </select>
         <span id="listCount" class="badge">0</span>
       </div>
       <div style="overflow:auto;margin-top:10px">
@@ -218,6 +223,11 @@
           </thead>
           <tbody></tbody>
         </table>
+      </div>
+      <div class="row" id="listPagination" style="margin-top:10px;justify-content:center;gap:10px;display:none">
+        <button id="btnPagePrev" class="btn">‹ Previous</button>
+        <span id="pageInfo" class="badge">Page 1 of 1</span>
+        <button id="btnPageNext" class="btn">Next ›</button>
       </div>
     </div>
   </div>
