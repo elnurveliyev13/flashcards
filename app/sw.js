@@ -1,9 +1,8 @@
-const CACHE = "srs-cache-v1";
+const CACHE = "srs-cache-v3";
 const ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest"
-  // иконки добавьте, если положите: "./icons/icon-192.png", "./icons/icon-512.png"
+  // Empty cache - Service Worker will be registered but won't cache anything
+  // This is minimal config just to enable PWA install prompt
+  // Manifest icons will be loaded via manifest.webmanifest reference
 ];
 
 self.addEventListener("install", e=>{

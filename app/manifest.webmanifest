@@ -1,12 +1,13 @@
 {
   "name": "Карточки SRS",
   "short_name": "SRS Cards",
-  "start_url": "./index.html",
+  "start_url": "/mod/flashcards/my/index.php",
+  "scope": "/mod/flashcards/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/mod/flashcards/app/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/mod/flashcards/app/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
