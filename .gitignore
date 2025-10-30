@@ -1,0 +1,7 @@
+/node_modules/
+/vendor/
+/amd/build/
+*.log
+*.cache
+.git/
+.claude/
