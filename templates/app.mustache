@@ -85,10 +85,11 @@
   }
   /* iOS Install Hint */
   .ios-hint{
+    position:relative;
     background:#1e3a5f;
     border:1px solid #3b82f6;
     border-radius:12px;
-    padding:12px 14px;
+    padding:12px 36px 12px 14px;
     margin-top:8px;
     color:#e2e8f0;
     font-size:14px;
@@ -104,6 +105,28 @@
     border-radius:6px;
     font-weight:600;
     margin:0 2px;
+  }
+  .ios-hint-close{
+    position:absolute;
+    top:8px;
+    right:8px;
+    background:transparent;
+    border:none;
+    color:#94a3b8;
+    font-size:20px;
+    line-height:1;
+    padding:4px;
+    cursor:pointer;
+    border-radius:4px;
+    width:28px;
+    height:28px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .ios-hint-close:hover{
+    background:rgba(255,255,255,0.1);
+    color:#e2e8f0;
   }
   </style>
 
@@ -132,6 +155,7 @@
 
     <!-- iOS Install Hint (shown only on iOS Safari when not installed) -->
     <div id="iosInstallHint" class="ios-hint hidden">
+      <button id="iosHintClose" class="ios-hint-close" title="Close" aria-label="Close">×</button>
       <strong>📱 {{#str}} ios_install_title, mod_flashcards {{/str}}</strong><br>
       {{#str}} ios_install_step1, mod_flashcards {{/str}} <span class="step">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> {{#str}} ios_install_step2, mod_flashcards {{/str}} <span class="step">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
     </div>
