@@ -686,6 +686,11 @@
     let deferredInstallPrompt = null;
     const btnInstallApp = $("#btnInstallApp");
 
+    // Debug: log button state on init
+    console.log('[PWA] Install button in DOM:', !!btnInstallApp);
+    console.log('[PWA] Service Worker support:', 'serviceWorker' in navigator);
+    console.log('[PWA] User agent:', navigator.userAgent);
+
     window.addEventListener('beforeinstallprompt', (e) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
@@ -694,7 +699,9 @@
       // Show install button
       if(btnInstallApp) {
         btnInstallApp.classList.remove('hidden');
-        console.log('[PWA] Install prompt available');
+        console.log('[PWA] ✅ Install prompt available - button shown');
+      } else {
+        console.error('[PWA] ❌ Button not found in DOM!');
       }
     });
 
@@ -735,7 +742,7 @@
     if(btnUpdate) btnUpdate.disabled = true;
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103001"; // Must match version.php
+    const CACHE_VERSION = "2025103002"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} → ${CACHE_VERSION}. Clearing cache...`);
