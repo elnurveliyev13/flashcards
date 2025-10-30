@@ -65,6 +65,24 @@
   .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
   .btnFile{background:#0b1220;border:1px solid #374151;border-radius:12px;padding:10px 12px}
   .fileName{font-size:12px;color:#9aa3b1;margin-left:6px}
+  /* PWA Install Button */
+  .install-btn{
+    background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border:none;
+    color:#fff;
+    font-weight:600;
+    padding:10px 16px;
+    border-radius:12px;
+    box-shadow:0 4px 12px rgba(102,126,234,0.3);
+    transition:all 0.3s ease;
+  }
+  .install-btn:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(102,126,234,0.4);
+  }
+  .install-btn:active{
+    transform:translateY(0);
+  }
   </style>
 
   <div class="wrap">
@@ -83,6 +101,9 @@
           <select id="profileSel"></select>
           <button id="btnAddProfile" class="iconbtn" title="+">+</button>
         </label>
+        <button id="btnInstallApp" class="hidden install-btn" title="{{#str}} install_app, mod_flashcards {{/str}}">
+          📱 {{#str}} install_app, mod_flashcards {{/str}}
+        </button>
         <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
         <!-- Export/Import removed per request -->
       </div>

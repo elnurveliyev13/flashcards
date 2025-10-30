@@ -365,6 +365,50 @@ define(['core/str'], function(str) {
       if(e.key==="h"||e.key==="H") rateHard();
     });
 
+    /* ===== PWA Install Prompt ===== */
+    let deferredInstallPrompt = null;
+    const btnInstallApp = $("#btnInstallApp");
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredInstallPrompt = e;
+      // Show install button
+      if(btnInstallApp) {
+        btnInstallApp.classList.remove('hidden');
+        console.log('[PWA] Install prompt available');
+      }
+    });
+
+    if(btnInstallApp) {
+      btnInstallApp.addEventListener('click', async () => {
+        if(!deferredInstallPrompt) {
+          console.log('[PWA] No install prompt available');
+          return;
+        }
+        // Show the install prompt
+        deferredInstallPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`[PWA] User choice: ${outcome}`);
+        if(outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+        }
+        // Clear the deferred prompt
+        deferredInstallPrompt = null;
+        // Hide install button
+        btnInstallApp.classList.add('hidden');
+      });
+    }
+
+    // Hide install button if already installed
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App successfully installed');
+      if(btnInstallApp) btnInstallApp.classList.add('hidden');
+      deferredInstallPrompt = null;
+    });
+
     /* ===== init ===== */
     (function(){
       // Ensure manifest link present in <head>.

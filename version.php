@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025102920; // YYYYMMDDXX.
+$plugin->version   = 2025103001; // YYYYMMDDXX.
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.5.17-notification-fix'; // Fix notification error: add fullmessageformat field (cannot be NULL)
+$plugin->release   = '0.6.0-pwa-install'; // Add PWA install button with beforeinstallprompt handler

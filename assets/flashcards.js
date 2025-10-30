@@ -682,6 +682,50 @@
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
     try { if (!document.querySelector('link[rel="manifest"]')) { const l=document.createElement('link'); l.rel='manifest'; l.href=baseurl + 'manifest.webmanifest'; document.head.appendChild(l);} } catch(e){}
 
+    // PWA Install Prompt
+    let deferredInstallPrompt = null;
+    const btnInstallApp = $("#btnInstallApp");
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Prevent Chrome 67 and earlier from automatically showing the prompt
+      e.preventDefault();
+      // Stash the event so it can be triggered later
+      deferredInstallPrompt = e;
+      // Show install button
+      if(btnInstallApp) {
+        btnInstallApp.classList.remove('hidden');
+        console.log('[PWA] Install prompt available');
+      }
+    });
+
+    if(btnInstallApp) {
+      btnInstallApp.addEventListener('click', async () => {
+        if(!deferredInstallPrompt) {
+          console.log('[PWA] No install prompt available');
+          return;
+        }
+        // Show the install prompt
+        deferredInstallPrompt.prompt();
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        console.log(`[PWA] User choice: ${outcome}`);
+        if(outcome === 'accepted') {
+          console.log('[PWA] User accepted the install prompt');
+        }
+        // Clear the deferred prompt
+        deferredInstallPrompt = null;
+        // Hide install button
+        btnInstallApp.classList.add('hidden');
+      });
+    }
+
+    // Hide install button if already installed
+    window.addEventListener('appinstalled', () => {
+      console.log('[PWA] App successfully installed');
+      if(btnInstallApp) btnInstallApp.classList.add('hidden');
+      deferredInstallPrompt = null;
+    });
+
     if(!localStorage.getItem(PROFILE_KEY)) localStorage.setItem(PROFILE_KEY,"Guest");
     (function(){ const sel=$("#profileSel"); const list=JSON.parse(localStorage.getItem("srs-profiles")||'["Guest"]'); const cur=localStorage.getItem(PROFILE_KEY)||"Guest"; if(!list.includes(cur)) list.push(cur); localStorage.setItem("srs-profiles",JSON.stringify([...new Set(list)])); sel.innerHTML=""; JSON.parse(localStorage.getItem("srs-profiles")).forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;sel.appendChild(o);}); sel.value=cur; })();
     $("#profileSel").addEventListener("change",e=>{ localStorage.setItem(PROFILE_KEY,e.target.value); loadState(); refreshSelect(); updateBadge(); buildQueue(); });
@@ -691,7 +735,7 @@
     if(btnUpdate) btnUpdate.disabled = true;
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025102920"; // Must match version.php
+    const CACHE_VERSION = "2025103001"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} → ${CACHE_VERSION}. Clearing cache...`);

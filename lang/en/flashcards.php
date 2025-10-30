@@ -37,6 +37,7 @@ $string['order'] = 'Order (click in sequence)';
 $string['empty'] = 'Nothing due today';
 $string['resetform'] = 'Reset form';
 $string['addtomycards'] = 'Add to my cards';
+$string['install_app'] = 'Install App';
 
 // Titles / tooltips
 $string['title_camera'] = 'Camera';
