@@ -25,8 +25,9 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025102604; // cache buster; aligns with plugin version (TEST MODE + progress sync fix).
+$ver = 2025102605; // cache buster; aligns with plugin version (UX improvements).
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
 $init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
 $init .= "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."')";
