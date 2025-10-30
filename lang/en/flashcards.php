@@ -39,6 +39,13 @@ $string['resetform'] = 'Reset form';
 $string['addtomycards'] = 'Add to my cards';
 $string['install_app'] = 'Install App';
 
+// iOS Install Instructions
+$string['ios_install_title'] = 'iOS users: Install this app';
+$string['ios_install_step1'] = 'Tap the';
+$string['ios_install_step2'] = 'button, then select';
+$string['ios_share_button'] = 'Share';
+$string['ios_add_to_home'] = 'Add to Home Screen';
+
 // Titles / tooltips
 $string['title_camera'] = 'Camera';
 $string['title_take'] = 'Take photo';

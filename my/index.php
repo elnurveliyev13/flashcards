@@ -25,6 +25,13 @@ $PAGE->set_pagelayout('standard');
 $PAGE->set_title(get_string('myflashcards', 'mod_flashcards'));
 $PAGE->set_heading(get_string('myflashcards', 'mod_flashcards'));
 
+// iOS PWA meta tags
+$PAGE->requires->string_for_js('ios_install_title', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_install_step1', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_install_step2', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_share_button', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
+
 // Check user's access via access_manager.
 // Force refresh to ensure status is current (expired enrollments detected immediately)
 $access = \mod_flashcards\access_manager::check_user_access($USER->id, true);

@@ -83,6 +83,28 @@
   .install-btn:active{
     transform:translateY(0);
   }
+  /* iOS Install Hint */
+  .ios-hint{
+    background:#1e3a5f;
+    border:1px solid #3b82f6;
+    border-radius:12px;
+    padding:12px 14px;
+    margin-top:8px;
+    color:#e2e8f0;
+    font-size:14px;
+    line-height:1.5;
+  }
+  .ios-hint strong{
+    color:#60a5fa;
+  }
+  .ios-hint .step{
+    display:inline-block;
+    background:#0c2340;
+    padding:2px 6px;
+    border-radius:6px;
+    font-weight:600;
+    margin:0 2px;
+  }
   </style>
 
   <div class="wrap">
@@ -105,9 +127,14 @@
           📱 {{#str}} install_app, mod_flashcards {{/str}}
         </button>
         <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
-        <!-- Export/Import removed per request -->
       </div>
     </header>
+
+    <!-- iOS Install Hint (shown only on iOS Safari when not installed) -->
+    <div id="iosInstallHint" class="ios-hint hidden">
+      <strong>📱 {{#str}} ios_install_title, mod_flashcards {{/str}}</strong><br>
+      {{#str}} ios_install_step1, mod_flashcards {{/str}} <span class="step">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> {{#str}} ios_install_step2, mod_flashcards {{/str}} <span class="step">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
+    </div>
 
     <div class="row hidden">
       <select id="deckSelect"></select>

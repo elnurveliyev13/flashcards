@@ -16,6 +16,13 @@ $PAGE->set_url('/mod/flashcards/view.php', ['id' => $id]);
 $PAGE->set_title(format_string($cm->name));
 $PAGE->set_heading(format_string($course->fullname));
 
+// iOS PWA meta tags
+$PAGE->requires->string_for_js('ios_install_title', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_install_step1', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_install_step2', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_share_button', 'mod_flashcards');
+$PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
+
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
 $ver = 2025102604; // cache buster; aligns with plugin version (TEST MODE + progress sync fix).

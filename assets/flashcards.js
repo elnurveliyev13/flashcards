@@ -682,6 +682,37 @@
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
     try { if (!document.querySelector('link[rel="manifest"]')) { const l=document.createElement('link'); l.rel='manifest'; l.href=baseurl + 'manifest.webmanifest'; document.head.appendChild(l);} } catch(e){}
 
+    // Add iOS-specific meta tags for PWA
+    try {
+      if (!document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
+        const metaCapable = document.createElement('meta');
+        metaCapable.name = 'apple-mobile-web-app-capable';
+        metaCapable.content = 'yes';
+        document.head.appendChild(metaCapable);
+      }
+      if (!document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')) {
+        const metaStatus = document.createElement('meta');
+        metaStatus.name = 'apple-mobile-web-app-status-bar-style';
+        metaStatus.content = 'black-translucent';
+        document.head.appendChild(metaStatus);
+      }
+      if (!document.querySelector('meta[name="apple-mobile-web-app-title"]')) {
+        const metaTitle = document.createElement('meta');
+        metaTitle.name = 'apple-mobile-web-app-title';
+        metaTitle.content = 'SRS Cards';
+        document.head.appendChild(metaTitle);
+      }
+      if (!document.querySelector('link[rel="apple-touch-icon"]')) {
+        const linkIcon = document.createElement('link');
+        linkIcon.rel = 'apple-touch-icon';
+        linkIcon.href = baseurl + 'icons/icon-192.png';
+        document.head.appendChild(linkIcon);
+      }
+      console.log('[PWA] iOS meta tags added');
+    } catch(e) {
+      console.log('[PWA] Error adding iOS meta tags:', e);
+    }
+
     // PWA Install Prompt
     let deferredInstallPrompt = null;
     const btnInstallApp = $("#btnInstallApp");
@@ -732,6 +763,22 @@
       if(btnInstallApp) btnInstallApp.classList.add('hidden');
       deferredInstallPrompt = null;
     });
+
+    // iOS Install Hint (since iOS doesn't support beforeinstallprompt)
+    const iosInstallHint = $("#iosInstallHint");
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+
+    console.log('[PWA] iOS device:', isIOS);
+    console.log('[PWA] Standalone mode:', isInStandaloneMode);
+
+    if(iosInstallHint && isIOS && !isInStandaloneMode) {
+      // Show iOS install hint for iOS users who haven't installed the app yet
+      iosInstallHint.classList.remove('hidden');
+      console.log('[PWA] ✅ iOS install hint shown');
+    } else if(iosInstallHint) {
+      console.log('[PWA] iOS hint hidden (not iOS or already installed)');
+    }
 
     if(!localStorage.getItem(PROFILE_KEY)) localStorage.setItem(PROFILE_KEY,"Guest");
     (function(){ const sel=$("#profileSel"); const list=JSON.parse(localStorage.getItem("srs-profiles")||'["Guest"]'); const cur=localStorage.getItem(PROFILE_KEY)||"Guest"; if(!list.includes(cur)) list.push(cur); localStorage.setItem("srs-profiles",JSON.stringify([...new Set(list)])); sel.innerHTML=""; JSON.parse(localStorage.getItem("srs-profiles")).forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;sel.appendChild(o);}); sel.value=cur; })();
