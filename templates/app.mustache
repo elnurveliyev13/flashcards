@@ -14,7 +14,7 @@
   button:hover{filter:brightness(1.05)}
   button:disabled{opacity:0.5;cursor:not-allowed}
   button:disabled:hover{filter:none}
-  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.cross{font-size:22px}
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn.cross{font-size:24px}`r`n
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
     .grid.edit-mode{grid-template-columns:1fr}
@@ -239,7 +239,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="btnFile" title="Clear form">&#128260;</button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&times;</button>
+            <button id="btnFormReset" class="iconbtn ghost" title="Clear form">&#128260;</button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&#10006;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -250,7 +250,7 @@
             <input id="uAudio" type="file" accept="audio/*" capture class="hidden">
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
             <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
-            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">&#127908;</button>
+            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
           </div>
           <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
@@ -265,7 +265,7 @@
             <!-- Camera controls positioned near image picker -->
             <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">&#128247;</button>
             <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">&#128248;</button>
-            <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&times;</button>
+            <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&#10006;</button>
           </div>
           <img id="imgPrev" class="media hidden" alt=""/>
         </div>
@@ -313,7 +313,7 @@
     <div class="box">
       <div class="row" style="justify-content:space-between;align-items:center">
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
-        <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
+        <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&#10006;</button>
       </div>
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
         <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="flex:1;min-width:200px">
@@ -349,3 +349,4 @@
 
   <!-- Fixed bottom action bar -->
 </div>
+
