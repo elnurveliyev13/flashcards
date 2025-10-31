@@ -95,6 +95,18 @@
             audio: p.audio||null,
             audioKey: p.audioKey||null,
             order: Array.isArray(p.order)?p.order:[],
+            // Enrichment fields
+            transcription: p.transcription||"",
+            pos: p.pos||"",
+            gender: p.gender||"",
+            forms: p.forms||null,
+            antonyms: Array.isArray(p.antonyms)?p.antonyms:[],
+            collocations: Array.isArray(p.collocations)?p.collocations:[],
+            examples: Array.isArray(p.examples)?p.examples:[],
+            cognates: Array.isArray(p.cognates)?p.cognates:[],
+            sayings: Array.isArray(p.sayings)?p.sayings:[],
+            scope: it.scope || 'private',
+            ownerid: (typeof it.ownerid === 'number' || it.ownerid === null) ? it.ownerid : null,
             _progress: it.progress // Keep progress for later
           });
         });
@@ -252,7 +264,7 @@
       const _btnUpdate = $("#btnUpdate");
       if(_btnUpdate) _btnUpdate.disabled = true;
     }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
-    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
+    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ const tr = card.transcription ? `<div class=\"small\" style=\"opacity:.85\">[${card.transcription}]</div>` : ""; el.innerHTML=`<div class="front">${card.text}</div>${tr}`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -304,7 +316,7 @@
       showCurrent();
     }
     function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
-    async function showCurrent(){ if(!currentItem){ updateRevealButton(); setIconVisibility(false); hidePlayIcons(); return; } setStage(currentItem.rec.step||0); await renderCard(currentItem.card, visibleSlots); setIconVisibility(true); updateRevealButton(); }
+    async function showCurrent(){ if(!currentItem){ updateRevealButton(); setIconVisibility(false); hidePlayIcons(); return; } setStage(currentItem.rec.step||0); await renderCard(currentItem.card, visibleSlots); setIconVisibility(true); updateRevealButton(); try{ maybePromptForStage(); }catch(_e){} }
 
     async function syncProgressToServer(deckId, cardId, rec){
       try{
@@ -448,6 +460,16 @@
 
       $("#uFront").value=c.text||"";
       $("#uExplanation").value=c.explanation||"";
+      const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = c.transcription||'';
+      const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
+      const _genSel = document.getElementById('uGender'); if(_genSel) { _genSel.value = c.gender||''; }
+      const nf=(c.forms&&c.forms.noun)||{}; const _nf1=document.getElementById('uNounIndefSg'); if(_nf1) _nf1.value = nf.indef_sg||''; const _nf2=document.getElementById('uNounDefSg'); if(_nf2) _nf2.value = nf.def_sg||''; const _nf3=document.getElementById('uNounIndefPl'); if(_nf3) _nf3.value = nf.indef_pl||''; const _nf4=document.getElementById('uNounDefPl'); if(_nf4) _nf4.value = nf.def_pl||'';
+      const _ant=document.getElementById('uAntonyms'); if(_ant) _ant.value = Array.isArray(c.antonyms)?c.antonyms.join('\n'):'';
+      const _col=document.getElementById('uCollocations'); if(_col) _col.value = Array.isArray(c.collocations)?c.collocations.join('\n'):'';
+      const _exs=document.getElementById('uExamples'); if(_exs) _exs.value = Array.isArray(c.examples)?c.examples.join('\n'):'';
+      const _cog=document.getElementById('uCognates'); if(_cog) _cog.value = Array.isArray(c.cognates)?c.cognates.join('\n'):'';
+      const _say=document.getElementById('uSayings'); if(_say) _say.value = Array.isArray(c.sayings)?c.sayings.join('\n'):'';
+      try{ togglePOSUI(); }catch(_e){}
       const __tr = c.translations || {};
       const __tl = $("#uTransLocal"); if(__tl) __tl.value = (userLang2 !== 'en') ? (__tr[userLang2] || c.translation || "") : "";
       const __te = $("#uTransEn"); if(__te) __te.value = (__tr.en || (userLang2 === 'en' ? (c.translation || "") : ""));
@@ -493,6 +515,18 @@
     // removed duplicate var line
     $("#btnChooseImg").addEventListener("click",()=>$("#uImage").click());
     $("#btnChooseAud").addEventListener("click",()=>$("#uAudio").click());
+    // POS visibility toggles + autofill placeholders
+    function togglePOSUI(){
+      const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();
+      const genderSlot = document.getElementById('slot_gender');
+      const nounFormsSlot = document.getElementById('slot_noun_forms');
+      if(genderSlot) genderSlot.classList.toggle('hidden', pos !== 'noun');
+      if(nounFormsSlot) nounFormsSlot.classList.toggle('hidden', pos !== 'noun');
+    }
+    const _uPOS = document.getElementById('uPOS');
+    if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); }
+    function autofillSoon(){ const s=document.getElementById('status'); if(s){ s.textContent=(M?.str?.mod_flashcards?.autofill_soon)||'Auto-fill will be available soon'; setTimeout(()=>{s.textContent='';},1200);} }
+    ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
     $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPut(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
     $("#uAudio").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#audName").textContent=f.name; lastAudioKey="my-"+Date.now().toString(36)+"-aud"; await idbPut(lastAudioKey,f); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(f); $("#audPrev").classList.remove("hidden");});
@@ -566,7 +600,7 @@
       const trLocalEl=$("#uTransLocal"), trEnEl=$("#uTransEn");
       const trLocal = trLocalEl ? trLocalEl.value.trim() : "";
       const trEn = trEnEl ? trEnEl.value.trim() : "";
-      if(!text && !expl && !tr && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
+      if(!text && !expl && !trLocal && !trEn && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
         $("#status").textContent="Empty"; setTimeout(()=>$("#status").textContent="",1000); return;
       }
 
@@ -597,6 +631,25 @@
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
       const payload={id,text,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      // Enrichment fields
+      const trscr=(document.getElementById('uTranscription')?.value||'').trim(); if(trscr) payload.transcription=trscr;
+      const posv=(document.getElementById('uPOS')?.value||''); if(posv) payload.pos=posv;
+      const g=(document.getElementById('uGender')?.value||''); if(g && posv==='noun') payload.gender=g;
+      if(posv==='noun'){
+        const nf={
+          indef_sg:(document.getElementById('uNounIndefSg')?.value||'').trim(),
+          def_sg:(document.getElementById('uNounDefSg')?.value||'').trim(),
+          indef_pl:(document.getElementById('uNounIndefPl')?.value||'').trim(),
+          def_pl:(document.getElementById('uNounDefPl')?.value||'').trim(),
+        };
+        if(nf.indef_sg||nf.def_sg||nf.indef_pl||nf.def_pl){ payload.forms={noun:nf}; }
+      }
+      function linesToArr(id){ return (document.getElementById(id)?.value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean); }
+      const antonyms=linesToArr('uAntonyms'); if(antonyms.length) payload.antonyms=antonyms;
+      const collocs=linesToArr('uCollocations'); if(collocs.length) payload.collocations=collocs;
+      const examples=linesToArr('uExamples'); if(examples.length) payload.examples=examples;
+      const cognates=linesToArr('uCognates'); if(cognates.length) payload.cognates=cognates;
+      const sayings=linesToArr('uSayings'); if(sayings.length) payload.sayings=sayings;
       if(lastImageUrl) payload.image=lastImageUrl; else if(lastImageKey) payload.imageKey=lastImageKey;
       if(lastAudioUrl) payload.audio=lastAudioUrl; else if(lastAudioKey) payload.audioKey=lastAudioKey;
 
@@ -951,8 +1004,110 @@
     // Initialize form: disable Update button by default
     if(btnUpdate) btnUpdate.disabled = true;
 
+    // Stage-based prompts: ask to fill missing fields per step
+    const shownPrompts = new Set();
+    function promptKey(deckId, cardId, step){ return `${deckId}::${cardId}::${step}`; }
+    function firstMissingForStep(card){
+      const order = ['transcription','pos','gender_or_forms','examples','collocations','antonyms','cognates','sayings'];
+      for(const key of order){
+        if(key==='gender_or_forms'){
+          if((card.pos||'').toLowerCase()==='noun'){
+            const hasGender = !!(card.gender);
+            const nf = card.forms && card.forms.noun || {};
+            const hasForms = !!(nf.indef_sg||nf.def_sg||nf.indef_pl||nf.def_pl);
+            if(!hasGender) return 'gender';
+            if(!hasForms) return 'nounForms';
+          }
+        } else {
+          if(key==='transcription' && !card.transcription) return 'transcription';
+          if(key==='pos' && !card.pos) return 'pos';
+          if(key==='examples' && (!Array.isArray(card.examples) || card.examples.length===0)) return 'examples';
+          if(key==='collocations' && (!Array.isArray(card.collocations) || card.collocations.length===0)) return 'collocations';
+          if(key==='antonyms' && (!Array.isArray(card.antonyms) || card.antonyms.length===0)) return 'antonyms';
+          if(key==='cognates' && (!Array.isArray(card.cognates) || card.cognates.length===0)) return 'cognates';
+          if(key==='sayings' && (!Array.isArray(card.sayings) || card.sayings.length===0)) return 'sayings';
+        }
+      }
+      return null;
+    }
+    function openFieldPrompt(field, card){
+      const fp = document.getElementById('fieldPrompt');
+      const body = document.getElementById('fpBody');
+      const title = document.getElementById('fpTitle');
+      if(!fp||!body||!title) return;
+      body.innerHTML = '';
+      let editor = null;
+      function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#e5e7eb'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
+      function textareaEl(){ const t=document.createElement('textarea'); t.style.width='100%'; t.style.minHeight='80px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#e5e7eb'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
+      const labelMap = {
+        transcription: 'Transcription', pos: 'Part of speech', gender:'Gender', nounForms:'Noun forms',
+        examples:'Example sentences', collocations:'Common collocations', antonyms:'Antonyms', cognates:'Cognates', sayings:'Common sayings'
+      };
+      title.textContent = (M?.str?.mod_flashcards?.fill_field || 'Please fill: {$a}').replace('{$a}', labelMap[field] || field);
+      if(field==='transcription'){
+        editor = inputEl('text'); editor.value = card.transcription||''; body.appendChild(editor);
+      } else if(field==='pos'){
+        const sel=document.createElement('select'); sel.id='fpPOS'; sel.innerHTML = `
+          <option value="">-</option>
+          <option value="noun">${M?.str?.mod_flashcards?.pos_noun||'Noun'}</option>
+          <option value="verb">${M?.str?.mod_flashcards?.pos_verb||'Verb'}</option>
+          <option value="adj">${M?.str?.mod_flashcards?.pos_adj||'Adjective'}</option>
+          <option value="adv">${M?.str?.mod_flashcards?.pos_adv||'Adverb'}</option>
+          <option value="other">${M?.str?.mod_flashcards?.pos_other||'Other'}</option>`;
+        sel.value = card.pos||''; editor = sel; body.appendChild(editor);
+      } else if(field==='gender'){
+        const sel=document.createElement('select'); sel.id='fpGender'; sel.innerHTML = `
+          <option value="">-</option>
+          <option value="intetkjonn">${M?.str?.mod_flashcards?.gender_neuter||'Neuter'}</option>
+          <option value="hankjonn">${M?.str?.mod_flashcards?.gender_masculine||'Masculine'}</option>
+          <option value="hunkjonn">${M?.str?.mod_flashcards?.gender_feminine||'Feminine'}</option>`;
+        sel.value = card.gender||''; editor = sel; body.appendChild(editor);
+      } else if(field==='nounForms'){
+        const wrap=document.createElement('div'); wrap.style.display='grid'; wrap.style.gap='6px';
+        function row(lbl,id,val){ const r=document.createElement('div'); r.innerHTML = `<div class="small">${lbl}</div>`; const i=inputEl('text'); i.id=id; i.value=val||''; r.appendChild(i); return r; }
+        const nf = (card.forms&&card.forms.noun) || {};
+        wrap.appendChild(row(M?.str?.mod_flashcards?.indef_sg||'Indefinite singular','fpNfIndefSg', nf.indef_sg));
+        wrap.appendChild(row(M?.str?.mod_flashcards?.def_sg||'Definite singular','fpNfDefSg', nf.def_sg));
+        wrap.appendChild(row(M?.str?.mod_flashcards?.indef_pl||'Indefinite plural','fpNfIndefPl', nf.indef_pl));
+        wrap.appendChild(row(M?.str?.mod_flashcards?.def_pl||'Definite plural','fpNfDefPl', nf.def_pl));
+        editor = wrap; body.appendChild(editor);
+      } else {
+        editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
+      }
+      fp.style.display='flex';
+      function close(){ fp.style.display='none'; }
+      const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
+      const btnSkip = document.getElementById('fpSkip'); if(btnSkip){ btnSkip.onclick = close; }
+      const btnSave = document.getElementById('fpSave');
+      if(btnSave){ btnSave.onclick = async ()=>{
+        let updated = false;
+        if(field==='transcription'){
+          const v = editor.value.trim(); if(v){ currentItem.card.transcription = v; updated = true; }
+        } else if(field==='pos'){
+          const v = editor.value; currentItem.card.pos = v; updated = true;
+        } else if(field==='gender'){
+          const v = editor.value; currentItem.card.gender = v; updated = true;
+        } else if(field==='nounForms'){
+          const nf = {indef_sg: document.getElementById('fpNfIndefSg').value.trim(), def_sg: document.getElementById('fpNfDefSg').value.trim(), indef_pl: document.getElementById('fpNfIndefPl').value.trim(), def_pl: document.getElementById('fpNfDefPl').value.trim()};
+          currentItem.card.forms = currentItem.card.forms || {}; currentItem.card.forms.noun = nf; updated = true;
+        } else {
+          const lines = editor.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+          currentItem.card[field] = lines; updated = true;
+        }
+        if(updated){
+          try{
+            const payload = buildPayloadFromCard(currentItem.card);
+            await api('upsert_card', {}, 'POST', { deckId: currentItem.deckId, cardId: currentItem.card.id, scope: currentItem.card.scope||'private', payload });
+          }catch(_e){}
+        }
+        close();
+      }; }
+    }
+    function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
+    function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
+
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103103"; // Must match version.php
+    const CACHE_VERSION = "2025103104"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);

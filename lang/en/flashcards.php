@@ -39,6 +39,36 @@ $string['resetform'] = 'Reset form';
 $string['addtomycards'] = 'Add to my cards';
 $string['install_app'] = 'Install App';
 
+// Linguistic enrichment fields
+$string['transcription'] = 'Transcription';
+$string['pos'] = 'Part of speech';
+$string['pos_noun'] = 'Noun';
+$string['pos_verb'] = 'Verb';
+$string['pos_adj'] = 'Adjective';
+$string['pos_adv'] = 'Adverb';
+$string['pos_other'] = 'Other';
+$string['gender'] = 'Gender';
+$string['gender_neuter'] = 'Neuter (intetkjønn)';
+$string['gender_masculine'] = 'Masculine (hankjønn)';
+$string['gender_feminine'] = 'Feminine (hunkjønn)';
+$string['noun_forms'] = 'Noun forms';
+$string['indef_sg'] = 'Indefinite singular';
+$string['def_sg'] = 'Definite singular';
+$string['indef_pl'] = 'Indefinite plural';
+$string['def_pl'] = 'Definite plural';
+$string['antonyms'] = 'Antonyms';
+$string['collocations'] = 'Common collocations';
+$string['examples'] = 'Example sentences';
+$string['cognates'] = 'Cognates';
+$string['sayings'] = 'Common sayings';
+$string['autofill'] = 'Auto-fill';
+$string['fetch_from_api'] = 'Fetch via API';
+$string['save'] = 'Save';
+$string['skip'] = 'Skip';
+$string['cancel'] = 'Cancel';
+$string['fill_field'] = 'Please fill: {$a}';
+$string['autofill_soon'] = 'Auto-fill will be available soon';
+
 // iOS Install Instructions
 $string['ios_install_title'] = 'iOS users: Install this app';
 $string['ios_install_step1'] = 'Tap the';
