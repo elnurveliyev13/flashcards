@@ -77,6 +77,8 @@
   input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}
   #mod_flashcards_container input[type=search]{background:#0b1220 !important;border-color:#374151 !important;color:#e5e7eb !important;}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
   .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
+  #listSearch{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; padding:8px 14px; border-radius:12px !important; }
+  #listFilterDue{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; border-radius:12px !important; }
   .btnFile{background:#0b1220;border:1px solid #374151;border-radius:12px;padding:10px 12px}
   .fileName{font-size:12px;color:#9aa3b1;margin-left:6px}
   /* PWA Install Button */
@@ -313,11 +315,11 @@
 
   <div id="listModal" class="modal" role="dialog" aria-modal="true">
     <div class="box">
-      <div class="row" style="justify-content:space-between;align-items:center">
+      <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
         <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&#10006;</button>
       </div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:2px">
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:12px">
         <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="width:340px">
         <select id="listFilterDue" style="padding:6px">
           <option value="all">All cards</option>
