@@ -1,4 +1,4 @@
-﻿/* global M */
+/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -498,7 +498,8 @@
           openEditor();
         });
       }
-    })();`r`n    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
+    })();
+    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
     const _btnToggleForm = $("#btnToggleForm");
     const _cardCreationFormWrap = $("#cardCreationFormWrap");
     if(_btnToggleForm && _cardCreationFormWrap && !_btnToggleForm.dataset.bound){
