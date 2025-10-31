@@ -1,4 +1,4 @@
-/* global M */
+﻿/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -204,7 +204,7 @@
       const _btnUpdate = $("#btnUpdate");
       if(_btnUpdate) _btnUpdate.disabled = true;
     }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
-    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">рџ”Љ Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
+    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -455,7 +455,7 @@
     $("#btnStop").addEventListener("click",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
 
     let orderChosen=[];
-    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(" в†’ "); $("#orderPreview").textContent=pretty; }
+    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
@@ -961,7 +961,7 @@
 
       console.log('[Flashcards] Active decks:', Object.keys(state.active || {}).filter(id => state.active[id]));
     })();
-    (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' в†’ '); })();
+    (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }
   window.flashcardsInit = flashcardsInit;
 })();
