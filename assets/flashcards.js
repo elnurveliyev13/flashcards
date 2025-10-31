@@ -708,8 +708,8 @@
       const localDeckId = serverDeckId;
       if(!registry[localDeckId]) registry[localDeckId]={id:localDeckId,title:"My cards",cards:[]};
 
-      // If editing, update existing card; otherwise add new
-      if(editingCardId){
+      // If editing AND updating: update existing card; else push new
+      if(isUpdate && editingCardId){
         const existingIdx = registry[localDeckId].cards.findIndex(c => c.id === editingCardId);
         if(existingIdx >= 0){
           registry[localDeckId].cards[existingIdx] = {id,...payload};
