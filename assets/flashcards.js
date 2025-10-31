@@ -329,6 +329,14 @@
     $("#btnNormal").addEventListener("click",rateNormal);
     $("#btnHard").addEventListener("click",rateHard);
 
+    // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
+    const _btnEasyBottom = $("#btnEasyBottom");
+    const _btnNormalBottom = $("#btnNormalBottom");
+    const _btnHardBottom = $("#btnHardBottom");
+    if(_btnEasyBottom && !_btnEasyBottom.dataset.bound){ _btnEasyBottom.dataset.bound = '1'; _btnEasyBottom.addEventListener('click', e=>{ e.preventDefault(); rateEasy(); }); }
+    if(_btnNormalBottom && !_btnNormalBottom.dataset.bound){ _btnNormalBottom.dataset.bound = '1'; _btnNormalBottom.addEventListener('click', e=>{ e.preventDefault(); rateNormal(); }); }
+    if(_btnHardBottom && !_btnHardBottom.dataset.bound){ _btnHardBottom.dataset.bound = '1'; _btnHardBottom.addEventListener('click', e=>{ e.preventDefault(); rateHard(); }); }
+
     var _btnReset=$("#btnReset"); if(_btnReset){ _btnReset.addEventListener("click",()=>{ if(confirm("Reset?")){ state={active:{},decks:{},hidden:{}}; saveState(); buildQueue(); updateBadge(); } }); }
     var _btnExport=$("#btnExport"); if(_btnExport){ _btnExport.addEventListener("click",()=>{ const blob=new Blob([JSON.stringify({state,registry},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="srs_export.json"; a.click(); }); }
     var _btnImport=$("#btnImport"); var _fileImport=$("#fileImport"); if(_btnImport && _fileImport){ _btnImport.addEventListener("click",()=>_fileImport.click()); _fileImport.addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const d=JSON.parse(await f.text()); if(d.state)state=d.state; if(d.registry)registry=d.registry; saveState(); saveRegistry(); refreshSelect(); updateBadge(); buildQueue(); $("#status").textContent="OK"; setTimeout(()=>$("#status").textContent="",1200); }catch{ $("#status").textContent="Bad deck"; setTimeout(()=>$("#status").textContent="",1500); }}); }
@@ -423,6 +431,17 @@
       if(btnUpdate) btnUpdate.disabled = true;
     }
     $("#btnFormReset").addEventListener("click", resetForm);
+
+    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
+    const _btnToggleForm = $("#btnToggleForm");
+    const _cardCreationFormWrap = $("#cardCreationFormWrap");
+    if(_btnToggleForm && _cardCreationFormWrap && !_btnToggleForm.dataset.bound){
+      _btnToggleForm.dataset.bound = '1';
+      _btnToggleForm.addEventListener('click', e => {
+        e.preventDefault();
+        _cardCreationFormWrap.classList.toggle('card-form-collapsed');
+      });
+    }
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
       const text=$("#uFront").value.trim(), expl=$("#uExplanation").value.trim(), tr=$("#uBack").value.trim();
@@ -878,7 +897,6 @@
   }
   window.flashcardsInit = flashcardsInit;
 })();
-
 
 
 
