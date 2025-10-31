@@ -10,6 +10,43 @@
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
 
+    // Language detection (prefer Moodle, fallback to browser)
+    const rawLang = (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
+    const userLang = (rawLang || 'en').toLowerCase();
+    const userLang2 = userLang.split(/[\-_]/)[0] || 'en';
+
+    function languageName(code){
+      const c = (code||'').toLowerCase();
+      const map = {
+        en:'English', no:'Norwegian', nb:'Norwegian', nn:'Norwegian (Nynorsk)',
+        uk:'Ukrainian', ru:'Russian', pl:'Polish', de:'German', fr:'French', es:'Spanish'
+      };
+      return map[c] || c.toUpperCase();
+    }
+
+    // Prepare translation inputs visibility/labels
+    try {
+      const slotLocal = $("#slot_translation_local");
+      const slotEn = $("#slot_translation_en");
+      const tagLocal = $("#tag_trans_local");
+      if(tagLocal){ tagLocal.textContent = `Translation (${languageName(userLang2)})`; }
+      if(userLang2 === 'en'){
+        if(slotLocal) slotLocal.classList.add('hidden');
+        if(slotEn) slotEn.classList.remove('hidden');
+      } else {
+        if(slotLocal) slotLocal.classList.remove('hidden');
+        if(slotEn) slotEn.classList.remove('hidden');
+      }
+    } catch(_e){}
+
+    function pickTranslationFromPayload(p){
+      const t = p && p.translations ? p.translations : null;
+      if(t && typeof t === 'object'){
+        return t[userLang2] || t[userLang] || t.en || '';
+      }
+      return p && (p.translation || p.back) || '';
+    }
+
     function resolveAsset(u){ if(!u) return null; if(/^https?:|^blob:|^data:/.test(u)) return u; u=(u+'').replace(/^\/+/, ''); return baseurl + u; }
     async function api(action, params={}, method='GET', body){
       const opts = {method, headers:{'Content-Type':'application/json'}};
@@ -40,7 +77,8 @@
           deckCards[deckId].push({
             id: it.cardId,
             text: p.text||p.front||"",
-            translation: p.translation||p.back||"",
+            translation: pickTranslationFromPayload(p),
+            translations: (p.translations && typeof p.translations==='object') ? p.translations : null,
             explanation: p.explanation||"",
             image: p.image||null,
             imageKey: p.imageKey||null,
@@ -400,7 +438,9 @@
 
       $("#uFront").value=c.text||"";
       $("#uExplanation").value=c.explanation||"";
-      $("#uBack").value=c.translation||"";
+      const __tr = c.translations || {};
+      const __tl = $("#uTransLocal"); if(__tl) __tl.value = (userLang2 !== 'en') ? (__tr[userLang2] || c.translation || "") : "";
+      const __te = $("#uTransEn"); if(__te) __te.value = (__tr.en || (userLang2 === 'en' ? (c.translation || "") : ""));
 
       (async()=>{
         $("#imgPrev").classList.add("hidden");
@@ -460,7 +500,8 @@
     function resetForm(){
       $("#uFront").value="";
       $("#uExplanation").value="";
-      $("#uBack").value="";
+      const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
+      const _te=$("#uTransEn"); if(_te) _te.value="";
       $("#uImage").value="";
       $("#uAudio").value="";
       $("#imgPrev").classList.add("hidden");
@@ -511,7 +552,10 @@
     }
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
-      const text=$("#uFront").value.trim(), expl=$("#uExplanation").value.trim(), tr=$("#uBack").value.trim();
+      const text=$("#uFront").value.trim(), expl=$("#uExplanation").value.trim();
+      const trLocalEl=$("#uTransLocal"), trEnEl=$("#uTransEn");
+      const trLocal = trLocalEl ? trLocalEl.value.trim() : "";
+      const trEn = trEnEl ? trEnEl.value.trim() : "";
       if(!text && !expl && !tr && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
         $("#status").textContent="Empty"; setTimeout(()=>$("#status").textContent="",1000); return;
       }
@@ -538,7 +582,11 @@
         }catch(e){ console.error('Audio upload failed:', e); }
       }
 
-      const payload={id,text,explanation:expl,translation:tr,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      const translations={};
+      if(userLang2 !== 'en' && trLocal){ translations[userLang2]=trLocal; }
+      if(trEn){ translations['en']=trEn; }
+      const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
+      const payload={id,text,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
       if(lastImageUrl) payload.image=lastImageUrl; else if(lastImageKey) payload.imageKey=lastImageKey;
       if(lastAudioUrl) payload.audio=lastAudioUrl; else if(lastAudioKey) payload.audioKey=lastAudioKey;
 
@@ -719,7 +767,7 @@
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="\u2716";
+        del.textContent="\u00D7";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;

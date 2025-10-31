@@ -212,7 +212,7 @@
         <div class="actionTop">
           <button id="btnAddNew" class="iconbtn plus" title="Create new card">+</button>
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
-          <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&#10006;</button>
+          <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&times;</button>
         </div>
         <video id="cam" class="hidden" autoplay playsinline muted style="width:100%;border-radius:12px"></video>
         <div class="front" id="front"></div>
@@ -243,7 +243,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&#10006;</button>
+            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&times;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -269,7 +269,7 @@
             <!-- Camera controls positioned near image picker -->
             <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">&#128247;</button>
             <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">&#128248;</button>
-            <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&#10006;</button>
+            <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&times;</button>
           </div>
           <img id="imgPrev" class="media hidden" alt=""/>
         </div>
@@ -282,9 +282,14 @@
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
           <textarea id="uExplanation" placeholder="Explanation..."></textarea>
         </div>
-        <div class="slot">
-          <span class="tag" id="t_backText">{{#str}} back, mod_flashcards {{/str}}</span>
-          <textarea id="uBack" placeholder="Back..."></textarea>
+        <!-- Language-aware translation fields -->
+        <div class="slot" id="slot_translation_local">
+          <span class="tag" id="tag_trans_local">Translation (…)</span>
+          <textarea id="uTransLocal" placeholder="Translation..."></textarea>
+        </div>
+        <div class="slot" id="slot_translation_en">
+          <span class="tag">Translation (English)</span>
+          <textarea id="uTransEn" placeholder="Translation (English)..."></textarea>
         </div>
 
         <div class="slot">
@@ -317,7 +322,7 @@
     <div class="box">
       <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
-        <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&#10006;</button>
+        <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:12px">
         <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="width:340px">
