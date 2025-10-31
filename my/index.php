@@ -21,7 +21,7 @@ if (isguestuser()) {
 $context = context_system::instance();
 $PAGE->set_context($context);
 $PAGE->set_url('/mod/flashcards/my/index.php');
-$PAGE->set_pagelayout('standard');
+$PAGE->set_pagelayout('embedded'); // Minimal chrome for app-like view
 $PAGE->set_title(get_string('myflashcards', 'mod_flashcards'));
 $PAGE->set_heading(get_string('myflashcards', 'mod_flashcards'));
 
@@ -79,9 +79,6 @@ if ($access['status'] === \mod_flashcards\access_manager::STATUS_GRACE) {
         html_writer::link($coursesurl, get_string('browse_courses', 'mod_flashcards'), ['class' => 'btn btn-primary']),
         'mt-3'
     );
-} else {
-    // Active status - show welcome message.
-    echo $OUTPUT->heading(get_string('myflashcards_welcome', 'mod_flashcards'), 3);
 }
 
 // Render app container (if not expired).
