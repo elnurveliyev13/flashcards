@@ -14,7 +14,7 @@
   button:hover{filter:brightness(1.05)}
   button:disabled{opacity:0.5;cursor:not-allowed}
   button:disabled:hover{filter:none}
-  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}`r`n
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}`r`n
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
     .grid.edit-mode{grid-template-columns:1fr}
@@ -158,7 +158,7 @@
   .card-form-toggle:hover{background:#374151;border-color:#4b5563;color:#e5e7eb}
   .card-form-toggle .icon{font-size:24px;margin-bottom:4px}.meta{margin-top:12px}
   @media (max-width:600px){#langSel{display:none}}
-    .iconbtn.cross{font-size: 20px !important;}\r\n  .iconbtn.plus{font-size: 22px !important;}
+    .iconbtn.cross{font-size: 20px !important;}\r\n  .iconbtn.plus{font-size: 24px !important;}
 </style>
 
   <div class="wrap">
@@ -243,7 +243,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="iconbtn ghost" title="Clear form">&#8634;</button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&#10006;</button>
+            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&#10006;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
