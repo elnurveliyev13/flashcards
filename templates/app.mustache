@@ -74,7 +74,8 @@
   .table{width:100%;border-collapse:collapse}
   .table th,.table td{border-bottom:1px solid #253047;padding:8px;text-align:left;font-size:14px}
   .table th{color:#9aa3b1;font-weight:600;position:sticky;top:0;background:#0b1220}`r`n  .table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}`r`n
-  input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
+  input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}
+  #mod_flashcards_container input[type=search]{background:#0b1220 !important;border-color:#374151 !important;color:#e5e7eb !important;}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
   .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
   .btnFile{background:#0b1220;border:1px solid #374151;border-radius:12px;padding:10px 12px}
   .fileName{font-size:12px;color:#9aa3b1;margin-left:6px}
@@ -155,7 +156,8 @@
   .card-form-toggle:hover{background:#374151;border-color:#4b5563;color:#e5e7eb}
   .card-form-toggle .icon{font-size:24px;margin-bottom:4px}.meta{margin-top:12px}
   @media (max-width:600px){#langSel{display:none}}
-  </style>
+    .iconbtn.plus, .iconbtn.cross{font-size: 20px !important;}
+</style>
 
   <div class="wrap">
     <header>
@@ -315,8 +317,8 @@
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
         <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&#10006;</button>
       </div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="flex:1;min-width:200px">
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:2px">
+        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="width:340px">
         <select id="listFilterDue" style="padding:6px">
           <option value="all">All cards</option>
           <option value="due">Due only</option>
