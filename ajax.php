@@ -25,7 +25,12 @@ if ($globalmode) {
 
     // Check permissions based on action
     if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media') {
-        if (!$access['can_create']) {
+        // Allow site administrators and managers regardless of grace period/access
+        $createallowed = !empty($access['can_create']);
+        if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
+            $createallowed = true;
+        }
+        if (!$createallowed) {
             throw new moodle_exception('access_create_blocked', 'mod_flashcards');
         }
     } else if ($action === 'fetch' || $action === 'get_due_cards' || $action === 'get_deck_cards' || $action === 'list_decks') {

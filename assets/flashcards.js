@@ -520,8 +520,8 @@
       const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();
       const genderSlot = document.getElementById('slot_gender');
       const nounFormsSlot = document.getElementById('slot_noun_forms');
-      if(genderSlot) genderSlot.classList.toggle('hidden', pos !== 'noun');
-      if(nounFormsSlot) nounFormsSlot.classList.toggle('hidden', pos !== 'noun');
+      if(genderSlot) genderSlot.classList.toggle('hidden', pos !== 'substantiv');
+      if(nounFormsSlot) nounFormsSlot.classList.toggle('hidden', pos !== 'substantiv');
     }
     const _uPOS = document.getElementById('uPOS');
     if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); }
@@ -634,8 +634,8 @@
       // Enrichment fields
       const trscr=(document.getElementById('uTranscription')?.value||'').trim(); if(trscr) payload.transcription=trscr;
       const posv=(document.getElementById('uPOS')?.value||''); if(posv) payload.pos=posv;
-      const g=(document.getElementById('uGender')?.value||''); if(g && posv==='noun') payload.gender=g;
-      if(posv==='noun'){
+      const g=(document.getElementById('uGender')?.value||''); if(g && posv==='substantiv') payload.gender=g;
+      if(posv==='substantiv'){
         const nf={
           indef_sg:(document.getElementById('uNounIndefSg')?.value||'').trim(),
           def_sg:(document.getElementById('uNounDefSg')?.value||'').trim(),
@@ -1011,7 +1011,7 @@
       const order = ['transcription','pos','gender_or_forms','examples','collocations','antonyms','cognates','sayings'];
       for(const key of order){
         if(key==='gender_or_forms'){
-          if((card.pos||'').toLowerCase()==='noun'){
+          if((card.pos||'').toLowerCase()==='substantiv'){
             const hasGender = !!(card.gender);
             const nf = card.forms && card.forms.noun || {};
             const hasForms = !!(nf.indef_sg||nf.def_sg||nf.indef_pl||nf.def_pl);
@@ -1049,7 +1049,7 @@
       } else if(field==='pos'){
         const sel=document.createElement('select'); sel.id='fpPOS'; sel.innerHTML = `
           <option value="">-</option>
-          <option value="noun">${M?.str?.mod_flashcards?.pos_noun||'Noun'}</option>
+          <option value="substantiv">Substantiv</option>
           <option value="verb">${M?.str?.mod_flashcards?.pos_verb||'Verb'}</option>
           <option value="adj">${M?.str?.mod_flashcards?.pos_adj||'Adjective'}</option>
           <option value="adv">${M?.str?.mod_flashcards?.pos_adv||'Adverb'}</option>
@@ -1107,7 +1107,7 @@
     function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103104"; // Must match version.php
+    const CACHE_VERSION = "2025103105"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);

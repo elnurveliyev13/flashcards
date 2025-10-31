@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025103104; // YYYYMMDDXX. Enrichment fields UI + staged prompts (client-only)
+$plugin->version   = 2025103105; // YYYYMMDDXX. UI alignment, NO POS, admin can create in global
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.6.3-pwa-minimal'; // Minimal SW cache - fix 404 errors on icons
