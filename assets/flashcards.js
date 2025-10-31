@@ -337,6 +337,29 @@
     if(_btnNormalBottom && !_btnNormalBottom.dataset.bound){ _btnNormalBottom.dataset.bound = '1'; _btnNormalBottom.addEventListener('click', e=>{ e.preventDefault(); rateNormal(); }); }
     if(_btnHardBottom && !_btnHardBottom.dataset.bound){ _btnHardBottom.dataset.bound = '1'; _btnHardBottom.addEventListener('click', e=>{ e.preventDefault(); rateHard(); }); }
 
+    // Keep bottom action bar aligned to content width (avoids overflow on Android themes)
+    function syncBottomBarWidth(){
+      const bar = $("#bottomActions");
+      const wrap = root.querySelector('.wrap');
+      if(!bar || !wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      // Align to the visible content area
+      bar.style.width = rect.width + 'px';
+      bar.style.left = rect.left + 'px';
+      bar.style.right = 'auto';
+      bar.style.transform = 'none';
+    }
+    // Initial and reactive alignment
+    try{
+      syncBottomBarWidth();
+      window.addEventListener('resize', syncBottomBarWidth, {passive:true});
+      window.addEventListener('orientationchange', syncBottomBarWidth);
+      window.addEventListener('scroll', syncBottomBarWidth, {passive:true});
+      // Re-align after fonts/UI settle
+      setTimeout(syncBottomBarWidth, 200);
+      setTimeout(syncBottomBarWidth, 600);
+    }catch(_e){}
+
     var _btnReset=$("#btnReset"); if(_btnReset){ _btnReset.addEventListener("click",()=>{ if(confirm("Reset?")){ state={active:{},decks:{},hidden:{}}; saveState(); buildQueue(); updateBadge(); } }); }
     var _btnExport=$("#btnExport"); if(_btnExport){ _btnExport.addEventListener("click",()=>{ const blob=new Blob([JSON.stringify({state,registry},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="srs_export.json"; a.click(); }); }
     var _btnImport=$("#btnImport"); var _fileImport=$("#fileImport"); if(_btnImport && _fileImport){ _btnImport.addEventListener("click",()=>_fileImport.click()); _fileImport.addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const d=JSON.parse(await f.text()); if(d.state)state=d.state; if(d.registry)registry=d.registry; saveState(); saveRegistry(); refreshSelect(); updateBadge(); buildQueue(); $("#status").textContent="OK"; setTimeout(()=>$("#status").textContent="",1200); }catch{ $("#status").textContent="Bad deck"; setTimeout(()=>$("#status").textContent="",1500); }}); }
@@ -897,6 +920,5 @@
   }
   window.flashcardsInit = flashcardsInit;
 })();
-
 
 
