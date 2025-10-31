@@ -75,6 +75,13 @@
   #mod_flashcards_container .slot .row{width:100%}
   #mod_flashcards_container .slot .row textarea{flex:1 1 auto; min-width:220px}
   #mod_flashcards_container .slot .row input[type=text]{flex:1 1 auto; min-width:220px}
+  /* Add a small visual left indent for inputs/selects placed in flexible rows */
+  #mod_flashcards_container .slot .row > input[type=text],
+  #mod_flashcards_container .slot .row > textarea,
+  #mod_flashcards_container .slot .row > select{ margin-left:8px }
+  /* Bright text inside modal prompt editors */
+  #mod_flashcards_container .modal .box input[type=text],
+  #mod_flashcards_container .modal .box textarea{ color:#f1f5f9 !important; background:#0b1220; border:1px solid #374151; }
   .empty{padding:28px;border:1px dashed #374151;border-radius:14px;text-align:center;color:#9aa3b1}
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
   .modal>.box{max-width:960px;width:100%;max-height:85vh;overflow:auto;background:#0b1220;border:1px solid #374151;border-radius:16px;padding:16px}
@@ -327,6 +334,7 @@
             </select>
             <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
+          <div id="uPOSHelp" class="small"></div>
         </div>
 
         <div class="slot hidden" id="slot_gender">

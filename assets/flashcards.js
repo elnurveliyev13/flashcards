@@ -49,6 +49,39 @@
       }
     } catch(_e){}
 
+    // POS helper: compact option labels + info text
+    const POS_INFO = {
+      substantiv: 'Substantiv – navn på steder, personer, ting og fenomener',
+      adjektiv: 'Adjektiv – beskriver substantiv',
+      pronomen: 'Pronomen – settes i stedet for et substantiv',
+      determinativ: 'Determinativ – bestemmer substantivet nærmere',
+      verb: 'Verb – navn på en handling',
+      adverb: 'Adverb – beskriver/modifiserer verb, adjektiv eller andre adverb',
+      preposisjon: 'Preposisjon – plassering i tid/rom i forhold til annet ord',
+      konjunksjon: 'Konjunksjon – binder sammen like ordledd eller helsetninger',
+      subjunksjon: 'Subjunksjon – innleder leddsetninger',
+      interjeksjon: 'Interjeksjon – lydmalende ord, følelser eller meninger'
+    };
+    function compactPOSOptions(){
+      const sel = document.getElementById('uPOS');
+      if(!sel) return;
+      Array.from(sel.options).forEach(o=>{
+        const v=(o.value||'').toLowerCase();
+        if(!v) return;
+        const map={substantiv:'Substantiv',adjektiv:'Adjektiv',pronomen:'Pronomen',determinativ:'Determinativ',verb:'Verb',adverb:'Adverb',preposisjon:'Preposisjon',konjunksjon:'Konjunksjon',subjunksjon:'Subjunksjon',interjeksjon:'Interjeksjon',other:'Annet'};
+        if(map[v]) o.textContent = map[v];
+      });
+    }
+    function updatePOSHelp(){
+      const sel = document.getElementById('uPOS');
+      const help = document.getElementById('uPOSHelp');
+      if(!sel || !help) return;
+      const v = (sel.value||'').toLowerCase();
+      help.textContent = POS_INFO[v] || '';
+      help.style.display = help.textContent ? 'block' : 'none';
+    }
+    compactPOSOptions();
+
     function pickTranslationFromPayload(p){
       const t = p && p.translations ? p.translations : null;
       if(t && typeof t === 'object'){
@@ -524,7 +557,7 @@
       if(nounFormsSlot) nounFormsSlot.classList.toggle('hidden', pos !== 'substantiv');
     }
     const _uPOS = document.getElementById('uPOS');
-    if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); }
+    if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); updatePOSHelp(); }
     function autofillSoon(){ const s=document.getElementById('status'); if(s){ s.textContent=(M?.str?.mod_flashcards?.autofill_soon)||'Auto-fill will be available soon'; setTimeout(()=>{s.textContent='';},1200);} }
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
@@ -1037,8 +1070,8 @@
       if(!fp||!body||!title) return;
       body.innerHTML = '';
       let editor = null;
-      function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#e5e7eb'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
-      function textareaEl(){ const t=document.createElement('textarea'); t.style.width='100%'; t.style.minHeight='80px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#e5e7eb'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
+      function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#f1f5f9'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
+      function textareaEl(){ const t=document.createElement('textarea'); t.style.width='100%'; t.style.minHeight='80px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
       const labelMap = {
         transcription: 'Transcription', pos: 'Part of speech', gender:'Gender', nounForms:'Noun forms',
         examples:'Example sentences', collocations:'Common collocations', antonyms:'Antonyms', cognates:'Cognates', sayings:'Common sayings'
@@ -1107,7 +1140,7 @@
     function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103105"; // Must match version.php
+    const CACHE_VERSION = "2025103106"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
