@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
@@ -51,9 +51,9 @@ $string['title_camera'] = 'Camera';
 $string['title_take'] = 'Take photo';
 $string['title_closecam'] = 'Close camera';
 $string['title_play'] = 'Play';
-$string['title_slow'] = 'Play 0.67×';
+$string['title_slow'] = 'Play 0.67Г—';
 $string['title_edit'] = 'Edit';
-$string['title_del'] = 'Delete/Hide';
+$string['title_del'] = 'Delete';
 $string['title_record'] = 'Record';
 $string['title_stop'] = 'Stop';
 
@@ -75,8 +75,8 @@ $string['access_expired_message'] = 'You no longer have access to flashcards. Pl
 $string['access_grace_message'] = 'You can review your cards for {$a} more days. Enrol in a course to create new cards.';
 $string['access_create_blocked'] = 'You cannot create new cards without an active course enrolment.';
 $string['grace_period_restrictions'] = 'During grace period:';
-$string['grace_can_review'] = '✓ You CAN review existing cards';
-$string['grace_cannot_create'] = '✗ You CANNOT create new cards';
+$string['grace_can_review'] = 'вњ“ You CAN review existing cards';
+$string['grace_cannot_create'] = 'вњ— You CANNOT create new cards';
 
 // Notifications
 $string['messageprovider:grace_period_started'] = 'Flashcards grace period started';
