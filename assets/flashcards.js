@@ -11,7 +11,17 @@
     const isGlobalMode = globalMode === true || cmid === 0;
 
     // Language detection (prefer Moodle, fallback to browser)
-    const rawLang = (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
+    // Prefer Moodle page lang and URL param over browser
+    function pageLang(){
+      try{
+        const qp = new URLSearchParams(window.location.search).get('lang');
+        if(qp) return qp;
+        const html = document.documentElement && document.documentElement.lang;
+        if(html) return html;
+      }catch(_e){}
+      return null;
+    }
+    const rawLang = pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
     const userLang = (rawLang || 'en').toLowerCase();
     const userLang2 = userLang.split(/[\-_]/)[0] || 'en';
 
@@ -730,7 +740,9 @@
       // Render paginated rows
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
+        const langs = Object.keys(r.card?.translations||{});
+        const langsHtml = langs.length ? ` <span class="badge" style="background:#334155;color:#e5e7eb;border-radius:10px;padding:2px 6px;margin-left:6px;">${langs.join(', ')}</span>` : '';
+        tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}${langsHtml}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
         const url = await audioURLFromCard(r.card);
         if(url){
@@ -940,7 +952,7 @@
     if(btnUpdate) btnUpdate.disabled = true;
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103002"; // Must match version.php
+    const CACHE_VERSION = "2025103103"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);

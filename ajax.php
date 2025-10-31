@@ -370,16 +370,32 @@ function get_deck_cards($userid, $deckid, $offset = 0, $limit = 100, $globalmode
     $sql = "SELECT * FROM {flashcards_cards} WHERE deckid = :deckid ORDER BY id ASC";
     $recs = $DB->get_records_sql($sql, ['deckid' => $deckid], $offset, $limit);
 
+    // Preload translations
+    $ids = array_map(function($r){return $r->cardid;}, $recs);
+    $transmap = [];
+    if (!empty($ids)) {
+        list($insql, $inparams) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'c');
+        $rows = $DB->get_records_select('flashcards_card_trans', 'deckid = :deckid AND cardid ' . $insql, ['deckid' => $deckid] + $inparams);
+        foreach ($rows as $row) {
+            $transmap[$row->cardid][strtolower($row->lang)] = $row->text;
+        }
+    }
+
     $out = [];
     foreach ($recs as $r) {
         // In global mode, show shared cards + user's own private cards
         if ($r->scope === 'private' && (int)$r->ownerid !== (int)$userid) { continue; }
+        $payload = json_decode($r->payload, true);
+        if (!is_array($payload)) { $payload = []; }
+        if (!empty($transmap[$r->cardid])) {
+            $payload['translations'] = $transmap[$r->cardid];
+        }
         $out[] = [
             'deckId' => (int)$r->deckid,
             'cardId' => $r->cardid,
             'scope' => $r->scope,
             'ownerid' => is_null($r->ownerid) ? null : (int)$r->ownerid,
-            'payload' => json_decode($r->payload, true),
+            'payload' => $payload,
             'timemodified' => (int)$r->timemodified,
         ];
     }
@@ -447,14 +463,32 @@ function get_due_cards_optimized($userid, $flashcardsid = null, $limit = 1000, $
 
     $recs = $DB->get_records_sql($sql, $params, 0, $limit);
 
+    // Preload translations for all fetched cards
+    $transmap = [];
+    if (!empty($recs)) {
+        $bydeck = [];
+        foreach ($recs as $r) { $bydeck[(int)$r->deckid][] = $r->cardid; }
+        foreach ($bydeck as $dk => $ids) {
+            list($insql, $inparams) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'c');
+            $rows = $DB->get_records_select('flashcards_card_trans', 'deckid = :deckid AND cardid ' . $insql, ['deckid' => $dk] + $inparams);
+            foreach ($rows as $row) {
+                $transmap[$dk.'::'.$row->cardid][strtolower($row->lang)] = $row->text;
+            }
+        }
+    }
+
     $out = [];
     foreach ($recs as $r) {
+        $payload = json_decode($r->payload, true);
+        if (!is_array($payload)) { $payload = []; }
+        $key = ((int)$r->deckid).'::'.$r->cardid;
+        if (!empty($transmap[$key])) { $payload['translations'] = $transmap[$key]; }
         $out[] = [
             'deckId' => (int)$r->deckid,
             'cardId' => $r->cardid,
             'scope' => $r->scope,
             'ownerid' => is_null($r->ownerid) ? null : (int)$r->ownerid,
-            'payload' => json_decode($r->payload, true),
+            'payload' => $payload,
             'timemodified' => (int)$r->timemodified,
             'progress' => [
                 'step' => (int)$r->step,
@@ -479,7 +513,18 @@ function upsert_card($userid, array $payload, $globalmode = false, $context = nu
     $deckid = (int)($payload['deckId'] ?? 0);
     $cardid = normalize_card_id($payload['cardId'] ?? '');
     $scope = clean_param($payload['scope'] ?? 'private', PARAM_ALPHA);
-    $pjson = json_encode($payload['payload'] ?? new stdClass(), JSON_UNESCAPED_UNICODE);
+    // Extract payload and translations
+    $pp = $payload['payload'] ?? [];
+    if (!is_array($pp)) { $pp = []; }
+    $translations = [];
+    if (isset($pp['translations']) && is_array($pp['translations'])) {
+        foreach ($pp['translations'] as $lng => $txt) {
+            $lng = strtolower(substr((string)$lng, 0, 10));
+            $txt = trim((string)$txt);
+            if ($lng && $txt !== '') { $translations[$lng] = $txt; }
+        }
+    }
+    $pjson = json_encode($pp, JSON_UNESCAPED_UNICODE);
     if ($cardid === '') { throw new invalid_parameter_exception('Missing cardId'); }
 
     // If deck is not provided, create/find a personal deck for this user.
@@ -534,6 +579,20 @@ function upsert_card($userid, array $payload, $globalmode = false, $context = nu
     if ($existing) { $rec->id = $existing->id; $DB->update_record('flashcards_cards', $rec); }
     else { $DB->insert_record('flashcards_cards', $rec); }
 
+    // Upsert translations rows
+    foreach ($translations as $lng => $txt) {
+        $exist = $DB->get_record('flashcards_card_trans', ['deckid'=>$deckid,'cardid'=>$cardid,'lang'=>$lng]);
+        $row = (object)[
+            'deckid' => $deckid,
+            'cardid' => $cardid,
+            'lang' => $lng,
+            'text' => $txt,
+            'timemodified' => time(),
+        ];
+        if ($exist) { $row->id = $exist->id; $DB->update_record('flashcards_card_trans', $row); }
+        else { $DB->insert_record('flashcards_card_trans', $row); }
+    }
+
     // Ensure initial progress for the owner so the card appears in due list.
     // Stage 0: newly created card with due=now (appears immediately)
     // PROGRESS SYNC FIX: Check by userid+cardid only (new unique constraint)
@@ -582,6 +641,7 @@ function delete_card($userid, $deckid, $cardid, $globalmode = false, $context = 
         // Delete ALL progress records for this card (not just current user)
         // Rationale: Card no longer exists, so all progress references are orphaned
         $DB->delete_records('flashcards_progress', ['deckid' => $deckid, 'cardid' => $cardid]);
+        $DB->delete_records('flashcards_card_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
     } else {
         // User "deleting" a SHARED card → just hide it for this user
         // Card remains in database, but marked as hidden in progress

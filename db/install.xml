@@ -117,5 +117,23 @@
         <INDEX NAME="owner_idx" UNIQUE="false" FIELDS="ownerid"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="flashcards_card_trans" COMMENT="Per-language translations for cards">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="deckid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="cardid" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="lang" TYPE="char" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="text" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="deck_card_lang_uix" UNIQUE="true" FIELDS="deckid, cardid, lang"/>
+        <INDEX NAME="deck_idx" UNIQUE="false" FIELDS="deckid"/>
+        <INDEX NAME="lang_idx" UNIQUE="false" FIELDS="lang"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

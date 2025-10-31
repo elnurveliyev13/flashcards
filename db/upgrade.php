@@ -198,6 +198,73 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025102700, 'flashcards');
     }
 
+    // Add per-language translations table and migrate existing data.
+    if ($oldversion < 2025103103) {
+        $table = new xmldb_table('flashcards_card_trans');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('deckid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('cardid', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('lang', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('text', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('deck_card_lang_uix', XMLDB_INDEX_UNIQUE, ['deckid', 'cardid', 'lang']);
+        $table->add_index('deck_idx', XMLDB_INDEX_NOTUNIQUE, ['deckid']);
+        $table->add_index('lang_idx', XMLDB_INDEX_NOTUNIQUE, ['lang']);
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Best-effort migration: read translations from payload JSON, if present.
+        $lastid = 0;
+        $batchsize = 500;
+        do {
+            $records = $DB->get_records_select('flashcards_cards', 'id > :lastid', ['lastid' => $lastid], 'id ASC', 'id, deckid, cardid, payload', $lastid, $batchsize);
+            if (!$records) { break; }
+            foreach ($records as $rec) {
+                $lastid = (int)$rec->id;
+                $p = json_decode($rec->payload ?? '{}');
+                if (!$p) { continue; }
+                // 1) New-format object p->translations
+                if (isset($p->translations) && is_object($p->translations)) {
+                    foreach ($p->translations as $lang => $text) {
+                        $lang = strtolower(substr((string)$lang, 0, 10));
+                        $text = (string)$text;
+                        if ($lang && $text !== '') {
+                            // Upsert by unique index
+                            $existing = $DB->get_record('flashcards_card_trans', ['deckid'=>$rec->deckid,'cardid'=>$rec->cardid,'lang'=>$lang]);
+                            $row = (object)[
+                                'deckid' => (int)$rec->deckid,
+                                'cardid' => (string)$rec->cardid,
+                                'lang' => $lang,
+                                'text' => $text,
+                                'timemodified' => time(),
+                            ];
+                            if ($existing) { $row->id = $existing->id; $DB->update_record('flashcards_card_trans', $row); }
+                            else { $DB->insert_record('flashcards_card_trans', $row); }
+                        }
+                    }
+                } else if (!empty($p->translation)) {
+                    // 2) Legacy single translation => put into English by default
+                    $lang = 'en';
+                    $text = (string)$p->translation;
+                    $existing = $DB->get_record('flashcards_card_trans', ['deckid'=>$rec->deckid,'cardid'=>$rec->cardid,'lang'=>$lang]);
+                    $row = (object)[
+                        'deckid' => (int)$rec->deckid,
+                        'cardid' => (string)$rec->cardid,
+                        'lang' => $lang,
+                        'text' => $text,
+                        'timemodified' => time(),
+                    ];
+                    if ($existing) { $row->id = $existing->id; $DB->update_record('flashcards_card_trans', $row); }
+                    else { $DB->insert_record('flashcards_card_trans', $row); }
+                }
+            }
+        } while (count($records) === $batchsize);
+
+        upgrade_mod_savepoint(true, 2025103103, 'flashcards');
+    }
+
     // Fix for version 2025102700: Handle cases where upgrade was interrupted.
     // This step ensures all fields are properly set even if previous upgrade failed partway.
     if ($oldversion < 2025102701) {

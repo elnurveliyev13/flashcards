@@ -41,7 +41,7 @@ error_log('[FLASHCARDS DEBUG] Access info for user ' . $USER->id . ': ' . print_
 
 // Prepare JS before header.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025103102; // Global access version.
+$ver = 2025103103; // Global access version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
 
 // Force client profile to Moodle user id for automatic sync.
