@@ -480,6 +480,8 @@
       if(btnUpdate) btnUpdate.disabled = true;
     }
     $("#btnFormReset").addEventListener("click", resetForm);
+    const btnCancel = $("#btnCancelEdit");
+    if(btnCancel && !btnCancel.dataset.bound){ btnCancel.dataset.bound = "1"; btnCancel.addEventListener("click", e=>{ e.preventDefault(); closeEditor(); }); }
 
     // Fallback toggle for the collapsible card creation form (when UX script isn't active)
     const _btnToggleForm = $("#btnToggleForm");
@@ -947,5 +949,3 @@
   }
   window.flashcardsInit = flashcardsInit;
 })();
-
-

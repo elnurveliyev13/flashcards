@@ -16,7 +16,16 @@
   button:disabled:hover{filter:none}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}`r`n  /* Edit mode: hide study card, show full editor */`r`n  .grid.edit-mode > .card:first-child { display:none }`r`n  .grid.edit-mode > #cardCreationFormWrap { display:block }`r`n  .grid.edit-mode > #cardCreationFormWrap .card-form-toggle { display:none }`r`n  .grid.edit-mode > #cardCreationFormWrap .card-form-content { display:block !important }`r`n  /* Always hide fixed bottom bar when embedding rating buttons in card */`r`n  #bottomActions{ display:none !important }
+  .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    .grid.edit-mode{grid-template-columns:1fr}
+  /* Swap study/editor views */
+  .grid > #cardCreationFormWrap { display:none }
+  .grid.edit-mode > .card:first-child { display:none }
+  .grid.edit-mode > #cardCreationFormWrap { display:block }
+  .grid.edit-mode > #cardCreationFormWrap .card-form-toggle { display:none }
+  .grid.edit-mode > #cardCreationFormWrap .card-form-content { display:block !important }
+  /* Always hide fixed bottom bar when embedding rating buttons in card */
+  #bottomActions{ display:none !important }
   @media (max-width:900px){.grid{grid-template-columns:1fr}}
   .card{position:relative;background:var(--card);border:1px solid #374151;border-radius:16px;padding:16px}
   .actionTop{position:absolute;top:8px;right:8px;display:flex;gap:6px}
@@ -198,7 +207,8 @@
 
     <div class="grid">
       <div class="card">
-        <div class="actionTop">`r`n          <button id="btnAddNew" class="iconbtn" title="+">+</button>
+        <div class="actionTop">
+          <button id="btnAddNew" class="iconbtn" title="+">+</button>
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">✎</button>
           <button id="btnDel" class="iconbtn hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">✖</button>
         </div>
@@ -226,12 +236,12 @@
       <!-- Card creation form (collapsible) -->
       <div class="card card-form-collapsed" id="cardCreationFormWrap">
         <div class="card-form-toggle" id="btnToggleForm">
-          <div class="icon">➕</div>
+          
           <div>Add New Card</div>
         </div>
         <div class="card-form-content" id="cardCreationForm">
-          <div class="actionTop">`r`n          <button id="btnAddNew" class="iconbtn" title="+">+</button>
-            <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button>
+          <div class="actionTop">
+            <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button><button id="btnCancelEdit" class="iconbtn" title="Cancel">×</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -340,9 +350,4 @@
   </div>
 
   <!-- Fixed bottom action bar -->
-  <div class="bottom-actions" id="bottomActions">
-    <button id="btnEasyBottom" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
-    <button id="btnNormalBottom" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
-    <button id="btnHardBottom" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
-  </div>
 </div>
