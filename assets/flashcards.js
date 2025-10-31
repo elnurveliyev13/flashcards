@@ -1,4 +1,4 @@
-/* global M */
+﻿/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -158,7 +158,7 @@
 
       // Stage 11+: completed (green checkmark)
       if(step > 10){
-        if(stageEmoji) stageEmoji.textContent = "✓";
+        if(stageEmoji) stageEmoji.textContent = "вњ“";
         if(stageText) stageText.textContent = "";
         stageBadge.style.background = "linear-gradient(90deg, #4caf50 100%, #e0e0e0 0%)";
         stageBadge.style.color = "#fff";
@@ -204,7 +204,7 @@
       const _btnUpdate = $("#btnUpdate");
       if(_btnUpdate) _btnUpdate.disabled = true;
     }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
-    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">🔊 Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
+    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">рџ”Љ Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -455,7 +455,7 @@
     $("#btnStop").addEventListener("click",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
 
     let orderChosen=[];
-    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(" → "); $("#orderPreview").textContent=pretty; }
+    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(" в†’ "); $("#orderPreview").textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
@@ -480,10 +480,25 @@
       if(btnUpdate) btnUpdate.disabled = true;
     }
     $("#btnFormReset").addEventListener("click", resetForm);
-    const btnCancel = $("#btnCancelEdit");
-    if(btnCancel && !btnCancel.dataset.bound){ btnCancel.dataset.bound = "1"; btnCancel.addEventListener("click", e=>{ e.preventDefault(); closeEditor(); }); }
-
-    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
+        const btnCancel = $("#btnCancelEdit");
+    if(btnCancel && !btnCancel.dataset.bound){
+      btnCancel.dataset.bound = "1";
+      btnCancel.addEventListener("click", e=>{ e.preventDefault(); closeEditor(); });
+    }
+    // Bind global "+" (Create new card) button at init
+    (function(){
+      const addBtn = $("#btnAddNew");
+      if(addBtn && !addBtn.dataset.bound){
+        addBtn.dataset.bound = "1";
+        addBtn.addEventListener("click", e => {
+          e.preventDefault();
+          editingCardId = null;
+          resetForm();
+          const _up=$("#btnUpdate"); if(_up) _up.disabled=true;
+          openEditor();
+        });
+      }
+    })();`r`n    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
     const _btnToggleForm = $("#btnToggleForm");
     const _cardCreationFormWrap = $("#cardCreationFormWrap");
     if(_btnToggleForm && _cardCreationFormWrap && !_btnToggleForm.dataset.bound){
@@ -601,7 +616,7 @@
       if(step < 0) step = 0;
       if(step > 10){
         // Completed: green checkmark
-        return '<span class="badge" style="background:#4caf50;color:#fff;padding:4px 8px;border-radius:12px;">✓</span>';
+        return '<span class="badge" style="background:#4caf50;color:#fff;padding:4px 8px;border-radius:12px;">вњ“</span>';
       }
       // Stage 0-10: number with fill
       const fillPercent = step === 0 ? 0 : (step / 10) * 100;
@@ -672,20 +687,20 @@
         if(url){
           const b1=document.createElement("button");
           b1.className="iconbtn";
-          b1.textContent="🔊";
+          b1.textContent="рџ”Љ";
           b1.title="Play";
           b1.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=1; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
           const b2=document.createElement("button");
           b2.className="iconbtn";
-          b2.textContent="🐢";
-          b2.title="Play 0.67×";
+          b2.textContent="рџђў";
+          b2.title="Play 0.67Г—";
           b2.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=0.67; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
           cell.appendChild(b1);
           cell.appendChild(b2);
         }
         const edit=document.createElement("button");
         edit.className="iconbtn";
-        edit.textContent="✎";
+        edit.textContent="вњЋ";
         edit.title="Edit";
         edit.onclick=()=>{
           const pack=registry[r.deckId];
@@ -703,7 +718,7 @@
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="✖";
+        del.textContent="вњ–";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;
@@ -801,9 +816,9 @@
       // Show install button
       if(btnInstallApp) {
         btnInstallApp.classList.remove('hidden');
-        console.log('[PWA] ✅ Install prompt available - button shown');
+        console.log('[PWA] вњ… Install prompt available - button shown');
       } else {
-        console.error('[PWA] ❌ Button not found in DOM!');
+        console.error('[PWA] вќЊ Button not found in DOM!');
       }
     });
 
@@ -851,7 +866,7 @@
     if(iosInstallHint && isIOS && !isInStandaloneMode && !isHintDismissed) {
       // Show iOS install hint for iOS users who haven't installed the app yet
       iosInstallHint.classList.remove('hidden');
-      console.log('[PWA] ✅ iOS install hint shown');
+      console.log('[PWA] вњ… iOS install hint shown');
     } else if(iosInstallHint) {
       console.log('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
     }
@@ -879,7 +894,7 @@
     const CACHE_VERSION = "2025103002"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
-      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} → ${CACHE_VERSION}. Clearing cache...`);
+      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} в†’ ${CACHE_VERSION}. Clearing cache...`);
       // Clear all flashcards-related localStorage keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -945,7 +960,7 @@
 
       console.log('[Flashcards] Active decks:', Object.keys(state.active || {}).filter(id => state.active[id]));
     })();
-    (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' → '); })();
+    (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' в†’ '); })();
   }
   window.flashcardsInit = flashcardsInit;
 })();
