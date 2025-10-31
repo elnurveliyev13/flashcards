@@ -818,24 +818,9 @@
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
         const langs = Object.keys(r.card?.translations||{});
-        const langsHtml = langs.length ? ` <span class="badge" style="background:#334155;color:#e5e7eb;border-radius:10px;padding:2px 6px;margin-left:6px;">${langs.join(', ')}</span>` : '';
-        tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}${langsHtml}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
+        tr.innerHTML=`<td>${r.front||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
-        const url = await audioURLFromCard(r.card);
-        if(url){
-          const b1=document.createElement("button");
-          b1.className="iconbtn";
-          b1.textContent="\uD83D\uDD0A";
-          b1.title="Play";
-          b1.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=1; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
-          const b2=document.createElement("button");
-          b2.className="iconbtn";
-          b2.textContent="\uD83D\uDC22";
-          b2.title="Play 0.67x";
-          b2.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=0.67; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
-          cell.appendChild(b1);
-          cell.appendChild(b2);
-        }
+        // Audio buttons removed per new UX
         const edit=document.createElement("button");
         edit.className="iconbtn";
         edit.textContent="\u270E";

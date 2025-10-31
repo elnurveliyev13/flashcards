@@ -133,3 +133,6 @@ $string['browse_courses'] = 'Browse available courses';
 
 // Scheduled tasks
 $string['task_check_user_access'] = 'Check flashcards user access and grace periods';
+
+// Overrides
+$string['title_slow'] = 'Play slowly';

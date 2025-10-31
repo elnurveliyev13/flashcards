@@ -181,7 +181,7 @@
   @media (max-width:600px){#langSel{display:none}}
     .iconbtn.cross{font-size: 20px !important;}\r\n  .iconbtn.plus{font-size: 24px !important;}
   /* Fullscreen (native or fallback) */
-  #mod_flashcards_container.fs-active{position:fixed;inset:0;z-index:1000;background:var(--bg);width:100vw;height:100svh;overflow:auto}
+  #mod_flashcards_container.fs-active{position:fixed;inset:0;z-index:99999;background:var(--bg);width:100vw;height:100svh;overflow:auto}
   #mod_flashcards_container.fs-active .wrap{max-width:none;width:100%;min-height:100%;padding-left:12px;padding-right:12px}
   /* On iOS account for safe areas */
   @supports(padding:max(env(safe-area-inset-bottom),0px)){
@@ -208,7 +208,7 @@
         <button id="btnInstallApp" class="hidden install-btn" title="{{#str}} install_app, mod_flashcards {{/str}}">
            {{#str}} install_app, mod_flashcards {{/str}}
         </button>
-        <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
+        <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">📜</button>
         <button id="btnFullscreen" class="iconbtn" title="Fullscreen" aria-label="Fullscreen">⤢</button>
       </div>
     </header>
@@ -459,11 +459,9 @@
           <thead>
             <tr>
               <th id="thFront">{{#str}} list_front, mod_flashcards {{/str}}</th>
-              <th id="thDeck">{{#str}} list_deck, mod_flashcards {{/str}}</th>
               <th id="thStage">{{#str}} list_stage, mod_flashcards {{/str}}</th>
-              <th id="thAdded">{{#str}} list_added, mod_flashcards {{/str}}</th>
               <th id="thDue">{{#str}} list_due, mod_flashcards {{/str}}</th>
-              <th id="thPlay">{{#str}} list_play, mod_flashcards {{/str}}</th>
+              <th id="thActions">Actions</th>
             </tr>
           </thead>
           <tbody></tbody>

@@ -178,10 +178,9 @@
           if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} }
           disablePseudo();
         } else {
-          if(root.requestFullscreen){
-            root.requestFullscreen().catch(()=> enablePseudo());
-          } else {
-            enablePseudo();
+          // Always enable pseudo first for instant effect, then try native fullscreen
+          enablePseudo();
+          if(root.requestFullscreen){ try{ root.requestFullscreen(); }catch(_e){}
           }
         }
       });
