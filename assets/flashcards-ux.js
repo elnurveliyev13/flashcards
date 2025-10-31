@@ -151,6 +151,47 @@
     }
 
     console.log('[Flashcards UX] All improvements initialized!');
+
+    // 5. Fullscreen toggle (native + fallback)
+    const btnFullscreen = $("#btnFullscreen");
+    if(btnFullscreen){
+      const updateIcon = () => {
+        const active = !!document.fullscreenElement || root.classList.contains('fs-active');
+        btnFullscreen.textContent = active ? '⤡' : '⤢';
+        btnFullscreen.title = active ? 'Exit full screen' : 'Fullscreen';
+        btnFullscreen.setAttribute('aria-label', btnFullscreen.title);
+      };
+      const enablePseudo = () => {
+        root.classList.add('fs-active');
+        try { document.documentElement.style.overflow = 'hidden'; } catch(e){}
+        updateIcon();
+      };
+      const disablePseudo = () => {
+        root.classList.remove('fs-active');
+        try { document.documentElement.style.overflow = ''; } catch(e){}
+        updateIcon();
+      };
+      btnFullscreen.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation();
+        const isActive = !!document.fullscreenElement || root.classList.contains('fs-active');
+        if(isActive){
+          if(document.fullscreenElement){ try{ document.exitFullscreen(); }catch(e){} }
+          disablePseudo();
+        } else {
+          if(root.requestFullscreen){
+            root.requestFullscreen().catch(()=> enablePseudo());
+          } else {
+            enablePseudo();
+          }
+        }
+      });
+      document.addEventListener('fullscreenchange', function(){
+        if(document.fullscreenElement === root){ root.classList.add('fs-active'); }
+        if(!document.fullscreenElement){ disablePseudo(); }
+        updateIcon();
+      });
+      updateIcon();
+    }
   }
 
   // Start waiting for app

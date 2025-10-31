@@ -2,9 +2,13 @@
   <style>
   :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
+  /* Fill viewport background for this module */
+  #mod_flashcards_container{background:var(--bg)}
   @media (max-width:620px){
-    /* On small screens occupy full container width and reduce side paddings */
-    .wrap{max-width:none;width:100%;padding-left:12px;padding-right:12px}
+    /* On small screens, remove side paddings and stretch to full width */
+    .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
+    /* Break out of Moodle content padding to avoid white gutters */
+    #mod_flashcards_container{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
   }
   header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
   h1{margin:0;font-size:20px}
@@ -176,6 +180,13 @@
   .card-form-toggle .icon{font-size:24px;margin-bottom:4px}.meta{margin-top:12px}
   @media (max-width:600px){#langSel{display:none}}
     .iconbtn.cross{font-size: 20px !important;}\r\n  .iconbtn.plus{font-size: 24px !important;}
+  /* Fullscreen (native or fallback) */
+  #mod_flashcards_container.fs-active{position:fixed;inset:0;z-index:1000;background:var(--bg);width:100vw;height:100svh;overflow:auto}
+  #mod_flashcards_container.fs-active .wrap{max-width:none;width:100%;min-height:100%;padding-left:12px;padding-right:12px}
+  /* On iOS account for safe areas */
+  @supports(padding:max(env(safe-area-inset-bottom),0px)){
+    #mod_flashcards_container.fs-active{padding-bottom:max(env(safe-area-inset-bottom),0px)}
+  }
 </style>
 
   <div class="wrap">
@@ -198,6 +209,7 @@
            {{#str}} install_app, mod_flashcards {{/str}}
         </button>
         <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
+        <button id="btnFullscreen" class="iconbtn" title="Fullscreen" aria-label="Fullscreen">⤢</button>
       </div>
     </header>
 

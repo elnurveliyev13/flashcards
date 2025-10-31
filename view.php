@@ -13,6 +13,7 @@ require_login($course, true, $cm);
 require_capability('mod/flashcards:view', $context);
 
 $PAGE->set_url('/mod/flashcards/view.php', ['id' => $id]);
+$PAGE->set_pagelayout('embedded'); // Minimal chrome for full-width/mobile UX
 $PAGE->set_title(format_string($cm->name));
 $PAGE->set_heading(format_string($course->fullname));
 
@@ -35,7 +36,6 @@ $PAGE->requires->js_init_code($init);
 
 // Output page (native, no AMD). Render mustache template and attach plain JS.
 echo $OUTPUT->header();
-echo $OUTPUT->heading(format_string($cm->name), 2);
 // If instance record is missing (e.g., previous save was interrupted), show a friendly message
 // instead of a fatal error.
 if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
