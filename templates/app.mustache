@@ -76,8 +76,11 @@
   #mod_flashcards_container .slot .row textarea{flex:1 1 auto; min-width:220px}
   #mod_flashcards_container .slot .row input[type=text]{flex:1 1 auto; min-width:220px}
   /* Reserve space for inline action icon so borders align with full-width fields */
-  #mod_flashcards_container .slot .row.has-action{ position:relative; padding-right:44px }
-  #mod_flashcards_container .slot .row.has-action > .iconbtn{ position:absolute; right:8px; top:50%; transform:translateY(-50%); }
+  #mod_flashcards_container .slot .row.has-action{ position:relative }
+  #mod_flashcards_container .slot .row.has-action > .iconbtn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); z-index:1 }
+  #mod_flashcards_container .slot .row.has-action > input[type=text],
+  #mod_flashcards_container .slot .row.has-action > textarea,
+  #mod_flashcards_container .slot .row.has-action > select{ padding-right:44px }
   /* Bright text inside modal prompt editors */
   #mod_flashcards_container .modal .box input[type=text],
   #mod_flashcards_container .modal .box textarea{ color:#f1f5f9 !important; background:#0b1220; border:1px solid #374151; }

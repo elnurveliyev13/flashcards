@@ -637,8 +637,8 @@
         $("#status").textContent="Empty"; setTimeout(()=>$("#status").textContent="",1000); return;
       }
 
-      // If editing existing card, use that ID; otherwise create new
-      const id = editingCardId || ("my-"+Date.now().toString(36));
+      // If updating: keep current id; If adding new: always create a fresh id
+      const id = isUpdate && editingCardId ? editingCardId : ("my-"+Date.now().toString(36));
 
       // Upload media files to server NOW (with correct cardId)
       if(lastImageKey && !lastImageUrl){
