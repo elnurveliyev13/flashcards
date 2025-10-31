@@ -690,17 +690,8 @@
       let serverDeckId = MY_DECK_ID;
       try{
         const result = await api('upsert_card', {}, 'POST', {deckId:null,cardId:id,scope:'private',payload});
-        if(result && result.ok) {
-          if(result.deckId) {
-            serverDeckId = String(result.deckId); // Use server's deckId
-          }
-        } else if(result && !result.ok) {
-          // Server rejected (e.g., grace period, no access)
-          const msg = result.error || 'Access denied. You cannot create cards during grace period or after access expires.';
-          $("#status").textContent = msg;
-          setTimeout(()=>$("#status").textContent="", 3000);
-          console.error('upsert_card rejected:', msg);
-          return; // STOP - don't save to localStorage
+        if(result && result.deckId) {
+          serverDeckId = String(result.deckId);
         }
       }catch(e){
         console.error('upsert_card error:', e);
@@ -1140,7 +1131,7 @@
     function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103106"; // Must match version.php
+    const CACHE_VERSION = "2025103107"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
