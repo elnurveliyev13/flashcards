@@ -158,7 +158,7 @@
 
       // Stage 11+: completed (green checkmark)
       if(step > 10){
-        if(stageEmoji) stageEmoji.textContent = "вњ“";
+        if(stageEmoji) stageEmoji.textContent = "\u2713";
         if(stageText) stageText.textContent = "";
         stageBadge.style.background = "linear-gradient(90deg, #4caf50 100%, #e0e0e0 0%)";
         stageBadge.style.color = "#fff";
@@ -168,7 +168,7 @@
 
       // Stage 0-10: show number and fill percentage
       const fillPercent = step === 0 ? 0 : (step / 10) * 100;
-      if(stageEmoji) stageEmoji.textContent = "";
+      if(stageEmoji) stageEmoji.textContent = "\u2713";
       if(stageText) stageText.textContent = String(step);
       stageBadge.style.background = `linear-gradient(90deg, #2196f3 ${fillPercent}%, #e0e0e0 ${fillPercent}%)`;
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
@@ -617,7 +617,7 @@
       if(step < 0) step = 0;
       if(step > 10){
         // Completed: green checkmark
-        return '<span class="badge" style="background:#4caf50;color:#fff;padding:4px 8px;border-radius:12px;">вњ“</span>';
+        return '<span class="badge" style="background:#4caf50;color:#fff;padding:4px 8px;border-radius:12px;">&#10003;</span>';
       }
       // Stage 0-10: number with fill
       const fillPercent = step === 0 ? 0 : (step / 10) * 100;
@@ -688,20 +688,20 @@
         if(url){
           const b1=document.createElement("button");
           b1.className="iconbtn";
-          b1.textContent="рџ”Љ";
+          b1.textContent="\uD83D\uDD0A";
           b1.title="Play";
           b1.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=1; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
           const b2=document.createElement("button");
           b2.className="iconbtn";
-          b2.textContent="рџђў";
-          b2.title="Play 0.67Г—";
+          b2.textContent="\uD83D\uDC22";
+          b2.title="Play 0.67x";
           b2.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=0.67; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
           cell.appendChild(b1);
           cell.appendChild(b2);
         }
         const edit=document.createElement("button");
         edit.className="iconbtn";
-        edit.textContent="вњЋ";
+        edit.textContent="\u270E";
         edit.title="Edit";
         edit.onclick=()=>{
           const pack=registry[r.deckId];
@@ -719,7 +719,7 @@
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="вњ–";
+        del.textContent="\u2716";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;
@@ -817,9 +817,9 @@
       // Show install button
       if(btnInstallApp) {
         btnInstallApp.classList.remove('hidden');
-        console.log('[PWA] вњ… Install prompt available - button shown');
+        console.log('[PWA] Install prompt available - button shown');
       } else {
-        console.error('[PWA] вќЊ Button not found in DOM!');
+        console.error('[PWA] Button not found in DOM!');
       }
     });
 
@@ -867,7 +867,7 @@
     if(iosInstallHint && isIOS && !isInStandaloneMode && !isHintDismissed) {
       // Show iOS install hint for iOS users who haven't installed the app yet
       iosInstallHint.classList.remove('hidden');
-      console.log('[PWA] вњ… iOS install hint shown');
+      console.log('[PWA] iOS install hint shown');
     } else if(iosInstallHint) {
       console.log('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
     }
@@ -895,7 +895,7 @@
     const CACHE_VERSION = "2025103002"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
-      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} в†’ ${CACHE_VERSION}. Clearing cache...`);
+      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
       // Clear all flashcards-related localStorage keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {

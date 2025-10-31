@@ -1,4 +1,4 @@
-<div id="mod_flashcards_container">
+﻿<div id="mod_flashcards_container">
   <style>
   :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
@@ -174,7 +174,7 @@
           <button id="btnAddProfile" class="iconbtn" title="+">+</button>
         </label>
         <button id="btnInstallApp" class="hidden install-btn" title="{{#str}} install_app, mod_flashcards {{/str}}">
-          📱 {{#str}} install_app, mod_flashcards {{/str}}
+           {{#str}} install_app, mod_flashcards {{/str}}
         </button>
         <button id="btnList">{{#str}} list, mod_flashcards {{/str}}</button>
       </div>
@@ -182,8 +182,8 @@
 
     <!-- iOS Install Hint (compact, auto-hide) -->
     <div id="iosInstallHint" class="ios-hint hidden">
-      <button id="iosHintClose" class="ios-hint-close" title="Close">×</button>
-      📱 Tap <span class="step">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> → <span class="step">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
+      <button id="iosHintClose" class="ios-hint-close" title="Close">&times;</button>
+       Tap <span class="step">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
     </div>
 
     <!-- Progress indicator -->
@@ -207,16 +207,16 @@
       <div class="card">
         <div class="actionTop">
           <button id="btnAddNew" class="iconbtn" title="Create new card">+</button>
-          <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">✎</button>
-          <button id="btnDel" class="iconbtn hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">✖</button>
+          <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
+          <button id="btnDel" class="iconbtn hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&times;</button>
         </div>
         <video id="cam" class="hidden" autoplay playsinline muted style="width:100%;border-radius:12px"></video>
         <div class="front" id="front"></div>
         <div class="back" id="back"></div>
         <div id="slotContainer"></div>
         <div class="playRow">
-          <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">🔊</button>
-          <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">🐢</button>
+          <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">Play</button>
+          <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">Slow</button>
         </div>
         <div class="meta">
           <button id="btnRevealNext" class="primary">{{#str}} showmore, mod_flashcards {{/str}}</button>
@@ -239,7 +239,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button><button id="btnCancelEdit" class="iconbtn" title="Cancel">×</button>
+            <button id="btnFormReset" class="iconbtn" title="Clear form">Reset</button><button id="btnCancelEdit" class="iconbtn" title="Cancel">&times;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -249,9 +249,9 @@
           <div class="previewRow">
             <input id="uAudio" type="file" accept="audio/*" capture class="hidden">
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
-            <button id="btnClearAud" class="iconbtn" title="Clear">×</button>
-            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">🎙️</button>
-            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">⏹</button>
+            <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">Rec</button>
+            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">Stop</button>
           </div>
           <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
         </div>
@@ -261,11 +261,11 @@
           <div class="previewRow">
             <input id="uImage" type="file" accept="image/*" capture class="hidden">
             <button id="btnChooseImg" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="imgName" class="fileName"></span>
-            <button id="btnClearImg" class="iconbtn" title="Clear">×</button>
+            <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
             <!-- Camera controls positioned near image picker -->
-            <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">📷</button>
-            <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">📸</button>
-            <button id="btnCloseCam" class="iconbtn hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">✖</button>
+            <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">Cam</button>
+            <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">Shot</button>
+            <button id="btnCloseCam" class="iconbtn hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&times;</button>
           </div>
           <img id="imgPrev" class="media hidden" alt=""/>
         </div>
@@ -292,7 +292,7 @@
             <button class="chip" data-kind="explanation" id="chip_explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="translation" id="chip_translation">{{#str}} back, mod_flashcards {{/str}}</button>
           </div>
-          <div class="small" id="orderPreview">audio → image → text → explanation → translation</div>
+          <div class="small" id="orderPreview">audio -> image -> text -> explanation -> translation</div>
         </div>
 
         <div class="row2" style="display:flex">
@@ -313,7 +313,7 @@
     <div class="box">
       <div class="row" style="justify-content:space-between;align-items:center">
         <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
-        <button id="btnCloseList" class="iconbtn" title="{{#str}} close, mod_flashcards {{/str}}">✖</button>
+        <button id="btnCloseList" class="iconbtn" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
         <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="flex:1;min-width:200px">
@@ -340,9 +340,9 @@
         </table>
       </div>
       <div class="row" id="listPagination" style="margin-top:10px;justify-content:center;gap:10px;display:none">
-        <button id="btnPagePrev" class="btn">‹ Previous</button>
+        <button id="btnPagePrev" class="btn">Previous</button>
         <span id="pageInfo" class="badge">Page 1 of 1</span>
-        <button id="btnPageNext" class="btn">Next ›</button>
+        <button id="btnPageNext" class="btn">Next</button>
       </div>
     </div>
   </div>

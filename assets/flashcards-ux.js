@@ -1,4 +1,4 @@
-// UX Improvements for Flashcards App
+﻿// UX Improvements for Flashcards App
 // Runs after main app initialization
 
 (function(){
@@ -82,10 +82,10 @@
         const label = btnToggleForm.querySelector("div:last-child");
         if(icon && label){
           if(cardCreationFormWrap.classList.contains("card-form-collapsed")){
-            icon.textContent = "➕";
+            icon.textContent = "\u2795";
             label.textContent = "Add New Card";
           } else {
-            icon.textContent = "➖";
+            icon.textContent = "\u2796";
             label.textContent = "Hide Form";
             // Scroll form into view
             setTimeout(function(){
@@ -150,7 +150,7 @@
       }, 10000);
     }
 
-    console.log('[Flashcards UX] ✅ All improvements initialized!');
+    console.log('[Flashcards UX] All improvements initialized!');
   }
 
   // Start waiting for app
