@@ -682,7 +682,7 @@
       // Render paginated rows
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row" style="gap:6px"></td>`;
+        tr.innerHTML=`<td>${r.front||"-"}</td><td>${r.deckTitle||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.added)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
         const url = await audioURLFromCard(r.card);
         if(url){
