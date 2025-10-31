@@ -1,4 +1,4 @@
-﻿/* global M */
+/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -189,7 +189,21 @@
     function hidePlayIcons(){ if(btnPlayBtn) btnPlayBtn.classList.add('hidden'); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden'); }
     function attachAudio(url){ audioURL=url; if(btnPlayBtn) btnPlayBtn.classList.remove("hidden"); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.remove("hidden"); if(btnPlayBtn){ btnPlayBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); }; } if(btnPlaySlowBtn){ btnPlaySlowBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=0.67; player.currentTime=0; player.play().catch(()=>{}); }; }
     }
-    function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
+        function openEditor(){
+      const grid = root.querySelector(".grid");
+      const wrap = $("#cardCreationFormWrap");
+      if(grid) grid.classList.add("edit-mode");
+      if(wrap) wrap.classList.remove("card-form-collapsed");
+    }
+    function closeEditor(){
+      const grid = root.querySelector(".grid");
+      const wrap = $("#cardCreationFormWrap");
+      if(grid) grid.classList.remove("edit-mode");
+      if(wrap) wrap.classList.add("card-form-collapsed");
+      editingCardId=null;
+      const _btnUpdate = $("#btnUpdate");
+      if(_btnUpdate) _btnUpdate.disabled = true;
+    }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
     async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ el.innerHTML=`<div class="front">${card.text}</div>`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">🔊 Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
@@ -362,7 +376,9 @@
 
     var _btnReset=$("#btnReset"); if(_btnReset){ _btnReset.addEventListener("click",()=>{ if(confirm("Reset?")){ state={active:{},decks:{},hidden:{}}; saveState(); buildQueue(); updateBadge(); } }); }
     var _btnExport=$("#btnExport"); if(_btnExport){ _btnExport.addEventListener("click",()=>{ const blob=new Blob([JSON.stringify({state,registry},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="srs_export.json"; a.click(); }); }
-    var _btnImport=$("#btnImport"); var _fileImport=$("#fileImport"); if(_btnImport && _fileImport){ _btnImport.addEventListener("click",()=>_fileImport.click()); _fileImport.addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const d=JSON.parse(await f.text()); if(d.state)state=d.state; if(d.registry)registry=d.registry; saveState(); saveRegistry(); refreshSelect(); updateBadge(); buildQueue(); $("#status").textContent="OK"; setTimeout(()=>$("#status").textContent="",1200); }catch{ $("#status").textContent="Bad deck"; setTimeout(()=>$("#status").textContent="",1500); }}); }
+    var _btnImport=$("#btnImport"); var _fileImport=$("#fileImport"); if(_btnImport && _fileImport){ _btnImport.addEventListener("click",()=>_fileImport.click()); _fileImport.addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const d=JSON.parse(await f.text()); if(d.state)state=d.state; if(d.registry)registry=d.registry; saveState(); saveRegistry(); refreshSelect(); updateBadge(); buildQueue();
+      closeEditor();
+      $("#status").textContent="OK"; setTimeout(()=>$("#status").textContent="",1200); }catch{ $("#status").textContent="Bad deck"; setTimeout(()=>$("#status").textContent="",1500); }}); }
     $("#packFile").addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const p=JSON.parse(await f.text()); if(!p.id)p.id="pack-"+Date.now().toString(36); p.cards=(p.cards||[]).map(x=>normalizeLessonCard(x)); registry[p.id]=p; saveRegistry(); refreshSelect(); if(!state.active) state.active={}; state.active[p.id]=true; saveState(); updateBadge(); buildQueue(); $("#deckSelect").value=p.id; }catch{ $("#status").textContent="Bad deck"; setTimeout(()=>$("#status").textContent="",1500); }});
     $("#btnActivate").addEventListener("click",()=>{ const id=$("#deckSelect").value; if(!id)return; if(!state.active) state.active={}; state.active[id]=true; saveState(); updateBadge(); buildQueue(); });
 
@@ -410,7 +426,17 @@
       orderChosen=[...(c.order||[])];
       updateOrderPreview();
       const grid = root.querySelector(".grid");
-      if (grid) grid.scrollIntoView({behavior:"smooth"});
+      if (grid) grid.scrollIntoView({behavior:"smooth"}); openEditor();
+    const _btnAddNew = $("#btnAddNew");
+    if(_btnAddNew && !_btnAddNew.dataset.bound){
+      _btnAddNew.dataset.bound = "1";
+      _btnAddNew.addEventListener("click", ()=>{
+        editingCardId=null;
+        resetForm();
+        const _up=$("#btnUpdate"); if(_up) _up.disabled=true;
+        openEditor();
+      });
+    }
     });
     $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); } catch(e) { /* May fail for shared cards, fallback to local removal */ } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); });
 
@@ -556,6 +582,7 @@
       refreshSelect();
       updateBadge();
       buildQueue();
+      closeEditor();
       $("#status").textContent= isUpdate ? "Updated" : "Added";
       setTimeout(()=>$("#status").textContent="",1200);
     }

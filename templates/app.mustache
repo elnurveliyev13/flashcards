@@ -1,4 +1,4 @@
-﻿<div id="mod_flashcards_container">
+<div id="mod_flashcards_container">
   <style>
   :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
@@ -16,7 +16,7 @@
   button:disabled:hover{filter:none}
   .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}`r`n  /* Edit mode: hide study card, show full editor */`r`n  .grid.edit-mode > .card:first-child { display:none }`r`n  .grid.edit-mode > #cardCreationFormWrap { display:block }`r`n  .grid.edit-mode > #cardCreationFormWrap .card-form-toggle { display:none }`r`n  .grid.edit-mode > #cardCreationFormWrap .card-form-content { display:block !important }`r`n  /* Always hide fixed bottom bar when embedding rating buttons in card */`r`n  #bottomActions{ display:none !important }
   @media (max-width:900px){.grid{grid-template-columns:1fr}}
   .card{position:relative;background:var(--card);border:1px solid #374151;border-radius:16px;padding:16px}
   .actionTop{position:absolute;top:8px;right:8px;display:flex;gap:6px}
@@ -198,7 +198,7 @@
 
     <div class="grid">
       <div class="card">
-        <div class="actionTop">
+        <div class="actionTop">`r`n          <button id="btnAddNew" class="iconbtn" title="+">+</button>
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">✎</button>
           <button id="btnDel" class="iconbtn hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">✖</button>
         </div>
@@ -230,7 +230,7 @@
           <div>Add New Card</div>
         </div>
         <div class="card-form-content" id="cardCreationForm">
-          <div class="actionTop">
+          <div class="actionTop">`r`n          <button id="btnAddNew" class="iconbtn" title="+">+</button>
             <button id="btnFormReset" class="iconbtn" title="Clear form">🔄</button>
           </div>
           <div class="slot">
