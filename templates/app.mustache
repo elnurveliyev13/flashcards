@@ -75,11 +75,9 @@
   #mod_flashcards_container .slot .row{width:100%}
   #mod_flashcards_container .slot .row textarea{flex:1 1 auto; min-width:220px}
   #mod_flashcards_container .slot .row input[type=text]{flex:1 1 auto; min-width:220px}
-  /* Add a small visual left indent for inputs/selects placed in flexible rows */
-  #mod_flashcards_container .slot .row > input[type=text],
-  #mod_flashcards_container .slot .row > textarea,
-  #mod_flashcards_container .slot .row > select{ margin-left:0 }
-  #mod_flashcards_container .slot .row > .iconbtn{ margin-right:0 }
+  /* Reserve space for inline action icon so borders align with full-width fields */
+  #mod_flashcards_container .slot .row.has-action{ position:relative; padding-right:44px }
+  #mod_flashcards_container .slot .row.has-action > .iconbtn{ position:absolute; right:8px; top:50%; transform:translateY(-50%); }
   /* Bright text inside modal prompt editors */
   #mod_flashcards_container .modal .box input[type=text],
   #mod_flashcards_container .modal .box textarea{ color:#f1f5f9 !important; background:#0b1220; border:1px solid #374151; }
@@ -310,7 +308,7 @@
         <!-- Linguistic enrichment fields -->
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
-          <div class="row" style="gap:6px;align-items:center;flex-wrap:wrap">
+          <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
             <input id="uTranscription" type="text" placeholder="[ˈspɪlə]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
             <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
@@ -318,7 +316,7 @@
 
         <div class="slot">
           <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
-          <div class="row" style="gap:6px;align-items:center;flex-wrap:wrap">
+          <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
             <select id="uPOS">
               <option value="">-</option>
               <option value="substantiv">Substantiv – navn på steder, personer, ting og fenomener</option>
@@ -350,7 +348,7 @@
 
         <div class="slot hidden" id="slot_noun_forms">
           <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
-          <div class="row" style="gap:6px;flex-wrap:wrap">
+          <div class="row has-action" style="gap:6px;flex-wrap:wrap">
             <input id="uNounIndefSg" type="text" placeholder="{{#str}} indef_sg, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
             <input id="uNounDefSg" type="text" placeholder="{{#str}} def_sg, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
             <input id="uNounIndefPl" type="text" placeholder="{{#str}} indef_pl, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
