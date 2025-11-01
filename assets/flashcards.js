@@ -569,8 +569,66 @@
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
-    $("#btnRec").addEventListener("click",async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});recChunks=[];const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/mp4";rec=new MediaRecorder(stream,{mimeType:mime});rec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};rec.onstop=async()=>{const blob=new Blob(recChunks,{type:mime});lastAudioKey="my-"+Date.now().toString(36)+"-aud";await idbPut(lastAudioKey,blob); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(blob);$("#audPrev").classList.remove("hidden");stream.getTracks().forEach(t=>t.stop());};rec.start();$("#btnRec").classList.add("hidden");$("#btnStop").classList.remove("hidden");}catch{}});
-    $("#btnStop").addEventListener("click",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
+        // Hold-to-record: press and hold to record; release to stop
+    (function(){
+      var recBtn = $("#btnRec");
+      var stopBtn = $("#btnStop");
+      if(stopBtn) stopBtn.classList.add("hidden");
+      if(!recBtn) return;
+      var isRecording = false;
+      function startRecording(){
+        if(isRecording) return;
+        (async function(){
+          try{
+            var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+            recChunks = [];
+            var mime = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm")) ? "audio/webm" : "audio/mp4";
+            rec = new MediaRecorder(stream, {mimeType:mime});
+            rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
+            rec.onstop = async function(){
+              try{
+                var blob = new Blob(recChunks, {type:mime});
+                lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
+                await idbPut(lastAudioKey, blob);
+                lastAudioUrl = null;
+                var url = URL.createObjectURL(blob);
+                var a = $("#audPrev");
+                if(a){ a.src = url; a.classList.remove("hidden"); }
+              }catch(_e){}
+              try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){}
+            };
+            rec.start();
+            isRecording = true;
+            recBtn.classList.add("active");
+          }catch(_e){ isRecording=false; rec=null; }
+        })();
+      }
+      function stopRecording(){
+        try{ if(rec){ rec.stop(); } }catch(_e){}
+        isRecording = false;
+        rec = null;
+        recBtn.classList.remove("active");
+      }
+      function onDown(e){
+        try{ e.preventDefault(); }catch(_e){}
+        startRecording();
+        function onceUp(){
+          window.removeEventListener("pointerup", onceUp);
+          window.removeEventListener("pointercancel", onceUp);
+          window.removeEventListener("mouseup", onceUp);
+          window.removeEventListener("touchend", onceUp);
+          stopRecording();
+        }
+        window.addEventListener("pointerup", onceUp);
+        window.addEventListener("pointercancel", onceUp);
+        window.addEventListener("mouseup", onceUp);
+        window.addEventListener("touchend", onceUp);
+      }
+      recBtn.addEventListener("pointerdown", onDown);
+      recBtn.addEventListener("mousedown", onDown);
+      recBtn.addEventListener("touchstart", onDown, {passive:false});
+    })();$("#btnRec").addEventListener("clack",async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});recChunks=[];const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/mp4";rec=new MediaRecorder(stream,{mimeType:mime});rec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};rec.onstop=async()=>{const blob=new Blob(recChunks,{type:mime});lastAudioKey="my-"+Date.now().toString(36)+"-aud";await idbPut(lastAudioKey,blob); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(blob);$("#audPrev").classList.remove("hidden");stream.getTracks().forEach(t=>t.stop());};rec.start();$("#btnRec").classList.add("hidden");$("#btnStop").classList.remove("hidden");}catch{}});
+    $("#btnStop").addEventListener("clack",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
 
     let orderChosen=[];
     function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
