@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
@@ -48,9 +48,9 @@ $string['pos_adj'] = 'Adjective';
 $string['pos_adv'] = 'Adverb';
 $string['pos_other'] = 'Other';
 $string['gender'] = 'Gender';
-$string['gender_neuter'] = 'Neuter (intetkjønn)';
-$string['gender_masculine'] = 'Masculine (hankjønn)';
-$string['gender_feminine'] = 'Feminine (hunkjønn)';
+$string['gender_neuter'] = 'Neuter (intetkjonn)';
+$string['gender_masculine'] = 'Masculine (hankjonn)';
+$string['gender_feminine'] = 'Feminine (hunkjonn)';
 $string['noun_forms'] = 'Noun forms';
 $string['indef_sg'] = 'Indefinite singular';
 $string['def_sg'] = 'Definite singular';
@@ -81,7 +81,7 @@ $string['title_camera'] = 'Camera';
 $string['title_take'] = 'Take photo';
 $string['title_closecam'] = 'Close camera';
 $string['title_play'] = 'Play';
-$string['title_slow'] = 'Play 0.67Г—';
+$string['title_slow'] = 'Play 0.67Р“вЂ”';
 $string['title_edit'] = 'Edit';
 $string['title_del'] = 'Delete';
 $string['title_record'] = 'Record';
@@ -105,8 +105,8 @@ $string['access_expired_message'] = 'You no longer have access to flashcards. Pl
 $string['access_grace_message'] = 'You can review your cards for {$a} more days. Enrol in a course to create new cards.';
 $string['access_create_blocked'] = 'You cannot create new cards without an active course enrolment.';
 $string['grace_period_restrictions'] = 'During grace period:';
-$string['grace_can_review'] = 'вњ“ You CAN review existing cards';
-$string['grace_cannot_create'] = 'вњ— You CANNOT create new cards';
+$string['grace_can_review'] = 'РІСљвЂњ You CAN review existing cards';
+$string['grace_cannot_create'] = 'РІСљвЂ” You CANNOT create new cards';
 
 // Notifications
 $string['messageprovider:grace_period_started'] = 'Flashcards grace period started';
@@ -134,5 +134,8 @@ $string['browse_courses'] = 'Browse available courses';
 // Scheduled tasks
 $string['task_check_user_access'] = 'Check flashcards user access and grace periods';
 
+$string['cards_remaining'] = 'cards remaining';
+$string['rating_actions'] = 'Rating actions';
+$string['progress_label'] = 'Review progress';
 // Overrides
 $string['title_slow'] = 'Play slowly';
