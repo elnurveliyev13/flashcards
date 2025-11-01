@@ -548,7 +548,27 @@
 
     // removed duplicate var line
     $("#btnChooseImg").addEventListener("click",()=>$("#uImage").click());
-    $("#btnChooseAud").addEventListener("click",()=>$("#uAudio").click());
+    $("#btnChooseAud").addEventListener("click", async (e)=>{ e.preventDefault();
+  try{
+    if(typeof window.showOpenFilePicker === 'function'){
+      const [h] = await window.showOpenFilePicker({
+        multiple: false,
+        excludeAcceptAllOption: true,
+        types: [{ description: 'Audio', accept: { 'audio/*': ['.mp3','.m4a','.wav','.ogg','.webm'] } }]
+      });
+      if(h){ const f = await h.getFile(); if(f){
+        $("#audName").textContent = f.name;
+        lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
+        await idbPut(lastAudioKey, f);
+        lastAudioUrl = null;
+        $("#audPrev").src = URL.createObjectURL(f);
+        $("#audPrev").classList.remove("hidden");
+        return; }
+      }
+    }
+  }catch(_e){}
+  $("#uAudio").click();
+});
     // POS visibility toggles + autofill placeholders
     function togglePOSUI(){
       const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();

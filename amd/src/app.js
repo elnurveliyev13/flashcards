@@ -285,7 +285,27 @@ define(['core/str'], function(str) {
     /* ===== camera / mic ===== */
     let camStream=null, rec=null, recChunks=[], lastImageKey=null, lastAudioKey=null;
     $("#btnChooseImg").addEventListener("click",()=>$("#uImage").click());
-    $("#btnChooseAud").addEventListener("click",()=>$("#uAudio").click());
+    $("#btnChooseAud").addEventListener("click", async (e)=>{ e.preventDefault();
+  try{
+    if(typeof window.showOpenFilePicker === 'function'){
+      const [h] = await window.showOpenFilePicker({
+        multiple: false,
+        excludeAcceptAllOption: true,
+        types: [{ description: 'Audio', accept: { 'audio/*': ['.mp3','.m4a','.wav','.ogg','.webm'] } }]
+      });
+      if(h){ const f = await h.getFile(); if(f){
+        $("#audName").textContent = f.name;
+        lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
+        await idbPut(lastAudioKey, f);
+        lastAudioUrl = null;
+        $("#audPrev").src = URL.createObjectURL(f);
+        $("#audPrev").classList.remove("hidden");
+        return; }
+      }
+    }
+  }catch(_e){}
+  $("#uAudio").click();
+});
     $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPut(lastImageKey,f); $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
     $("#uAudio").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#audName").textContent=f.name; lastAudioKey="my-"+Date.now().toString(36)+"-aud"; await idbPut(lastAudioKey,f); $("#audPrev").src=URL.createObjectURL(f); $("#audPrev").classList.remove("hidden");});
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
