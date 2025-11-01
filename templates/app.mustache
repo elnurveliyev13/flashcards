@@ -3,7 +3,7 @@
   :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
   /* Fill viewport background for this module */
-  #mod_flashcards_container{background:var(--bg)}
+  #mod_flashcards_container{background:var(--bg);color:var(--fg)}
   @media (max-width:620px){
     /* On small screens, remove side paddings and stretch to full width */
     .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
@@ -11,7 +11,9 @@
     #mod_flashcards_container{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
   }
   header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
-  h1{margin:0;font-size:20px}
+  h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
+  /* Hide header list button; we place it inside the card actions */
+  header #btnList{display:none}
   .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .pill{padding:8px 12px;border-radius:999px;background:#0b1220;border:1px dashed #374151;color:var(--muted);font-size:13px}
   button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radius:14px;padding:12px 16px;font-size:16px;cursor:pointer}
@@ -239,6 +241,7 @@
     <div class="grid">
       <div class="card">
         <div class="actionTop">
+          <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">&#128220;</button>
           <button id="btnAddNew" class="iconbtn plus" title="Create new card">+</button>
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
           <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&times;</button>
@@ -492,6 +495,5 @@
     </div>
   </div>
 </div>
-
 
 

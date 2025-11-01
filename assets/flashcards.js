@@ -861,11 +861,11 @@
         tbody.appendChild(tr);
       });
     }
-    $("#btnList").addEventListener("click",()=>{
+    $$("#btnList").forEach(function(_el){ _el.addEventListener("click",()=>{
       listCurrentPage = 1; // Reset to page 1 when opening modal
       $("#listModal").style.display="flex";
       buildListRows();
-    });
+    }); });
     $("#btnCloseList").addEventListener("click",()=>{ $("#listModal").style.display="none"; });
     $("#listSearch").addEventListener("input", ()=>{
       listCurrentPage = 1; // Reset to page 1 when searching
