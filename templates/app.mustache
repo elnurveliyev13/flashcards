@@ -1,4 +1,4 @@
-Ôªø<div id="mod_flashcards_container">
+<div id="mod_flashcards_container">
   <style>
   :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
   .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
@@ -142,6 +142,23 @@
     font-weight:600;
     margin:0 1px;
     font-size:10px;
+  
+    line-height:1; /* ensure vertical centering for icons */
+  }
+  /* Icons after step labels (iOS-style) */
+  .ios-hint .step-share::after{
+    content:'';
+    display:inline-block;
+    width:12px;height:12px;margin-left:4px;vertical-align:-1px;
+    background-repeat:no-repeat;background-size:12px 12px;
+background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%2212%22 width=%2216%22 height=%228%22 rx=%222%22/%3E%3Cpath d=%22M12 4v10%22/%3E%3Cpath d=%22M8 8l4-4 4 4%22/%3E%3C/svg%3E");
+  }
+  .ios-hint .step-add::after{
+    content:'';
+    display:inline-block;
+    width:12px;height:12px;margin-left:4px;vertical-align:-1px;
+    background-repeat:no-repeat;background-size:12px 12px;
+background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8%22/%3E%3Cpath d=%22M8 12h8%22/%3E%3C/svg%3E");
   }
   .ios-hint-close{
     position:absolute;
@@ -189,6 +206,12 @@
   @supports(padding:max(env(safe-area-inset-bottom),0px)){
     #mod_flashcards_container.fs-active{padding-bottom:max(env(safe-area-inset-bottom),0px)}
   }
+
+  /* Mobile offsets for title and iOS banner */
+  @media (max-width:620px){
+    header h1#t_appTitle{ margin-left:12px }
+    .ios-hint{ margin-left:12px; margin-right:12px }
+  }
 </style>
 
   <div class="wrap">
@@ -199,8 +222,8 @@
         <span class="pill hidden" id="t_intervals">{{#str}} intervals, mod_flashcards {{/str}}</span>
         <select id="langSel">
           <option value="en">English</option>
-          <option value="no">Norsk (bokm√•l)</option>
-          <option value="uk">–£–∫—Ä–∞—ó–Ω—Å—å–∫–∞</option>
+          <option value="no">Norsk (bokmal)</option>
+          <option value="uk">”Í‡øÌÒ¸Í‡</option>
         </select>
         <label class="pill hidden">
           <span id="t_profile">{{#str}} profile, mod_flashcards {{/str}}</span>
@@ -210,7 +233,7 @@
         <button id="btnInstallApp" class="hidden install-btn" title="{{#str}} install_app, mod_flashcards {{/str}}">
            {{#str}} install_app, mod_flashcards {{/str}}
         </button>
-        <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">üìú</button>
+        <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">??</button>
         <!-- Fullscreen button removed per UX feedback -->
       </div>
     </header>
@@ -218,7 +241,7 @@
     <!-- iOS Install Hint (compact, auto-hide) -->
     <div id="iosInstallHint" class="ios-hint hidden">
       <button id="iosHintClose" class="ios-hint-close" title="Close">&times;</button>
-       Tap <span class="step">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
+       Tap <span class="step step-share">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step step-add">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
     </div>
 
     <!-- Progress indicator -->
@@ -316,7 +339,7 @@
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
-          <span class="tag" id="tag_trans_local">Translation (‚Ä¶)</span>
+          <span class="tag" id="tag_trans_local">Translation (Ö)</span>
           <textarea id="uTransLocal" placeholder="Translation..."></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
@@ -328,7 +351,7 @@
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-            <input id="uTranscription" type="text" placeholder="[Ààsp…™l…ô]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+            <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
             <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
@@ -338,16 +361,16 @@
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
             <select id="uPOS">
               <option value="">-</option>
-              <option value="substantiv">Substantiv ‚Äì navn p√• steder, personer, ting og fenomener</option>
-              <option value="adjektiv">Adjektiv ‚Äì beskriver substantiv</option>
-              <option value="pronomen">Pronomen ‚Äì settes i stedet for et substantiv</option>
-              <option value="determinativ">Determinativ ‚Äì bestemmer substantivet n√¶rmere</option>
-              <option value="verb">Verb ‚Äì navn p√• en handling</option>
-              <option value="adverb">Adverb ‚Äì beskriver/modifiserer verb, adjektiv eller andre adverb</option>
-              <option value="preposisjon">Preposisjon ‚Äì forteller hvor verbet/substantivet befinner seg i forhold til et annet verb/substantiv i b√•de tid og rom</option>
-              <option value="konjunksjon">Konjunksjon ‚Äì binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
-              <option value="subjunksjon">Subjunksjon ‚Äì innleder leddsetninger</option>
-              <option value="interjeksjon">Interjeksjon ‚Äì spesielle ord som gir et bilde av lyder som ikke kan skrives, f√∏lelser eller meninger</option>
+              <option value="substantiv">Substantiv ñ navn pa steder, personer, ting og fenomener</option>
+              <option value="adjektiv">Adjektiv ñ beskriver substantiv</option>
+              <option value="pronomen">Pronomen ñ settes i stedet for et substantiv</option>
+              <option value="determinativ">Determinativ ñ bestemmer substantivet n?rmere</option>
+              <option value="verb">Verb ñ navn pa en handling</option>
+              <option value="adverb">Adverb ñ beskriver/modifiserer verb, adjektiv eller andre adverb</option>
+              <option value="preposisjon">Preposisjon ñ forteller hvor verbet/substantivet befinner seg i forhold til et annet verb/substantiv i bade tid og rom</option>
+              <option value="konjunksjon">Konjunksjon ñ binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
+              <option value="subjunksjon">Subjunksjon ñ innleder leddsetninger</option>
+              <option value="interjeksjon">Interjeksjon ñ spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
               <option value="other">Annet</option>
             </select>
             <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
