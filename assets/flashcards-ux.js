@@ -19,6 +19,12 @@
     const $ = s => root.querySelector(s);
 
     console.log('[Flashcards UX] Initializing improvements...');
+    // Hide original rating row when bottom bar is visible
+    try{
+      var _style = document.createElement('style');
+      _style.textContent = '#mod_flashcards_container[data-bottom-visible="1"] .row2{display:none !important}';
+      (document.head || document.documentElement).appendChild(_style);
+    }catch(_e){}
     // Feature flag: enable bottom bar when query ?uxbar=1 or localStorage flag
     try{
       var _p = new URLSearchParams(location.search).get('uxbar');
@@ -152,8 +158,10 @@
         const count = parseInt(dueCount.textContent) || 0;
         if(count > 0){
           bottomActions.classList.remove("hidden");
+          if(root){ root.setAttribute('data-bottom-visible','1'); }
         } else {
           bottomActions.classList.add("hidden");
+          if(root){ root.removeAttribute('data-bottom-visible'); }
         }
       }
     }
@@ -164,7 +172,12 @@
       const fieldPrompt = document.getElementById('fieldPrompt');
       const bar = document.getElementById('bottomActions');
       const overlaysOpen = !!((listModal && listModal.style.display==='flex') || (fieldPrompt && fieldPrompt.style.display==='flex') || (formWrap && !formWrap.classList.contains('card-form-collapsed')));
-      if(bar){ bar.classList.toggle('hidden', bar.classList.contains('hidden') || overlaysOpen); if(!bar.classList.contains('hidden')){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} } }
+      if(bar){
+        bar.classList.toggle('hidden', bar.classList.contains('hidden') || overlaysOpen);
+        var visible = !bar.classList.contains('hidden');
+        if(root){ root.toggleAttribute && root.toggleAttribute('data-bottom-visible', visible); if(!root.toggleAttribute){ if(visible){ root.setAttribute('data-bottom-visible','1'); } else { root.removeAttribute('data-bottom-visible'); } } }
+        if(visible){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} }
+      }
     }
 
     // Initial update
