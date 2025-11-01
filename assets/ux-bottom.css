@@ -1,8 +1,10 @@
-# Use the fixed bottom action bar as the single set of rating controls
-# Hide the original in-card rating row to avoid duplicates across devices
-# (Bottom bar is always visible and buttons can be disabled when needed.)
-# Scoped to this module container only.
+/* Use the fixed bottom bar as the single rating UI */
+#mod_flashcards_container[data-ux-bottom=\"1\"] #btnEasy,
+#mod_flashcards_container[data-ux-bottom=\"1\"] #btnNormal,
+#mod_flashcards_container[data-ux-bottom=\"1\"] #btnHard{ display:none !important }
 
-#mod_flashcards_container[data-ux-bottom="1"] #btnEasy,
-#mod_flashcards_container[data-ux-bottom="1"] #btnNormal,
-#mod_flashcards_container[data-ux-bottom="1"] #btnHard{ display:none !important }
+/* Slight breathing room that respects iOS safe area; visuals are handled by template */
+#mod_flashcards_container .bottom-actions{
+  padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(14px + constant(safe-area-inset-bottom)) !important;
+}
