@@ -19,10 +19,12 @@
     const $ = s => root.querySelector(s);
 
     console.log('[Flashcards UX] Initializing improvements...');
+    // Detect iOS and mark root
+    try{ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){ root.setAttribute('data-platform-ios','1'); } }catch(_e){}
     // Hide original rating row when bottom bar is visible
     try{
       var _style = document.createElement('style');
-      _style.textContent = '#mod_flashcards_container[data-bottom-visible="1"] .row2{display:none !important}';
+      _style.textContent = '#mod_flashcards_container[data-bottom-visible="1"] .row2{display:none !important}\n#mod_flashcards_container[data-platform-ios="1"] .row2{display:none !important}';
       (document.head || document.documentElement).appendChild(_style);
     }catch(_e){}
     // Feature flag: enable bottom bar when query ?uxbar=1 or localStorage flag
@@ -45,48 +47,8 @@
       }
     }catch(_e){}
 
-    // 1. Fixed bottom action bar handlers
-    const btnEasyBottom = $("#btnEasyBottom");
-    const btnNormalBottom = $("#btnNormalBottom");
-    const btnHardBottom = $("#btnHardBottom");
+    // 1. Fixed bottom action bar (bindings handled in assets/flashcards.js)
     const bottomActions = $("#bottomActions");
-
-    const btnEasy = $("#btnEasy");
-    const btnNormal = $("#btnNormal");
-    const btnHard = $("#btnHard");
-
-    console.log('[Flashcards UX] Bottom buttons found:', !!btnEasyBottom, !!btnNormalBottom, !!btnHardBottom);
-    console.log('[Flashcards UX] Original buttons found:', !!btnEasy, !!btnNormal, !!btnHard);
-
-    if(btnEasyBottom && btnEasy){
-      btnEasyBottom.addEventListener("click", function(e){ 
-        console.log('[Flashcards UX] Easy bottom clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        btnEasy.click(); 
-      });
-      console.log('[Flashcards UX] Easy handler attached');
-    }
-    
-    if(btnNormalBottom && btnNormal){
-      btnNormalBottom.addEventListener("click", function(e){ 
-        console.log('[Flashcards UX] Normal bottom clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        btnNormal.click(); 
-      });
-      console.log('[Flashcards UX] Normal handler attached');
-    }
-    
-    if(btnHardBottom && btnHard){
-      btnHardBottom.addEventListener("click", function(e){ 
-        console.log('[Flashcards UX] Hard bottom clicked');
-        e.preventDefault();
-        e.stopPropagation();
-        btnHard.click(); 
-      });
-      console.log('[Flashcards UX] Hard handler attached');
-    }
 
     // 2. Collapsible form toggle
     const btnToggleForm = $("#btnToggleForm");
@@ -188,13 +150,7 @@
     try{ const _lm=document.getElementById('listModal'); if(_lm){ new MutationObserver(()=>updateBottomBarPlus()).observe(_lm,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
     try{ const _fp=document.getElementById('fieldPrompt'); if(_fp){ new MutationObserver(()=>updateBottomBarPlus()).observe(_fp,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
 
-    // 4. Auto-hide iOS hint after 10 seconds
-    const iosHint = $("#iosInstallHint");
-    if(iosHint && !iosHint.classList.contains("hidden")){
-      setTimeout(function(){
-        iosHint.classList.add("hidden");
-      }, 10000);
-    }
+    // 4. No auto-hide for iOS hint (per UX request) – handled elsewhere
 
     console.log('[Flashcards UX] All improvements initialized!');
 
