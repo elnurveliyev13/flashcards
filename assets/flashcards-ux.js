@@ -1,4 +1,4 @@
-﻿// UX Improvements for Flashcards App
+// UX Improvements for Flashcards App
 // Runs after main app initialization
 
 (function(){
@@ -119,7 +119,8 @@
         if(count > 0){
           progressBar.classList.remove("hidden");
           progressCurrent.textContent = count;
-          progressTotal.textContent = count;
+          const total = parseInt(progressBar.dataset.total || progressTotal.textContent) || count;
+          progressTotal.textContent = total;
         } else {
           progressBar.classList.add("hidden");
         }
@@ -157,7 +158,7 @@
     if(btnFullscreen){
       const updateIcon = () => {
         const active = !!document.fullscreenElement || root.classList.contains('fs-active');
-        btnFullscreen.textContent = active ? '⤡' : '⤢';
+        btnFullscreen.textContent = active ? '?' : '?';
         btnFullscreen.title = active ? 'Exit full screen' : 'Fullscreen';
         btnFullscreen.setAttribute('aria-label', btnFullscreen.title);
       };

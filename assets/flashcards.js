@@ -1,4 +1,4 @@
-ï»¿/* global M */
+/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -51,16 +51,16 @@
 
     // POS helper: compact option labels + info text
     const POS_INFO = {
-      substantiv: 'Substantiv â€“ navn pÃ¥ steder, personer, ting og fenomener',
-      adjektiv: 'Adjektiv â€“ beskriver substantiv',
-      pronomen: 'Pronomen â€“ settes i stedet for et substantiv',
-      determinativ: 'Determinativ â€“ bestemmer substantivet nÃ¦rmere',
-      verb: 'Verb â€“ navn pÃ¥ en handling',
-      adverb: 'Adverb â€“ beskriver/modifiserer verb, adjektiv eller andre adverb',
-      preposisjon: 'Preposisjon â€“ plassering i tid/rom i forhold til annet ord',
-      konjunksjon: 'Konjunksjon â€“ binder sammen like ordledd eller helsetninger',
-      subjunksjon: 'Subjunksjon â€“ innleder leddsetninger',
-      interjeksjon: 'Interjeksjon â€“ lydmalende ord, fÃ¸lelser eller meninger'
+      substantiv: 'Substantiv – navn pa steder, personer, ting og fenomener',
+      adjektiv: 'Adjektiv – beskriver substantiv',
+      pronomen: 'Pronomen – settes i stedet for et substantiv',
+      determinativ: 'Determinativ – bestemmer substantivet n?rmere',
+      verb: 'Verb – navn pa en handling',
+      adverb: 'Adverb – beskriver/modifiserer verb, adjektiv eller andre adverb',
+      preposisjon: 'Preposisjon – plassering i tid/rom i forhold til annet ord',
+      konjunksjon: 'Konjunksjon – binder sammen like ordledd eller helsetninger',
+      subjunksjon: 'Subjunksjon – innleder leddsetninger',
+      interjeksjon: 'Interjeksjon – lydmalende ord, folelser eller meninger'
     };
     function compactPOSOptions(){
       const sel = document.getElementById('uPOS');
@@ -335,6 +335,7 @@
 
       console.log(`[buildQueue] Total due cards: ${queue.length}`);
       setDue(queue.length);
+      const _pb = $("#progressBar"); if(_pb){ _pb.dataset.total = String(queue.length); const _pt = $("#progressTotal"); if(_pt) _pt.textContent = String(queue.length); }
 
       if(queue.length===0){
         slotContainer.innerHTML="";
