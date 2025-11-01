@@ -28,6 +28,17 @@
       }
     }catch(_e){}
 
+    
+
+    // Enable bottom bar by default; opt-out with ?uxbar=0 or localStorage '0'
+    try{
+      const __root=document.getElementById('mod_flashcards_container');
+      const __p=new URLSearchParams(location.search).get('uxbar');
+      if(__root && !__root.hasAttribute('data-ux-bottom')){
+        if(__p !== '0' && localStorage.getItem('srs-ux-bottom') !== '0'){ __root.setAttribute('data-ux-bottom','1'); }
+      }
+    }catch(_e){}
+
     // 1. Fixed bottom action bar handlers
     const btnEasyBottom = $("#btnEasyBottom");
     const btnNormalBottom = $("#btnNormalBottom");
@@ -106,11 +117,11 @@
     }
 
     // 3. Update progress bar on queue changes
-    const originalDue = $("#due");
+    const originalDue = root.querySelector("#due");
     if(originalDue){
       const observer = new MutationObserver(function(mutations){
         updateProgressBar();
-        updateBottomBar();
+        updateBottomBarPlus();
       });
       observer.observe(originalDue, {childList: true, characterData: true, subtree: true});
       console.log('[Flashcards UX] Progress observer attached');
@@ -147,9 +158,22 @@
       }
     }
 
+    function updateBottomBarPlus(){ updateBottomBar();
+      const formWrap = document.getElementById('cardCreationFormWrap');
+      const listModal = document.getElementById('listModal');
+      const fieldPrompt = document.getElementById('fieldPrompt');
+      const bar = document.getElementById('bottomActions');
+      const overlaysOpen = !!((listModal && listModal.style.display==='flex') || (fieldPrompt && fieldPrompt.style.display==='flex') || (formWrap && !formWrap.classList.contains('card-form-collapsed')));
+      if(bar){ bar.classList.toggle('hidden', bar.classList.contains('hidden') || overlaysOpen); if(!bar.classList.contains('hidden')){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} } }
+    }
+
     // Initial update
     updateProgressBar();
-    updateBottomBar();
+    updateBottomBarPlus();
+
+    try{ const _wrap=document.getElementById('cardCreationFormWrap'); if(_wrap){ new MutationObserver(()=>updateBottomBarPlus()).observe(_wrap,{attributes:true, attributeFilter:['class']}); } }catch(_e){}
+    try{ const _lm=document.getElementById('listModal'); if(_lm){ new MutationObserver(()=>updateBottomBarPlus()).observe(_lm,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
+    try{ const _fp=document.getElementById('fieldPrompt'); if(_fp){ new MutationObserver(()=>updateBottomBarPlus()).observe(_fp,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
 
     // 4. Auto-hide iOS hint after 10 seconds
     const iosHint = $("#iosInstallHint");
