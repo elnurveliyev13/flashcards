@@ -26,11 +26,13 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025103107; // cache buster; aligns with plugin version bump.
+$ver = 2025110108; // cache buster; aligns with plugin version bump.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 // One-time iOS install guide (lightweight modal)
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
+// Prefer bottom action bar as the single rating UI
+$PAGE->requires->css(new moodle_url('/mod/flashcards/assets/ux-bottom.css', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
 $init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
 $init .= "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."')";

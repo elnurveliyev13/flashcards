@@ -1,0 +1,7 @@
+# Use the fixed bottom action bar as the single set of rating controls
+# Hide the original in-card rating row to avoid duplicates across devices
+# (Bottom bar is always visible and buttons can be disabled when needed.)
+# Scoped to this module container only.
+
+#mod_flashcards_container .row2{ display:none !important }
+

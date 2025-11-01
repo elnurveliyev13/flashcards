@@ -24,7 +24,7 @@
     // Hide original rating row when bottom bar is visible
     try{
       var _style = document.createElement('style');
-      _style.textContent = '#mod_flashcards_container[data-bottom-visible="1"] .row2{display:none !important}\n#mod_flashcards_container[data-platform-ios="1"] .row2{display:none !important}';
+      _style.textContent = '#mod_flashcards_container[data-ux-bottom="1"] .row2{display:none !important}';
       (document.head || document.documentElement).appendChild(_style);
     }catch(_e){}
     // Feature flag: enable bottom bar when query ?uxbar=1 or localStorage flag
@@ -42,13 +42,34 @@
     try{
       const __root=document.getElementById('mod_flashcards_container');
       const __p=new URLSearchParams(location.search).get('uxbar');
-      if(__root && !__root.hasAttribute('data-ux-bottom')){
+      if(__root){
         if(__p !== '0' && localStorage.getItem('srs-ux-bottom') !== '0'){ __root.setAttribute('data-ux-bottom','1'); }
+        else if(!__root.hasAttribute('data-ux-bottom')){ __root.setAttribute('data-ux-bottom','1'); }
       }
     }catch(_e){}
 
-    // 1. Fixed bottom action bar (bindings handled in assets/flashcards.js)
+    // 1. Fixed bottom action bar
     const bottomActions = $("#bottomActions");
+    const btnEasyBottom = $("#btnEasyBottom");
+    const btnNormalBottom = $("#btnNormalBottom");
+    const btnHardBottom = $("#btnHardBottom");
+    const btnEasy = $("#btnEasy");
+    const btnNormal = $("#btnNormal");
+    const btnHard = $("#btnHard");
+
+    // Bridge bottom buttons to original handlers using capture-phase to cancel any prior listeners
+    function bindBridge(bottomBtn, originalBtn){
+      if(!bottomBtn || !originalBtn) return;
+      if(bottomBtn.dataset.bridgeBound === '1') return;
+      bottomBtn.dataset.bridgeBound = '1';
+      bottomBtn.addEventListener('click', function(e){
+        try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }catch(_e){}
+        try{ originalBtn.click(); }catch(_e){}
+      }, true /* capture */);
+    }
+    bindBridge(btnEasyBottom, btnEasy);
+    bindBridge(btnNormalBottom, btnNormal);
+    bindBridge(btnHardBottom, btnHard);
 
     // 2. Collapsible form toggle
     const btnToggleForm = $("#btnToggleForm");
@@ -118,13 +139,12 @@
       const dueCount = $("#due");
       if(bottomActions && dueCount){
         const count = parseInt(dueCount.textContent) || 0;
-        if(count > 0){
-          bottomActions.classList.remove("hidden");
-          if(root){ root.setAttribute('data-bottom-visible','1'); }
-        } else {
-          bottomActions.classList.add("hidden");
-          if(root){ root.removeAttribute('data-bottom-visible'); }
-        }
+        // Always show bar; disable buttons when nothing due
+        bottomActions.classList.remove("hidden");
+        if(root){ root.setAttribute('data-bottom-visible','1'); }
+        try{
+          [btnEasyBottom, btnNormalBottom, btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
+        }catch(_e){}
       }
     }
 
@@ -135,9 +155,10 @@
       const bar = document.getElementById('bottomActions');
       const overlaysOpen = !!((listModal && listModal.style.display==='flex') || (fieldPrompt && fieldPrompt.style.display==='flex') || (formWrap && !formWrap.classList.contains('card-form-collapsed')));
       if(bar){
-        bar.classList.toggle('hidden', bar.classList.contains('hidden') || overlaysOpen);
+        // Only hide for overlays; otherwise keep visible
+        bar.classList.toggle('hidden', overlaysOpen);
         var visible = !bar.classList.contains('hidden');
-        if(root){ root.toggleAttribute && root.toggleAttribute('data-bottom-visible', visible); if(!root.toggleAttribute){ if(visible){ root.setAttribute('data-bottom-visible','1'); } else { root.removeAttribute('data-bottom-visible'); } } }
+        if(root){ if(visible){ root.setAttribute('data-bottom-visible','1'); } else { root.removeAttribute('data-bottom-visible'); } }
         if(visible){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} }
       }
     }
