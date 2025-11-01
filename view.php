@@ -29,6 +29,8 @@ $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
 $ver = 2025103107; // cache buster; aligns with plugin version bump.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
+// One-time iOS install guide (lightweight modal)
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
 $init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
 $init .= "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."')";
