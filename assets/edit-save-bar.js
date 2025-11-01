@@ -20,16 +20,18 @@
       bar.id = 'editActionsBar';
       bar.className = 'bottom-actions hidden';
       bar.style.zIndex = '1001';
-      bar.style.bottom = '64px'; // stack above rating bar
+      bar.style.bottom = '0'; // pin to true bottom (rating bar hidden while editing)
       bar.setAttribute('role','toolbar');
       bar.setAttribute('aria-label','Edit actions');
       bar.innerHTML = ''+
-        '<button id="saveBarUpdate" class="ok">'+(btnUpdate.textContent||'Update Previous')+'</button>'+
-        '<button id="saveBarAdd" class="mid">'+(btnAdd.textContent||'Add as New')+'</button>';
+        '<button id="saveBarUpdate" class="ok">'+(btnUpdate.textContent||'Update')+'</button>'+
+        '<button id="saveBarAdd" class="mid">'+(btnAdd.textContent||'Create new')+'</button>';
       (root||document.body).appendChild(bar);
     }
 
     // Helper to strip any pre-existing listeners
+    // Also hide inline row to avoid duplication
+    try{ var inlineRow = btnUpdate && btnUpdate.closest('.row2'); if(inlineRow){ inlineRow.style.display='none'; } }catch(_e){}
     function reset(b){ if(!b) return null; var c=b.cloneNode(true); b.parentNode.replaceChild(c,b); return c; }
     var sbUpdate = reset(once('saveBarUpdate'));
     var sbAdd = reset(once('saveBarAdd'));
@@ -45,6 +47,8 @@
       var editMode = grid && grid.classList.contains('edit-mode');
       var visible = !!(formOpen || editMode);
       bar.classList.toggle('hidden', !visible);
+      // Hide rating bar while editing to avoid overlap
+      try{ var ratingBar = once('bottomActions'); if(ratingBar){ ratingBar.classList.toggle('hidden', visible); } }catch(_e){}
       // Mirror disabled state
       try{ sbUpdate.disabled = !!btnUpdate.disabled; }catch(_e){}
     }
@@ -62,4 +66,6 @@
   function boot(){ if(install()) return; var tries=0; var t=setInterval(function(){ if(install()||++tries>150){ clearInterval(t); } }, 100); }
   ready(boot);
 })();
+
+
 
