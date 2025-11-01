@@ -57,6 +57,18 @@
     const btnNormal = $("#btnNormal");
     const btnHard = $("#btnHard");
 
+    // Reset bottom buttons to strip any previous listeners (e.g., fallback bindings)
+    function resetButton(b){
+      if(!b || b.dataset._reset === '1') return b;
+      const clone = b.cloneNode(true);
+      b.parentNode.replaceChild(clone, b);
+      clone.dataset._reset = '1';
+      return clone;
+    }
+    const _btnEasyBottom = resetButton(btnEasyBottom);
+    const _btnNormalBottom = resetButton(btnNormalBottom);
+    const _btnHardBottom = resetButton(btnHardBottom);
+
     // Bridge bottom buttons to original handlers using capture-phase to cancel any prior listeners
     function bindBridge(bottomBtn, originalBtn){
       if(!bottomBtn || !originalBtn) return;
@@ -67,9 +79,9 @@
         try{ originalBtn.click(); }catch(_e){}
       }, true /* capture */);
     }
-    bindBridge(btnEasyBottom, btnEasy);
-    bindBridge(btnNormalBottom, btnNormal);
-    bindBridge(btnHardBottom, btnHard);
+    bindBridge(_btnEasyBottom, btnEasy);
+    bindBridge(_btnNormalBottom, btnNormal);
+    bindBridge(_btnHardBottom, btnHard);
 
     // 2. Collapsible form toggle
     const btnToggleForm = $("#btnToggleForm");
@@ -143,7 +155,7 @@
         bottomActions.classList.remove("hidden");
         if(root){ root.setAttribute('data-bottom-visible','1'); }
         try{
-          [btnEasyBottom, btnNormalBottom, btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
+          [_btnEasyBottom, _btnNormalBottom, _btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
         }catch(_e){}
       }
     }
