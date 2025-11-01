@@ -597,18 +597,48 @@
       if(!recBtn) return;
       var isRecording = false;
       var timerEl = document.getElementById('recTimer');
+      var hintEl  = document.getElementById('recHint');
       var tInt=null, t0=0;
+      var autoStopTimer=null;
+
+      function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
+      function setHintIdle(){ if(hintEl){ hintEl.textContent = t('press_hold_to_record') || 'Press and hold to record'; } }
+      function setHintActive(){ if(hintEl){ hintEl.textContent = t('release_when_finished') || 'Release when you finish'; } }
       function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
       function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent = fmt(Date.now()-t0); }catch(_e){} }, 250); }
       function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
+      function bestMime(){
+        try{
+          if(!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
+          var cand=[
+            'audio/webm;codecs=opus','audio/webm',
+            'audio/mp4;codecs=mp4a.40.2','audio/mp4',
+            'audio/ogg;codecs=opus','audio/ogg'
+          ];
+          for(var i=0;i<cand.length;i++){ if(MediaRecorder.isTypeSupported(cand[i])) return cand[i]; }
+        }catch(_e){}
+        return '';
+      }
+      function fallbackCapture(){
+        try{
+          var input=document.getElementById('uAudio');
+          if(input){ input.setAttribute('accept','audio/*'); input.setAttribute('capture','microphone'); try{ input.click(); }catch(_e){} }
+        }catch(_e){}
+      }
       function startRecording(){
         if(isRecording) return;
         (async function(){
           try{
+            if(!window.MediaRecorder){ fallbackCapture(); return; }
             var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
             recChunks = [];
-            var mime = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm")) ? "audio/webm" : "audio/mp4";
-            rec = new MediaRecorder(stream, {mimeType:mime});
+            var mime = bestMime();
+            try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
+            catch(_er){
+              // If creation with mime failed, try without explicit mime; then fallback
+              try{ rec = new MediaRecorder(stream); mime = rec.mimeType || mime || ''; }
+              catch(_er2){ try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(_e){}; fallbackCapture(); return; }
+            }
             rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
             rec.onstop = async function(){
               try{
@@ -624,15 +654,17 @@
             };
             rec.start();
             isRecording = true;
-            recBtn.classList.add("recording"); timerStart();
-          }catch(_e){ isRecording=false; rec=null; }
+            recBtn.classList.add("recording"); timerStart(); setHintActive();
+            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
+          }catch(_e){ isRecording=false; rec=null; fallbackCapture(); }
         })();
       }
       function stopRecording(){
         try{ if(rec){ rec.stop(); } }catch(_e){}
         isRecording = false;
         rec = null;
-        recBtn.classList.remove("recording"); timerStop();
+        if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null;
+        recBtn.classList.remove("recording"); timerStop(); setHintIdle();
       }
       function onDown(e){
         try{ e.preventDefault(); }catch(_e){}
@@ -653,6 +685,8 @@
       recBtn.addEventListener("mousedown", onDown);
       recBtn.addEventListener("touchstart", onDown, {passive:false});
       try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
+      // Initialize idle hint
+      setHintIdle();
     })();
     let orderChosen=[];
     function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
@@ -737,7 +771,19 @@
         try{
           const blob = await idbGet(lastAudioKey);
           if(blob){
-            lastAudioUrl = await uploadMedia((function(){ var ext = (blob && blob.type==='audio/wav')?'wav':((blob && blob.type==='audio/mp4')?'mp4':'webm'); return new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)}); })(), 'audio', id);
+            lastAudioUrl = await uploadMedia((function(){
+              var mt = (blob && blob.type) ? (blob.type+'') : '';
+              var ext = 'webm';
+              if(mt){
+                var low = mt.toLowerCase();
+                if(low.indexOf('audio/wav') === 0) ext = 'wav';
+                else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0) ext = 'mp4';
+                else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
+                else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
+                else if(low.indexOf('audio/webm') === 0) ext = 'webm';
+              }
+              return new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)});
+            })(), 'audio', id);
           }
         }catch(e){ console.error('Audio upload failed:', e); }
       }

@@ -25,6 +25,10 @@
   .iconbtn *{ pointer-events:none }
   .iconbtn.recording{ background:#7f1d1d; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6) }
   .rec-timer{ color:#fca5a5; font-size:12px; margin-left:8px }
+  /* Press-and-hold mic button */
+  .rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+  .micbtn{ width:72px; height:72px; border-radius:50%; font-size:32px; display:inline-flex; align-items:center; justify-content:center }
+  .rec-hint{ color:var(--muted); font-size:13px }
 `r`n
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
@@ -317,8 +321,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <input id="uAudio" type="file" accept="audio/*" class="hidden">
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
             <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
-            <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button><span id="recTimer" class="rec-timer hidden">00:00</span>
+            <div class="rec-wrap">
+              <button id="btnRec"  class="iconbtn micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+              <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
+              <span id="recTimer" class="rec-timer hidden">00:00</span>
+              <div id="recHint" class="rec-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</div>
+            </div>
           </div>
           <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
         </div>

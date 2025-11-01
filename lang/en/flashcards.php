@@ -86,6 +86,8 @@ $string['title_edit'] = 'Edit';
 $string['title_del'] = 'Delete';
 $string['title_record'] = 'Record';
 $string['title_stop'] = 'Stop';
+$string['press_hold_to_record'] = 'Press and hold to record';
+$string['release_when_finished'] = 'Release when you finish';
 
 // List table
 $string['list_front'] = 'Front';
