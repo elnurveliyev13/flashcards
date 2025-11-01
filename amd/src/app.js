@@ -30,7 +30,7 @@ define(['core/str'], function(str) {
           addOwn:"Add your card",front:"Front text",back:"Translation / note",image:"Image",audio:"Audio (normal)",
           chooseFile:"Choose file",showMore:"Show more",easy:"Easy",normal:"Normal",hard:"Hard",
           order:"Order (click in sequence)",empty:"Nothing due today",
-          titles:{camera:"Camera",take:"Take photo",closeCam:"Close camera",play:"Play",slow:"Play 0.67×",edit:"Edit",del:"Delete/Hide",record:"Record",stop:"Stop"},
+          titles:{camera:"Camera",take:"Take photo",closeCam:"Close camera",play:"Play",slow:"Play 0.67??",edit:"Edit",del:"Delete/Hide",record:"Record",stop:"Stop"},
           listCols:{front:"Front",deck:"Deck",stage:"Stage",added:"Added",due:"Next due",play:"Play"},resetForm:"Reset form",addToMine:'Add to "Mine"',
           chips:{text:"Text",translation:"Translation",image:"Image",audio:"Audio"},searchPh:"Search..."},
       no:{appTitle:"SRS-kort",intervals:"Intervaller: 1,3,7,15,31,62,125,251",
@@ -38,10 +38,10 @@ define(['core/str'], function(str) {
           choose:"Velg leksjon",loadPack:"Last opp kortstokk",due:n=>`Til repetisjon: ${n}`,list:"Kortliste",
           addOwn:"Legg til eget kort",front:"Tekst (forside)",back:"Oversettelse / notat",image:"Bilde",audio:"Lyd (vanlig)",
           chooseFile:"Velg fil",showMore:"Vis mer",easy:"Lett",normal:"Middels",hard:"Vanskelig",
-          order:"Rekkefølge (klikk i ønsket rekkefølge)",empty:"Ingen kort i dag",
-          titles:{camera:"Kamera",take:"Ta bilde",closeCam:"Lukk kamera",play:"Spill av",slow:"Sakte 0.67×",edit:"Rediger",del:"Slett/Skjul",record:"Ta opp",stop:"Stopp"},
+          order:"Rekkef??lge (klikk i ??nsket rekkef??lge)",empty:"Ingen kort i dag",
+          titles:{camera:"Kamera",take:"Ta bilde",closeCam:"Lukk kamera",play:"Spill av",slow:"Sakte 0.67??",edit:"Rediger",del:"Slett/Skjul",record:"Ta opp",stop:"Stopp"},
           listCols:{front:"Forside",deck:"Leksjon",stage:"Trinn",added:"Lagt til",due:"Neste",play:"Spill"},resetForm:"Nullstill",addToMine:'Legg til i "Mine"',
-          chips:{text:"Tekst",translation:"Overs.",image:"Bilde",audio:"Lyd"},searchPh:"Søk..."},
+          chips:{text:"Tekst",translation:"Overs.",image:"Bilde",audio:"Lyd"},searchPh:"S??k..."},
     };
     let LANG=localStorage.getItem("srs-lang")||"en";
     // Load Moodle strings and map them into existing I18N structure to avoid large refactors.
@@ -153,7 +153,7 @@ define(['core/str'], function(str) {
 
     /* ===== render card ===== */
     const slotContainer=$("#slotContainer"), emptyState=$("#emptyState");
-    const STAGE_EMOJI=["🟢","🟡","🟠","🔵","⭐","⭐","⭐","⭐","⭐"];
+    const STAGE_EMOJI=["????","????","????","????","???","???","???","???","???"];
     function setStage(step){if(step<0)step=0;if(step>8)step=8;$("#stageEmoji").textContent=STAGE_EMOJI[step];$("#stageText").textContent=step===0?"0":String(INTERVALS[Math.min(step,INTERVALS.length)-1]);$("#stageBadge").classList.remove("hidden");}
     let audioURL=null; const player=new Audio();
     function attachAudio(url){audioURL=url; $("#btnPlay").classList.remove("hidden"); $("#btnPlaySlow").classList.remove("hidden");
@@ -175,7 +175,7 @@ define(['core/str'], function(str) {
       }
       if(kind==="audio" && (card.audio||card.audioKey)){
         const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio);
-        if(url){ attachAudio(url); el.innerHTML=`<div class="pill">▶ ${ (t("audio")||"Audio").split(" ")[0] }</div>`; el.dataset.autoplay=url; return el; }
+        if(url){ attachAudio(url); el.innerHTML=`<div class="pill">??? ${ (t("audio")||"Audio").split(" ")[0] }</div>`; el.dataset.autoplay=url; return el; }
       }
       return null;
     }
@@ -364,19 +364,59 @@ define(['core/str'], function(str) {
         window.addEventListener("mouseup", onceUp);
         window.addEventListener("touchend", onceUp);
       };
-      recBtn.addEventListener("pointerdown", onDown);
-      recBtn.addEventListener("mousedown", onDown);
-      recBtn.addEventListener("touchstart", onDown, {passive:false});
+      recBtn.addEventListener("pointerdown_disabled", onDown);
+      recBtn.addEventListener("mousedown_disabled", onDown);
+      recBtn.addEventListener("touchstart_disabled", onDown, {passive:false});
     })();$("#btnRec").addEventListener("clack",async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});recChunks=[];const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/mp4";rec=new MediaRecorder(stream,{mimeType:mime});rec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};rec.onstop=async()=>{const blob=new Blob(recChunks,{type:mime});lastAudioKey="my-"+Date.now().toString(36)+"-aud";await idbPut(lastAudioKey,blob);$("#audPrev").src=URL.createObjectURL(blob);$("#audPrev").classList.remove("hidden");stream.getTracks().forEach(t=>t.stop());};rec.start();$("#btnRec").classList.add("hidden");$("#btnStop").classList.remove("hidden");}catch{}});
     $("#btnStop").addEventListener("clack",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
 
-    /* ===== order chips (click sequence) ===== */
+        // Click-to-record toggle with iOS WebAudio fallback and timer
+    (function(){
+      var recBtn = $("#btnRec");
+      var stopBtn = $("#btnStop");
+      var timerEl = document.getElementById('recTimer');
+      var usingMR = false, mr=null, mrChunks=[], waCtx=null, waSrc=null, waProc=null, waBuffers=[], waRate=44100, streamRef=null;
+      var recOn = false, t0=0, tInt=null;
+      function canUseMR(){ try{ if(!window.MediaRecorder) return false; if(MediaRecorder.isTypeSupported && (MediaRecorder.isTypeSupported('audio/webm')||MediaRecorder.isTypeSupported('audio/mp4'))) return true; return !!window.MediaRecorder; }catch(_e){ return false; } }
+      function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
+      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) clearInterval(tInt); tInt=setInterval(function(){ timerEl.textContent=fmt(Date.now()-t0); }, 250); }
+      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){} tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
+      function uiOn(){ if(recBtn){ recBtn.classList.add('recording'); recBtn.setAttribute('aria-pressed','true'); } if(stopBtn) stopBtn.classList.add('hidden'); timerStart(); }
+      function uiOff(){ if(recBtn){ recBtn.classList.remove('recording'); recBtn.removeAttribute('aria-pressed'); } if(stopBtn) stopBtn.classList.add('hidden'); timerStop(); }
+      async function start(){ if(recOn) return; recOn=true; try{
+        var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+        streamRef = stream;
+        if(canUseMR()){
+          usingMR=true; mrChunks=[]; var mime = (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))?'audio/webm':'audio/mp4';
+          mr=new MediaRecorder(stream,{mimeType:mime});
+          mr.ondataavailable=function(e){ if(e.data && e.data.size>0) mrChunks.push(e.data); };
+          mr.start();
+        } else {
+          usingMR=false; waCtx = new (window.AudioContext||window.webkitAudioContext)(); waRate=waCtx.sampleRate; waSrc=waCtx.createMediaStreamSource(stream); waProc=waCtx.createScriptProcessor(4096,1,1); waBuffers=[]; waProc.onaudioprocess=function(e){ var ch=e.inputBuffer.getChannelData(0); waBuffers.push(new Float32Array(ch)); }; waSrc.connect(waProc); waProc.connect(waCtx.destination);
+        }
+        uiOn();
+      }catch(_e){ recOn=false; uiOff(); }
+      }
+      function encodeWAV(buffers, sampleRate){ var len=0; for(var i=0;i<buffers.length;i++) len+=buffers[i].length; var pcm=new Int16Array(len); var off=0; for(var i=0;i<buffers.length;i++){ var b=buffers[i]; for(var j=0;j<b.length;j++){ var s=Math.max(-1,Math.min(1,b[j])); pcm[off++]= s<0 ? s*0x8000 : s*0x7FFF; } } var buf=new ArrayBuffer(44 + pcm.length*2); var view=new DataView(buf); function wstr(o,s){ for(var i=0;i<s.length;i++) view.setUint8(o+i, s.charCodeAt(i)); }
+        wstr(0,'RIFF'); view.setUint32(4, 36 + pcm.length*2, true); wstr(8,'WAVE'); wstr(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true); view.setUint32(24,sampleRate,true); view.setUint32(28,sampleRate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true); wstr(36,'data'); view.setUint32(40, pcm.length*2, true); for(var i=0,pos=44;i<pcm.length;i++,pos+=2){ view.setInt16(pos, pcm[i], true); } return new Blob([buf],{type:'audio/wav'}); }
+      function stop(){ return new Promise(function(resolve){ if(!recOn){ resolve(null); return; } recOn=false; try{ uiOff(); if(usingMR && mr){ mr.onstop = async function(){ try{ var blob=new Blob(mrChunks,{type:(mr.mimeType||'audio/webm')}); await handleBlob(blob); }catch(_e){} try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(_e){} resolve(true); }; try{ mr.stop(); }catch(__){} }
+        else { try{ waSrc && waSrc.disconnect(); waProc && waProc.disconnect(); }catch(_e){} try{ var blob = encodeWAV(waBuffers, waRate); (async function(){ await handleBlob(blob); try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(_e){} resolve(true); })(); }catch(_e){ try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(__){} resolve(false); } }
+      }catch(_e){ resolve(false); } }); }
+      async function handleBlob(blob){ try{ lastAudioKey = 'my-' + Date.now().toString(36) + '-aud'; await idbPut(lastAudioKey, blob); lastAudioUrl = null; var a=$("#audPrev"); if(a){ a.src=URL.createObjectURL(blob); a.classList.remove('hidden'); } }catch(_e){} }
+      function onClick(){ if(!recOn) start(); else stop(); }
+      if(recBtn && !recBtn.dataset.toggleBound){ recBtn.dataset.toggleBound='1'; recBtn.addEventListener('click', function(e){ try{e.preventDefault();}catch(_e){} onClick(); }); }
+    })();/* ===== order chips (click sequence) ===== */
     const defaultMyOrder=["text","translation","image","audio"];
     let orderChosen=[];
     function syncChips(){ $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); }
-    function updateOrderPreview(){ syncChips(); const m=I18N[LANG].chips || {text:'text',translation:'translation',image:'image',audio:'audio'}; const pretty = (orderChosen.length?orderChosen:defaultMyOrder).map(k=>m[k]).join(" → "); $("#orderPreview").textContent=pretty; }
+    function updateOrderPreview(){ syncChips(); const m=I18N[LANG].chips || {text:'text',translation:'translation',image:'image',audio:'audio'}; const pretty = (orderChosen.length?orderChosen:defaultMyOrder).map(k=>m[k]).join(" ??? "); $("#orderPreview").textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
-    function resetForm(){ $("#uFront").value=""; $("#uBack").value=""; $("#uImage").value=""; $("#uAudio").value=""; $("#imgPrev").classList.add("hidden"); $("#audPrev").classList.add("hidden"); $("#imgName").textContent=""; $("#audName").textContent=""; lastImageKey=null; lastAudioKey=null; orderChosen=[]; updateOrderPreview(); }
+        ; }catch(_e){ try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(__){} resolve(false); } }
+      }catch(_e){ resolve(false); } }); }
+      async function handleBlob(blob){ try{ lastAudioKey = 'my-' + Date.now().toString(36) + '-aud'; await idbPut(lastAudioKey, blob); lastAudioUrl = null; var a=$("#audPrev"); if(a){ a.src=URL.createObjectURL(blob); a.classList.remove('hidden'); } }catch(_e){} }
+      function onClick(){ if(!recOn) start(); else stop(); }
+      if(recBtn && !recBtn.dataset.toggleBound){ recBtn.dataset.toggleBound='1'; recBtn.addEventListener('click', function(e){ try{e.preventDefault();}catch(_e){} onClick(); }); }
+    })();function resetForm(){ $("#uFront").value=""; $("#uBack").value=""; $("#uImage").value=""; $("#uAudio").value=""; $("#imgPrev").classList.add("hidden"); $("#audPrev").classList.add("hidden"); $("#imgName").textContent=""; $("#audName").textContent=""; lastImageKey=null; lastAudioKey=null; orderChosen=[]; updateOrderPreview(); }
     $("#btnFormReset").addEventListener("click", resetForm);
     $("#btnAdd").addEventListener("click",async()=>{
       const text=$("#uFront").value.trim(), tr=$("#uBack").value.trim();
@@ -414,13 +454,13 @@ define(['core/str'], function(str) {
         const cell=tr.lastElementChild;
         const url = await audioURLFromCard(r.card);
         if(url){
-          const b1=document.createElement("button"); b1.className="iconbtn"; b1.textContent="▶"; b1.title=t("titles").play;
+          const b1=document.createElement("button"); b1.className="iconbtn"; b1.textContent="???"; b1.title=t("titles").play;
           b1.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=1; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
-          const b2=document.createElement("button"); b2.className="iconbtn"; b2.textContent="🐢"; b2.title=t("titles").slow;
+          const b2=document.createElement("button"); b2.className="iconbtn"; b2.textContent="????"; b2.title=t("titles").slow;
           b2.onclick=()=>{listPlayer.src=url; listPlayer.playbackRate=0.67; listPlayer.currentTime=0; listPlayer.play().catch(()=>{});};
           cell.appendChild(b1); cell.appendChild(b2);
         }
-        const edit=document.createElement("button"); edit.className="iconbtn"; edit.textContent="✎"; edit.title=t("titles").edit;
+        const edit=document.createElement("button"); edit.className="iconbtn"; edit.textContent="???"; edit.title=t("titles").edit;
         edit.onclick=()=>{ const pack=registry[r.deckId]; const card=pack.cards.find(x=>x.id===r.id);
           if(card){ currentItem={deckId:r.deckId,card:normalizeLessonCard({...card}),rec:state.decks[r.deckId][r.id],index:0}; visibleSlots=1; showCurrent(); $("#listModal").style.display="none"; }};
         cell.appendChild(edit);
@@ -458,9 +498,9 @@ define(['core/str'], function(str) {
       // Show install button
       if(btnInstallApp) {
         btnInstallApp.classList.remove('hidden');
-        console.log('[PWA] ✅ Install prompt available - button shown');
+        console.log('[PWA] ??? Install prompt available - button shown');
       } else {
-        console.error('[PWA] ❌ Button not found in DOM!');
+        console.error('[PWA] ??? Button not found in DOM!');
       }
     });
 
@@ -508,7 +548,7 @@ define(['core/str'], function(str) {
     if(iosInstallHint && isIOS && !isInStandaloneMode && !isHintDismissed) {
       // Show iOS install hint for iOS users who haven't installed the app yet
       iosInstallHint.classList.remove('hidden');
-      console.log('[PWA] ✅ iOS install hint shown');
+      console.log('[PWA] ??? iOS install hint shown');
     } else if(iosInstallHint) {
       console.log('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
     }

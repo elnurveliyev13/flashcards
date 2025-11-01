@@ -20,7 +20,12 @@
   button:hover{filter:brightness(1.05)}
   button:disabled{opacity:0.5;cursor:not-allowed}
   button:disabled:hover{filter:none}
-  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}`r`n
+  .iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}
+  .iconbtn, .btnFile{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
+  .iconbtn *{ pointer-events:none }
+  .iconbtn.recording{ background:#7f1d1d; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6) }
+  .rec-timer{ color:#fca5a5; font-size:12px; margin-left:8px }
+`r`n
   select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
   .grid{display:grid;grid-template-columns:1fr;gap:14px}
     .grid.edit-mode{grid-template-columns:1fr}
@@ -230,7 +235,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
         <select id="langSel">
           <option value="en">English</option>
           <option value="no">Norsk (bokmal)</option>
-          <option value="uk">”крањнська</option>
+          <option value="uk">??????????</option>
         </select>
         <label class="pill hidden">
           <span id="t_profile">{{#str}} profile, mod_flashcards {{/str}}</span>
@@ -312,7 +317,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
             <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
             <button id="btnRec"  class="iconbtn" title="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
+            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button><span id="recTimer" class="rec-timer hidden">00:00</span>
           </div>
           <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
         </div>
@@ -339,7 +344,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
-          <span class="tag" id="tag_trans_local">Translation (Е)</span>
+          <span class="tag" id="tag_trans_local">Translation (?)</span>
           <textarea id="uTransLocal" placeholder="Translation..."></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
@@ -359,16 +364,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
             <select id="uPOS">
               <option value="">-</option>
-              <option value="substantiv">Substantiv Ц navn pa steder, personer, ting og fenomener</option>
-              <option value="adjektiv">Adjektiv Ц beskriver substantiv</option>
-              <option value="pronomen">Pronomen Ц settes i stedet for et substantiv</option>
-              <option value="determinativ">Determinativ Ц bestemmer substantivet n?rmere</option>
-              <option value="verb">Verb Ц navn pa en handling</option>
-              <option value="adverb">Adverb Ц beskriver/modifiserer verb, adjektiv eller andre adverb</option>
-              <option value="preposisjon">Preposisjon Ц forteller hvor verbet/substantivet befinner seg i forhold til et annet verb/substantiv i bade tid og rom</option>
-              <option value="konjunksjon">Konjunksjon Ц binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
-              <option value="subjunksjon">Subjunksjon Ц innleder leddsetninger</option>
-              <option value="interjeksjon">Interjeksjon Ц spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
+              <option value="substantiv">Substantiv ? navn pa steder, personer, ting og fenomener</option>
+              <option value="adjektiv">Adjektiv ? beskriver substantiv</option>
+              <option value="pronomen">Pronomen ? settes i stedet for et substantiv</option>
+              <option value="determinativ">Determinativ ? bestemmer substantivet n?rmere</option>
+              <option value="verb">Verb ? navn pa en handling</option>
+              <option value="adverb">Adverb ? beskriver/modifiserer verb, adjektiv eller andre adverb</option>
+              <option value="preposisjon">Preposisjon ? forteller hvor verbet/substantivet befinner seg i forhold til et annet verb/substantiv i bade tid og rom</option>
+              <option value="konjunksjon">Konjunksjon ? binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
+              <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
+              <option value="interjeksjon">Interjeksjon ? spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
               <option value="other">Annet</option>
             </select>
             <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
