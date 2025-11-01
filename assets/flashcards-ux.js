@@ -19,6 +19,14 @@
     const $ = s => root.querySelector(s);
 
     console.log('[Flashcards UX] Initializing improvements...');
+    // Feature flag: enable bottom bar when query ?uxbar=1 or localStorage flag
+    try{
+      var _p = new URLSearchParams(location.search).get('uxbar');
+      if((_p && _p !== '0') || localStorage.getItem('srs-ux-bottom') === '1'){
+        const _root = document.getElementById('mod_flashcards_container');
+        if(_root) _root.setAttribute('data-ux-bottom','1');
+      }
+    }catch(_e){}
 
     // 1. Fixed bottom action bar handlers
     const btnEasyBottom = $("#btnEasyBottom");

@@ -16,7 +16,7 @@
   header #btnList{display:none}
   .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .pill{padding:8px 12px;border-radius:999px;background:#0b1220;border:1px dashed #374151;color:var(--muted);font-size:13px}
-  button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radius:14px;padding:12px 16px;font-size:16px;cursor:pointer}
+  button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radius:14px;padding:12px 16px;font-size:16px;cursor:pointer; transition:all 0.15s ease;}
   button:hover{filter:brightness(1.05)}
   button:disabled{opacity:0.5;cursor:not-allowed}
   button:disabled:hover{filter:none}
@@ -31,7 +31,7 @@
   .grid.edit-mode > #cardCreationFormWrap .card-form-toggle { display:none }
   .grid.edit-mode > #cardCreationFormWrap .card-form-content { display:block !important }
   /* Always hide fixed bottom bar when embedding rating buttons in card */
-  #bottomActions{ display:none !important }
+  #mod_flashcards_container:not([data-ux-bottom="1"]) #bottomActions{ display:none !important }
   @media (max-width:900px){.grid{grid-template-columns:1fr}}
   .card{position:relative;background:var(--card);border:1px solid #374151;border-radius:16px;padding:16px}
   .actionTop{position:absolute;top:8px;right:8px;display:flex;gap:6px}
@@ -206,14 +206,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   @supports(padding:max(env(safe-area-inset-bottom),0px)){
     #mod_flashcards_container.fs-active{padding-bottom:max(env(safe-area-inset-bottom),0px)}
   }
-
   /* Mobile offsets for title and iOS banner */
   @media (max-width:620px){
     header h1#t_appTitle{ margin-left:12px }
     .ios-hint{ margin-left:12px; margin-right:12px }
   }
-</style>
-
+  /* Rating buttons inside the card: match fixed bar palette */
+  .row2 .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
+  .row2 .mid{background:rgba(59,130,246,0.22);border:2px solid rgba(59,130,246,0.6);color:#60a5fa}
+  .row2 .hard{background:rgba(245,158,11,0.22);border:2px solid rgba(245,158,11,0.6);color:#fbbf24}
+  .row2 button:active{transform:scale(0.92)}</style>
   <div class="wrap">
     <header>
       <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
@@ -237,13 +239,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
         <!-- Fullscreen button removed per UX feedback -->
       </div>
     </header>
-
     <!-- iOS Install Hint (compact, auto-hide) -->
     <div id="iosInstallHint" class="ios-hint hidden">
       <button id="iosHintClose" class="ios-hint-close" title="Close">&times;</button>
        Tap <span class="step step-share">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step step-add">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
     </div>
-
     <!-- Progress indicator -->
     <div id="progressBar" class="progress-bar hidden">
       <div>
@@ -252,7 +252,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
       </div>
       <span id="stageBadge" class="stage hidden"><span id="stageEmoji"></span><b id="stageText">0</b></span>
     </div>
-
     <div class="row hidden">
       <select id="deckSelect"></select>
       <button id="btnActivate">{{#str}} activate, mod_flashcards {{/str}}</button>
@@ -260,7 +259,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
       <span id="dueInfo" class="pill" data-label="{{#str}} list_due, mod_flashcards {{/str}}">{{#str}} due, mod_flashcards {{/str}}</span>
       <label class="pill"><input id="packFile" type="file" accept="application/json"><span id="t_loadPack">{{#str}} loadpack, mod_flashcards {{/str}}</span></label>
     </div>
-
     <div class="grid">
       <div class="card">
         <div class="actionTop">
@@ -289,7 +287,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
         </div>
         <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
       </div>
-
       <!-- Card creation form (collapsible) -->
       <div class="card card-form-collapsed" id="cardCreationFormWrap">
         <div class="card-form-toggle" id="btnToggleForm">
@@ -314,7 +311,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           </div>
           <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
         </div>
-
         <div class="slot">
           <span class="tag" id="t_pickPhoto">{{#str}} image, mod_flashcards {{/str}}</span>
           <div class="previewRow">
@@ -328,7 +324,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           </div>
           <img id="imgPrev" class="media hidden" alt=""/>
         </div>
-
         <div class="slot">
           <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
           <textarea id="uFront" placeholder="Front..."></textarea>
@@ -346,7 +341,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           <span class="tag">Translation (English)</span>
           <textarea id="uTransEn" placeholder="Translation (English)..."></textarea>
         </div>
-
         <!-- Linguistic enrichment fields -->
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
@@ -355,7 +349,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
@@ -377,7 +370,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           </div>
           <div id="uPOSHelp" class="small"></div>
         </div>
-
         <div class="slot hidden" id="slot_gender">
           <span class="tag">{{#str}} gender, mod_flashcards {{/str}}</span>
           <select id="uGender">
@@ -387,7 +379,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <option value="hunkjonn">{{#str}} gender_feminine, mod_flashcards {{/str}}</option>
           </select>
         </div>
-
         <div class="slot hidden" id="slot_noun_forms">
           <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;flex-wrap:wrap">
@@ -398,7 +389,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -406,7 +396,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -414,7 +403,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -422,7 +410,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -430,7 +417,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
@@ -438,7 +424,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
             <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
-
         <div class="slot">
           <span class="tag" id="t_order">{{#str}} order, mod_flashcards {{/str}}</span>
           <div id="orderChips" class="chips">
@@ -450,21 +435,24 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
           </div>
           <div class="small" id="orderPreview">audio -> image -> text -> explanation -> translation</div>
         </div>
-
         <div class="row2" style="display:flex">
           <button id="btnUpdate" class="ok">Update Previous</button>
           <button id="btnAdd" class="mid">Add as New</button>
         </div>
-
         <div class="mono" id="status"></div>
         <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>
         </div>
       </div>
     </div>
-
     <div class="mono" id="debug"></div>
   </div>
-
+  
+  <!-- Fixed bottom action bar (feature-flagged via data-ux-bottom="1") -->
+  <div id="bottomActions" class="bottom-actions hidden" aria-label="rating actions">
+    <button id="btnEasyBottom" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
+    <button id="btnNormalBottom" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
+    <button id="btnHardBottom" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
+  </div>
   <div id="listModal" class="modal" role="dialog" aria-modal="true">
     <div class="box">
       <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
@@ -500,10 +488,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
       </div>
     </div>
   </div>
-
-  <!-- Fixed bottom action bar -->
-</div>
-
 <!-- Field prompt modal for staged tasks -->
 <div id="fieldPrompt" class="modal" role="dialog" aria-modal="true">
   <div class="box" style="max-width:560px">
@@ -518,5 +502,3 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     </div>
   </div>
 </div>
-
-
