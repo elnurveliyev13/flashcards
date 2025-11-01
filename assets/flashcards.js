@@ -595,7 +595,7 @@
       var stopBtn = $("#btnStop");
       if(stopBtn) stopBtn.classList.add("hidden");
       if(!recBtn) return;
-      var isRecording = false;
+      var isRecording = false;\r\n      var timerEl = document.getElementById('recTimer'); var tInt=null,t0=0;\r\n      function _fmt(t){t=Math.max(0,Math.floor(t/1000));var m=('0'+Math.floor(t/60)).slice(-2),s=('0'+(t%60)).slice(-2);return m+':'+s;}\r\n      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent=_fmt(Date.now()-t0); }catch(_e){} }, 250);}\r\n      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }\r\n
       function startRecording(){
         if(isRecording) return;
         (async function(){
@@ -619,7 +619,7 @@
             };
             rec.start();
             isRecording = true;
-            recBtn.classList.add("active");
+            recBtn.classList.add("recording"); timerStart();
           }catch(_e){ isRecording=false; rec=null; }
         })();
       }
@@ -627,7 +627,7 @@
         try{ if(rec){ rec.stop(); } }catch(_e){}
         isRecording = false;
         rec = null;
-        recBtn.classList.remove("active");
+        recBtn.classList.remove("recording"); timerStop();
       }
       function onDown(e){
         try{ e.preventDefault(); }catch(_e){}
@@ -644,49 +644,14 @@
         window.addEventListener("mouseup", onceUp);
         window.addEventListener("touchend", onceUp);
       }
-      recBtn.addEventListener("pointerdown_disabled", onDown);
-      recBtn.addEventListener("mousedown_disabled", onDown);
-      recBtn.addEventListener("touchstart_disabled", onDown, {passive:false});
+      recBtn.addEventListener("pointerdown", onDown);
+      recBtn.addEventListener("mousedown", onDown);
+      recBtn.addEventListener("touchstart", onDown, {passive:false});\r\n      try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}\r\n
     })();$("#btnRec").addEventListener("clack",async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});recChunks=[];const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/mp4";rec=new MediaRecorder(stream,{mimeType:mime});rec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};rec.onstop=async()=>{const blob=new Blob(recChunks,{type:mime});lastAudioKey="my-"+Date.now().toString(36)+"-aud";await idbPut(lastAudioKey,blob); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(blob);$("#audPrev").classList.remove("hidden");stream.getTracks().forEach(t=>t.stop());};rec.start();$("#btnRec").classList.add("hidden");$("#btnStop").classList.remove("hidden");}catch{}});
     $("#btnStop").addEventListener("clack",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
 
-        // Click-to-record toggle with iOS WebAudio fallback and timer
-    (function(){
-      var recBtn = $("#btnRec");
-      var stopBtn = $("#btnStop");
-      var timerEl = document.getElementById('recTimer');
-      var usingMR = false, mr=null, mrChunks=[], waCtx=null, waSrc=null, waProc=null, waBuffers=[], waRate=44100, streamRef=null;
-      var recOn = false, t0=0, tInt=null;
-      function canUseMR(){ try{ if(!window.MediaRecorder) return false; if(MediaRecorder.isTypeSupported && (MediaRecorder.isTypeSupported('audio/webm')||MediaRecorder.isTypeSupported('audio/mp4'))) return true; return !!window.MediaRecorder; }catch(_e){ return false; } }
-      function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
-      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) clearInterval(tInt); tInt=setInterval(function(){ timerEl.textContent=fmt(Date.now()-t0); }, 250); }
-      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){} tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
-      function uiOn(){ if(recBtn){ recBtn.classList.add('recording'); recBtn.setAttribute('aria-pressed','true'); } if(stopBtn) stopBtn.classList.add('hidden'); timerStart(); }
-      function uiOff(){ if(recBtn){ recBtn.classList.remove('recording'); recBtn.removeAttribute('aria-pressed'); } if(stopBtn) stopBtn.classList.add('hidden'); timerStop(); }
-      async function start(){ if(recOn) return; recOn=true; try{
-        var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
-        streamRef = stream;
-        if(canUseMR()){
-          usingMR=true; mrChunks=[]; var mime = (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported('audio/webm'))?'audio/webm':'audio/mp4';
-          mr=new MediaRecorder(stream,{mimeType:mime});
-          mr.ondataavailable=function(e){ if(e.data && e.data.size>0) mrChunks.push(e.data); };
-          mr.start();
-        } else {
-          usingMR=false; waCtx = new (window.AudioContext||window.webkitAudioContext)(); waRate=waCtx.sampleRate; waSrc=waCtx.createMediaStreamSource(stream); waProc=waCtx.createScriptProcessor(4096,1,1); waBuffers=[]; waProc.onaudioprocess=function(e){ var ch=e.inputBuffer.getChannelData(0); waBuffers.push(new Float32Array(ch)); }; waSrc.connect(waProc); waProc.connect(waCtx.destination);
-        }
-        uiOn();
-      }catch(_e){ recOn=false; uiOff(); }
-      }
-      function encodeWAV(buffers, sampleRate){ var len=0; for(var i=0;i<buffers.length;i++) len+=buffers[i].length; var pcm=new Int16Array(len); var off=0; for(var i=0;i<buffers.length;i++){ var b=buffers[i]; for(var j=0;j<b.length;j++){ var s=Math.max(-1,Math.min(1,b[j])); pcm[off++]= s<0 ? s*0x8000 : s*0x7FFF; } } var buf=new ArrayBuffer(44 + pcm.length*2); var view=new DataView(buf); function wstr(o,s){ for(var i=0;i<s.length;i++) view.setUint8(o+i, s.charCodeAt(i)); }
-        wstr(0,'RIFF'); view.setUint32(4, 36 + pcm.length*2, true); wstr(8,'WAVE'); wstr(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true); view.setUint16(22,1,true); view.setUint32(24,sampleRate,true); view.setUint32(28,sampleRate*2,true); view.setUint16(32,2,true); view.setUint16(34,16,true); wstr(36,'data'); view.setUint32(40, pcm.length*2, true); for(var i=0,pos=44;i<pcm.length;i++,pos+=2){ view.setInt16(pos, pcm[i], true); } return new Blob([buf],{type:'audio/wav'}); }
-      function stop(){ return new Promise(function(resolve){ if(!recOn){ resolve(null); return; } recOn=false; try{ uiOff(); if(usingMR && mr){ mr.onstop = async function(){ try{ var blob=new Blob(mrChunks,{type:(mr.mimeType||'audio/webm')}); await handleBlob(blob); }catch(_e){} try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(_e){} resolve(true); }; try{ mr.stop(); }catch(__){} }
-        else { try{ waSrc && waSrc.disconnect(); waProc && waProc.disconnect(); }catch(_e){} try{ var blob = encodeWAV(waBuffers, waRate); (async function(){ await handleBlob(blob); try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(_e){} resolve(true); })(); }catch(_e){ try{ streamRef && streamRef.getTracks().forEach(function(t){t.stop();}); }catch(__){} resolve(false); } }
-      }catch(_e){ resolve(false); } }); }
-      async function handleBlob(blob){ try{ lastAudioKey = 'my-' + Date.now().toString(36) + '-aud'; await idbPut(lastAudioKey, blob); lastAudioUrl = null; var a=$("#audPrev"); if(a){ a.src=URL.createObjectURL(blob); a.classList.remove('hidden'); } }catch(_e){} }
-      function onClick(){ if(!recOn) start(); else stop(); }
-      if(recBtn && !recBtn.dataset.toggleBound){ recBtn.dataset.toggleBound='1'; recBtn.addEventListener('click', function(e){ try{e.preventDefault();}catch(_e){} onClick(); }); }
-    })();let orderChosen=[];
-    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
+        
+    let orderChosen=[];\r\n    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
