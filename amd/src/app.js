@@ -311,14 +311,70 @@ define(['core/str'], function(str) {
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b);$("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
-        // Hold-to-record: press and hold to record; release to stop
+            // Hold-to-record: press and hold to record; release to stop
     (function(){
-      const recBtn = $("#btnRec");
-      const stopBtn = $("#btnStop");
+      var recBtn = $("#btnRec");
+      var stopBtn = $("#btnStop");
       if(stopBtn) stopBtn.classList.add("hidden");
       if(!recBtn) return;
-      let isRecording = false;\r\n      const timerEl = document.getElementById('recTimer'); let tInt=null, t0=0;\r\n      function _fmt(t){t=Math.max(0,Math.floor(t/1000));const m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s;}\r\n      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(()=>{ try{ timerEl.textContent=_fmt(Date.now()-t0)      function onClick(){ if(!recOn) start(); else stop(); }
-      if(recBtn && !recBtn.dataset.toggleBound){ recBtn.dataset.toggleBound='1'; recBtn.addEventListener('click', function(e){ try{e.preventDefault();}catch(_e){} onClick(); }); }
+      var isRecording = false;
+      var timerEl = document.getElementById('recTimer');
+      var tInt=null, t0=0;
+      function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
+      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent = fmt(Date.now()-t0); }catch(_e){} }, 250); }
+      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
+      function startRecording(){
+        if(isRecording) return;
+        (async function(){
+          try{
+            var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+            recChunks = [];
+            var mime = (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm")) ? "audio/webm" : "audio/mp4";
+            rec = new MediaRecorder(stream, {mimeType:mime});
+            rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
+            rec.onstop = async function(){
+              try{
+                var blob = new Blob(recChunks, {type:mime});
+                lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
+                await idbPut(lastAudioKey, blob);
+                lastAudioUrl = null;
+                var url = URL.createObjectURL(blob);
+                var a = $("#audPrev");
+                if(a){ a.src = url; a.classList.remove("hidden"); }
+              }catch(_e){}
+              try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){}
+            };
+            rec.start();
+            isRecording = true;
+            recBtn.classList.add("recording"); timerStart();
+          }catch(_e){ isRecording=false; rec=null; }
+        })();
+      }
+      function stopRecording(){
+        try{ if(rec){ rec.stop(); } }catch(_e){}
+        isRecording = false;
+        rec = null;
+        recBtn.classList.remove("recording"); timerStop();
+      }
+      function onDown(e){
+        try{ e.preventDefault(); }catch(_e){}
+        startRecording();
+        function onceUp(){
+          window.removeEventListener("pointerup", onceUp);
+          window.removeEventListener("pointercancel", onceUp);
+          window.removeEventListener("mouseup", onceUp);
+          window.removeEventListener("touchend", onceUp);
+          stopRecording();
+        }
+        window.addEventListener("pointerup", onceUp);
+        window.addEventListener("pointercancel", onceUp);
+        window.addEventListener("mouseup", onceUp);
+        window.addEventListener("touchend", onceUp);
+      }
+      recBtn.addEventListener("pointerdown", onDown);
+      recBtn.addEventListener("mousedown", onDown);
+      recBtn.addEventListener("touchstart", onDown, {passive:false});
+      try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
     })();function resetForm(){ $("#uFront").value=""; $("#uBack").value=""; $("#uImage").value=""; $("#uAudio").value=""; $("#imgPrev").classList.add("hidden"); $("#audPrev").classList.add("hidden"); $("#imgName").textContent=""; $("#audName").textContent=""; lastImageKey=null; lastAudioKey=null; orderChosen=[]; updateOrderPreview(); }
     $("#btnFormReset").addEventListener("click", resetForm);
     $("#btnAdd").addEventListener("click",async()=>{

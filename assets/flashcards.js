@@ -589,13 +589,18 @@
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
-        // Hold-to-record: press and hold to record; release to stop
+                        // Hold-to-record: press and hold to record; release to stop
     (function(){
       var recBtn = $("#btnRec");
       var stopBtn = $("#btnStop");
       if(stopBtn) stopBtn.classList.add("hidden");
       if(!recBtn) return;
-      var isRecording = false;\r\n      var timerEl = document.getElementById('recTimer'); var tInt=null,t0=0;\r\n      function _fmt(t){t=Math.max(0,Math.floor(t/1000));var m=('0'+Math.floor(t/60)).slice(-2),s=('0'+(t%60)).slice(-2);return m+':'+s;}\r\n      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent=_fmt(Date.now()-t0); }catch(_e){} }, 250);}\r\n      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }\r\n
+      var isRecording = false;
+      var timerEl = document.getElementById('recTimer');
+      var tInt=null, t0=0;
+      function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
+      function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent = fmt(Date.now()-t0); }catch(_e){} }, 250); }
+      function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
       function startRecording(){
         if(isRecording) return;
         (async function(){
@@ -646,12 +651,11 @@
       }
       recBtn.addEventListener("pointerdown", onDown);
       recBtn.addEventListener("mousedown", onDown);
-      recBtn.addEventListener("touchstart", onDown, {passive:false});\r\n      try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}\r\n
-    })();$("#btnRec").addEventListener("clack",async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});recChunks=[];const mime=MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/mp4";rec=new MediaRecorder(stream,{mimeType:mime});rec.ondataavailable=e=>{if(e.data.size>0)recChunks.push(e.data);};rec.onstop=async()=>{const blob=new Blob(recChunks,{type:mime});lastAudioKey="my-"+Date.now().toString(36)+"-aud";await idbPut(lastAudioKey,blob); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(blob);$("#audPrev").classList.remove("hidden");stream.getTracks().forEach(t=>t.stop());};rec.start();$("#btnRec").classList.add("hidden");$("#btnStop").classList.remove("hidden");}catch{}});
-    $("#btnStop").addEventListener("clack",()=>{if(rec){rec.stop();rec=null;}$("#btnStop").classList.add("hidden");$("#btnRec").classList.remove("hidden");});
-
-        
-    let orderChosen=[];\r\n    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
+      recBtn.addEventListener("touchstart", onDown, {passive:false});
+      try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
+    })();
+    let orderChosen=[];
+    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";

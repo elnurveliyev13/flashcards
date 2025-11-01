@@ -25,7 +25,7 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Assets (same order and version as activity view).
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025110121; // keep in sync with view.php
+`$ver = 2025110125; // keep in sync with view.php
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
@@ -41,3 +41,4 @@ $PAGE->requires->js_init_code($init);
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('mod_flashcards/app', []);
 echo $OUTPUT->footer();
+
