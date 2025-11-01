@@ -21,10 +21,10 @@
     console.log('[Flashcards UX] Initializing improvements...');
     // Detect iOS and mark root
     try{ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){ root.setAttribute('data-platform-ios','1'); } }catch(_e){}
-    // Hide original rating row when bottom bar is visible
+    // Hide the in-card rating buttons when the bottom bar is enabled
     try{
       var _style = document.createElement('style');
-      _style.textContent = '#mod_flashcards_container[data-ux-bottom="1"] .row2{display:none !important}';
+      _style.textContent = '#mod_flashcards_container[data-ux-bottom="1"] #btnEasy,\\\n#mod_flashcards_container[data-ux-bottom="1"] #btnNormal,\\\n#mod_flashcards_container[data-ux-bottom="1"] #btnHard{display:none !important}';
       (document.head || document.documentElement).appendChild(_style);
     }catch(_e){}
     // Feature flag: enable bottom bar when query ?uxbar=1 or localStorage flag

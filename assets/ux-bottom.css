@@ -3,5 +3,6 @@
 # (Bottom bar is always visible and buttons can be disabled when needed.)
 # Scoped to this module container only.
 
-#mod_flashcards_container .row2{ display:none !important }
-
+#mod_flashcards_container[data-ux-bottom="1"] #btnEasy,
+#mod_flashcards_container[data-ux-bottom="1"] #btnNormal,
+#mod_flashcards_container[data-ux-bottom="1"] #btnHard{ display:none !important }

@@ -32,6 +32,8 @@ $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' 
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 // One-time iOS install guide (lightweight modal)
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
+// Fixed save bar for editor
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/edit-save-bar.js', ['v' => $ver]));
 // Prefer bottom action bar as the single rating UI
 $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/ux-bottom.css', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
