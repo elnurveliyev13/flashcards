@@ -3,8 +3,8 @@
 #mod_flashcards_container[data-ux-bottom=\"1\"] #btnNormal,
 #mod_flashcards_container[data-ux-bottom=\"1\"] #btnHard{ display:none !important }
 
-/* Slight breathing room that respects iOS safe area; visuals are handled by template */
+/* Slightly raise buttons from the very bottom (both rating + edit bars) */
 #mod_flashcards_container .bottom-actions{
-  padding-bottom: calc(14px + env(safe-area-inset-bottom)) !important;
-  padding-bottom: calc(14px + constant(safe-area-inset-bottom)) !important;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important; /* +2px */
+  padding-bottom: calc(16px + constant(safe-area-inset-bottom)) !important; /* legacy iOS */
 }
