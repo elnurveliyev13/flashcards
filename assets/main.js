@@ -14,22 +14,35 @@
       };
     }
 
-    import(moduleUrl).then(mod => {
-      if(!mod || typeof mod.flashcardsInit !== 'function'){
-        throw new Error('flashcards.js did not export flashcardsInit');
-      }
-      window.flashcardsInit = mod.flashcardsInit;
-      while(queue.length){
-        const args = queue.shift();
-        try{
-          mod.flashcardsInit(...args);
-        }catch(err){
-          console.error('Flashcards init failed', err);
-        }
-      }
-    }).catch(err => {
+    const supportsModules = (function(){
+      const s = document.createElement('script');
+      return 'noModule' in s;
+    })();
+
+    if(!supportsModules){
+      console.error('Flashcards requires a browser with ES module support.');
+      return;
+    }
+
+    const moduleScript = document.createElement('script');
+    moduleScript.type = 'module';
+    moduleScript.textContent = `
+import { flashcardsInit as init } from '${moduleUrl}';
+const queue = window.__flashcardsInitQueue || [];
+window.flashcardsInit = init;
+while(queue.length){
+  const args = queue.shift();
+  try{
+    init(...args);
+  }catch(err){
+    console.error('Flashcards init failed', err);
+  }
+}
+`;
+    moduleScript.addEventListener('error', err => {
       console.error('Failed to load Flashcards app module', err);
     });
+    (document.head || document.documentElement).appendChild(moduleScript);
   }catch(err){
     console.error('Flashcards bootstrap failed', err);
   }
