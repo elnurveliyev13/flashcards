@@ -17,10 +17,13 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .install-btn-compact svg{display:block}
 .header-progress{display:flex;flex-direction:column;gap:6px}
 .progress-info{display:flex;align-items:center;gap:8px;font-size:13px;color:#9ca3af}
-.progress-counter{font-weight:600;color:#e5e7eb}
+.progress-counter{font-weight:600;color:#e5e7eb;font-size:14px}
 .progress-track{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;position:relative}
 .progress-fill-mini{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg, #2196f3 0%, #1976d2 100%);transition:width 0.3s ease;width:0}
-.stage-compact{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 8px;background:rgba(33,150,243,0.15);border:1px solid rgba(33,150,243,0.3);border-radius:12px;font-size:12px;font-weight:600;color:#60a5fa}
+/* Card stage indicator */
+.card-stage-info{display:flex;justify-content:center;margin-top:12px}
+.stage-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(33,150,243,0.12);border:1px solid rgba(33,150,243,0.25);border-radius:20px;font-size:13px;color:#9ca3af}
+.stage-pill b{color:#60a5fa;font-weight:600;font-size:14px}
 /* Hide header list button; we place it inside the card actions */
 header #btnList{display:none}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
