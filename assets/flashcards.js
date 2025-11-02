@@ -270,7 +270,7 @@
     function setDue(n){ const el=$("#due"); if(!el) return; el.textContent = String(n); }
 
     let audioURL=null; const player=new Audio();
-    let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let rec=null,recChunks=[],camStream=null;
+    let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[],camStream=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const DEBUG_REC = (function(){
       try{
@@ -932,9 +932,26 @@ function encodeWAV(samples) {
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
     $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPut(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
-    $("#uAudio").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#audName").textContent=f.name; lastAudioKey="my-"+Date.now().toString(36)+"-aud"; await idbPut(lastAudioKey,f); lastAudioUrl=null; const url=URL.createObjectURL(f); const a=$("#audPrev"); if(a){ try{a.pause();}catch(_e){} a.src=url; a.classList.remove("hidden"); try{a.load();}catch(_e){} } });
+    $("#uAudio").addEventListener("change", async e=>{
+      const f=e.target.files?.[0];
+      if(!f) return;
+      $("#audName").textContent=f.name;
+      lastAudioUrl=null;
+      lastAudioBlob=null;
+      try{
+        lastAudioKey="my-"+Date.now().toString(36)+"-aud";
+        await idbPut(lastAudioKey,f);
+      }catch(err){
+        debugLog('Manual audio idbPut failed: '+(err?.message||err));
+        lastAudioKey=null;
+        lastAudioBlob=f;
+      }
+      const url=URL.createObjectURL(f);
+      const a=$("#audPrev");
+      if(a){ try{a.pause();}catch(_e){} a.src=url; a.classList.remove("hidden"); try{a.load();}catch(_e){} }
+    });
     $("#btnClearImg").addEventListener("click",()=>{ lastImageKey=null; lastImageUrl=null; $("#uImage").value=""; const img=$("#imgPrev"); if(img){ img.classList.add("hidden"); img.removeAttribute('src'); } $("#imgName").textContent=""; });
-    $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } $("#audName").textContent=""; });
+    $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; lastAudioBlob=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } $("#audName").textContent=""; });
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
@@ -1033,26 +1050,37 @@ function encodeWAV(samples) {
         if(blob.size <= 0){
           lastAudioKey = null;
           lastAudioUrl = null;
+          lastAudioBlob = null;
           resetAudioPreview();
           const statusEl = $("#status");
           if(statusEl){ statusEl.textContent = 'Recording failed'; setTimeout(()=>{ statusEl.textContent=''; }, 2000); }
           debugLog('Empty blob received from recorder');
           return;
         }
+        let stored = false;
+        lastAudioUrl = null;
+        lastAudioBlob = null;
         try{
           lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
           await idbPut(lastAudioKey, blob);
-          lastAudioUrl = null;
-          const a = $("#audPrev");
-          if(a){
-            resetAudioPreview();
-            previewAudioURL = URL.createObjectURL(blob);
-            a.src = previewAudioURL;
-            a.classList.remove("hidden");
-            try{ a.load(); }catch(_e){}
-          }
+          stored = true;
         }catch(err){
-          debugLog('handleRecordedBlob failed: '+(err?.message||err));
+          debugLog('IndexedDB store failed: '+(err?.message||err));
+          lastAudioKey = null;
+          lastAudioBlob = blob;
+        }
+        const a = $("#audPrev");
+        if(a){
+          resetAudioPreview();
+          previewAudioURL = URL.createObjectURL(blob);
+          a.src = previewAudioURL;
+          a.classList.remove("hidden");
+          try{ a.load(); }catch(_e){}
+        }
+        if(stored){
+          debugLog('handleRecordedBlob stored via IDB');
+        } else {
+          debugLog('handleRecordedBlob using in-memory blob fallback (size '+blob.size+')');
         }
       }
       let iosStartPromise = null;
@@ -1198,6 +1226,7 @@ function encodeWAV(samples) {
       lastAudioKey=null;
       lastImageUrl=null;
       lastAudioUrl=null;
+      lastAudioBlob=null;
       if(useIOSRecorderGlobal && iosRecorderGlobal){ try{ iosRecorderGlobal.releaseMic(); }catch(_e){} }
       editingCardId=null; // Clear editing card ID when resetting form
       orderChosen=[];
@@ -1280,8 +1309,25 @@ function encodeWAV(samples) {
               }
               return new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)});
             })(), 'audio', id);
+            lastAudioBlob = null;
           }
         }catch(e){ console.error('Audio upload failed:', e); }
+      } else if(lastAudioBlob && !lastAudioUrl){
+        try{
+          const blob = lastAudioBlob;
+          const mt = (blob && blob.type) ? (blob.type+'') : '';
+          let ext = 'webm';
+          if(mt){
+            const low = mt.toLowerCase();
+            if(low.indexOf('audio/wav') === 0) ext = 'wav';
+            else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
+            else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
+            else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
+            else if(low.indexOf('audio/webm') === 0) ext = 'webm';
+          }
+          lastAudioUrl = await uploadMedia(new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)}), 'audio', id);
+          lastAudioBlob = null;
+        }catch(e){ console.error('Audio upload failed (memory fallback):', e); }
       }
 
       const translations={};
