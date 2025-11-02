@@ -151,76 +151,120 @@ input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12p
   justify-content:center;
   margin:24px auto 0;
   width:100%;
-  max-width:320px;
-  font-size:15px;
-  gap:8px;
+  max-width:360px;
+  padding:14px 20px;
+  font-size:16px;
+  gap:10px;
   text-align:center;
-  line-height:1.3;
+  line-height:1.35;
 }
 @media (max-width:600px){
   .install-btn-block{
     max-width:none;
-    margin-top:16px;
+    margin-top:20px;
   }
 }
-/* iOS Install Hint - Compact */
+/* iOS Install Hint */
 .ios-hint{
   position:relative;
-  background:#1e3a5f;
-  border:1px solid #3b82f6;
-  border-radius:8px;
-  padding:5px 24px 5px 8px;
-  margin:0 18px 6px 18px;
-  color:#e2e8f0;
-  font-size:11px;
-  line-height:1.3;
+  background:linear-gradient(135deg, rgba(15,36,68,0.95), rgba(17,51,99,0.95));
+  border:1px solid rgba(56,189,248,0.55);
+  border-radius:18px;
+  padding:20px 56px 20px 20px;
+  margin:20px auto 0;
+  width:100%;
+  max-width:360px;
+  color:#f8fafc;
+  font-size:16px;
+  line-height:1.6;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  box-shadow:0 14px 38px rgba(15,118,222,0.35);
+}
+.ios-hint-title{
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:0.01em;
+}
+.ios-hint-steps{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+.ios-hint-step-text{
+  font-weight:500;
+}
+.ios-hint-arrow{
+  font-size:20px;
+  color:#38bdf8;
+  font-weight:600;
 }
 .ios-hint .step{
-  display:inline-block;
-  background:#0c2340;
-  padding:1px 4px;
-  border-radius:4px;
-  font-weight:600;
-  margin:0 1px;
-  font-size:10px;
-
-  line-height:1; /* ensure vertical centering for icons */
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(15,23,42,0.65);
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:700;
+  margin:0;
+  font-size:15px;
+  line-height:1.2;
+  color:#e2e8f0;
+  box-shadow:0 4px 12px rgba(22,78,199,0.35);
 }
 /* Icons after step labels (iOS-style) */
 .ios-hint .step-share::after{
   content:'';
   display:inline-block;
-  width:12px;height:12px;margin-left:4px;vertical-align:-1px;
-  background-repeat:no-repeat;background-size:12px 12px;
+  width:16px;height:16px;margin-left:6px;vertical-align:-1px;
+  background-repeat:no-repeat;background-size:16px 16px;
 background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%2212%22 width=%2216%22 height=%228%22 rx=%222%22/%3E%3Cpath d=%22M12 4v10%22/%3E%3Cpath d=%22M8 8l4-4 4 4%22/%3E%3C/svg%3E");
 }
 .ios-hint .step-add::after{
   content:'';
   display:inline-block;
-  width:12px;height:12px;margin-left:4px;vertical-align:-1px;
-  background-repeat:no-repeat;background-size:12px 12px;
+  width:16px;height:16px;margin-left:6px;vertical-align:-1px;
+  background-repeat:no-repeat;background-size:16px 16px;
 background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8%22/%3E%3Cpath d=%22M8 12h8%22/%3E%3C/svg%3E");
 }
 .ios-hint-close{
   position:absolute;
-  top:2px;
-  right:2px;
-  background:transparent;
+  top:14px;
+  right:14px;
+  background:rgba(15,23,42,0.35);
   border:none;
-  color:#94a3b8;
-  font-size:14px;
-  padding:2px;
+  color:#cbd5f5;
+  font-size:18px;
+  padding:4px;
   cursor:pointer;
-  border-radius:4px;
-  width:18px;
-  height:18px;
+  border-radius:8px;
+  width:28px;
+  height:28px;
   display:flex;
   align-items:center;
   justify-content:center;
+  transition:background 0.2s ease,color 0.2s ease;
 }
 .ios-hint-close:hover{
-  background:rgba(255,255,255,0.1);
-  color:#e2e8f0;
+  background:rgba(148,163,184,0.35);
+  color:#f8fafc;
+}
+@media (max-width:600px){
+  .ios-hint{
+    max-width:none;
+    padding:18px 48px 18px 18px;
+    margin-top:18px;
+  }
+  .ios-hint-steps{
+    gap:8px;
+  }
+  .ios-hint .step{
+    font-size:14px;
+    padding:5px 9px;
+  }
 }
 /* UX IMPROVEMENTS */
 .front{font-size:32px !important;font-weight:500;line-height:1.3;color:#f1f5f9}

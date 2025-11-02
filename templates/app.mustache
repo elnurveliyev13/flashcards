@@ -20,11 +20,6 @@
         </div>
       </div>
     </header>
-    <!-- iOS Install Hint (compact, auto-hide) -->
-    <div id="iosInstallHint" class="ios-hint hidden">
-      <button id="iosHintClose" class="ios-hint-close" title="Close">&times;</button>
-       Tap <span class="step step-share">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step step-add">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
-    </div>
     <div class="row hidden">
       <select id="deckSelect"></select>
       <button id="btnActivate">{{#str}} activate, mod_flashcards {{/str}}</button>
@@ -59,6 +54,17 @@
         <button id="btnInstallApp" class="hidden install-btn install-btn-block" title="{{#str}} install_app, mod_flashcards {{/str}}">
           📱 {{#str}} install_app, mod_flashcards {{/str}}
         </button>
+        <div id="iosInstallHint" class="ios-hint hidden" role="note">
+          <button id="iosHintClose" class="ios-hint-close" title="Close" aria-label="Close">&times;</button>
+          <div class="ios-hint-title">📱 {{#str}} ios_install_title, mod_flashcards {{/str}}</div>
+          <div class="ios-hint-steps">
+            <span class="ios-hint-step-text">{{#str}} ios_install_step1, mod_flashcards {{/str}}</span>
+            <span class="step step-share">{{#str}} ios_share_button, mod_flashcards {{/str}}</span>
+            <span class="ios-hint-arrow">→</span>
+            <span class="ios-hint-step-text">{{#str}} ios_install_step2, mod_flashcards {{/str}}</span>
+            <span class="step step-add">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
+          </div>
+        </div>
         <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
       </div>
       <!-- Card creation form (collapsible) -->
