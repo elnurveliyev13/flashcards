@@ -1,25 +1,29 @@
 ﻿<div id="mod_flashcards_container">
   <div class="wrap">
     <header>
-      <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
-      <div class="row">
-        <!-- intervals hidden per request -->
-        <span class="pill hidden" id="t_intervals">{{#str}} intervals, mod_flashcards {{/str}}</span>
-        <select id="langSel">
-          <option value="en">English</option>
-          <option value="no">Norsk (bokmal)</option>
-          <option value="uk">??????????</option>
-        </select>
-        <label class="pill hidden">
-          <span id="t_profile">{{#str}} profile, mod_flashcards {{/str}}</span>
-          <select id="profileSel"></select>
-          <button id="btnAddProfile" class="iconbtn" title="+">+</button>
-        </label>
-        <button id="btnInstallApp" class="hidden install-btn" title="{{#str}} install_app, mod_flashcards {{/str}}">
-           {{#str}} install_app, mod_flashcards {{/str}}
-        </button>
-        <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">??</button>
-        <!-- Fullscreen button removed per UX feedback -->
+      <div class="header-top">
+        <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
+        <div class="header-actions">
+          <button id="btnInstallApp" class="hidden install-btn-compact" title="{{#str}} install_app, mod_flashcards {{/str}}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+          </button>
+          <select id="langSel">
+            <option value="en">EN</option>
+            <option value="no">NO</option>
+            <option value="uk">UK</option>
+          </select>
+        </div>
+      </div>
+      <div class="header-progress" id="progressBar">
+        <div class="progress-info">
+          <span id="stageBadge" class="stage-compact hidden"><b id="stageText">0</b></span>
+          <span class="progress-counter"><span id="progressCurrent">0</span> / <span id="progressTotal">0</span></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill-mini" id="progressFill"></div>
+        </div>
       </div>
     </header>
     <!-- iOS Install Hint (compact, auto-hide) -->
@@ -42,7 +46,6 @@
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
           <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&times;</button>
         </div>
-        <span id="stageBadge" class="stage hidden"><span id="stageEmoji"></span><b id="stageText">0</b></span>
         <video id="cam" class="hidden capture-video" autoplay playsinline muted></video>
         <div class="front" id="front"></div>
         <div class="back" id="back"></div>
@@ -55,18 +58,9 @@
           <button id="btnRevealNext" class="primary">{{#str}} showmore, mod_flashcards {{/str}}</button>
         </div>
         <div class="row2">
-
           <button id="btnEasy" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
           <button id="btnNormal" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
           <button id="btnHard" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
-        </div>
-        <!-- Progress indicator (fillable bar) -->
-        <div id="progressBar" class="progress-bar hidden" role="region" aria-live="polite" aria-label="{{#str}} progress_label, mod_flashcards {{/str}}">
-          <div class="progress-fill" id="progressFill"></div>
-          <div class="progress-label">
-            <span class="progress-text"><span id="progressCurrent">0</span> / <span id="progressTotal">0</span></span>
-            <span class="progress-subtext">{{#str}} cards_remaining, mod_flashcards {{/str}}</span>
-          </div>
         </div>
         <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
       </div>
