@@ -228,12 +228,6 @@
     function refreshSelect(){const s=$("#deckSelect"); s.innerHTML=""; Object.values(registry||{}).forEach(d=>{const o=document.createElement("option");o.value=d.id;o.textContent=`${d.title} - ${d.cards.length} kort`; s.appendChild(o);});}
     function updateBadge(){const act=Object.keys(state?.active||{}).filter(id=>state.active[id]); const lbl=$('#badge'); if(!lbl) return; const base=(lbl.dataset&&lbl.dataset.label)||lbl.textContent; const actlbl=$('#btnActivate')? $('#btnActivate').textContent : 'Activate'; lbl.textContent = act.length?`${actlbl}: ${act.length}`:base; }
 
-    // IndexedDB
-    function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open("srs-media",1); r.onupgradeneeded=e=>{e.target.result.createObjectStore("files")}; r.onsuccess=e=>res(e.target.result); r.onerror=()=>rej(r.error);});}
-    async function idbPut(k,b){const db=await openDB(); return new Promise((res,rej)=>{const tx=db.transaction("files","readwrite"); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); tx.objectStore("files").put(b,k);});}
-    async function idbGet(k){const db=await openDB(); return new Promise((res,rej)=>{const tx=db.transaction("files","readonly"); const rq=tx.objectStore("files").get(k); rq.onsuccess=()=>res(rq.result||null); rq.onerror=()=>rej(rq.error);});}
-    async function urlFor(k){const b=await idbGet(k); return b?URL.createObjectURL(b):null;}
-
     // UI helpers
     const slotContainer=$("#slotContainer"), emptyState=$("#emptyState");
 
@@ -280,343 +274,24 @@
         return localStorage.getItem('flashcards-debugrec') === '1';
       }catch(_e){ return false; }
     })();
+    const ModNamespace = window.ModFlashcards || {};
+    const DebugModule = ModNamespace.Debug || {log:()=>{}};
+    const StorageModule = ModNamespace.Storage || {};
+    const RecorderModule = ModNamespace.Recorder || null;
+
+    const debugLog = message => DebugModule.log(DEBUG_REC, message);
+
+    const storageFallback = new Map();
+    const idbPutSafe = StorageModule.idbPut ? StorageModule.idbPut.bind(StorageModule) : async (key, blob)=>{ storageFallback.set(key, blob); };
+    const idbGetSafe = StorageModule.idbGet ? StorageModule.idbGet.bind(StorageModule) : async key => storageFallback.get(key) || null;
+    const urlForSafe = StorageModule.urlFor ? StorageModule.urlFor.bind(StorageModule) : async key => {
+      const blob = storageFallback.get(key);
+      return blob ? URL.createObjectURL(blob) : null;
+    };
     const IOS_WORKER_URL = ((window.M && M.cfg && M.cfg.wwwroot) ? M.cfg.wwwroot : '') + '/mod/flashcards/assets/recorder-worker.js';
-    const IOS_WORKER_FALLBACK_SRC = `/**
- * This is a web worker responsible for recording/buffering the sound and
- * encoding it as wav.
- */
 
-var recLength = 0;
-var recBuffers = [];
-var sampleRate;
-var numChannels;
-
-// Listen to incoming messages
-this.onmessage = function(e) {
-  switch(e.data.command){
-    case 'init':
-      init(e.data.config);
-      break;
-    case 'record':
-      record(e.data.buffer);
-      break;
-    case 'export-wav':
-      exportWAV();
-      break;
-    case 'clear':
-      clear();
-      break;
-  }
-};
-
-/**
- * Initialization
- *
- * @param  {Object} config
- */
-function init(config) {
-  sampleRate = config.sampleRate;
-  numChannels = config.numChannels;
-  initBuffers();
-}
-
-/**
- * Storing the data buffer
- *
- * @param  {Float32Array} inputBuffer
- */
-function record(inputBuffer) {
-  for (var channel = 0; channel < numChannels; channel++){
-    recBuffers[channel].push(inputBuffer[channel]);
-  }
-  recLength += inputBuffer[0].length;
-}
-
-/**
- * Export buffered data as a wav encoded blob
- */
-function exportWAV() {
-  var buffers = [];
-  for (var channel = 0; channel < numChannels; channel++){
-    buffers.push(mergeBuffers(recBuffers[channel], recLength));
-  }
-  var interleaved;
-  if (numChannels === 2){
-      interleaved = interleave(buffers[0], buffers[1]);
-  } else {
-      interleaved = buffers[0];
-  }
-  var dataview = encodeWAV(interleaved);
-  var audioBlob = new Blob([dataview], { type: 'audio/wav' });
-
-  this.postMessage({
-    command: 'wav-delivered',
-    blob: audioBlob
-  });
-}
-
-/**
- * Clear the buffers
- */
-function clear() {
-  recLength = 0;
-  recBuffers = [];
-  initBuffers();
-}
-
-/**
- * Initialize the buffers
- */
-function initBuffers() {
-  for (var channel = 0; channel < numChannels; channel++){
-    recBuffers[channel] = [];
-  }
-}
-
-/**
- * Merge buffers
- *
- * @param {Array} recBuffers
- * @param {[type]} recLength
- * @return {Float32Array}
- */
-function mergeBuffers(recBuffers, recLength){
-  var result = new Float32Array(recLength);
-  var offset = 0;
-  for (var i = 0; i < recBuffers.length; i++){
-    result.set(recBuffers[i], offset);
-    offset += recBuffers[i].length;
-  }
-  return result;
-}
-
-/**
- * Interleave two channels
- *
- * @param {Array} inputL
- * @param {Array} inputR
- * @return {Float32Array}
- */
-function interleave(inputL, inputR){
-  var length = inputL.length + inputR.length;
-  var result = new Float32Array(length);
-
-  var index = 0,
-    inputIndex = 0;
-
-  while (index < length){
-    result[index++] = inputL[inputIndex];
-    result[index++] = inputR[inputIndex];
-    inputIndex++;
-  }
-  return result;
-}
-
-/**
- * Convert floats to 16 bit PCMs
- *
- * @param {DataView} output
- * @param {number} offset
- * @param {Array} input
- */
-function floatTo16BitPCM(output, offset, input) {
-  for (var i = 0; i < input.length; i++, offset+=2){
-    var s = Math.max(-1, Math.min(1, input[i]));
-    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-  }
-}
-
-/**
- * Write string to wav header
- *
- * @param {DataView} view
- * @param {number} offset
- * @param {string} string
- */
-function writeString(view, offset, string) {
-  for (var i = 0; i < string.length; i++){
-    view.setUint8(offset + i, string.charCodeAt(i));
-  }
-}
-
-/**
- * Encode as wav
- *
- * @param {Array} samples
- * @return {DataView}
- */
-function encodeWAV(samples) {
-  var buffer = new ArrayBuffer(44 + samples.length * 2);
-  var view = new DataView(buffer);
-
-  /* RIFF identifier */
-  writeString(view, 0, 'RIFF');
-  /* RIFF chunk length */
-  view.setUint32(4, 36 + samples.length * 2, true);
-  /* RIFF type */
-  writeString(view, 8, 'WAVE');
-  /* format chunk identifier */
-  writeString(view, 12, 'fmt ');
-  /* format chunk length */
-  view.setUint32(16, 16, true);
-  /* sample format (raw) */
-  view.setUint16(20, 1, true);
-  /* channel count */
-  view.setUint16(22, numChannels, true);
-  /* sample rate */
-  view.setUint32(24, sampleRate, true);
-  /* byte rate (sample rate * block align) */
-  view.setUint32(28, sampleRate * 2 * numChannels, true);
-  /* block align (channel count * bytes per sample) */
-  view.setUint16(32, numChannels * 2, true);
-  /* bits per sample */
-  view.setUint16(34, 16, true);
-  /* data chunk identifier */
-  writeString(view, 36, 'data');
-  /* data chunk length */
-  view.setUint32(40, samples.length * 2, true);
-
-  floatTo16BitPCM(view, 44, samples);
-
-  return view;
-}`;
-
-    let iosRecorderGlobal = null;
+    let iosRecorderGlobal = RecorderModule ? RecorderModule.createIOSRecorder(IOS_WORKER_URL, debugLog) : null;
     let useIOSRecorderGlobal = false;
-
-    class Emitter {
-      constructor(){ this._events = Object.create(null); }
-      on(evt, handler){ if(!evt || typeof handler !== 'function') return; (this._events[evt] ||= []).push(handler); }
-      once(evt, handler){ if(!evt || typeof handler !== 'function') return; const wrap = payload => { this.off(evt, wrap); handler(payload); }; this.on(evt, wrap); }
-      off(evt, handler){ const arr=this._events[evt]; if(!arr) return; const idx=arr.indexOf(handler); if(idx>-1) arr.splice(idx,1); }
-      emit(evt, payload){ const arr=(this._events[evt]||[]).slice(); arr.forEach(fn=>{ try{ fn(payload); }catch(err){ if(DEBUG_REC){ console.error('[Recorder] listener error', err); } } }); }
-    }
-
-    class IOSRecorder extends Emitter {
-      constructor(workerUrl){
-        super();
-        this.workerUrl = workerUrl;
-        this.config = {bufferLength:4096,numChannels:1};
-        this.state = 'inactive';
-        this.worker = null;
-        this.workerPromise = null;
-        this.stream = null;
-        this.audioContext = null;
-        this.scriptNode = null;
-        this.sourceNode = null;
-        this.userMediaPromise = null;
-      }
-      supported(){
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        return !!(AudioCtx && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.Worker && window.Blob && window.URL);
-      }
-      async _ensureWorker(){
-        if(this.worker) return this.worker;
-        if(this.workerPromise) return this.workerPromise;
-        this.workerPromise = (async()=>{
-          let code = '';
-          try{
-            const resp = await fetch(this.workerUrl, {credentials:'same-origin'});
-            if(resp.ok){ code = await resp.text(); }
-          }catch(err){ if(DEBUG_REC){ console.warn('[Recorder] worker fetch failed, using inline source', err); } }
-          if(!code){ code = IOS_WORKER_FALLBACK_SRC; }
-          const blob = new Blob([code], {type:'text/javascript'});
-          const blobUrl = URL.createObjectURL(blob);
-          const worker = new Worker(blobUrl);
-          worker.onmessage = e => {
-            const msg = e && e.data; if(!msg || !msg.command) return;
-            this.emit(msg.command, msg);
-          };
-          worker.onerror = e => { this.emit('worker-error', e); };
-          this.worker = worker;
-          this.workerBlobUrl = blobUrl;
-          return worker;
-        })().catch(err=>{ this.workerPromise = null; throw err; });
-        return this.workerPromise;
-      }
-      async _setupAudioProcessing(stream){
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        this.audioContext = new AudioCtx();
-        try{ if(this.audioContext.state === 'suspended'){ await this.audioContext.resume(); } }catch(_e){}
-        this.scriptNode = this.audioContext.createScriptProcessor(
-          this.config.bufferLength,
-          this.config.numChannels,
-          this.config.numChannels
-        );
-        this.scriptNode.onaudioprocess = e => {
-          if(this.state !== 'recording') return;
-          try{
-            const input = e.inputBuffer.getChannelData(0);
-            const copy = new Float32Array(input.length);
-            copy.set(input);
-            this.worker.postMessage({command:'record', buffer:[copy]});
-          }catch(err){ if(DEBUG_REC){ console.error('[Recorder] chunk push failed', err); } }
-        };
-        this.sourceNode = this.audioContext.createMediaStreamSource(stream);
-        this.sourceNode.connect(this.scriptNode);
-        this.scriptNode.connect(this.audioContext.destination);
-        this.worker.postMessage({command:'init', config:{sampleRate:this.audioContext.sampleRate, numChannels:this.config.numChannels}});
-      }
-      async grabMic(){
-        if(!this.supported()) throw new Error('unsupported');
-        if(this.userMediaPromise) return this.userMediaPromise;
-        this.userMediaPromise = (async()=>{
-          const worker = await this._ensureWorker();
-          try{
-            const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-            this.stream = stream;
-            await this._setupAudioProcessing(stream);
-            return stream;
-          }catch(err){
-            this.userMediaPromise = null;
-            this.emit('blocked', err);
-            throw err;
-          }
-        })();
-        return this.userMediaPromise;
-      }
-      _setState(state){
-        if(this.state === state) return;
-        this.state = state;
-        this.emit(state, {state});
-      }
-      async start(){
-        await this.grabMic();
-        this._setState('recording');
-      }
-      stop(){ this._setState('inactive'); }
-      async exportWav(){
-        await this._ensureWorker();
-        this.stop();
-        return new Promise((resolve,reject)=>{
-          const onDelivered = data => {
-            this.off('worker-error', onError);
-            resolve(data && data.blob ? data.blob : null);
-          };
-          const onError = err => {
-            this.off('wav-delivered', onDelivered);
-            reject(err);
-          };
-          this.once('wav-delivered', onDelivered);
-          this.once('worker-error', onError);
-          try{ this.worker.postMessage({command:'export-wav'}); }
-          catch(err){
-            this.off('wav-delivered', onDelivered);
-            this.off('worker-error', onError);
-            reject(err);
-          }
-        });
-      }
-      async releaseMic(){
-        this._setState('inactive');
-        try{ if(this.worker){ this.worker.postMessage({command:'clear'}); } }catch(_e){}
-        if(this.stream){ try{ this.stream.getTracks().forEach(t=>t.stop()); }catch(_e){} this.stream=null; }
-        if(this.sourceNode){ try{ this.sourceNode.disconnect(); }catch(_e){} this.sourceNode=null; }
-        if(this.scriptNode){ try{ this.scriptNode.disconnect(); }catch(_e){} this.scriptNode=null; }
-        if(this.audioContext){ try{ await this.audioContext.close(); }catch(_e){} this.audioContext=null; }
-        this.userMediaPromise = null;
-      }
-    }
 
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
@@ -646,7 +321,7 @@ function encodeWAV(samples) {
       const _btnUpdate = $("#btnUpdate");
       if(_btnUpdate) _btnUpdate.disabled = true;
     }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
-    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ const tr = card.transcription ? `<div class=\"small\" style=\"opacity:.85\">[${card.transcription}]</div>` : ""; el.innerHTML=`<div class="front">${card.text}</div>${tr}`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
+    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ const tr = card.transcription ? `<div class=\"small\" style=\"opacity:.85\">[${card.transcription}]</div>` : ""; el.innerHTML=`<div class="front">${card.text}</div>${tr}`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlForSafe(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -654,18 +329,15 @@ function encodeWAV(samples) {
       queue=[]; current=-1; currentItem=null;
       const act=Object.keys(state?.active||{}).filter(id=>state.active[id]);
 
-      console.log(`[buildQueue] Active decks:`, act);
-      console.log(`[buildQueue] Current time:`, now, new Date(now));
-
       act.forEach(id=>{
         const d=registry[id];
         if(!d) {
-          console.warn(`[buildQueue] Deck ${id} is active but not found in registry`);
+          debugLog(`Deck ${id} is active but not found in registry`);
           return;
         }
         ensureDeckProgress(id,d.cards);
 
-        console.log(`[buildQueue] Processing deck ${id}: ${d.cards?.length || 0} cards`);
+        debugLog(`Processing deck ${id}: ${(d.cards||[]).length} cards`);
 
         (d.cards||[]).forEach(c=>{
           if(state.hidden && state.hidden[id] && state.hidden[id][c.id]) return;
@@ -674,15 +346,15 @@ function encodeWAV(samples) {
 
           const isDue = r.due <= now;
           if(!isDue) {
-            console.log(`[buildQueue] Card ${c.id} NOT due: due=${r.due} (${new Date(r.due)}), now=${now}`);
+            debugLog(`Card ${c.id} not due -> ${r.due}`);
           } else {
-            console.log(`[buildQueue] Card ${c.id} IS due: due=${r.due} (${new Date(r.due)})`);
+            debugLog(`Card ${c.id} due -> ${r.due}`);
             queue.push({deckId:id,card:nc,rec:r,index:queue.length});
           }
         });
       });
 
-      console.log(`[buildQueue] Total due cards: ${queue.length}`);
+      debugLog(`Total due cards: ${queue.length}`);
       setDue(queue.length);
       const _pb = $("#progressBar"); if(_pb){ _pb.dataset.total = String(queue.length); const _pt = $("#progressTotal"); if(_pt) _pt.textContent = String(queue.length); }
 
@@ -862,7 +534,7 @@ function encodeWAV(samples) {
         $("#audPrev").classList.add("hidden");
 
         if(c.imageKey){
-          const u=await urlFor(c.imageKey);
+          const u=await urlForSafe(c.imageKey);
           if(u){$("#imgPrev").src=u; $("#imgPrev").classList.remove("hidden");}
         } else if(c.image){
           $("#imgPrev").src=resolveAsset(c.image);
@@ -870,7 +542,7 @@ function encodeWAV(samples) {
         }
 
         if(c.audioKey){
-          const u=await urlFor(c.audioKey);
+          const u=await urlForSafe(c.audioKey);
           if(u){$("#audPrev").src=u; $("#audPrev").classList.remove("hidden");}
         } else if(c.audio){
           $("#audPrev").src=resolveAsset(c.audio);
@@ -908,7 +580,7 @@ function encodeWAV(samples) {
       if(h){ const f = await h.getFile(); if(f){
         $("#audName").textContent = f.name;
         lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
-        await idbPut(lastAudioKey, f);
+        await idbPutSafe(lastAudioKey, f);
         lastAudioUrl = null;
         $("#audPrev").src = URL.createObjectURL(f);
         $("#audPrev").classList.remove("hidden");
@@ -931,7 +603,7 @@ function encodeWAV(samples) {
     function autofillSoon(){ const s=document.getElementById('status'); if(s){ s.textContent=(M?.str?.mod_flashcards?.autofill_soon)||'Auto-fill will be available soon'; setTimeout(()=>{s.textContent='';},1200);} }
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
-    $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPut(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
+    $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPutSafe(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
       if(!f) return;
@@ -940,9 +612,9 @@ function encodeWAV(samples) {
       lastAudioBlob=null;
       try{
         lastAudioKey="my-"+Date.now().toString(36)+"-aud";
-        await idbPut(lastAudioKey,f);
+        await idbPutSafe(lastAudioKey,f);
       }catch(err){
-        debugLog('Manual audio idbPut failed: '+(err?.message||err));
+        debugLog('Manual audio storage failed: '+(err?.message||err));
         lastAudioKey=null;
         lastAudioBlob=f;
       }
@@ -954,7 +626,7 @@ function encodeWAV(samples) {
     $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; lastAudioBlob=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } $("#audName").textContent=""; });
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
-    $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
+    $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPutSafe(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
                         // Hold-to-record: press and hold to record; release to stop
     (function(){
       var recBtn = $("#btnRec");
@@ -966,8 +638,8 @@ function encodeWAV(samples) {
       var hintEl  = document.getElementById('recHint');
       var tInt=null, t0=0;
       var autoStopTimer=null;
-      if(IS_IOS && !iosRecorderGlobal){
-        iosRecorderGlobal = new IOSRecorder(IOS_WORKER_URL);
+      if(IS_IOS && RecorderModule && !iosRecorderGlobal){
+        iosRecorderGlobal = RecorderModule.createIOSRecorder(IOS_WORKER_URL, debugLog);
       }
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
       useIOSRecorderGlobal = useIOSRecorder;
@@ -1032,7 +704,7 @@ function encodeWAV(samples) {
         lastAudioBlob = null;
         try{
           lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
-          await idbPut(lastAudioKey, blob);
+          await idbPutSafe(lastAudioKey, blob);
           stored = true;
         }catch(err){
           debugLog('IndexedDB store failed: '+(err?.message||err));
@@ -1255,7 +927,7 @@ function encodeWAV(samples) {
       // Upload media files to server NOW (with correct cardId)
       if(lastImageKey && !lastImageUrl){
         try{
-          const blob = await idbGet(lastImageKey);
+          const blob = await idbGetSafe(lastImageKey);
           if(blob){
             lastImageUrl = await uploadMedia(new File([blob], 'image.jpg', {type: blob.type || 'image/jpeg'}), 'image', id);
           }
@@ -1264,7 +936,7 @@ function encodeWAV(samples) {
 
       if(lastAudioKey && !lastAudioUrl){
         try{
-          const blob = await idbGet(lastAudioKey);
+          const blob = await idbGetSafe(lastAudioKey);
           if(blob){
             lastAudioUrl = await uploadMedia((function(){
               var mt = (blob && blob.type) ? (blob.type+'') : '';
@@ -1385,7 +1057,7 @@ function encodeWAV(samples) {
     if(btnUpdate) btnUpdate.addEventListener("click", ()=> saveCard(true));
 
     const listPlayer = new Audio();
-    async function audioURLFromCard(c){ if(c.audioKey) return await urlFor(c.audioKey); return resolveAsset(c.audio) || null; }
+    async function audioURLFromCard(c){ if(c.audioKey) return await urlForSafe(c.audioKey); return resolveAsset(c.audio) || null; }
     function fmtDateTime(ts){ return ts? new Date(ts).toLocaleString() : '-'; }
 
     // Format stage as inline pill (for cards list table)
