@@ -240,7 +240,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function setStage(step){
       if(step < 0) step = 0;
       const stageBadge = $("#stageBadge");
-      const stageEmoji = $("#stageEmoji");
       const stageText = $("#stageText");
 
       if(!stageBadge) return;
@@ -248,8 +247,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Stage 11+: completed (green checkmark)
       if(step > 10){
-        if(stageEmoji) stageEmoji.textContent = "\u2713";
-        if(stageText) stageText.textContent = "";
+        if(stageText) stageText.textContent = "\u2713";
         stageBadge.style.background = "linear-gradient(90deg, #4caf50 100%, #e0e0e0 0%)";
         stageBadge.style.color = "#fff";
         stageBadge.style.justifyContent = "center";
@@ -258,7 +256,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Stage 0-10: show number and fill percentage
       const fillPercent = step === 0 ? 0 : (step / 10) * 100;
-      if(stageEmoji) stageEmoji.textContent = "";
       if(stageText) stageText.textContent = String(step);
       stageBadge.style.background = `linear-gradient(90deg, #2196f3 ${fillPercent}%, #e0e0e0 ${fillPercent}%)`;
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
