@@ -742,7 +742,7 @@
       var hintEl  = document.getElementById('recHint');
       var tInt=null, t0=0;
       var autoStopTimer=null;
-      const iosRecorderInstance = IS_IOS ? new IOSWaveRecorder(IOS_WORKER_URL) : null;
+      const iosRecorderInstance = IS_IOS ? new IOSRecorder(IOS_WORKER_URL) : null;
       const useIOSRecorder = !!(iosRecorderInstance && iosRecorderInstance.supported());
       if(IS_IOS && DEBUG_REC){
         console.log('[Recorder] mode:', useIOSRecorder ? 'web-audio' : 'media-recorder');
