@@ -271,6 +271,8 @@
 
     let audioURL=null; const player=new Audio();
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let rec=null,recChunks=[],camStream=null;
+    // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
+    let micStream=null, previewAudioURL=null;
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
     const btnEdit = $("#btnEdit"), btnDel=$("#btnDel"), btnPlayBtn=$("#btnPlay"), btnPlaySlowBtn=$("#btnPlaySlow"), btnUpdate=$("#btnUpdate");
@@ -583,9 +585,9 @@
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
     $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPut(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
-    $("#uAudio").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#audName").textContent=f.name; lastAudioKey="my-"+Date.now().toString(36)+"-aud"; await idbPut(lastAudioKey,f); lastAudioUrl=null; $("#audPrev").src=URL.createObjectURL(f); $("#audPrev").classList.remove("hidden");});
+    $("#uAudio").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#audName").textContent=f.name; lastAudioKey="my-"+Date.now().toString(36)+"-aud"; await idbPut(lastAudioKey,f); lastAudioUrl=null; const url=URL.createObjectURL(f); const a=$("#audPrev"); if(a){ try{a.pause();}catch(_e){} a.src=url; a.classList.remove("hidden"); try{a.load();}catch(_e){} } });
     $("#btnClearImg").addEventListener("click",()=>{ lastImageKey=null; lastImageUrl=null; $("#uImage").value=""; const img=$("#imgPrev"); if(img){ img.classList.add("hidden"); img.removeAttribute('src'); } $("#imgName").textContent=""; });
-    $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } $("#audName").textContent=""; });
+    $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } $("#audName").textContent=""; });
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPut(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
@@ -610,15 +612,17 @@
       function bestMime(){
         try{
           if(!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
-          var cand=[
-            'audio/webm;codecs=opus','audio/webm',
-            'audio/mp4;codecs=mp4a.40.2','audio/mp4',
-            'audio/ogg;codecs=opus','audio/ogg'
-          ];
+          // Prefer MP4 on iOS Safari; otherwise try WebM Opus first
+          var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+          var cand = isIOS ?
+            ['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'] :
+            ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4;codecs=mp4a.40.2','audio/mp4'];
           for(var i=0;i<cand.length;i++){ if(MediaRecorder.isTypeSupported(cand[i])) return cand[i]; }
         }catch(_e){}
         return '';
       }
+      function stopMicStream(){ try{ if(micStream){ micStream.getTracks().forEach(function(t){ try{t.stop();}catch(_e){} }); micStream = null; } }catch(_e){} }
+      function resetAudioPreview(){ try{ const a=$("#audPrev"); if(a){ if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } try{a.pause();}catch(_e){} a.removeAttribute('src'); a.load(); } }catch(_e){} }
       function fallbackCapture(){
         try{
           var input=document.getElementById('uAudio');
@@ -630,7 +634,10 @@
         (async function(){
           try{
             if(!window.MediaRecorder){ fallbackCapture(); return; }
+            // If previous stream exists (iOS bug), stop it first
+            stopMicStream();
             var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+            micStream = stream;
             recChunks = [];
             var mime = bestMime();
             try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
@@ -639,31 +646,41 @@
               try{ rec = new MediaRecorder(stream); mime = rec.mimeType || mime || ''; }
               catch(_er2){ try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(_e){}; fallbackCapture(); return; }
             }
+            // Use the actual codec decided by the recorder (prevents wrong type on Safari)
+            try{ if(rec && rec.mimeType){ mime = rec.mimeType; } }catch(_e){}
             rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
             rec.onstop = async function(){
               try{
-                var blob = new Blob(recChunks, {type:mime});
+                var detectedType = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
+                var blob = new Blob(recChunks, {type: detectedType});
                 lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
                 await idbPut(lastAudioKey, blob);
                 lastAudioUrl = null;
-                var url = URL.createObjectURL(blob);
                 var a = $("#audPrev");
-                if(a){ a.src = url; a.classList.remove("hidden"); }
+                if(a){
+                  resetAudioPreview();
+                  previewAudioURL = URL.createObjectURL(blob);
+                  a.src = previewAudioURL;
+                  a.classList.remove("hidden");
+                  try{ a.load(); }catch(_e){}
+                }
               }catch(_e){}
-              try{ stream.getTracks().forEach(function(t){ t.stop(); }); }catch(_e){}
+              stopMicStream();
             };
             rec.start();
             isRecording = true;
             recBtn.classList.add("recording"); timerStart(); setHintActive();
-            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
+            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ try{rec.requestData();}catch(_e){} rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
           }catch(_e){ isRecording=false; rec=null; fallbackCapture(); }
         })();
       }
       function stopRecording(){
-        try{ if(rec){ rec.stop(); } }catch(_e){}
+        try{ if(rec){ try{rec.requestData();}catch(_e){} rec.stop(); } }catch(_e){}
         isRecording = false;
         rec = null;
         if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null;
+        // Extra safety for iOS: stop tracks immediately as well
+        stopMicStream();
         recBtn.classList.remove("recording"); timerStop(); setHintIdle();
       }
       function onDown(e){
@@ -699,7 +716,7 @@
       $("#uImage").value="";
       $("#uAudio").value="";
       $("#imgPrev").classList.add("hidden");
-      $("#audPrev").classList.add("hidden");
+      $("#audPrev").classList.add("hidden"); if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; }
       $("#imgName").textContent="";
       $("#audName").textContent="";
       lastImageKey=null;
@@ -713,6 +730,9 @@
       // Disable Update button when no card is being edited
       const btnUpdate = $("#btnUpdate");
       if(btnUpdate) btnUpdate.disabled = true;
+
+      // Safety: ensure no active mic stream remains (clears iOS mic indicator)
+      try{ if(typeof stopMicStream==='function') stopMicStream(); }catch(_e){}
     }
     $("#btnFormReset").addEventListener("click", resetForm);
         const btnCancel = $("#btnCancelEdit");
