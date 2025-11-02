@@ -4,11 +4,6 @@
       <div class="header-top">
         <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
         <div class="header-actions">
-          <button id="btnInstallApp" class="hidden install-btn-compact" title="{{#str}} install_app, mod_flashcards {{/str}}">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-            </svg>
-          </button>
           <select id="langSel">
             <option value="en">EN</option>
             <option value="no">NO</option>
@@ -56,16 +51,16 @@
         <div class="meta">
           <button id="btnRevealNext" class="primary">{{#str}} showmore, mod_flashcards {{/str}}</button>
         </div>
-        <div class="card-stage-info">
-          <span id="stageBadge" class="stage-pill hidden">
-            Stage <b id="stageText">0</b>
-          </span>
-        </div>
+        <button id="btnInstallApp" class="hidden install-btn install-btn-block" title="{{#str}} install_app, mod_flashcards {{/str}}">
+          📱 {{#str}} install_app, mod_flashcards {{/str}}
+        </button>
         <div class="row2">
           <button id="btnEasy" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
           <button id="btnNormal" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
           <button id="btnHard" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
         </div>
+        <!-- Stage badge hidden, used only in card list modal -->
+        <span id="stageBadge" class="hidden"><b id="stageText">0</b></span>
         <div id="emptyState" class="empty hidden">{{#str}} empty, mod_flashcards {{/str}}</div>
       </div>
       <!-- Card creation form (collapsible) -->
