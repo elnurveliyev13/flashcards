@@ -280,6 +280,10 @@
     const RecorderModule = ModNamespace.Recorder || null;
 
     const debugLog = message => DebugModule.log(DEBUG_REC, message);
+    const recorderLog = message => {
+      if(!DEBUG_REC) return;
+      try{ debugLog('[Recorder] ' + message); }catch(_e){}
+    };
 
     const storageFallback = new Map();
     const idbPutSafe = StorageModule.idbPut ? StorageModule.idbPut.bind(StorageModule) : async (key, blob)=>{ storageFallback.set(key, blob); };
@@ -614,7 +618,7 @@
         lastAudioKey="my-"+Date.now().toString(36)+"-aud";
         await idbPutSafe(lastAudioKey,f);
       }catch(err){
-        debugLog('Manual audio storage failed: '+(err?.message||err));
+        recorderLog('Manual audio storage failed: '+(err?.message||err));
         lastAudioKey=null;
         lastAudioBlob=f;
       }
@@ -648,11 +652,6 @@
         debugLog('[Recorder] mode:', useIOSRecorder ? 'web-audio' : 'media-recorder');
       }
 
-      function debugLog(message){
-        if(!DEBUG_REC) return;
-        try{ debugLog('[Recorder]', message); }catch(_e){}
-      }
-
       function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
       function setHintIdle(){ if(hintEl){ hintEl.textContent = t('press_hold_to_record') || 'Press and hold to record'; } }
       function setHintActive(){ if(hintEl){ hintEl.textContent = t('release_when_finished') || 'Release when you finish'; } }
@@ -672,10 +671,10 @@
       function fallbackCapture(){
         try{
           if(useIOSRecorder && iosRecorderInstance){ try{ iosRecorderInstance.releaseMic(); }catch(_e){} }
-          debugLog('Fallback to native file picker');
+          recorderLog('Fallback to native file picker');
           var input=document.getElementById('uAudio');
           if(input){ input.setAttribute('accept','audio/*'); input.setAttribute('capture','microphone'); try{ input.click(); }catch(_e){} }
-        }catch(_e){ debugLog('Fallback capture error: '+(_e?.message||_e)); }
+        }catch(_e){ recorderLog('Fallback capture error: '+(_e?.message||_e)); }
       }
       function normalizeAudioMime(mt){
         mt = (mt||'').toLowerCase();
@@ -696,7 +695,7 @@
           resetAudioPreview();
           const statusEl = $("#status");
           if(statusEl){ statusEl.textContent = 'Recording failed'; setTimeout(()=>{ statusEl.textContent=''; }, 2000); }
-          debugLog('Empty blob received from recorder');
+          recorderLog('Empty blob received from recorder');
           return;
         }
         let stored = false;
@@ -707,7 +706,7 @@
           await idbPutSafe(lastAudioKey, blob);
           stored = true;
         }catch(err){
-          debugLog('IndexedDB store failed: '+(err?.message||err));
+          recorderLog('IndexedDB store failed: '+(err?.message||err));
           lastAudioKey = null;
           lastAudioBlob = blob;
         }
@@ -720,20 +719,22 @@
           try{ a.load(); }catch(_e){}
         }
         if(stored){
-          debugLog('handleRecordedBlob stored via IDB');
+          recorderLog('handleRecordedBlob stored via IDB');
         } else {
-          debugLog('handleRecordedBlob using in-memory blob fallback (size '+blob.size+')');
+          recorderLog('handleRecordedBlob using in-memory blob fallback (size '+blob.size+')');
         }
       }
       let iosStartPromise = null;
+      let startPending = false;
 
       async function startRecording(){
-        if(isRecording) return;
+        if(isRecording || startPending) return;
+        startPending = true;
         if(autoStopTimer){ try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null; }
         if(useIOSRecorder){
           iosStartPromise = (async()=>{
             try{
-              debugLog('iOS recorder start()');
+              recorderLog('iOS recorder start()');
               await iosRecorderInstance.start();
               isRecording = true;
               recBtn.classList.add("recording");
@@ -742,12 +743,13 @@
               autoStopTimer = setTimeout(()=>{ if(isRecording){ stopRecording().catch(()=>{}); } }, 120000);
             }catch(err){
               isRecording = false;
-              debugLog('iOS start failed: '+(err?.message||err));
+              recorderLog('iOS start failed: '+(err?.message||err));
               try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
               fallbackCapture();
               throw err;
             }finally{
               iosStartPromise = null;
+              startPending = false;
             }
           })();
           return iosStartPromise;
@@ -771,12 +773,13 @@
               const detectedTypeRaw = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
               const finalType = normalizeAudioMime(detectedTypeRaw || mime || '');
               const blob = new Blob(recChunks, {type: finalType || undefined});
-              debugLog('MediaRecorder stop -> chunks='+recChunks.length+' size='+blob.size+' type='+finalType);
+              recorderLog('MediaRecorder stop -> chunks='+recChunks.length+' size='+blob.size+' type='+finalType);
               await handleRecordedBlob(blob);
-            }catch(err){ debugLog('MediaRecorder stop failed: '+(err?.message||err)); }
+            }catch(err){ recorderLog('MediaRecorder stop failed: '+(err?.message||err)); }
             stopMicStream();
             rec = null;
             isRecording = false;
+            startPending = false;
           };
           try{ rec.start(1000); }catch(_e){ rec.start(); }
           isRecording = true;
@@ -788,14 +791,19 @@
           isRecording = false;
           rec = null;
           stopMicStream();
-          debugLog('MediaRecorder start failed: '+(err?.message||err));
+          recorderLog('MediaRecorder start failed: '+(err?.message||err));
           fallbackCapture();
+        }finally{
+          if(!useIOSRecorder){
+            startPending = false;
+          }
         }
       }
       async function stopRecording(){
         if(autoStopTimer){ try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null; }
         if(useIOSRecorder){
-          if(iosStartPromise){ try{ await iosStartPromise; }catch(_e){ debugLog('Start promise rejected: '+(_e?.message||_e)); } }
+          if(iosStartPromise){ try{ await iosStartPromise; }catch(_e){ recorderLog('Start promise rejected: '+(_e?.message||_e)); } }
+          startPending = false;
           if(!isRecording){
             try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
             recBtn.classList.remove("recording");
@@ -806,8 +814,8 @@
           try{
             const blob = await iosRecorderInstance.exportWav();
             await handleRecordedBlob(blob);
-            debugLog('iOS export size: '+(blob ? blob.size : 0));
-          }catch(err){ debugLog('iOS stop failed: '+(err?.message||err)); }
+            recorderLog('iOS export size: '+(blob ? blob.size : 0));
+          }catch(err){ recorderLog('iOS stop failed: '+(err?.message||err)); }
           finally {
             try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
             isRecording = false;
@@ -822,27 +830,44 @@
         recBtn.classList.remove("recording");
         timerStop();
         setHintIdle();
+        startPending = false;
       }
+      let holdActive = false;
+      let activePointerToken = null;
       function onDown(e){
+        if(e.type === 'mousedown' && e.button !== 0) return;
+        if(e.pointerType === 'mouse' && e.button !== 0) return;
+        if(holdActive) return;
+        holdActive = true;
+        activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
         const startPromise = startRecording();
         if(startPromise && typeof startPromise.then === 'function'){
-          startPromise.catch(err=>{ debugLog('start promise rejected: '+(err?.message||err)); });
+          startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
         }
-        function onceUp(){
+        function onceUp(ev){
+          if(activePointerToken !== null){
+            if(typeof activePointerToken === 'number'){
+              if(ev && ev.pointerId !== undefined && ev.pointerId !== activePointerToken){ return; }
+            }
+          }
           window.removeEventListener("pointerup", onceUp);
           window.removeEventListener("pointercancel", onceUp);
           window.removeEventListener("mouseup", onceUp);
           window.removeEventListener("touchend", onceUp);
+          window.removeEventListener("touchcancel", onceUp);
+          holdActive = false;
+          activePointerToken = null;
           const stopPromise = stopRecording();
           if(stopPromise && typeof stopPromise.then === 'function'){
-            stopPromise.catch(err=>{ debugLog('stop promise rejected: '+(err?.message||err)); });
+            stopPromise.catch(err=>{ recorderLog('stop promise rejected: '+(err?.message||err)); });
           }
         }
         window.addEventListener("pointerup", onceUp);
         window.addEventListener("pointercancel", onceUp);
         window.addEventListener("mouseup", onceUp);
         window.addEventListener("touchend", onceUp);
+        window.addEventListener("touchcancel", onceUp);
       }
       recBtn.addEventListener("pointerdown", onDown);
       recBtn.addEventListener("mousedown", onDown);
