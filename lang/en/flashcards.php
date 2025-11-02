@@ -70,7 +70,7 @@ $string['fill_field'] = 'Please fill: {$a}';
 $string['autofill_soon'] = 'Auto-fill will be available soon';
 
 // iOS Install Instructions
-$string['ios_install_title'] = 'iOS users: Install this app';
+$string['ios_install_title'] = 'Install this app';
 $string['ios_install_step1'] = 'Tap the';
 $string['ios_install_step2'] = 'button, then select';
 $string['ios_share_button'] = 'Share';

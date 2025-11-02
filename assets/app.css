@@ -151,9 +151,9 @@ input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12p
   justify-content:center;
   margin:24px auto 0;
   width:100%;
-  max-width:360px;
+  max-width:420px;
   padding:14px 20px;
-  font-size:16px;
+  font-size:18px;
   gap:10px;
   text-align:center;
   line-height:1.35;
@@ -170,20 +170,20 @@ input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12p
   background:linear-gradient(135deg, rgba(15,36,68,0.95), rgba(17,51,99,0.95));
   border:1px solid rgba(56,189,248,0.55);
   border-radius:18px;
-  padding:20px 56px 20px 20px;
+  padding:30px 72px 30px 30px;
   margin:20px auto 0;
   width:100%;
-  max-width:360px;
+  max-width:420px;
   color:#f8fafc;
-  font-size:16px;
-  line-height:1.6;
+  font-size:32px;
+  line-height:1.45;
   display:flex;
   flex-direction:column;
-  gap:14px;
-  box-shadow:0 14px 38px rgba(15,118,222,0.35);
+  gap:24px;
+  box-shadow:0 18px 48px rgba(15,118,222,0.35);
 }
 .ios-hint-title{
-  font-size:20px;
+  font-size:40px;
   font-weight:700;
   letter-spacing:0.01em;
 }
@@ -191,58 +191,53 @@ input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12p
   display:flex;
   flex-wrap:wrap;
   align-items:center;
-  gap:10px;
+  gap:16px;
 }
 .ios-hint-step-text{
   font-weight:500;
-}
-.ios-hint-arrow{
-  font-size:20px;
-  color:#38bdf8;
-  font-weight:600;
 }
 .ios-hint .step{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   background:rgba(15,23,42,0.65);
-  padding:6px 10px;
+  padding:10px 18px;
   border-radius:999px;
   font-weight:700;
   margin:0;
-  font-size:15px;
+  font-size:30px;
   line-height:1.2;
   color:#e2e8f0;
-  box-shadow:0 4px 12px rgba(22,78,199,0.35);
+  box-shadow:0 6px 18px rgba(22,78,199,0.35);
 }
 /* Icons after step labels (iOS-style) */
 .ios-hint .step-share::after{
   content:'';
   display:inline-block;
-  width:16px;height:16px;margin-left:6px;vertical-align:-1px;
-  background-repeat:no-repeat;background-size:16px 16px;
+  width:24px;height:24px;margin-left:10px;vertical-align:-2px;
+  background-repeat:no-repeat;background-size:24px 24px;
 background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%2212%22 width=%2216%22 height=%228%22 rx=%222%22/%3E%3Cpath d=%22M12 4v10%22/%3E%3Cpath d=%22M8 8l4-4 4 4%22/%3E%3C/svg%3E");
 }
 .ios-hint .step-add::after{
   content:'';
   display:inline-block;
-  width:16px;height:16px;margin-left:6px;vertical-align:-1px;
-  background-repeat:no-repeat;background-size:16px 16px;
+  width:24px;height:24px;margin-left:10px;vertical-align:-2px;
+  background-repeat:no-repeat;background-size:24px 24px;
 background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8%22/%3E%3Cpath d=%22M8 12h8%22/%3E%3C/svg%3E");
 }
 .ios-hint-close{
   position:absolute;
-  top:14px;
-  right:14px;
+  top:20px;
+  right:20px;
   background:rgba(15,23,42,0.35);
   border:none;
-  color:#cbd5f5;
-  font-size:18px;
-  padding:4px;
+  color:#dbeafe;
+  font-size:28px;
+  padding:8px;
   cursor:pointer;
-  border-radius:8px;
-  width:28px;
-  height:28px;
+  border-radius:12px;
+  width:44px;
+  height:44px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -255,15 +250,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 @media (max-width:600px){
   .ios-hint{
     max-width:none;
-    padding:18px 48px 18px 18px;
-    margin-top:18px;
+    padding:24px 60px 24px 24px;
+    margin-top:22px;
   }
   .ios-hint-steps{
-    gap:8px;
+    gap:12px;
   }
   .ios-hint .step{
-    font-size:14px;
-    padding:5px 9px;
+    font-size:26px;
+    padding:8px 16px;
   }
 }
 /* UX IMPROVEMENTS */
