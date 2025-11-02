@@ -978,37 +978,7 @@ function encodeWAV(samples) {
 
       function debugLog(message){
         if(!DEBUG_REC) return;
-        try{
-          console.log('[Recorder]', message);
-        }catch(_e){}
-        try{
-          let panel = document.getElementById('recDebugOverlay');
-          if(!panel){
-            panel = document.createElement('div');
-            panel.id = 'recDebugOverlay';
-            panel.style.position='fixed';
-            panel.style.bottom='12px';
-            panel.style.left='12px';
-            panel.style.zIndex='9999';
-            panel.style.maxWidth='260px';
-            panel.style.background='rgba(15,23,42,0.85)';
-            panel.style.color='#f8fafc';
-            panel.style.fontSize='11px';
-            panel.style.lineHeight='1.3';
-            panel.style.padding='8px 10px';
-            panel.style.borderRadius='10px';
-            panel.style.boxShadow='0 8px 16px rgba(0,0,0,0.25)';
-            panel.style.pointerEvents='none';
-            panel.style.fontFamily='-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-            document.body && document.body.appendChild(panel);
-          }
-          if(panel){
-            const entry = document.createElement('div');
-            entry.textContent = `${new Date().toLocaleTimeString()} • ${message}`;
-            panel.appendChild(entry);
-            while(panel.childElementCount > 6){ panel.removeChild(panel.firstChild); }
-          }
-        }catch(_e){}
+        try{ console.log('[Recorder]', message); }catch(_e){}
       }
 
       function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
