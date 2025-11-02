@@ -289,6 +289,8 @@
         this.numChannels = 1;
         this.recording = false;
         this.worker = null;
+        this.workerPromise = null;
+        this.workerBlobUrl = null;
         this.stream = null;
         this.audioContext = null;
         this.scriptNode = null;
@@ -296,16 +298,34 @@
       }
       supported(){
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        return !!(AudioCtx && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.Worker);
+        return !!(AudioCtx && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.Worker && window.Blob);
       }
       async _ensureWorker(){
-        if(this.worker) return;
-        this.worker = new Worker(this.workerUrl);
-        this.worker.onerror = e => { if(DEBUG_REC){ try{ console.error('[Recorder] worker error', e); }catch(_e){} } };
+        if(this.worker) return this.worker;
+        if(this.workerPromise) return this.workerPromise;
+        this.workerPromise = (async()=>{
+          let code = '';
+          try{
+            const resp = await fetch(this.workerUrl, {credentials:'same-origin'});
+            if(!resp.ok) throw new Error('Worker fetch failed: '+resp.status);
+            code = await resp.text();
+          }catch(err){
+            this.workerPromise = null;
+            if(DEBUG_REC){ console.error('[Recorder] worker fetch failed', err); }
+            throw err;
+          }
+          const blob = new Blob([code], {type:'text/javascript'});
+          this.workerBlobUrl = URL.createObjectURL(blob);
+          const worker = new Worker(this.workerBlobUrl);
+          worker.onerror = e => { if(DEBUG_REC){ console.error('[Recorder] worker error', e); } };
+          this.worker = worker;
+          return worker;
+        })();
+        return this.workerPromise;
       }
       async _ensureStream(){
         if(this.stream) return;
-        await this._ensureWorker();
+        const worker = await this._ensureWorker();
         const stream = await navigator.mediaDevices.getUserMedia({audio:true});
         this.stream = stream;
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -317,14 +337,16 @@
           if(!this.recording) return;
           try{
             const input = e.inputBuffer.getChannelData(0);
-            const copy = new Float32Array(input);
-            this.worker.postMessage({command:'record', buffer:[copy]}, [copy.buffer]);
-          }catch(err){ if(DEBUG_REC){ try{ console.error('[Recorder] chunk push failed', err); }catch(_e){} } }
+            // Clone buffer to transfer to worker
+            const copy = new Float32Array(input.length);
+            copy.set(input);
+            worker.postMessage({command:'record', buffer:[copy]}, [copy.buffer]);
+          }catch(err){ if(DEBUG_REC){ console.error('[Recorder] chunk push failed', err); } }
         };
         this.sourceNode = this.audioContext.createMediaStreamSource(stream);
         this.sourceNode.connect(this.scriptNode);
         this.scriptNode.connect(this.audioContext.destination);
-        this.worker.postMessage({command:'init', config:{sampleRate:this.audioContext.sampleRate, numChannels:this.numChannels}});
+        worker.postMessage({command:'init', config:{sampleRate:this.audioContext.sampleRate, numChannels:this.numChannels}});
       }
       async start(){
         if(!this.supported()) throw new Error('Recorder unsupported');
@@ -334,22 +356,22 @@
       }
       stop(){ this.recording = false; }
       async exportWav(){
-        if(!this.worker) throw new Error('Recorder not initialized');
+        const worker = await this._ensureWorker();
         this.stop();
         return new Promise((resolve,reject)=>{
           const handleMessage = event => {
             if(!event || !event.data) return;
             if(event.data.command === 'wav-delivered'){
-              this.worker.removeEventListener('message', handleMessage);
+              worker.removeEventListener('message', handleMessage);
               resolve(event.data.blob);
             }
           };
           const handleError = err => {
-            this.worker.removeEventListener('message', handleMessage);
+            worker.removeEventListener('message', handleMessage);
             reject(err);
           };
-          this.worker.addEventListener('message', handleMessage);
-          try{ this.worker.postMessage({command:'export-wav'}); }
+          worker.addEventListener('message', handleMessage);
+          try{ worker.postMessage({command:'export-wav'}); }
           catch(err){ handleError(err); }
         });
       }
@@ -777,6 +799,7 @@
           }catch(err){
             isRecording = false;
             if(DEBUG_REC){ console.error('[Recorder] iOS start failed', err); }
+            try{ await iosRecorderInstance.release(); }catch(_e){}
             fallbackCapture();
           }
           return;
@@ -824,6 +847,13 @@
       async function stopRecording(){
         if(autoStopTimer){ try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null; }
         if(useIOSRecorder){
+          if(!isRecording){
+            try{ await iosRecorderInstance.release(); }catch(_e){}
+            recBtn.classList.remove("recording");
+            timerStop();
+            setHintIdle();
+            return;
+          }
           try{
             iosRecorderInstance.stop();
             const blob = await iosRecorderInstance.exportWav();
