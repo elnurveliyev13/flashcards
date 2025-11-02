@@ -27,10 +27,14 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
 $ver = 2025110126; // cache buster; aligns with target version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/debug.js', ['v' => $ver]));
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/storage.js', ['v' => $ver]));
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/recorder.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/edit-save-bar.js', ['v' => $ver]));
+$PAGE->requires->css(new moodle_url('/mod/flashcards/assets/app.css', ['v' => $ver]));
 $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/ux-bottom.css', ['v' => $ver]));
 
 // Init (global mode: cmid=0, instance=0)
