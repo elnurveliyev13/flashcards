@@ -154,7 +154,16 @@ define(['core/str'], function(str) {
     /* ===== render card ===== */
     const slotContainer=$("#slotContainer"), emptyState=$("#emptyState");
     const STAGE_EMOJI=["????","????","????","????","???","???","???","???","???"];
-    function setStage(step){if(step<0)step=0;if(step>8)step=8;$("#stageEmoji").textContent=STAGE_EMOJI[step];$("#stageText").textContent=step===0?"0":String(INTERVALS[Math.min(step,INTERVALS.length)-1]);$("#stageBadge").classList.remove("hidden");}
+    function setStage(step){
+      if(step<0) step=0;
+      if(step>8) step=8;
+      const stageBadge=$("#stageBadge");
+      const stageEmoji=$("#stageEmoji");
+      const stageText=$("#stageText");
+      if(stageEmoji) stageEmoji.textContent=STAGE_EMOJI[step];
+      if(stageText) stageText.textContent=step===0?"0":String(INTERVALS[Math.min(step,INTERVALS.length)-1]);
+      if(stageBadge) stageBadge.classList.remove("hidden");
+    }
     let audioURL=null; const player=new Audio();
     function attachAudio(url){audioURL=url; $("#btnPlay").classList.remove("hidden"); $("#btnPlaySlow").classList.remove("hidden");
       $("#btnPlay").onclick=()=>{if(!audioURL)return; player.src=audioURL; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{});};
@@ -201,7 +210,16 @@ define(['core/str'], function(str) {
         });
       });
       $("#dueInfo").textContent=t("due",queue.length);
-      if(queue.length===0){ slotContainer.innerHTML=""; $("#counter").textContent="0/0"; $("#stageBadge").classList.add("hidden"); emptyState.classList.remove("hidden"); $("#btnRevealNext").disabled=true; $("#btnRevealNext").classList.remove("primary"); return; }
+      if(queue.length===0){
+        slotContainer.innerHTML="";
+        $("#counter").textContent="0/0";
+        const stageBadge=$("#stageBadge");
+        if(stageBadge) stageBadge.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        $("#btnRevealNext").disabled=true;
+        $("#btnRevealNext").classList.remove("primary");
+        return;
+      }
       emptyState.classList.add("hidden");
       current=0; visibleSlots=1; currentItem=queue[current]; showCurrent();
     }
