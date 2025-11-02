@@ -280,7 +280,92 @@
         return localStorage.getItem('flashcards-debugrec') === '1';
       }catch(_e){ return false; }
     })();
-    let stopFallbackTimer=null;
+    const IOS_WORKER_URL = ((window.M && M.cfg && M.cfg.wwwroot) ? M.cfg.wwwroot : '') + '/mod/flashcards/assets/recorder-worker.js';
+
+    class IOSWaveRecorder {
+      constructor(workerUrl){
+        this.workerUrl = workerUrl;
+        this.bufferLength = 4096;
+        this.numChannels = 1;
+        this.recording = false;
+        this.worker = null;
+        this.stream = null;
+        this.audioContext = null;
+        this.scriptNode = null;
+        this.sourceNode = null;
+      }
+      supported(){
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        return !!(AudioCtx && navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.Worker);
+      }
+      async _ensureWorker(){
+        if(this.worker) return;
+        this.worker = new Worker(this.workerUrl);
+        this.worker.onerror = e => { if(DEBUG_REC){ try{ console.error('[Recorder] worker error', e); }catch(_e){} } };
+      }
+      async _ensureStream(){
+        if(this.stream) return;
+        await this._ensureWorker();
+        const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        this.stream = stream;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new AudioCtx();
+        try{ if(this.audioContext.state === 'suspended'){ await this.audioContext.resume(); } }
+        catch(_e){}
+        this.scriptNode = this.audioContext.createScriptProcessor(this.bufferLength, this.numChannels, this.numChannels);
+        this.scriptNode.onaudioprocess = e => {
+          if(!this.recording) return;
+          try{
+            const input = e.inputBuffer.getChannelData(0);
+            const copy = new Float32Array(input);
+            this.worker.postMessage({command:'record', buffer:[copy]}, [copy.buffer]);
+          }catch(err){ if(DEBUG_REC){ try{ console.error('[Recorder] chunk push failed', err); }catch(_e){} } }
+        };
+        this.sourceNode = this.audioContext.createMediaStreamSource(stream);
+        this.sourceNode.connect(this.scriptNode);
+        this.scriptNode.connect(this.audioContext.destination);
+        this.worker.postMessage({command:'init', config:{sampleRate:this.audioContext.sampleRate, numChannels:this.numChannels}});
+      }
+      async start(){
+        if(!this.supported()) throw new Error('Recorder unsupported');
+        await this._ensureStream();
+        try{ this.worker.postMessage({command:'clear'}); }catch(_e){}
+        this.recording = true;
+      }
+      stop(){ this.recording = false; }
+      async exportWav(){
+        if(!this.worker) throw new Error('Recorder not initialized');
+        this.stop();
+        return new Promise((resolve,reject)=>{
+          const handleMessage = event => {
+            if(!event || !event.data) return;
+            if(event.data.command === 'wav-delivered'){
+              this.worker.removeEventListener('message', handleMessage);
+              resolve(event.data.blob);
+            }
+          };
+          const handleError = err => {
+            this.worker.removeEventListener('message', handleMessage);
+            reject(err);
+          };
+          this.worker.addEventListener('message', handleMessage);
+          try{ this.worker.postMessage({command:'export-wav'}); }
+          catch(err){ handleError(err); }
+        });
+      }
+      async release(){
+        this.recording = false;
+        try{ if(this.worker){ this.worker.postMessage({command:'clear'}); } }catch(_e){}
+        if(this.stream){
+          try{ this.stream.getTracks().forEach(t=>t.stop()); }catch(_e){}
+          this.stream = null;
+        }
+        if(this.sourceNode){ try{ this.sourceNode.disconnect(); }catch(_e){} this.sourceNode = null; }
+        if(this.scriptNode){ try{ this.scriptNode.disconnect(); }catch(_e){} this.scriptNode = null; }
+        if(this.audioContext){ try{ await this.audioContext.close(); }catch(_e){} this.audioContext = null; }
+      }
+    }
+
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
@@ -612,6 +697,11 @@
       var hintEl  = document.getElementById('recHint');
       var tInt=null, t0=0;
       var autoStopTimer=null;
+      const iosRecorderInstance = IS_IOS ? new IOSWaveRecorder(IOS_WORKER_URL) : null;
+      const useIOSRecorder = !!(iosRecorderInstance && iosRecorderInstance.supported());
+      if(IS_IOS && DEBUG_REC){
+        console.log('[Recorder] mode:', useIOSRecorder ? 'web-audio' : 'media-recorder');
+      }
 
       function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
       function setHintIdle(){ if(hintEl){ hintEl.textContent = t('press_hold_to_record') || 'Press and hold to record'; } }
@@ -622,10 +712,7 @@
       function bestMime(){
         try{
           if(!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
-          // Prefer MP4 on iOS Safari; otherwise try WebM Opus first
-          var cand = IS_IOS ?
-            ['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'] :
-            ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4;codecs=mp4a.40.2','audio/mp4'];
+          var cand = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4;codecs=mp4a.40.2','audio/mp4'];
           for(var i=0;i<cand.length;i++){ if(MediaRecorder.isTypeSupported(cand[i])) return cand[i]; }
         }catch(_e){}
         return '';
@@ -649,98 +736,129 @@
         if(mt.includes('wav')) return 'audio/wav';
         return mt.startsWith('video/mp4') ? 'audio/mp4' : mt;
       }
-      function startRecording(){
+      async function handleRecordedBlob(blob){
+        if(!blob){ return; }
+        if(blob.size <= 0){
+          lastAudioKey = null;
+          lastAudioUrl = null;
+          resetAudioPreview();
+          const statusEl = $("#status");
+          if(statusEl){ statusEl.textContent = 'Recording failed'; setTimeout(()=>{ statusEl.textContent=''; }, 2000); }
+          if(DEBUG_REC){ console.warn('[Recorder] Empty blob received'); }
+          return;
+        }
+        try{
+          lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
+          await idbPut(lastAudioKey, blob);
+          lastAudioUrl = null;
+          const a = $("#audPrev");
+          if(a){
+            resetAudioPreview();
+            previewAudioURL = URL.createObjectURL(blob);
+            a.src = previewAudioURL;
+            a.classList.remove("hidden");
+            try{ a.load(); }catch(_e){}
+          }
+        }catch(err){
+          if(DEBUG_REC){ console.error('[Recorder] handle blob failed', err); }
+        }
+      }
+      async function startRecording(){
         if(isRecording) return;
-        if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; stopFallbackTimer=null; }
-        (async function(){
+        if(autoStopTimer){ try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null; }
+        if(useIOSRecorder){
           try{
-            if(!window.MediaRecorder){ fallbackCapture(); return; }
-            // If previous stream exists (iOS bug), stop it first
-            stopMicStream();
-            var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
-            micStream = stream;
-            recChunks = [];
-            var chunkCount = 0;
-            var startedAt = Date.now();
-            var mime = bestMime();
-            try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
-            catch(_er){
-              // If creation with mime failed, try without explicit mime; then fallback
-              try{ rec = new MediaRecorder(stream); mime = rec.mimeType || mime || ''; }
-              catch(_er2){ try{ stream.getTracks().forEach(function(t){t.stop();}); }catch(_e){}; fallbackCapture(); return; }
-            }
-            // Use the actual codec decided by the recorder (prevents wrong type on Safari)
-            try{ if(rec && rec.mimeType){ mime = rec.mimeType; } }catch(_e){}
-            if(DEBUG_REC){
-              try{ console.log('[Recorder] started', {preferred: bestMime(), actual: rec?.mimeType || mime || '', isIOS: IS_IOS}); }catch(_e){}
-            }
-            rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
-            if(DEBUG_REC){
-              const origHandler = rec.ondataavailable;
-              rec.ondataavailable = function(e){
-                if(DEBUG_REC){ try{ console.log('[Recorder] chunk', ++chunkCount, {type:e?.data?.type||'', size:e?.data?.size||0}); }catch(_e2){} }
-                origHandler.call(this, e);
-              };
-            }
-            rec.onstop = async function(){
-              if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; stopFallbackTimer=null; }
-              try{
-                var detectedTypeRaw = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
-                var finalType = normalizeAudioMime(detectedTypeRaw || mime || '');
-                var blob = new Blob(recChunks, {type: finalType || undefined});
-                if(DEBUG_REC){ try{ console.log('[Recorder] stop', {chunks:recChunks.length, finalType, blobSize:blob.size, elapsed: Date.now()-startedAt, chunkTypes: recChunks.map(c=>c.type)}); }catch(_e2){} }
-                lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
-                await idbPut(lastAudioKey, blob);
-                lastAudioUrl = null;
-                var a = $("#audPrev");
-                if(a){
-                  resetAudioPreview();
-                  previewAudioURL = URL.createObjectURL(blob);
-                  a.src = previewAudioURL;
-                  a.classList.remove("hidden");
-                  try{ a.load(); }catch(_e){}
-                }
-              }catch(_e){}
-              stopMicStream();
-              rec = null;
-              isRecording = false;
-            };
-            // Only use periodic chunks on non-iOS browsers
-            try{
-              if(IS_IOS){ rec.start(); }
-              else { rec.start(1000); }
-            }catch(_e){ rec.start(); }
+            await iosRecorderInstance.start();
             isRecording = true;
-            recBtn.classList.add("recording"); timerStart(); setHintActive();
-            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){};
-            autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
-          }catch(_e){
-            isRecording=false;
-            rec=null;
-            stopMicStream();
-            if(DEBUG_REC){ try{ console.error('[Recorder] start failed', _e); }catch(__e){} }
+            recBtn.classList.add("recording");
+            timerStart();
+            setHintActive();
+            autoStopTimer = setTimeout(()=>{ if(isRecording){ stopRecording().catch(()=>{}); } }, 120000);
+          }catch(err){
+            isRecording = false;
+            if(DEBUG_REC){ console.error('[Recorder] iOS start failed', err); }
             fallbackCapture();
           }
-        })();
+          return;
+        }
+        try{
+          if(!window.MediaRecorder){ fallbackCapture(); return; }
+          stopMicStream();
+          const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+          micStream = stream;
+          recChunks = [];
+          let mime = bestMime();
+          try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
+          catch(_er){
+            try{ rec = new MediaRecorder(stream); mime = rec.mimeType || mime || ''; }
+            catch(_er2){ stopMicStream(); fallbackCapture(); return; }
+          }
+          try{ if(rec && rec.mimeType){ mime = rec.mimeType; } }catch(_e){}
+          rec.ondataavailable = e => { if(e.data && e.data.size>0) recChunks.push(e.data); };
+          rec.onstop = async () => {
+            try{
+              const detectedTypeRaw = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
+              const finalType = normalizeAudioMime(detectedTypeRaw || mime || '');
+              const blob = new Blob(recChunks, {type: finalType || undefined});
+              if(DEBUG_REC){ console.log('[Recorder] stop', {chunks:recChunks.length, finalType, blobSize:blob.size}); }
+              await handleRecordedBlob(blob);
+            }catch(err){ if(DEBUG_REC){ console.error('[Recorder] stop handler failed', err); } }
+            stopMicStream();
+            rec = null;
+            isRecording = false;
+          };
+          try{ rec.start(1000); }catch(_e){ rec.start(); }
+          isRecording = true;
+          recBtn.classList.add("recording");
+          timerStart();
+          setHintActive();
+          autoStopTimer = setTimeout(()=>{ if(rec && isRecording){ try{ rec.stop(); }catch(_e){} } }, 120000);
+        }catch(err){
+          isRecording = false;
+          rec = null;
+          stopMicStream();
+          if(DEBUG_REC){ console.error('[Recorder] start failed', err); }
+          fallbackCapture();
+        }
       }
-      function stopRecording(){
+      async function stopRecording(){
+        if(autoStopTimer){ try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null; }
+        if(useIOSRecorder){
+          try{
+            iosRecorderInstance.stop();
+            const blob = await iosRecorderInstance.exportWav();
+            await handleRecordedBlob(blob);
+          }catch(err){ if(DEBUG_REC){ console.error('[Recorder] iOS stop failed', err); } }
+          finally {
+            try{ await iosRecorderInstance.release(); }catch(_e){}
+            isRecording = false;
+            recBtn.classList.remove("recording");
+            timerStop();
+            setHintIdle();
+          }
+          return;
+        }
         try{ if(rec){ rec.stop(); } }catch(_e){}
         isRecording = false;
-        // rec will be nulled once onstop fires to avoid race conditions
-        if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null;
-        if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; }
-        stopFallbackTimer = micStream ? setTimeout(()=>{ try{ stopMicStream(); }catch(_e){}; }, 3000) : null;
-        recBtn.classList.remove("recording"); timerStop(); setHintIdle();
+        recBtn.classList.remove("recording");
+        timerStop();
+        setHintIdle();
       }
       function onDown(e){
         try{ e.preventDefault(); }catch(_e){}
-        startRecording();
+        const startPromise = startRecording();
+        if(startPromise && typeof startPromise.then === 'function'){
+          startPromise.catch(err=>{ if(DEBUG_REC){ console.error('[Recorder] start promise rejected', err); } });
+        }
         function onceUp(){
           window.removeEventListener("pointerup", onceUp);
           window.removeEventListener("pointercancel", onceUp);
           window.removeEventListener("mouseup", onceUp);
           window.removeEventListener("touchend", onceUp);
-          stopRecording();
+          const stopPromise = stopRecording();
+          if(stopPromise && typeof stopPromise.then === 'function'){
+            stopPromise.catch(err=>{ if(DEBUG_REC){ console.error('[Recorder] stop promise rejected', err); } });
+          }
         }
         window.addEventListener("pointerup", onceUp);
         window.addEventListener("pointercancel", onceUp);
@@ -751,7 +869,6 @@
       recBtn.addEventListener("mousedown", onDown);
       recBtn.addEventListener("touchstart", onDown, {passive:false});
       try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
-      // Initialize idle hint
       setHintIdle();
     })();
     let orderChosen=[];
