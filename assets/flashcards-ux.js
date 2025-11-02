@@ -2,7 +2,6 @@
 // Runs after main app initialization
 
 (function(){
-  console.log('[Flashcards UX] Script loaded');
 
   // Wait for main app to initialize
   function waitForApp(){
@@ -18,7 +17,6 @@
     const root = document.getElementById('mod_flashcards_container');
     const $ = s => root.querySelector(s);
 
-    console.log('[Flashcards UX] Initializing improvements...');
     // Detect iOS and mark root
     try{ if(/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream){ root.setAttribute('data-platform-ios','1'); } }catch(_e){}
     // Hide the in-card rating buttons when the bottom bar is enabled
@@ -87,11 +85,9 @@
     const btnToggleForm = $("#btnToggleForm");
     const cardCreationFormWrap = $("#cardCreationFormWrap");
 
-    console.log('[Flashcards UX] Form toggle found:', !!btnToggleForm, !!cardCreationFormWrap);
 
     if(btnToggleForm && cardCreationFormWrap){
       btnToggleForm.addEventListener("click", function(e){
-        console.log('[Flashcards UX] Form toggle clicked');
         e.preventDefault();
         e.stopPropagation();
         
@@ -114,7 +110,6 @@
           }
         }
       });
-      console.log('[Flashcards UX] Form toggle handler attached');
     }
 
     // 3. Update progress bar on queue changes
@@ -125,7 +120,6 @@
         updateBottomBarPlus();
       });
       observer.observe(originalDue, {childList: true, characterData: true, subtree: true});
-      console.log('[Flashcards UX] Progress observer attached');
     }
 
     function updateProgressBar(){
@@ -185,7 +179,6 @@
 
     // 4. No auto-hide for iOS hint (per UX request) – handled elsewhere
 
-    console.log('[Flashcards UX] All improvements initialized!');
 
     // 5. Fullscreen toggle (native + fallback)
     const btnFullscreen = $("#btnFullscreen");
