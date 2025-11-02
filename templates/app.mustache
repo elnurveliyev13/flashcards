@@ -27,13 +27,13 @@
       <button id="iosHintClose" class="ios-hint-close" title="Close">&times;</button>
        Tap <span class="step step-share">{{#str}} ios_share_button, mod_flashcards {{/str}}</span> -> <span class="step step-add">{{#str}} ios_add_to_home, mod_flashcards {{/str}}</span>
     </div>
-    <!-- Progress indicator -->
+    <!-- Progress indicator (fillable bar) -->
     <div id="progressBar" class="progress-bar hidden" role="region" aria-live="polite" aria-label="{{#str}} progress_label, mod_flashcards {{/str}}">
-      <div>
+      <div class="progress-fill" id="progressFill"></div>
+      <div class="progress-label">
         <span class="progress-text"><span id="progressCurrent">0</span> / <span id="progressTotal">0</span></span>
         <span class="progress-subtext">{{#str}} cards_remaining, mod_flashcards {{/str}}</span>
       </div>
-      <span id="stageBadge" class="stage hidden"><span id="stageEmoji"></span><b id="stageText">0</b></span>
     </div>
     <div class="row hidden">
       <select id="deckSelect"></select>
@@ -50,6 +50,7 @@
           <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
           <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}">&times;</button>
         </div>
+        <span id="stageBadge" class="stage hidden"><span id="stageEmoji"></span><b id="stageText">0</b></span>
         <video id="cam" class="hidden capture-video" autoplay playsinline muted></video>
         <div class="front" id="front"></div>
         <div class="back" id="back"></div>

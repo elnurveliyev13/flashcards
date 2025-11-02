@@ -263,6 +263,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function setDue(n){ const el=$("#due"); if(!el) return; el.textContent = String(n); }
 
+    function updateProgressBar(){
+      const pb = $("#progressBar");
+      if(!pb) return;
+
+      const total = parseInt(pb.dataset.total || "0", 10);
+      const remaining = queue.length;
+      const completed = Math.max(0, total - remaining);
+
+      const progressCurrent = $("#progressCurrent");
+      const progressTotal = $("#progressTotal");
+      const progressFill = $("#progressFill");
+
+      if(progressCurrent) progressCurrent.textContent = String(completed);
+      if(progressTotal) progressTotal.textContent = String(total);
+
+      if(progressFill && total > 0){
+        const percent = (completed / total) * 100;
+        progressFill.style.width = `${percent}%`;
+      }
+    }
+
     let audioURL=null; const player=new Audio();
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[],camStream=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -382,7 +403,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       debugLog(`Total due cards: ${queue.length}`);
       setDue(queue.length);
-      const _pb = $("#progressBar"); if(_pb){ _pb.dataset.total = String(queue.length); const _pt = $("#progressTotal"); if(_pt) _pt.textContent = String(queue.length); }
+      const _pb = $("#progressBar"); if(_pb){ _pb.dataset.total = String(queue.length); }
+      updateProgressBar();
 
       if(queue.length===0){
         slotContainer.innerHTML="";
@@ -428,6 +450,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         visibleSlots = 1;
         showCurrent();
         setDue(queue.length);
+        updateProgressBar();
       }
     }
 
@@ -454,6 +477,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         visibleSlots = 1;
         showCurrent();
         setDue(queue.length);
+        updateProgressBar();
       }
     }
 
@@ -477,6 +501,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       visibleSlots = 1;
       showCurrent();
       setDue(queue.length);
+      updateProgressBar();
     }
 
     $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(); });
