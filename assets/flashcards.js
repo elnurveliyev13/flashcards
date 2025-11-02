@@ -1,6 +1,9 @@
-﻿/* global M */
-(function(){
-  function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
+/* global M */
+import { log as baseDebugLog } from './modules/debug.js';
+import { idbPut, idbGet, urlFor } from './modules/storage.js';
+import { createIOSRecorder } from './modules/recorder.js';
+
+function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
     if(!root) return;
     const $ = s => root.querySelector(s);
@@ -274,27 +277,49 @@
         return localStorage.getItem('flashcards-debugrec') === '1';
       }catch(_e){ return false; }
     })();
-    const ModNamespace = window.ModFlashcards || {};
-    const DebugModule = ModNamespace.Debug || {log:()=>{}};
-    const StorageModule = ModNamespace.Storage || {};
-    const RecorderModule = ModNamespace.Recorder || null;
-
-    const debugLog = message => DebugModule.log(DEBUG_REC, message);
+    const debugLog = message => baseDebugLog(DEBUG_REC, message);
     const recorderLog = message => {
       if(!DEBUG_REC) return;
       try{ debugLog('[Recorder] ' + message); }catch(_e){}
     };
 
     const storageFallback = new Map();
-    const idbPutSafe = StorageModule.idbPut ? StorageModule.idbPut.bind(StorageModule) : async (key, blob)=>{ storageFallback.set(key, blob); };
-    const idbGetSafe = StorageModule.idbGet ? StorageModule.idbGet.bind(StorageModule) : async key => storageFallback.get(key) || null;
-    const urlForSafe = StorageModule.urlFor ? StorageModule.urlFor.bind(StorageModule) : async key => {
+    async function idbPutSafe(key, blob){
+      try{
+        await idbPut(key, blob);
+        return true;
+      }catch(_e){
+        storageFallback.set(key, blob);
+        return false;
+      }
+    }
+    async function idbGetSafe(key){
+      try{
+        const value = await idbGet(key);
+        if(value !== undefined && value !== null){
+          return value;
+        }
+      }catch(_e){}
+      return storageFallback.get(key) || null;
+    }
+    async function urlForSafe(key){
+      try{
+        const val = await urlFor(key);
+        if(val) return val;
+      }catch(_e){}
       const blob = storageFallback.get(key);
       return blob ? URL.createObjectURL(blob) : null;
-    };
+    }
     const IOS_WORKER_URL = ((window.M && M.cfg && M.cfg.wwwroot) ? M.cfg.wwwroot : '') + '/mod/flashcards/assets/recorder-worker.js';
 
-    let iosRecorderGlobal = RecorderModule ? RecorderModule.createIOSRecorder(IOS_WORKER_URL, debugLog) : null;
+    let iosRecorderGlobal = null;
+    if(IS_IOS){
+      try{
+        iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog);
+      }catch(_e){
+        iosRecorderGlobal = null;
+      }
+    }
     let useIOSRecorderGlobal = false;
 
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
@@ -584,7 +609,14 @@
       if(h){ const f = await h.getFile(); if(f){
         $("#audName").textContent = f.name;
         lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
-        await idbPutSafe(lastAudioKey, f);
+        const stored = await idbPutSafe(lastAudioKey, f);
+        if(!stored){
+          recorderLog('File picker audio stored in memory fallback');
+          lastAudioKey = null;
+          lastAudioBlob = f;
+        } else {
+          lastAudioBlob = null;
+        }
         lastAudioUrl = null;
         $("#audPrev").src = URL.createObjectURL(f);
         $("#audPrev").classList.remove("hidden");
@@ -614,13 +646,14 @@
       $("#audName").textContent=f.name;
       lastAudioUrl=null;
       lastAudioBlob=null;
-      try{
-        lastAudioKey="my-"+Date.now().toString(36)+"-aud";
-        await idbPutSafe(lastAudioKey,f);
-      }catch(err){
-        recorderLog('Manual audio storage failed: '+(err?.message||err));
+      lastAudioKey="my-"+Date.now().toString(36)+"-aud";
+      const manualStore = await idbPutSafe(lastAudioKey,f);
+      if(!manualStore){
+        recorderLog('Manual audio storage fallback (IndexedDB unavailable)');
         lastAudioKey=null;
         lastAudioBlob=f;
+      } else {
+        lastAudioBlob=null;
       }
       const url=URL.createObjectURL(f);
       const a=$("#audPrev");
@@ -642,8 +675,12 @@
       var hintEl  = document.getElementById('recHint');
       var tInt=null, t0=0;
       var autoStopTimer=null;
-      if(IS_IOS && RecorderModule && !iosRecorderGlobal){
-        iosRecorderGlobal = RecorderModule.createIOSRecorder(IOS_WORKER_URL, debugLog);
+      if(IS_IOS && !iosRecorderGlobal){
+        try{
+          iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog);
+        }catch(_e){
+          iosRecorderGlobal = null;
+        }
       }
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
       useIOSRecorderGlobal = useIOSRecorder;
@@ -698,15 +735,12 @@
           recorderLog('Empty blob received from recorder');
           return;
         }
-        let stored = false;
         lastAudioUrl = null;
         lastAudioBlob = null;
-        try{
-          lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
-          await idbPutSafe(lastAudioKey, blob);
-          stored = true;
-        }catch(err){
-          recorderLog('IndexedDB store failed: '+(err?.message||err));
+        lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
+        const stored = await idbPutSafe(lastAudioKey, blob);
+        if(!stored){
+          recorderLog('IndexedDB store failed; using in-memory blob');
           lastAudioKey = null;
           lastAudioBlob = blob;
         }
@@ -1525,5 +1559,6 @@
     })();
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }
-  window.flashcardsInit = flashcardsInit;
-})();
+}
+
+export { flashcardsInit };

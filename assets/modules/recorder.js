@@ -1,7 +1,4 @@
-(function(root){
-  const namespace = root.ModFlashcards || (root.ModFlashcards = {});
-
-  const workerSrc = `/**
+export const workerSrc = `/**
  * This is a web worker responsible for recording/buffering the sound and
  * encoding it as wav.
  */
@@ -261,12 +258,6 @@ function encodeWAV(samples) {
     }
   }
 
-  function createIOSRecorder(workerUrl, debugFn){
+  export function createIOSRecorder(workerUrl, debugFn){
     return new IOSRecorder(workerUrl, debugFn);
   }
-
-  namespace.Recorder = {
-    workerSrc,
-    createIOSRecorder
-  };
-})(window);

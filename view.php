@@ -28,10 +28,7 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
 $ver = 2025110126; // cache buster; aligns with target version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
-$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/debug.js', ['v' => $ver]));
-$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/storage.js', ['v' => $ver]));
-$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/modules/recorder.js', ['v' => $ver]));
-$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards.js', ['v' => $ver]));
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/main.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 // One-time iOS install guide (lightweight modal)
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
@@ -43,7 +40,12 @@ $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/app.css', ['v' => $v
 $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/ux-bottom.css', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
 $init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
-$init .= "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."')";
+$init .= "window.__flashcardsInitQueue = window.__flashcardsInitQueue || [];";
+$init .= "if (typeof window.flashcardsInit === 'function') {"
+  . "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."');"
+  . "} else {"
+  . "window.__flashcardsInitQueue.push(['mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."']);"
+  . "}";
 $PAGE->requires->js_init_code($init);
 
 // Output page (native, no AMD). Render mustache template and attach plain JS.
