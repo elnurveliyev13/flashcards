@@ -271,6 +271,16 @@
 
     let audioURL=null; const player=new Audio();
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let rec=null,recChunks=[],camStream=null;
+    const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    const DEBUG_REC = (function(){
+      try{
+        const qs = new URLSearchParams(location.search);
+        if(qs.get('debugrec') === '1'){ localStorage.setItem('flashcards-debugrec','1'); return true; }
+        if(qs.get('debugrec') === '0'){ localStorage.removeItem('flashcards-debugrec'); return false; }
+        return localStorage.getItem('flashcards-debugrec') === '1';
+      }catch(_e){ return false; }
+    })();
+    let stopFallbackTimer=null;
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
@@ -613,8 +623,7 @@
         try{
           if(!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
           // Prefer MP4 on iOS Safari; otherwise try WebM Opus first
-          var isIOS = /iP(hone|ad|od)/.test(navigator.userAgent);
-          var cand = isIOS ?
+          var cand = IS_IOS ?
             ['audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg'] :
             ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4;codecs=mp4a.40.2','audio/mp4'];
           for(var i=0;i<cand.length;i++){ if(MediaRecorder.isTypeSupported(cand[i])) return cand[i]; }
@@ -625,6 +634,7 @@
       function resetAudioPreview(){ try{ const a=$("#audPrev"); if(a){ if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } try{a.pause();}catch(_e){} a.removeAttribute('src'); a.load(); } }catch(_e){} }
       function fallbackCapture(){
         try{
+          if(DEBUG_REC){ console.warn('[Recorder] Falling back to input capture'); }
           var input=document.getElementById('uAudio');
           if(input){ input.setAttribute('accept','audio/*'); input.setAttribute('capture','microphone'); try{ input.click(); }catch(_e){} }
         }catch(_e){}
@@ -633,6 +643,7 @@
         mt = (mt||'').toLowerCase();
         if(!mt) return '';
         if(mt.includes('mp4') || mt.includes('m4a') || mt.includes('aac')) return 'audio/mp4';
+        if(mt.includes('3gpp')) return 'audio/3gpp';
         if(mt.includes('webm')) return 'audio/webm';
         if(mt.includes('ogg')) return 'audio/ogg';
         if(mt.includes('wav')) return 'audio/wav';
@@ -640,6 +651,7 @@
       }
       function startRecording(){
         if(isRecording) return;
+        if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; stopFallbackTimer=null; }
         (async function(){
           try{
             if(!window.MediaRecorder){ fallbackCapture(); return; }
@@ -648,6 +660,8 @@
             var stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
             micStream = stream;
             recChunks = [];
+            var chunkCount = 0;
+            var startedAt = Date.now();
             var mime = bestMime();
             try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
             catch(_er){
@@ -657,12 +671,24 @@
             }
             // Use the actual codec decided by the recorder (prevents wrong type on Safari)
             try{ if(rec && rec.mimeType){ mime = rec.mimeType; } }catch(_e){}
+            if(DEBUG_REC){
+              try{ console.log('[Recorder] started', {preferred: bestMime(), actual: rec?.mimeType || mime || '', isIOS: IS_IOS}); }catch(_e){}
+            }
             rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
+            if(DEBUG_REC){
+              const origHandler = rec.ondataavailable;
+              rec.ondataavailable = function(e){
+                if(DEBUG_REC){ try{ console.log('[Recorder] chunk', ++chunkCount, {type:e?.data?.type||'', size:e?.data?.size||0}); }catch(_e2){} }
+                origHandler.call(this, e);
+              };
+            }
             rec.onstop = async function(){
+              if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; stopFallbackTimer=null; }
               try{
                 var detectedTypeRaw = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
                 var finalType = normalizeAudioMime(detectedTypeRaw || mime || '');
                 var blob = new Blob(recChunks, {type: finalType || undefined});
+                if(DEBUG_REC){ try{ console.log('[Recorder] stop', {chunks:recChunks.length, finalType, blobSize:blob.size, elapsed: Date.now()-startedAt, chunkTypes: recChunks.map(c=>c.type)}); }catch(_e2){} }
                 lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
                 await idbPut(lastAudioKey, blob);
                 lastAudioUrl = null;
@@ -676,22 +702,34 @@
                 }
               }catch(_e){}
               stopMicStream();
+              rec = null;
+              isRecording = false;
             };
-            // timeslice helps Safari flush data regularly, improving reliability
-            try{ rec.start(1000); }catch(_e){ rec.start(); }
+            // Only use periodic chunks on non-iOS browsers
+            try{
+              if(IS_IOS){ rec.start(); }
+              else { rec.start(1000); }
+            }catch(_e){ rec.start(); }
             isRecording = true;
             recBtn.classList.add("recording"); timerStart(); setHintActive();
-            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ try{rec.requestData();}catch(_e){} rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
-          }catch(_e){ isRecording=false; rec=null; fallbackCapture(); }
+            if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){};
+            autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
+          }catch(_e){
+            isRecording=false;
+            rec=null;
+            stopMicStream();
+            if(DEBUG_REC){ try{ console.error('[Recorder] start failed', _e); }catch(__e){} }
+            fallbackCapture();
+          }
         })();
       }
       function stopRecording(){
-        try{ if(rec){ try{rec.requestData();}catch(_e){} rec.stop(); } }catch(_e){}
+        try{ if(rec){ rec.stop(); } }catch(_e){}
         isRecording = false;
-        rec = null;
+        // rec will be nulled once onstop fires to avoid race conditions
         if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=null;
-        // Extra safety for iOS: stop tracks immediately as well
-        stopMicStream();
+        if(stopFallbackTimer){ try{clearTimeout(stopFallbackTimer);}catch(_e){}; }
+        stopFallbackTimer = micStream ? setTimeout(()=>{ try{ stopMicStream(); }catch(_e){}; }, 3000) : null;
         recBtn.classList.remove("recording"); timerStop(); setHintIdle();
       }
       function onDown(e){
