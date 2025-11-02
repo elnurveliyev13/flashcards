@@ -1,4 +1,4 @@
-/* global M */
+﻿/* global M */
 (function(){
   function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const root = document.getElementById(rootid);
@@ -645,12 +645,12 @@
       useIOSRecorderGlobal = useIOSRecorder;
       const iosRecorderInstance = useIOSRecorder ? iosRecorderGlobal : null;
       if(IS_IOS && DEBUG_REC){
-        console.log('[Recorder] mode:', useIOSRecorder ? 'web-audio' : 'media-recorder');
+        debugLog('[Recorder] mode:', useIOSRecorder ? 'web-audio' : 'media-recorder');
       }
 
       function debugLog(message){
         if(!DEBUG_REC) return;
-        try{ console.log('[Recorder]', message); }catch(_e){}
+        try{ debugLog('[Recorder]', message); }catch(_e){}
       }
 
       function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
@@ -1230,9 +1230,9 @@
         linkIcon.href = baseurl + 'icons/icon-192.png';
         document.head.appendChild(linkIcon);
       }
-      console.log('[PWA] iOS meta tags added');
+      debugLog('[PWA] iOS meta tags added');
     } catch(e) {
-      console.log('[PWA] Error adding iOS meta tags:', e);
+      debugLog('[PWA] Error adding iOS meta tags:', e);
     }
 
     // PWA Install Prompt
@@ -1240,9 +1240,9 @@
     const btnInstallApp = $("#btnInstallApp");
 
     // Debug: log button state on init
-    console.log('[PWA] Install button in DOM:', !!btnInstallApp);
-    console.log('[PWA] Service Worker support:', 'serviceWorker' in navigator);
-    console.log('[PWA] User agent:', navigator.userAgent);
+    debugLog('[PWA] Install button in DOM:', !!btnInstallApp);
+    debugLog('[PWA] Service Worker support:', 'serviceWorker' in navigator);
+    debugLog('[PWA] User agent:', navigator.userAgent);
 
     window.addEventListener('beforeinstallprompt', (e) => {
       // Prevent Chrome 67 and earlier from automatically showing the prompt
@@ -1252,7 +1252,7 @@
       // Show install button
       if(btnInstallApp) {
         btnInstallApp.classList.remove('hidden');
-        console.log('[PWA] Install prompt available - button shown');
+        debugLog('[PWA] Install prompt available - button shown');
       } else {
         console.error('[PWA] Button not found in DOM!');
       }
@@ -1261,16 +1261,16 @@
     if(btnInstallApp) {
       btnInstallApp.addEventListener('click', async () => {
         if(!deferredInstallPrompt) {
-          console.log('[PWA] No install prompt available');
+          debugLog('[PWA] No install prompt available');
           return;
         }
         // Show the install prompt
         deferredInstallPrompt.prompt();
         // Wait for the user to respond to the prompt
         const { outcome } = await deferredInstallPrompt.userChoice;
-        console.log(`[PWA] User choice: ${outcome}`);
+        debugLog(`[PWA] User choice: ${outcome}`);
         if(outcome === 'accepted') {
-          console.log('[PWA] User accepted the install prompt');
+          debugLog('[PWA] User accepted the install prompt');
         }
         // Clear the deferred prompt
         deferredInstallPrompt = null;
@@ -1281,7 +1281,7 @@
 
     // Hide install button if already installed
     window.addEventListener('appinstalled', () => {
-      console.log('[PWA] App successfully installed');
+      debugLog('[PWA] App successfully installed');
       if(btnInstallApp) btnInstallApp.classList.add('hidden');
       deferredInstallPrompt = null;
     });
@@ -1293,8 +1293,8 @@
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
     const hintDismissedKey = 'ios-install-hint-dismissed';
 
-    console.log('[PWA] iOS device:', isIOS);
-    console.log('[PWA] Standalone mode:', isInStandaloneMode);
+    debugLog('[PWA] iOS device:', isIOS);
+    debugLog('[PWA] Standalone mode:', isInStandaloneMode);
 
     // Check if user previously dismissed the hint
     const isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
@@ -1302,9 +1302,9 @@
     if(iosInstallHint && isIOS && !isInStandaloneMode && !isHintDismissed) {
       // Show iOS install hint for iOS users who haven't installed the app yet
       iosInstallHint.classList.remove('hidden');
-      console.log('[PWA] iOS install hint shown');
+      debugLog('[PWA] iOS install hint shown');
     } else if(iosInstallHint) {
-      console.log('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
+      debugLog('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
     }
 
     // Handle close button click
@@ -1313,7 +1313,7 @@
         if(iosInstallHint) {
           iosInstallHint.classList.add('hidden');
           localStorage.setItem(hintDismissedKey, 'true');
-          console.log('[PWA] iOS hint dismissed by user');
+          debugLog('[PWA] iOS hint dismissed by user');
         }
       });
     }
@@ -1432,7 +1432,7 @@
     const CACHE_VERSION = "2025103107"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
-      console.log(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
+      debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
       // Clear all flashcards-related localStorage keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -1452,20 +1452,20 @@
 
       // Set new version
       localStorage.setItem("flashcards-cache-version", CACHE_VERSION);
-      console.log('[Flashcards] Cache cleared successfully');
+      debugLog('[Flashcards] Cache cleared successfully');
     }
 
     // Check access permissions and hide card creation form if needed
     if (window.flashcardsAccessInfo) {
       const access = window.flashcardsAccessInfo;
-      console.log('[Flashcards] Access info:', access);
+      debugLog('[Flashcards] Access info:', access);
 
       if (!access.can_create) {
         // Hide card creation form during grace period or when access expired
         const formEl = $("#cardCreationForm");
         if (formEl) {
           formEl.style.display = 'none';
-          console.log('[Flashcards] Card creation form hidden (can_create=false)');
+          debugLog('[Flashcards] Card creation form hidden (can_create=false)');
         }
       }
     }
@@ -1474,7 +1474,7 @@
       await syncFromServer();
 
       // Debug: log what we got from server
-      console.log('[Flashcards] Registry after sync:', Object.keys(registry || {}).map(id => ({
+      debugLog('[Flashcards] Registry after sync:', Object.keys(registry || {}).map(id => ({
         id,
         title: registry[id].title,
         cardCount: registry[id].cards?.length || 0
@@ -1487,7 +1487,7 @@
       Object.keys(registry || {}).forEach(deckId => {
         if(registry[deckId].cards && registry[deckId].cards.length > 0) {
           state.active[deckId] = true;
-          console.log(`[Flashcards] Auto-activated deck: ${deckId} (${registry[deckId].cards.length} cards)`);
+          debugLog(`[Flashcards] Auto-activated deck: ${deckId} (${registry[deckId].cards.length} cards)`);
         }
       });
 
@@ -1496,7 +1496,7 @@
       updateBadge();
       buildQueue();
 
-      console.log('[Flashcards] Active decks:', Object.keys(state.active || {}).filter(id => state.active[id]));
+      debugLog('[Flashcards] Active decks:', Object.keys(state.active || {}).filter(id => state.active[id]));
     })();
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }

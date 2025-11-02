@@ -1,0 +1,231 @@
+﻿:root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
+/* Fill viewport background for this module */
+#mod_flashcards_container{background:var(--bg);color:var(--fg)}
+@media (max-width:620px){
+  /* On small screens, remove side paddings and stretch to full width */
+  .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
+  /* Break out of Moodle content padding to avoid white gutters */
+  #mod_flashcards_container{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
+}
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
+/* Hide header list button; we place it inside the card actions */
+header #btnList{display:none}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pill{padding:8px 12px;border-radius:999px;background:#0b1220;border:1px dashed #374151;color:var(--muted);font-size:13px}
+button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radius:14px;padding:12px 16px;font-size:16px;cursor:pointer; transition:all 0.15s ease;}
+button:hover{filter:brightness(1.05)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button:disabled:hover{filter:none}
+.iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}
+.iconbtn, .btnFile{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
+.iconbtn *{ pointer-events:none }
+.iconbtn.recording{ background:#7f1d1d; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6) }
+.rec-timer{ color:#fca5a5; font-size:12px; margin-left:8px }
+/* Press-and-hold mic button */
+.rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.micbtn{ width:72px; height:72px; border-radius:50%; font-size:32px; display:inline-flex; align-items:center; justify-content:center }
+.rec-hint{ color:var(--muted); font-size:13px }
+`r`n
+select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr;gap:14px}
+  .grid.edit-mode{grid-template-columns:1fr}
+/* Swap study/editor views */
+.grid > #cardCreationFormWrap { display:none }
+.grid.edit-mode > .card:first-child { display:none }
+.grid.edit-mode > #cardCreationFormWrap { display:block }
+.grid.edit-mode > #cardCreationFormWrap .card-form-toggle { display:none }
+.grid.edit-mode > #cardCreationFormWrap .card-form-content { display:block !important }
+/* Always hide fixed bottom bar when embedding rating buttons in card */
+#mod_flashcards_container:not([data-ux-bottom="1"]) #bottomActions{ display:none !important }
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{position:relative;background:var(--card);border:1px solid #374151;border-radius:16px;padding:16px}
+.capture-video{width:100%;border-radius:12px;display:block}
+.actionTop{position:absolute;top:8px;right:8px;display:flex;gap:6px}
+.front{font-size:24px;margin-bottom:10px}
+.back{color:var(--muted);margin-bottom:12px;min-height:2.2em}
+/* improve contrast */
+.back{color:#e2e8f0}
+.table td{color:#e5e7eb}
+.table th{color:#f1f5f9}
+textarea, input[type=search]{color:#f1f5f9}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
+/* Make text inputs visually consistent with textareas */
+input[type=text]{color:#f1f5f9; background:#0b1220; border:1px solid #374151; border-radius:10px; padding:10px}
+textarea::placeholder{color:#64748b;opacity:0.7}
+input[type=search]::placeholder{color:#64748b;opacity:0.7}
+input[type=text]::placeholder{color:#64748b;opacity:0.7}
+/* force high-contrast text inside inputs/selects in Moodle themes */
+#mod_flashcards_container textarea,
+#mod_flashcards_container input[type=search],
+#mod_flashcards_container select,
+#mod_flashcards_container option { color:#f1f5f9 !important; }
+#mod_flashcards_container select { background:#0b1220; border:1px solid #374151; }
+#mod_flashcards_container select:disabled { opacity:0.9; }
+/* play row below content */
+.playRow{display:flex;gap:6px;align-items:center;margin:10px 0}
+.meta{display:flex;gap:8px;color:var(--muted);font-size:13px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.row2{display:flex;gap:10px;align-items:center;margin-top:12px}
+.ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35)}
+.mid{background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.35)}
+.hard{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35)}
+.hidden{display:none !important}
+.mono{font:12px/1.2 ui-monospace,Menlo,Consolas,monospace}
+.small{font-size:12px;color:var(--muted)}
+textarea{width:100%;min-height:80px;border-radius:10px;padding:10px;background:#0b1220;color:#d1d5db;border:1px solid #374151}
+label{display:inline-flex;align-items:center;gap:6px}
+.stage{display:inline-flex;align-items:center;gap:6px;border:1px solid #374151;border-radius:999px;padding:4px 10px;background:#0b1220}
+.stage b{font-size:12px}
+#btnRevealNext.primary{outline:2px solid var(--mid)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:8px 10px;border-radius:999px;border:1px solid #374151;background:#0b1220;color:#cbd5e1;cursor:pointer}
+.chip.active{background:#0e223e;border-color:#4269ff}
+.previewRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
+audio{max-width:260px}
+.slot{margin:6px 0}
+.slot .tag{font-size:12px;color:#9aa3b1;margin-bottom:4px}
+/* Ensure new enrichment rows align to full width, and fields flex like textareas */
+#mod_flashcards_container .slot .row{width:100%}
+#mod_flashcards_container .slot .row textarea{flex:1 1 auto; min-width:220px}
+#mod_flashcards_container .slot .row input[type=text]{flex:1 1 auto; min-width:220px}
+/* Reserve space for inline action icon so borders align with full-width fields */
+/* Action rows: behave like full-width blocks (exactly like legacy textareas), icon overlays on the right */
+#mod_flashcards_container .slot .row.has-action{ position:relative; display:block; width:100%; padding-left:16px }
+#mod_flashcards_container .slot .row.has-action > .iconbtn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); z-index:1 }
+#mod_flashcards_container .slot .row.has-action > input[type=text],
+#mod_flashcards_container .slot .row.has-action > textarea,
+#mod_flashcards_container .slot .row.has-action > select{ width:100%; box-sizing:border-box; padding-right:44px; margin-left:0 }
+/* Bright text inside modal prompt editors */
+#mod_flashcards_container .modal .box input[type=text],
+#mod_flashcards_container .modal .box textarea{ color:#f1f5f9 !important; background:#0b1220; border:1px solid #374151; }
+.empty{padding:28px;border:1px dashed #374151;border-radius:14px;text-align:center;color:#9aa3b1}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px}
+.modal>.box{max-width:960px;width:100%;max-height:85vh;overflow:auto;background:#0b1220;border:1px solid #374151;border-radius:16px;padding:16px}
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{border-bottom:1px solid #253047;padding:8px;text-align:left;font-size:14px}
+.table th{color:#9aa3b1;font-weight:600;position:sticky;top:0;background:#0b1220}`r`n  .table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}`r`n
+input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}
+#mod_flashcards_container input[type=search]{background:#0b1220 !important;border-color:#374151 !important;color:#e5e7eb !important;}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
+.badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
+#listSearch{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; padding:8px 14px; border-radius:12px !important; }
+#listFilterDue{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; border-radius:12px !important; }
+.btnFile{background:#0b1220;border:1px solid #374151;border-radius:12px;padding:10px 12px}
+.fileName{font-size:12px;color:#9aa3b1;margin-left:6px}
+/* PWA Install Button */
+.install-btn{
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border:none;
+  color:#fff;
+  font-weight:600;
+  padding:10px 16px;
+  border-radius:12px;
+  box-shadow:0 4px 12px rgba(102,126,234,0.3);
+  transition:all 0.3s ease;
+}
+.install-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(102,126,234,0.4);
+}
+.install-btn:active{
+  transform:translateY(0);
+}
+/* iOS Install Hint - Compact */
+.ios-hint{
+  position:relative;
+  background:#1e3a5f;
+  border:1px solid #3b82f6;
+  border-radius:8px;
+  padding:5px 24px 5px 8px;
+  margin-bottom:6px;
+  color:#e2e8f0;
+  font-size:11px;
+  line-height:1.3;
+}
+.ios-hint .step{
+  display:inline-block;
+  background:#0c2340;
+  padding:1px 4px;
+  border-radius:4px;
+  font-weight:600;
+  margin:0 1px;
+  font-size:10px;
+
+  line-height:1; /* ensure vertical centering for icons */
+}
+/* Icons after step labels (iOS-style) */
+.ios-hint .step-share::after{
+  content:'';
+  display:inline-block;
+  width:12px;height:12px;margin-left:4px;vertical-align:-1px;
+  background-repeat:no-repeat;background-size:12px 12px;
+background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%224%22 y=%2212%22 width=%2216%22 height=%228%22 rx=%222%22/%3E%3Cpath d=%22M12 4v10%22/%3E%3Cpath d=%22M8 8l4-4 4 4%22/%3E%3C/svg%3E");
+}
+.ios-hint .step-add::after{
+  content:'';
+  display:inline-block;
+  width:12px;height:12px;margin-left:4px;vertical-align:-1px;
+  background-repeat:no-repeat;background-size:12px 12px;
+background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23e2e8f0%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Crect x=%223%22 y=%223%22 width=%2218%22 height=%2218%22 rx=%224%22/%3E%3Cpath d=%22M12 8v8%22/%3E%3Cpath d=%22M8 12h8%22/%3E%3C/svg%3E");
+}
+.ios-hint-close{
+  position:absolute;
+  top:2px;
+  right:2px;
+  background:transparent;
+  border:none;
+  color:#94a3b8;
+  font-size:14px;
+  padding:2px;
+  cursor:pointer;
+  border-radius:4px;
+  width:18px;
+  height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.ios-hint-close:hover{
+  background:rgba(255,255,255,0.1);
+  color:#e2e8f0;
+}
+/* UX IMPROVEMENTS */
+.front{font-size:32px !important;font-weight:500;line-height:1.3;color:#f1f5f9}
+.back{font-size:18px !important;line-height:1.5}
+.bottom-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,1000px);background:linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.92) 12%, rgba(15,23,42,1) 100%);backdrop-filter:blur(12px);padding:10px 14px;padding-bottom:max(10px, env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;align-items:stretch;z-index:1000;border-top:1px solid rgba(55,65,81,0.5);box-shadow:0 -6px 24px rgba(0,0,0,0.4);box-sizing:border-box}
+.bottom-actions button{flex:1;max-width:140px;font-size:16px;font-weight:700;padding:16px 20px;border-radius:16px;transition:all 0.15s ease}
+.bottom-actions button:active{transform:scale(0.92)}
+.bottom-actions .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
+.bottom-actions .mid{background:rgba(59,130,246,0.22);border:2px solid rgba(59,130,246,0.6);color:#60a5fa}
+.bottom-actions .hard{background:rgba(245,158,11,0.22);border:2px solid rgba(245,158,11,0.6);color:#fbbf24}
+.progress-bar{display:flex;align-items:center;justify-content:space-between;background:#0b1220;border:1px solid #374151;border-radius:12px;padding:12px 18px;margin-bottom:10px}
+.progress-text{font-size:20px;font-weight:700;color:#e5e7eb}
+.progress-subtext{font-size:13px;color:#9ca3af;margin-left:8px;font-weight:400}
+.card-form-collapsed .card-form-content{display:none}
+.card-form-toggle{background:#1f2937;border:1px dashed #374151;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s ease;font-size:16px;color:#9ca3af}
+.card-form-toggle:hover{background:#374151;border-color:#4b5563;color:#e5e7eb}
+.card-form-toggle .icon{font-size:24px;margin-bottom:4px}.meta{margin-top:12px}
+@media (max-width:600px){#langSel{display:none}}
+  .iconbtn.cross{font-size: 20px !important;}
+.iconbtn.plus{font-size: 24px !important;}
+/* Fullscreen (native or fallback) */
+#mod_flashcards_container.fs-active{position:fixed;inset:0;z-index:99999;background:var(--bg);width:100vw;height:100svh;overflow:auto}
+#mod_flashcards_container.fs-active .wrap{max-width:none;width:100%;min-height:100%;padding-left:12px;padding-right:12px}
+/* On iOS account for safe areas */
+@supports(padding:max(env(safe-area-inset-bottom),0px)){
+  #mod_flashcards_container.fs-active{padding-bottom:max(env(safe-area-inset-bottom),0px)}
+}
+/* Mobile offsets for title and iOS banner */
+@media (max-width:620px){
+  header h1#t_appTitle{ margin-left:12px }
+  .ios-hint{ margin-left:12px; margin-right:12px }
+}
+/* Rating buttons inside the card: match fixed bar palette */
+.row2 .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
+.row2 .mid{background:rgba(59,130,246,0.22);border:2px solid rgba(59,130,246,0.6);color:#60a5fa}
+.row2 .hard{background:rgba(245,158,11,0.22);border:2px solid rgba(245,158,11,0.6);color:#fbbf24}
+.row2 button:active{transform:scale(0.92)}
+@media (prefers-reduced-motion: reduce){
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  .bottom-actions button:active, .row2 button:active { transform:none !important }
+}
