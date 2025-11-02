@@ -258,7 +258,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Stage 0-10: show number and fill percentage
       const fillPercent = step === 0 ? 0 : (step / 10) * 100;
-      if(stageEmoji) stageEmoji.textContent = "\u2713";
+      if(stageEmoji) stageEmoji.textContent = "";
       if(stageText) stageText.textContent = String(step);
       stageBadge.style.background = `linear-gradient(90deg, #2196f3 ${fillPercent}%, #e0e0e0 ${fillPercent}%)`;
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
