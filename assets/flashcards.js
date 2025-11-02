@@ -629,6 +629,15 @@
           if(input){ input.setAttribute('accept','audio/*'); input.setAttribute('capture','microphone'); try{ input.click(); }catch(_e){} }
         }catch(_e){}
       }
+      function normalizeAudioMime(mt){
+        mt = (mt||'').toLowerCase();
+        if(!mt) return '';
+        if(mt.includes('mp4') || mt.includes('m4a') || mt.includes('aac')) return 'audio/mp4';
+        if(mt.includes('webm')) return 'audio/webm';
+        if(mt.includes('ogg')) return 'audio/ogg';
+        if(mt.includes('wav')) return 'audio/wav';
+        return mt.startsWith('video/mp4') ? 'audio/mp4' : mt;
+      }
       function startRecording(){
         if(isRecording) return;
         (async function(){
@@ -651,8 +660,9 @@
             rec.ondataavailable = function(e){ if(e.data && e.data.size>0) recChunks.push(e.data); };
             rec.onstop = async function(){
               try{
-                var detectedType = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
-                var blob = new Blob(recChunks, {type: detectedType});
+                var detectedTypeRaw = (recChunks && recChunks[0] && recChunks[0].type) ? recChunks[0].type : (mime || '');
+                var finalType = normalizeAudioMime(detectedTypeRaw || mime || '');
+                var blob = new Blob(recChunks, {type: finalType || undefined});
                 lastAudioKey = "my-" + Date.now().toString(36) + "-aud";
                 await idbPut(lastAudioKey, blob);
                 lastAudioUrl = null;
@@ -667,7 +677,8 @@
               }catch(_e){}
               stopMicStream();
             };
-            rec.start();
+            // timeslice helps Safari flush data regularly, improving reliability
+            try{ rec.start(1000); }catch(_e){ rec.start(); }
             isRecording = true;
             recBtn.classList.add("recording"); timerStart(); setHintActive();
             if(autoStopTimer) try{clearTimeout(autoStopTimer);}catch(_e){}; autoStopTimer=setTimeout(function(){ try{ if(rec && isRecording){ try{rec.requestData();}catch(_e){} rec.stop(); } }catch(_e){} }, 120000); // 2 min safety
@@ -797,7 +808,7 @@
               if(mt){
                 var low = mt.toLowerCase();
                 if(low.indexOf('audio/wav') === 0) ext = 'wav';
-                else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0) ext = 'mp4';
+                else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
                 else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
                 else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
                 else if(low.indexOf('audio/webm') === 0) ext = 'webm';
