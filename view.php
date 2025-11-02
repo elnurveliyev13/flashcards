@@ -26,7 +26,7 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025110128; // cache buster; aligns with target version.
+$ver = 2025110129; // cache buster; aligns with target version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/main.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
