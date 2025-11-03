@@ -722,46 +722,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const audioUploadBtn = document.getElementById('btnAudioUpload');
     if(audioUploadBtn && !audioUploadBtn.dataset.bound){
       audioUploadBtn.dataset.bound = '1';
-      audioUploadBtn.addEventListener("click", async e=>{ e.preventDefault();
-  try{
-    if(typeof window.showOpenFilePicker === 'function'){
-      const [h] = await window.showOpenFilePicker({
-        multiple: false,
-        excludeAcceptAllOption: true,
-        types: [{ description: 'Audio', accept: { 'audio/*': ['.mp3','.m4a','.wav','.ogg','.webm'] } }]
-      });
-      if(h){ const f = await h.getFile(); if(f){
-        $("#audName").textContent = f.name;
-        showAudioBadge(f.name);
-        lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
-        const stored = await idbPutSafe(lastAudioKey, f);
-        if(!stored){
-          recorderLog('File picker audio stored in memory fallback');
-          lastAudioKey = null;
-          lastAudioBlob = f;
-        } else {
-          lastAudioBlob = null;
+      audioUploadBtn.addEventListener("click", async e=>{ 
+        e.preventDefault();
+        let handled = false;
+        try{
+          if(typeof window.showOpenFilePicker === 'function'){
+            const [h] = await window.showOpenFilePicker({
+              multiple: false,
+              excludeAcceptAllOption: true,
+              types: [{ description: 'Audio', accept: { 'audio/*': ['.mp3','.m4a','.wav','.ogg','.webm'] } }]
+            });
+            if(h){
+              const f = await h.getFile();
+              if(f){
+                $("#audName").textContent = f.name;
+                showAudioBadge(f.name);
+                lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
+                const stored = await idbPutSafe(lastAudioKey, f);
+                if(!stored){
+                  recorderLog('File picker audio stored in memory fallback');
+                  lastAudioKey = null;
+                  lastAudioBlob = f;
+                } else {
+                  lastAudioBlob = null;
+                }
+                lastAudioUrl = null;
+                $("#audPrev").src = URL.createObjectURL(f);
+                $("#audPrev").classList.remove("hidden");
+                handled = true;
+              }
+            }
+          }
+        }catch(_e){}
+        if(!handled){
+          const input=document.getElementById('uAudio');
+          if(input) input.click();
         }
-        lastAudioUrl = null;
-        $("#audPrev").src = URL.createObjectURL(f);
-        $("#audPrev").classList.remove("hidden");
-        return; }
-      }
-    }
-  }catch(_e){}
-  const input=document.getElementById('uAudio');
-  if(input) input.click();
       });
-    }
-    const resetAudioBtn=document.getElementById('btnResetAudio');
-    if(resetAudioBtn && !resetAudioBtn.dataset.bound){
-      resetAudioBtn.dataset.bound='1';
-      resetAudioBtn.addEventListener('click', e=>{ e.preventDefault(); clearAudioSelection(); });
-    }
-    const resetImageBtn=document.getElementById('btnResetImage');
-    if(resetImageBtn && !resetImageBtn.dataset.bound){
-      resetImageBtn.dataset.bound='1';
-      resetImageBtn.addEventListener('click', e=>{ e.preventDefault(); clearImageSelection(); });
     }
     // POS visibility toggles + autofill placeholders
     function togglePOSUI(){
@@ -908,8 +905,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           a.classList.remove("hidden");
           try{ a.load(); }catch(_e){}
         }
-        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = 'Recording';
-        showAudioBadge('Recording');
+        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = 'Recorded audio';
+        showAudioBadge('Recorded audio');
         if(stored){
           recorderLog('handleRecordedBlob stored via IDB');
         } else {

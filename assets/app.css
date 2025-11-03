@@ -434,36 +434,39 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-quick-media-btn.fc-media-large {
-  flex-direction: row;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  justify-content: flex-start;
-  gap: 16px;
-  padding: 22px 26px;
+  text-align: center;
+  gap: 10px;
+  padding: 26px 24px;
+  min-height: 160px;
+  position: relative;
 }
 
 .fc-quick-media-btn.fc-media-large .fc-media-icon {
   font-size: 36px;
 }
 
-.fc-media-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  text-align: left;
+.fc-quick-media-btn.fc-media-large .fc-media-label {
   font-size: 15px;
+  font-weight: 600;
 }
 
-.fc-media-hint {
+.fc-media-caption {
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--text-dim);
+  text-align: center;
+  margin: 6px 0 12px;
 }
 
 .fc-quick-media-btn .rec-timer {
-  margin-left: auto;
+  position: absolute;
+  top: 12px;
+  right: 16px;
   font-weight: 600;
-  color: var(--primary);
+  color: #a5b4fc;
 }
 
 .fc-quick-media-btn.micbtn.recording {
@@ -474,12 +477,17 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-media-actions {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .fc-media-actions .fc-link-btn {
   padding: 6px 0;
+  color: #93c5fd;
+}
+.fc-media-actions .fc-link-btn:hover {
+  text-decoration: underline;
 }
 
 .fc-media-icon {
