@@ -1,7 +1,11 @@
 ﻿:root{--bg:#0f172a;--fg:#e5e7eb;--muted:#9ca3af;--card:#111827;--btn:#1f2937;--ok:#22c55e;--mid:#3b82f6;--hard:#f59e0b}
 .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
 /* Fill viewport background for this module */
-#mod_flashcards_container{background:var(--bg);color:var(--fg)}
+#mod_flashcards_container{background:var(--bg);color:var(--fg);overflow-x:hidden;width:100%;max-width:100vw;box-sizing:border-box}
+/* Prevent zoom on input focus (iOS Safari) */
+input, textarea, select{font-size:16px !important}
+/* Prevent double-tap zoom */
+*{touch-action:manipulation}
 /* Disable text selection for all UI elements */
 #mod_flashcards_container *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* Allow selection only in input fields */
