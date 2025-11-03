@@ -1689,7 +1689,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Load Dashboard Data
       async function loadDashboard() {
         try {
-          const resp = await fetch(baseurl + '/ajax.php', {
+          // baseurl = '/mod/flashcards/app/', so go up one level for ajax.php
+          const ajaxUrl = baseurl.replace(/\/app\/?$/, '') + '/ajax.php';
+          const resp = await fetch(ajaxUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
