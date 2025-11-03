@@ -58,84 +58,175 @@
 
     <!-- Quick Input Section (Default) -->
     <div class="fc-tab-content fc-tab-active" id="quickInputSection" role="tabpanel" aria-labelledby="tabQuickInput">
-      <div class="fc-quick-input-wrap">
-        <div class="fc-quick-input-form card">
-          <h2 id="t_quick_input_title">{{#str}} quickinput_title, mod_flashcards {{/str}}</h2>
+      <div class="fc-editor-wrap">
+        <div class="card" id="cardCreationFormWrap">
+          <div class="editor-header">
+            <h2 id="t_quick_input_title">{{#str}} quickinput_title, mod_flashcards {{/str}}</h2>
+            <div class="actionTop">
+              <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button>
+              <button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&times;</button>
+            </div>
+          </div>
+          <div class="card-form-content" id="cardCreationForm">
+            <div class="slot">
+              <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
+            </div>
+            <div class="slot">
+              <span class="tag" id="t_pickAudio">{{#str}} audio, mod_flashcards {{/str}}</span>
+              <div class="previewRow">
+                <input id="uAudio" type="file" accept="audio/*" class="hidden">
+                <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
+                <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+                <div class="rec-wrap">
+                  <button id="btnRec"  class="iconbtn micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+                  <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
+                  <span id="recTimer" class="rec-timer hidden">00:00</span>
+                  <div id="recHint" class="rec-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</div>
+                </div>
+              </div>
+              <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
+            </div>
+            <div class="slot">
+              <span class="tag" id="t_pickPhoto">{{#str}} image, mod_flashcards {{/str}}</span>
+              <div class="previewRow">
+                <input id="uImage" type="file" accept="image/*" class="hidden">
+                <button id="btnChooseImg" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="imgName" class="fileName"></span>
+                <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
+                <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">&#128247;</button>
+                <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">&#128248;</button>
+                <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&times;</button>
+              </div>
+              <img id="imgPrev" class="media hidden" alt=""/>
+            </div>
+            <div class="slot">
+              <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+              <textarea id="uFront" placeholder="Front..." autofocus></textarea>
+            </div>
+            <div class="slot" id="slot_translation_local">
+              <span class="tag" id="tag_trans_local">Translation (?)</span>
+              <textarea id="uTransLocal" placeholder="Translation..."></textarea>
+            </div>
 
-          <!-- Media Inputs (Large buttons at top) -->
-          <div class="fc-quick-media">
-            <div class="fc-quick-media-row">
-              <button id="btnQuickRec" class="fc-quick-media-btn" title="{{#str}} title_record, mod_flashcards {{/str}}">
-                <span class="fc-media-icon">&#127897;&#65039;</span>
-                <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+            <div class="fc-quick-advanced-toggle">
+              <button id="btnEditorAdvanced" class="fc-link-btn">
+                <span id="editorAdvancedLabel">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
+                <span id="editorAdvancedIcon">&#9660;</span>
               </button>
-              <button id="btnQuickCam" class="fc-quick-media-btn" title="{{#str}} title_camera, mod_flashcards {{/str}}">
-                <span class="fc-media-icon">&#128247;</span>
-                <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
-              </button>
             </div>
-            <div id="quickMediaPreview" class="fc-quick-preview hidden">
-              <audio id="quickAudPrev" class="hidden" controls preload="metadata"></audio>
-              <img id="quickImgPrev" class="media hidden" alt=""/>
-              <button id="btnQuickClearMedia" class="iconbtn cross" title="Clear">&times;</button>
-            </div>
-          </div>
 
-          <!-- Text Input -->
-          <div class="fc-quick-field">
-            <textarea id="quickFront" placeholder="{{#str}} front, mod_flashcards {{/str}}..." autofocus></textarea>
-          </div>
-
-          <!-- Translation Input -->
-          <div class="fc-quick-field">
-            <textarea id="quickTranslation" placeholder="{{#str}} translation, mod_flashcards {{/str}}..."></textarea>
-          </div>
-
-          <!-- Save Button -->
-          <button id="btnQuickSave" class="fc-quick-save primary">{{#str}} save, mod_flashcards {{/str}}</button>
-
-          <!-- Advanced Toggle -->
-          <div class="fc-quick-advanced-toggle">
-            <button id="btnQuickAdvanced" class="fc-link-btn">
-              <span id="quickAdvancedLabel">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
-              <span id="quickAdvancedIcon">&#9660;</span>
-            </button>
-          </div>
-
-          <!-- Advanced Fields (Initially Hidden) -->
-          <div id="quickAdvancedFields" class="fc-quick-advanced hidden">
-            <div class="fc-quick-field">
-              <label>{{#str}} explanation, mod_flashcards {{/str}}</label>
-              <textarea id="quickExplanation" placeholder="{{#str}} explanation, mod_flashcards {{/str}}..."></textarea>
+            <div id="editorAdvancedFields" class="fc-quick-advanced hidden">
+              <div class="slot" id="slot_translation_en">
+                <span class="tag">Translation (English)</span>
+                <textarea id="uTransEn" placeholder="Translation (English)..."></textarea>
+              </div>
+              <div class="slot">
+                <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
+                <textarea id="uExplanation" placeholder="Explanation..."></textarea>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+                  <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <select id="uPOS">
+                    <option value="">-</option>
+                    <option value="substantiv">Substantiv ? navn pa steder, personer, ting og fenomener</option>
+                    <option value="adjektiv">Adjektiv ? beskriver substantiv</option>
+                    <option value="pronomen">Pronomen ? settes i stedet for et substantiv</option>
+                    <option value="determinativ">Determinativ ? bestemmer substantivet n?rmere</option>
+                    <option value="verb">Verb ? navn pa en handling</option>
+                    <option value="adverb">Adverb ? beskriver/modifiserer verb, adjektiv eller andre adverb</option>
+                    <option value="preposisjon">Preposisjon ? forteller hvor verbet/substantivet befinner seg i forhold til et annet verb/substantiv i bade tid og rom</option>
+                    <option value="konjunksjon">Konjunksjon ? binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
+                    <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
+                    <option value="interjeksjon">Interjeksjon ? lydmalende ord, folelser eller meninger</option>
+                    <option value="andre">Andre</option>
+                  </select>
+                  <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+                <div id="uPOSHelp" class="small"></div>
+              </div>
+              <div class="slot" id="slot_gender">
+                <span class="tag">{{#str}} gender, mod_flashcards {{/str}}</span>
+                <select id="uGender">
+                  <option value="">-</option>
+                  <option value="m">{{#str}} gender_m, mod_flashcards {{/str}}</option>
+                  <option value="f">{{#str}} gender_f, mod_flashcards {{/str}}</option>
+                  <option value="n">{{#str}} gender_n, mod_flashcards {{/str}}</option>
+                  <option value="c">{{#str}} gender_c, mod_flashcards {{/str}}</option>
+                </select>
+              </div>
+              <div class="slot" id="slot_noun_forms">
+                <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
+                <div class="grid-forms">
+                  <label>Indef. singular<input id="uNounIndefSg" type="text"></label>
+                  <label>Def. singular<input id="uNounDefSg" type="text"></label>
+                  <label>Indef. plural<input id="uNounIndefPl" type="text"></label>
+                  <label>Def. plural<input id="uNounDefPl" type="text"></label>
+                </div>
+                <div class="row" style="gap:6px;flex-wrap:wrap">
+                  <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <textarea id="uCollocations" placeholder="collocations..." style="flex:1"></textarea>
+                  <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <textarea id="uExamples" placeholder="examples..." style="flex:1"></textarea>
+                  <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <textarea id="uAntonyms" placeholder="antonyms..." style="flex:1"></textarea>
+                  <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <textarea id="uCognates" placeholder="cognates..." style="flex:1"></textarea>
+                  <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
+                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
+                  <textarea id="uSayings" placeholder="sayings..." style="flex:1"></textarea>
+                  <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot">
+                <span class="tag" id="t_order">{{#str}} order, mod_flashcards {{/str}}</span>
+                <div id="orderChips" class="chips">
+                  <button class="chip" data-kind="audio"       id="chip_audio">{{#str}} audio, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="image"       id="chip_image">{{#str}} image, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="text"        id="chip_text">{{#str}} front, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="explanation" id="chip_explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="translation" id="chip_translation">{{#str}} back, mod_flashcards {{/str}}</button>
+                </div>
+                <div class="small" id="orderPreview">audio -> image -> text -> explanation -> translation</div>
+              </div>
             </div>
-            <div class="fc-quick-field">
-              <label>{{#str}} transcription, mod_flashcards {{/str}}</label>
-              <input id="quickTranscription" type="text" placeholder="[?sp?l?]">
-            </div>
-            <div class="fc-quick-field">
-              <label>{{#str}} pos, mod_flashcards {{/str}}</label>
-              <select id="quickPOS">
-                <option value="">-</option>
-                <option value="substantiv">Substantiv</option>
-                <option value="adjektiv">Adjektiv</option>
-                <option value="verb">Verb</option>
-                <option value="adverb">Adverb</option>
-              </select>
-            </div>
-            <div class="fc-quick-field">
-              <label>{{#str}} collocations, mod_flashcards {{/str}}</label>
-              <textarea id="quickCollocations" placeholder="{{#str}} collocations_ph, mod_flashcards {{/str}}..."></textarea>
-            </div>
-            <div class="fc-quick-field">
-              <label>{{#str}} examples, mod_flashcards {{/str}}</label>
-              <textarea id="quickExamples" placeholder="{{#str}} examples_ph, mod_flashcards {{/str}}..."></textarea>
-            </div>
-          </div>
 
-          <!-- Success Message -->
-          <div id="quickSuccessMsg" class="fc-quick-success hidden">
-            <span class="fc-success-icon">&#10004;</span>
-            <span class="fc-success-text">{{#str}} card_created, mod_flashcards {{/str}}</span>
+            <div class="row2" style="display:flex">
+              <button id="btnUpdate" class="ok">Update</button>
+              <button id="btnAdd" class="mid">Create new</button>
+            </div>
+            <div class="mono" id="status"></div>
+            <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>
           </div>
         </div>
       </div>
@@ -475,4 +566,3 @@
     </div>
   </div>
 </div>
-

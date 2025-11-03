@@ -355,23 +355,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{ mainAudio.load(); }catch(_e){}
           mainAudio.classList.add("hidden");
         }
-        const quickAudio=$("#quickAudPrev");
-        if(quickAudio){
-          try{ quickAudio.pause(); }catch(_e){}
-          quickAudio.removeAttribute('src');
-          try{ quickAudio.load(); }catch(_e){}
-          quickAudio.classList.add("hidden");
-        }
-        const quickImg=$("#quickImgPrev");
-        const quickWrap=$("#quickMediaPreview");
-        if(quickWrap){
-          const hasImg=!!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
-          const hasAudio=!!(quickAudio && !quickAudio.classList.contains("hidden") && quickAudio.getAttribute('src'));
-          if(!hasImg && !hasAudio){
-            quickWrap.classList.add("hidden");
-          }
-        }
       }catch(_e){}
+    }
+    let advancedVisible=false;
+    function setAdvancedVisibility(show){
+      advancedVisible = !!show;
+      const advanced = $("#editorAdvancedFields");
+      if(advanced){
+        advanced.classList.toggle("hidden", !advancedVisible);
+      }
+      const label = $("#editorAdvancedLabel");
+      if(label){
+        label.textContent = advancedVisible ? 'Hide Advanced' : 'Show Advanced';
+      }
+      const icon = $("#editorAdvancedIcon");
+      if(icon){
+        icon.textContent = advancedVisible ? '▲' : '▼';
+      }
     }
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
@@ -384,21 +384,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function hidePlayIcons(){ if(btnPlayBtn) btnPlayBtn.classList.add('hidden'); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden'); }
     function attachAudio(url){ audioURL=url; if(btnPlayBtn) btnPlayBtn.classList.remove("hidden"); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.remove("hidden"); if(btnPlayBtn){ btnPlayBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); }; } if(btnPlaySlowBtn){ btnPlaySlowBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=0.67; player.currentTime=0; player.play().catch(()=>{}); }; }
     }
-        function openEditor(){
-      const grid = root.querySelector(".grid");
-      const wrap = $("#cardCreationFormWrap");
-      if(grid) grid.classList.add("edit-mode");
-      if(wrap) wrap.classList.remove("card-form-collapsed");
+    function openEditor(){
+      const front = $("#uFront");
+      if(front){
+        setTimeout(()=>front.focus(), 50);
+      }
     }
     function closeEditor(){
-      const grid = root.querySelector(".grid");
-      const wrap = $("#cardCreationFormWrap");
-      if(grid) grid.classList.remove("edit-mode");
-      if(wrap) wrap.classList.add("card-form-collapsed");
       editingCardId=null;
       const _btnUpdate = $("#btnUpdate");
       if(_btnUpdate) _btnUpdate.disabled = true;
-    }function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
+      setAdvancedVisibility(false);
+    }
+    function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
     async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ const tr = card.transcription ? `<div class=\"small\" style=\"opacity:.85\">[${card.transcription}]</div>` : ""; el.innerHTML=`<div class="front">${card.text}</div>${tr}`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlForSafe(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
@@ -581,6 +579,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     $("#btnEdit").addEventListener("click",()=>{
       if(!currentItem) return;
+      const quickTabBtn = document.getElementById('tabQuickInput');
+      if(quickTabBtn && !quickTabBtn.classList.contains('fc-tab-active')){
+        quickTabBtn.click();
+      }
       const c=currentItem.card;
 
       // Set editing card ID to prevent media from being attached to other cards
@@ -610,6 +612,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const __tr = c.translations || {};
       const __tl = $("#uTransLocal"); if(__tl) __tl.value = (userLang2 !== 'en') ? (__tr[userLang2] || c.translation || "") : "";
       const __te = $("#uTransEn"); if(__te) __te.value = (__tr.en || (userLang2 === 'en' ? (c.translation || "") : ""));
+      const hasAdvanced = Boolean(
+        (c.explanation && c.explanation.trim()) ||
+        (__te && __te.value && __te.value.trim()) ||
+        (c.transcription && c.transcription.trim()) ||
+        (c.pos && c.pos.trim()) ||
+        (c.gender && c.gender.trim()) ||
+        (nf && (nf.indef_sg || nf.def_sg || nf.indef_pl || nf.def_pl)) ||
+        (Array.isArray(c.collocations) && c.collocations.length) ||
+        (Array.isArray(c.examples) && c.examples.length) ||
+        (Array.isArray(c.antonyms) && c.antonyms.length) ||
+        (Array.isArray(c.cognates) && c.cognates.length) ||
+        (Array.isArray(c.sayings) && c.sayings.length) ||
+        (Array.isArray(c.order) && c.order.length && c.order.length !== DEFAULT_ORDER.length)
+      );
+      setAdvancedVisibility(hasAdvanced);
 
       (async()=>{
         $("#imgPrev").classList.add("hidden");
@@ -634,12 +651,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       orderChosen=[...(c.order||[])];
       updateOrderPreview();
-      const grid = root.querySelector(".grid");
-      if (grid) grid.scrollIntoView({behavior:"smooth"}); openEditor();
+      openEditor();
     const _btnAddNew = $("#btnAddNew");
     if(_btnAddNew && !_btnAddNew.dataset.bound){
       _btnAddNew.dataset.bound = "1";
       _btnAddNew.addEventListener("click", ()=>{
+        const quickTabBtn = document.getElementById('tabQuickInput');
+        if(quickTabBtn && !quickTabBtn.classList.contains('fc-tab-active')){
+          quickTabBtn.click();
+        }
         editingCardId=null;
         resetForm();
         const _up=$("#btnUpdate"); if(_up) _up.disabled=true;
@@ -705,15 +725,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         imgPrev.src=objectURL;
         imgPrev.classList.remove("hidden");
       }
-      const quickImg=$("#quickImgPrev");
-      if(quickImg){
-        quickImg.src=objectURL;
-        quickImg.classList.remove("hidden");
-      }
-      const quickWrap=$("#quickMediaPreview");
-      if(quickWrap){
-        quickWrap.classList.remove("hidden");
-      }
     });
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
@@ -740,17 +751,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         a.classList.remove("hidden");
         try{a.load();}catch(_e){}
       }
-      const quickAud=$("#quickAudPrev");
-      if(quickAud){
-        try{quickAud.pause();}catch(_e){}
-        quickAud.src=objectURL;
-        quickAud.classList.remove("hidden");
-        try{quickAud.load();}catch(_e){}
-      }
-      const quickWrap=$("#quickMediaPreview");
-      if(quickWrap){
-        quickWrap.classList.remove("hidden");
-      }
     });
     $("#btnClearImg").addEventListener("click",()=>{
       lastImageKey=null;
@@ -760,20 +760,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(img){
         img.classList.add("hidden");
         img.removeAttribute('src');
-      }
-      const quickImg=$("#quickImgPrev");
-      if(quickImg){
-        quickImg.classList.add("hidden");
-        quickImg.removeAttribute('src');
-      }
-      const quickAud=$("#quickAudPrev");
-      const quickWrap=$("#quickMediaPreview");
-      if(quickWrap){
-        const hasAud=!!(quickAud && !quickAud.classList.contains("hidden") && quickAud.getAttribute('src'));
-        const hasImg=!!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
-        if(!hasAud && !hasImg){
-          quickWrap.classList.add("hidden");
-        }
       }
       $("#imgName").textContent="";
     });
@@ -875,16 +861,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           a.src = objectURL;
           a.classList.remove("hidden");
           try{ a.load(); }catch(_e){}
-        }
-        const quickAud = $("#quickAudPrev");
-        if(quickAud){
-          quickAud.src = objectURL;
-          quickAud.classList.remove("hidden");
-          try{ quickAud.load(); }catch(_e){}
-        }
-        const quickWrap = $("#quickMediaPreview");
-        if(quickWrap){
-          quickWrap.classList.remove("hidden");
         }
         if(stored){
           recorderLog('handleRecordedBlob stored via IDB');
@@ -1048,13 +1024,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
-      $("#uExplanation").value="";
       const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
       const _te=$("#uTransEn"); if(_te) _te.value="";
+      $("#uExplanation").value="";
+      const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = '';
+      const _posField = document.getElementById('uPOS'); if(_posField) _posField.value = '';
+      const _genderField = document.getElementById('uGender'); if(_genderField) _genderField.value = '';
+      ['uNounIndefSg','uNounDefSg','uNounIndefPl','uNounDefPl','uAntonyms','uCollocations','uExamples','uCognates','uSayings']
+        .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      togglePOSUI();
+      updatePOSHelp();
+      setAdvancedVisibility(false);
       $("#uImage").value="";
       $("#uAudio").value="";
       $("#imgPrev").classList.add("hidden");
-      $("#audPrev").classList.add("hidden"); if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; }
+      resetAudioPreview();
       $("#imgName").textContent="";
       $("#audName").textContent="";
       lastImageKey=null;
@@ -1078,7 +1062,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const btnCancel = $("#btnCancelEdit");
     if(btnCancel && !btnCancel.dataset.bound){
       btnCancel.dataset.bound = "1";
-      btnCancel.addEventListener("click", e=>{ e.preventDefault(); closeEditor(); });
+      btnCancel.addEventListener("click", e=>{ e.preventDefault(); resetForm(); closeEditor(); });
     }
     // Bind global "+" (Create new card) button at init
     (function(){
@@ -1087,6 +1071,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         addBtn.dataset.bound = "1";
         addBtn.addEventListener("click", e => {
           e.preventDefault();
+          const quickTabBtn = document.getElementById('tabQuickInput');
+          if(quickTabBtn && !quickTabBtn.classList.contains('fc-tab-active')){
+            quickTabBtn.click();
+          }
           editingCardId = null;
           resetForm();
           const _up=$("#btnUpdate"); if(_up) _up.disabled=true;
@@ -1094,16 +1082,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
       }
     })();
-    // Fallback toggle for the collapsible card creation form (when UX script isn't active)
-    const _btnToggleForm = $("#btnToggleForm");
-    const _cardCreationFormWrap = $("#cardCreationFormWrap");
-    if(_btnToggleForm && _cardCreationFormWrap && !_btnToggleForm.dataset.bound){
-      _btnToggleForm.dataset.bound = '1';
-      _btnToggleForm.addEventListener('click', e => {
-        e.preventDefault();
-        _cardCreationFormWrap.classList.toggle('card-form-collapsed');
-      });
-    }
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
       const text=$("#uFront").value.trim(), expl=$("#uExplanation").value.trim();
@@ -1760,8 +1738,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           tabQuickInput.setAttribute('aria-selected', 'true');
           console.log('[Tabs] Activated Quick Input');
           // Auto-focus text input
-          const quickFront = $('#quickFront');
-          if (quickFront) setTimeout(() => quickFront.focus(), 100);
+          const frontInput = $('#uFront');
+          if (frontInput) setTimeout(() => frontInput.focus(), 100);
         } else if (tabName === 'study' && studySection) {
           studySection.classList.add('fc-tab-active');
           tabStudy.classList.add('fc-tab-active');
@@ -1964,384 +1942,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       loadDashboard();
     })();
 
-    // ========== QUICK INPUT FORM (v0.7.0) ==========
-    (function initQuickInput() {
-      const quickFront = $('#quickFront');
-      const quickTranslation = $('#quickTranslation');
-      const btnQuickSave = $('#btnQuickSave');
-      const btnQuickAdvanced = $('#btnQuickAdvanced');
-      const quickAdvancedFields = $('#quickAdvancedFields');
-      const quickSuccessMsg = $('#quickSuccessMsg');
-      const quickAdvancedLabel = $('#quickAdvancedLabel');
-      const quickAdvancedIcon = $('#quickAdvancedIcon');
-
-      if (!quickFront || !btnQuickSave) {
-        debugLog('[QuickInput] Quick input elements not found');
-        return;
-      }
-
-      // Toggle advanced fields
-      let advancedVisible = false;
-      if (btnQuickAdvanced) {
-        btnQuickAdvanced.addEventListener('click', () => {
-          advancedVisible = !advancedVisible;
-          if (quickAdvancedFields) {
-            quickAdvancedFields.classList.toggle('hidden', !advancedVisible);
-          }
-          if (quickAdvancedLabel) {
-            quickAdvancedLabel.textContent = advancedVisible ? 'Hide Advanced' : 'Show Advanced';
-          }
-          if (quickAdvancedIcon) {
-            quickAdvancedIcon.textContent = advancedVisible ? '▲' : '▼';
-          }
-        });
-      }
-
-      // Wire up audio recorder button: mirror main recorder behaviour
-      const btnQuickRec = $('#btnQuickRec');
-      const mainRecorderBtn = $('#btnRec');
-      const uAudio = $('#uAudio');
-      if (btnQuickRec && mainRecorderBtn) {
-        if (!btnQuickRec.dataset.recorderBound) {
-          btnQuickRec.dataset.recorderBound = '1';
-          const bridgeState = { active: false, pointerId: 4096, dispatching: false };
-
-          const syncRecordingClass = () => {
-            btnQuickRec.classList.toggle('recording', mainRecorderBtn.classList.contains('recording'));
-          };
-          const observer = new MutationObserver(syncRecordingClass);
-          observer.observe(mainRecorderBtn, { attributes: true, attributeFilter: ['class'] });
-          btnQuickRec._recorderObserver = observer;
-          syncRecordingClass();
-
-          const dispatchToMain = (type, srcEvent) => {
-            if (bridgeState.dispatching) return;
-            bridgeState.dispatching = true;
-            try {
-              const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
-              const pointerType = srcEvent?.pointerType || (srcEvent?.type?.indexOf('touch') === 0 ? 'touch' : 'mouse');
-              const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
-              const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
-              const clientX = srcEvent?.clientX ?? 0;
-              const clientY = srcEvent?.clientY ?? 0;
-              let dispatched = false;
-              if (window.PointerEvent) {
-                try {
-                  mainRecorderBtn.dispatchEvent(new PointerEvent(type, {
-                    bubbles: true,
-                    cancelable: true,
-                    pointerId,
-                    pointerType,
-                    button,
-                    buttons,
-                    clientX,
-                    clientY
-                  }));
-                  dispatched = true;
-                } catch(_e){}
-              }
-              if (!dispatched) {
-                const fallback = type === 'pointerdown' ? 'mousedown' :
-                                 type === 'pointerup' ? 'mouseup' :
-                                 type === 'pointercancel' ? 'mouseleave' : type;
-                try {
-                  mainRecorderBtn.dispatchEvent(new MouseEvent(fallback, {
-                    bubbles: true,
-                    cancelable: true,
-                    button,
-                    buttons,
-                    clientX,
-                    clientY,
-                    view: window
-                  }));
-                  dispatched = true;
-                } catch(_e){}
-              }
-              if (!dispatched) {
-                const touchType = type === 'pointerdown' ? 'touchstart' :
-                                  type === 'pointerup' ? 'touchend' :
-                                  type === 'pointercancel' ? 'touchcancel' : null;
-                if (touchType) {
-                  try {
-                    mainRecorderBtn.dispatchEvent(new Event(touchType, { bubbles: true, cancelable: true }));
-                  } catch(_e){}
-                }
-              }
-            } finally {
-              bridgeState.dispatching = false;
-            }
-          };
-
-          const cleanupBridge = () => {
-            window.removeEventListener('pointerup', onGlobalPointerUp, true);
-            window.removeEventListener('pointercancel', onGlobalPointerCancel, true);
-            window.removeEventListener('mouseup', onGlobalMouseUp, true);
-            window.removeEventListener('touchend', onGlobalTouchEnd, true);
-            window.removeEventListener('touchcancel', onGlobalTouchCancel, true);
-          };
-
-          function onGlobalPointerUp(evt) {
-            if (!bridgeState.active) return;
-            try{ evt.preventDefault(); }catch(_e){}
-            bridgeState.active = false;
-            cleanupBridge();
-            dispatchToMain('pointerup', evt);
-          }
-          function onGlobalPointerCancel(evt) {
-            if (!bridgeState.active) return;
-            bridgeState.active = false;
-            cleanupBridge();
-            dispatchToMain('pointercancel', evt);
-          }
-          function onGlobalMouseUp(evt) {
-            if (!bridgeState.active) return;
-            bridgeState.active = false;
-            cleanupBridge();
-            dispatchToMain('pointerup', evt);
-          }
-          function onGlobalTouchEnd(evt) {
-            if (!bridgeState.active) return;
-            bridgeState.active = false;
-            cleanupBridge();
-            dispatchToMain('pointerup', evt);
-          }
-          function onGlobalTouchCancel(evt) {
-            if (!bridgeState.active) return;
-            bridgeState.active = false;
-            cleanupBridge();
-            dispatchToMain('pointercancel', evt);
-          }
-
-          const onPointerDown = evt => {
-            if (bridgeState.active) return;
-            bridgeState.active = true;
-            bridgeState.pointerId = typeof evt.pointerId === 'number' ? evt.pointerId : 4096;
-            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
-            dispatchToMain('pointerdown', evt);
-            window.addEventListener('pointerup', onGlobalPointerUp, true);
-            window.addEventListener('pointercancel', onGlobalPointerCancel, true);
-            window.addEventListener('mouseup', onGlobalMouseUp, true);
-            window.addEventListener('touchend', onGlobalTouchEnd, true);
-            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
-          };
-          const onMouseDown = evt => {
-            if (bridgeState.active) return;
-            bridgeState.active = true;
-            bridgeState.pointerId = 4096;
-            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
-            dispatchToMain('pointerdown', evt);
-            window.addEventListener('mouseup', onGlobalMouseUp, true);
-            window.addEventListener('touchend', onGlobalTouchEnd, true);
-            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
-          };
-          const onTouchStart = evt => {
-            if (bridgeState.active) return;
-            bridgeState.active = true;
-            bridgeState.pointerId = 8192;
-            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
-            dispatchToMain('pointerdown', evt);
-            window.addEventListener('touchend', onGlobalTouchEnd, true);
-            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
-          };
-
-          if (window.PointerEvent) {
-            btnQuickRec.addEventListener('pointerdown', onPointerDown);
-          } else {
-            btnQuickRec.addEventListener('mousedown', onMouseDown);
-            btnQuickRec.addEventListener('touchstart', onTouchStart, { passive: false });
-          }
-          btnQuickRec.addEventListener('click', e => {
-            try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-          }, true);
-        }
-      } else if (btnQuickRec && uAudio) {
-        // Fallback: trigger file picker if main recorder is unavailable
-        btnQuickRec.addEventListener('click', () => {
-          uAudio.click();
-        });
-      }
-
-      // Wire up camera button (trigger image file picker)
-      const btnQuickCam = $('#btnQuickCam');
-      const uImage = $('#uImage');
-      if (btnQuickCam && uImage) {
-        btnQuickCam.addEventListener('click', () => {
-          // Trigger the image file picker
-          uImage.click();
-        });
-      }
-
-      const btnQuickClear = $('#btnQuickClearMedia');
-      if (btnQuickClear) {
-        btnQuickClear.addEventListener('click', e => {
+    // ========== QUICK EDITOR PANEL ==========
+    (function initEditorPanel() {
+      setAdvancedVisibility(false);
+      const toggleBtn = $('#btnEditorAdvanced');
+      if (toggleBtn && !toggleBtn.dataset.bound) {
+        toggleBtn.dataset.bound = '1';
+        toggleBtn.addEventListener('click', e => {
           try{ e.preventDefault(); }catch(_e){}
-          const clearImgBtn = $('#btnClearImg');
-          const clearAudBtn = $('#btnClearAud');
-          if (clearImgBtn) clearImgBtn.click();
-          if (clearAudBtn) clearAudBtn.click();
-          const quickWrap = $('#quickMediaPreview');
-          if (quickWrap) quickWrap.classList.add('hidden');
+          setAdvancedVisibility(!advancedVisible);
         });
       }
-
-      // Save button
-      btnQuickSave.addEventListener('click', async () => {
-        const front = quickFront.value.trim();
-        if (!front) {
-          alert('Please enter card text');
-          return;
-        }
-
-        const translation = quickTranslation.value.trim();
-
-        // Generate card ID from front text
-        const normalizedText = front.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 64);
-        const cardId = normalizedText || Date.now().toString();
-
-        const translations = {};
-        if (translation) {
-          translations[userLang2] = translation;
-        }
-
-        // Ensure media is uploaded similarly to the main form flow
-        let resolvedImageUrl = lastImageUrl || null;
-        if (lastImageKey && !resolvedImageUrl) {
-          try {
-            const blob = await idbGetSafe(lastImageKey);
-            if (blob) {
-              resolvedImageUrl = await uploadMedia(new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' }), 'image', cardId);
-              lastImageUrl = resolvedImageUrl;
-            }
-          } catch (e) {
-            console.error('QuickInput image upload failed:', e);
-          }
-        }
-
-        let resolvedAudioUrl = lastAudioUrl || null;
-        if (lastAudioKey && !resolvedAudioUrl) {
-          try {
-            const blob = await idbGetSafe(lastAudioKey);
-            if (blob) {
-              const mt = (blob.type || '').toLowerCase();
-              let ext = 'webm';
-              if (mt.indexOf('audio/wav') === 0) ext = 'wav';
-              else if (mt.indexOf('audio/mp4') === 0 || mt.indexOf('audio/m4a') === 0 || mt.indexOf('video/mp4') === 0) ext = 'mp4';
-              else if (mt.indexOf('audio/mpeg') === 0 || mt.indexOf('audio/mp3') === 0) ext = 'mp3';
-              else if (mt.indexOf('audio/ogg') === 0) ext = 'ogg';
-              else if (mt.indexOf('audio/webm') === 0) ext = 'webm';
-              const file = new File([blob], 'audio.' + ext, { type: blob.type || ('audio/' + ext) });
-              resolvedAudioUrl = await uploadMedia(file, 'audio', cardId);
-              lastAudioUrl = resolvedAudioUrl;
-              lastAudioBlob = null;
-            }
-          } catch (e) {
-            console.error('QuickInput audio upload failed:', e);
-          }
-        } else if (lastAudioBlob && !resolvedAudioUrl) {
-          try {
-            const blob = lastAudioBlob;
-            const mt = (blob.type || '').toLowerCase();
-            let ext = 'webm';
-            if (mt.indexOf('audio/wav') === 0) ext = 'wav';
-            else if (mt.indexOf('audio/mp4') === 0 || mt.indexOf('audio/m4a') === 0 || mt.indexOf('video/mp4') === 0) ext = 'mp4';
-            else if (mt.indexOf('audio/mpeg') === 0 || mt.indexOf('audio/mp3') === 0) ext = 'mp3';
-            else if (mt.indexOf('audio/ogg') === 0) ext = 'ogg';
-            else if (mt.indexOf('audio/webm') === 0) ext = 'webm';
-            const file = new File([blob], 'audio.' + ext, { type: blob.type || ('audio/' + ext) });
-            resolvedAudioUrl = await uploadMedia(file, 'audio', cardId);
-            lastAudioUrl = resolvedAudioUrl;
-            lastAudioBlob = null;
-          } catch (e) {
-            console.error('QuickInput audio upload failed (memory fallback):', e);
-          }
-        }
-
-        const payload = {
-          text: front,
-          translation: translation, // For backward compatibility
-          translations: translations,
-          explanation: $('#quickExplanation')?.value || '',
-          transcription: $('#quickTranscription')?.value || '',
-          pos: $('#quickPOS')?.value || '',
-          collocations: $('#quickCollocations')?.value || '',
-          examples: $('#quickExamples')?.value || ''
-        };
-
-        if (resolvedImageUrl) {
-          payload.image = resolvedImageUrl;
-        } else if (lastImageKey) {
-          payload.imageKey = lastImageKey;
-        }
-
-        if (resolvedAudioUrl) {
-          payload.audio = resolvedAudioUrl;
-        } else if (lastAudioKey) {
-          payload.audioKey = lastAudioKey;
-        }
-
-        try {
-          // Use the same API call as the main form
-          const result = await api('upsert_card', {}, 'POST', {
-            deckId: null, // Will use default deck
-            cardId: cardId,
-            scope: 'private',
-            payload: payload
-          });
-
-          // Show success message
-          if (quickSuccessMsg) {
-            quickSuccessMsg.classList.remove('hidden');
-            setTimeout(() => quickSuccessMsg.classList.add('hidden'), 3000);
-          }
-
-          // Clear form
-          quickFront.value = '';
-          if (quickTranslation) quickTranslation.value = '';
-          if ($('#quickExplanation')) $('#quickExplanation').value = '';
-          if ($('#quickTranscription')) $('#quickTranscription').value = '';
-          if ($('#quickPOS')) $('#quickPOS').value = '';
-          if ($('#quickCollocations')) $('#quickCollocations').value = '';
-          if ($('#quickExamples')) $('#quickExamples').value = '';
-
-          // Clear media inputs and previews
-          resetAudioPreview();
-          const imgPrev = $('#imgPrev');
-          if (imgPrev) {
-            imgPrev.classList.add('hidden');
-            imgPrev.removeAttribute('src');
-          }
-          const quickImgPrev = $('#quickImgPrev');
-          if (quickImgPrev) {
-            quickImgPrev.classList.add('hidden');
-            quickImgPrev.removeAttribute('src');
-          }
-          const quickMediaWrap = $('#quickMediaPreview');
-          if (quickMediaWrap) {
-            quickMediaWrap.classList.add('hidden');
-          }
-          const audNameEl = $('#audName');
-          if (audNameEl) audNameEl.textContent = '';
-          const imgNameEl = $('#imgName');
-          if (imgNameEl) imgNameEl.textContent = '';
-          const audioInput = $('#uAudio');
-          if (audioInput) audioInput.value = '';
-          const imageInput = $('#uImage');
-          if (imageInput) imageInput.value = '';
-          lastAudioKey = null;
-          lastAudioUrl = null;
-          lastAudioBlob = null;
-          lastImageKey = null;
-          lastImageUrl = null;
-
-          // Re-focus
-          setTimeout(() => quickFront.focus(), 100);
-
-          debugLog('[QuickInput] Card created successfully');
-        } catch (err) {
-          alert('Error saving card: ' + err.message);
-          debugLog('[QuickInput] Error:', err);
-        }
-      });
     })();
 
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
