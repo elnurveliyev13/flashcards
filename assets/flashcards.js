@@ -1631,6 +1631,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         });
 
+        // Show/hide progress bar (only visible on Study tab)
+        const progressBar = $('#progressBar');
+        if (progressBar) {
+          if (tabName === 'study') {
+            progressBar.classList.add('visible');
+          } else {
+            progressBar.classList.remove('visible');
+          }
+        }
+
         // Activate selected tab
         if (tabName === 'quickInput' && quickInputSection) {
           quickInputSection.classList.add('fc-tab-active');
@@ -1884,6 +1894,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if (quickAdvancedIcon) {
             quickAdvancedIcon.textContent = advancedVisible ? '▲' : '▼';
           }
+        });
+      }
+
+      // Wire up recorder button (reuse existing recorder from main form)
+      const btnQuickRec = $('#btnQuickRec');
+      const btnRec = $('#btnRec');
+      if (btnQuickRec && btnRec) {
+        btnQuickRec.addEventListener('click', () => {
+          // Trigger the main form's recorder button
+          btnRec.click();
+        });
+      }
+
+      // Wire up camera button (reuse existing camera from main form)
+      const btnQuickCam = $('#btnQuickCam');
+      const btnOpenCam = $('#btnOpenCam');
+      if (btnQuickCam && btnOpenCam) {
+        btnQuickCam.addEventListener('click', () => {
+          // Trigger the main form's camera button
+          btnOpenCam.click();
         });
       }
 

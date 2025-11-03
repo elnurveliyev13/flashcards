@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025110301; // YYYYMMDDXX. v0.7.0 - Dashboard + Quick Input tabs
+$plugin->version   = 2025110302; // YYYYMMDDXX. v0.7.1 - Dashboard fixes + header stats
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.7.0-dashboard'; // Dashboard with stats, Quick Input tab, 3-tab navigation
+$plugin->release   = '0.7.1-dashboard-fixes'; // Dashboard fixes, header stats, study badge

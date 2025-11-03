@@ -856,10 +856,18 @@ function xmldb_flashcards_upgrade($oldversion) {
         $users = $DB->get_records_sql("SELECT DISTINCT userid FROM {flashcards_progress}");
         foreach ($users as $user) {
             if (!$DB->record_exists('flashcards_user_stats', ['userid' => $user->userid])) {
+                // Count existing cards owned by this user
+                $totalCards = $DB->count_records_sql(
+                    "SELECT COUNT(DISTINCT p.cardid)
+                     FROM {flashcards_progress} p
+                     WHERE p.userid = :userid",
+                    ['userid' => $user->userid]
+                );
+
                 $record = (object)[
                     'userid' => $user->userid,
                     'total_reviews' => 0,
-                    'total_cards_created' => 0,
+                    'total_cards_created' => $totalCards, // Use actual count
                     'current_streak_days' => 0,
                     'longest_streak_days' => 0,
                     'last_study_date' => 0,
@@ -871,11 +879,38 @@ function xmldb_flashcards_upgrade($oldversion) {
                     'timemodified' => time()
                 ];
                 $DB->insert_record('flashcards_user_stats', $record);
+                mtrace("    - User {$user->userid}: {$totalCards} cards");
             }
         }
 
         mtrace('Flashcards: Dashboard tables created and initialized successfully.');
         upgrade_mod_savepoint(true, 2025110301, 'flashcards');
+    }
+
+    // Fix total_cards_created for existing users (v0.7.0 - part 2)
+    if ($oldversion < 2025110302) {
+        mtrace('Flashcards: Recalculating total_cards_created for existing users...');
+
+        $stats = $DB->get_records('flashcards_user_stats');
+        foreach ($stats as $stat) {
+            // Count actual cards owned by user
+            $totalCards = $DB->count_records_sql(
+                "SELECT COUNT(DISTINCT p.cardid)
+                 FROM {flashcards_progress} p
+                 WHERE p.userid = :userid",
+                ['userid' => $stat->userid]
+            );
+
+            if ($totalCards != $stat->total_cards_created) {
+                $stat->total_cards_created = $totalCards;
+                $stat->timemodified = time();
+                $DB->update_record('flashcards_user_stats', $stat);
+                mtrace("  - User {$stat->userid}: updated from {$stat->total_cards_created} to {$totalCards} cards");
+            }
+        }
+
+        mtrace('Flashcards: Total cards recalculated successfully.');
+        upgrade_mod_savepoint(true, 2025110302, 'flashcards');
     }
 
     return true;

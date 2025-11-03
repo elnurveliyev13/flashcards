@@ -19,7 +19,8 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .install-btn-compact{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;background:rgba(103,126,234,0.15);border:1px solid rgba(103,126,234,0.3);border-radius:8px;color:#9ca3af;transition:all 0.2s}
 .install-btn-compact:hover{background:rgba(103,126,234,0.25);color:#e5e7eb}
 .install-btn-compact svg{display:block}
-.header-progress{display:flex;flex-direction:column;gap:6px}
+.header-progress{display:none;flex-direction:column;gap:6px}
+.header-progress.visible{display:flex}
 .progress-info{display:flex;align-items:center;gap:8px;font-size:13px;color:#9ca3af}
 .progress-counter{font-weight:600;color:#e5e7eb;font-size:14px}
 .progress-track{height:6px;background:#1e293b;border-radius:3px;overflow:hidden;position:relative}
