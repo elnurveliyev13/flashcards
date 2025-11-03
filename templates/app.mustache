@@ -63,44 +63,39 @@
               <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
             </div>
             <div class="fc-quick-media">
-              <div class="fc-quick-media-row">
-                <button id="btnQuickRec" class="fc-quick-media-btn" title="{{#str}} title_record, mod_flashcards {{/str}}">
+              <div class="fc-quick-media-row fc-media-large-row">
+                <button id="btnRec" class="fc-quick-media-btn fc-media-large micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#127897;&#65039;</span>
                   <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+                  <span id="recHint" class="fc-media-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</span>
+                  <span id="recTimer" class="rec-timer hidden">00:00</span>
                 </button>
-                <button id="btnQuickCam" class="fc-quick-media-btn" title="{{#str}} title_camera, mod_flashcards {{/str}}">
+                <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#128247;</span>
                   <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
                 </button>
               </div>
+              <div class="fc-media-actions">
+                <button id="btnAudioUpload" class="fc-link-btn fc-media-subaction">{{#str}} choosefile, mod_flashcards {{/str}}</button>
+              </div>
             </div>
-            <div class="slot">
-              <span class="tag" id="t_pickAudio">{{#str}} audio, mod_flashcards {{/str}}</span>
-              <div class="previewRow">
-                <input id="uAudio" type="file" accept="audio/*" class="hidden">
-                <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
+            <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
+            <input id="uAudio" type="file" accept="audio/*" class="hidden">
+            <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
+            <input id="uImage" type="file" accept="image/*" class="hidden">
+            <div class="fc-media-badges">
+              <span id="audBadge" class="media-pill hidden">
+                <span class="icon">&#127897;&#65039;</span>
+                <span id="audName" class="media-name"></span>
                 <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
-                <div class="rec-wrap">
-                  <button id="btnRec"  class="iconbtn micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-                  <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
-                  <span id="recTimer" class="rec-timer hidden">00:00</span>
-                  <div id="recHint" class="rec-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</div>
-                </div>
-              </div>
-              <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
-            </div>
-            <div class="slot">
-              <span class="tag" id="t_pickPhoto">{{#str}} image, mod_flashcards {{/str}}</span>
-              <div class="previewRow">
-                <input id="uImage" type="file" accept="image/*" class="hidden">
-                <button id="btnChooseImg" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="imgName" class="fileName"></span>
+              </span>
+              <span id="imgBadge" class="media-pill hidden">
+                <span class="icon">&#128247;</span>
+                <span id="imgName" class="media-name"></span>
                 <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
-                <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">&#128247;</button>
-                <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">&#128248;</button>
-                <button id="btnCloseCam" class="iconbtn cross hidden" title="{{#str}} title_closecam, mod_flashcards {{/str}}">&times;</button>
-              </div>
-              <img id="imgPrev" class="media hidden" alt=""/>
+              </span>
             </div>
+            <img id="imgPrev" class="media hidden" alt=""/>
             <div class="slot">
               <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
               <textarea id="uFront" placeholder="Front..." autofocus></textarea>

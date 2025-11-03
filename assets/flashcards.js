@@ -272,7 +272,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     let audioURL=null; const player=new Audio();
-    let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[],camStream=null;
+    let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[];
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const DEBUG_REC = (function(){
       try{
@@ -342,6 +342,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{ mainAudio.load(); }catch(_e){}
           mainAudio.classList.add("hidden");
         }
+        hideAudioBadge();
       }catch(_e){}
     }
     let advancedVisible=false;
@@ -359,6 +360,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(icon){
         icon.textContent = advancedVisible ? '▲' : '▼';
       }
+    }
+    function showAudioBadge(label){
+      const badge=document.getElementById('audBadge');
+      const nameEl=document.getElementById('audName');
+      if(nameEl) nameEl.textContent = label || '';
+      if(badge) badge.classList.remove('hidden');
+    }
+    function hideAudioBadge(){
+      const badge=document.getElementById('audBadge');
+      if(badge) badge.classList.add('hidden');
+      const nameEl=document.getElementById('audName');
+      if(nameEl) nameEl.textContent = '';
+    }
+    function showImageBadge(label){
+      const badge=document.getElementById('imgBadge');
+      const nameEl=document.getElementById('imgName');
+      if(nameEl) nameEl.textContent = label || '';
+      if(badge) badge.classList.remove('hidden');
+    }
+    function hideImageBadge(){
+      const badge=document.getElementById('imgBadge');
+      if(badge) badge.classList.add('hidden');
+      const nameEl=document.getElementById('imgName');
+      if(nameEl) nameEl.textContent = '';
     }
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
@@ -612,21 +637,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       (async()=>{
         $("#imgPrev").classList.add("hidden");
         $("#audPrev").classList.add("hidden");
+        hideImageBadge();
+        hideAudioBadge();
 
         if(c.imageKey){
           const u=await urlForSafe(c.imageKey);
-          if(u){$("#imgPrev").src=u; $("#imgPrev").classList.remove("hidden");}
+          if(u){
+            $("#imgPrev").src=u;
+            $("#imgPrev").classList.remove("hidden");
+            showImageBadge('Image');
+          }
         } else if(c.image){
-          $("#imgPrev").src=resolveAsset(c.image);
-          $("#imgPrev").classList.remove("hidden");
+          const resolved = resolveAsset(c.image);
+          if(resolved){
+            $("#imgPrev").src=resolved;
+            $("#imgPrev").classList.remove("hidden");
+            showImageBadge(c.image.split('/').pop() || 'Image');
+          }
         }
 
         if(c.audioKey){
           const u=await urlForSafe(c.audioKey);
-          if(u){$("#audPrev").src=u; $("#audPrev").classList.remove("hidden");}
+          if(u){
+            $("#audPrev").src=u;
+            $("#audPrev").classList.remove("hidden");
+            showAudioBadge('Audio');
+          }
         } else if(c.audio){
-          $("#audPrev").src=resolveAsset(c.audio);
-          $("#audPrev").classList.remove("hidden");
+          const resolved = resolveAsset(c.audio);
+          if(resolved){
+            $("#audPrev").src=resolved;
+            $("#audPrev").classList.remove("hidden");
+            showAudioBadge(c.audio.split('/').pop() || 'Audio');
+          }
         }
       })();
 
@@ -651,8 +694,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); } catch(e) { /* May fail for shared cards, fallback to local removal */ } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); });
 
     // removed duplicate var line
-    $("#btnChooseImg").addEventListener("click",()=>$("#uImage").click());
-    $("#btnChooseAud").addEventListener("click", async (e)=>{ e.preventDefault();
+    const imagePickerBtn = document.getElementById('btnImagePicker');
+    if(imagePickerBtn && !imagePickerBtn.dataset.bound){
+      imagePickerBtn.dataset.bound = '1';
+      imagePickerBtn.addEventListener("click", e=>{ e.preventDefault(); const input=document.getElementById('uImage'); if(input) input.click(); });
+    }
+    const audioUploadBtn = document.getElementById('btnAudioUpload');
+    if(audioUploadBtn && !audioUploadBtn.dataset.bound){
+      audioUploadBtn.dataset.bound = '1';
+      audioUploadBtn.addEventListener("click", async e=>{ e.preventDefault();
   try{
     if(typeof window.showOpenFilePicker === 'function'){
       const [h] = await window.showOpenFilePicker({
@@ -678,102 +728,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
   }catch(_e){}
-  $("#uAudio").click();
-});
-(function bindQuickMediaButtons(){
-  const quickRecBtn = document.getElementById('btnQuickRec');
-  const mainRecBtn = document.getElementById('btnRec');
-  if(quickRecBtn && mainRecBtn && !quickRecBtn.dataset.bound){
-    quickRecBtn.dataset.bound = '1';
-    const bridgeState = { active:false, pointerId:9000 };
-    const dispatchToRecorder = (type, srcEvent) => {
-      const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
-      const pointerType = srcEvent?.pointerType || (srcEvent?.type && srcEvent.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
-      const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
-      const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
-      const clientX = srcEvent?.clientX ?? 0;
-      const clientY = srcEvent?.clientY ?? 0;
-      if(window.PointerEvent){
-        try{
-          mainRecBtn.dispatchEvent(new PointerEvent(type, {
-            bubbles:true,
-            cancelable:true,
-            pointerId,
-            pointerType,
-            button,
-            buttons,
-            clientX,
-            clientY
-          }));
-          return;
-        }catch(_e){}
-      }
-      const fallback = type === 'pointerdown' ? 'mousedown' :
-                       type === 'pointerup' ? 'mouseup' : 'mouseleave';
-      try{
-        mainRecBtn.dispatchEvent(new MouseEvent(fallback, {
-          bubbles:true,
-          cancelable:true,
-          button,
-          buttons,
-          clientX,
-          clientY,
-          view:window
-        }));
-      }catch(_e){}
-    };
-    function cleanupListeners(){
-      window.removeEventListener('pointerup', onWindowPointerUp, true);
-      window.removeEventListener('pointercancel', onWindowPointerCancel, true);
-      window.removeEventListener('mouseup', onWindowMouseUp, true);
-      window.removeEventListener('touchend', onWindowTouchEnd, true);
-      window.removeEventListener('touchcancel', onWindowTouchCancel, true);
+  const input=document.getElementById('uAudio');
+  if(input) input.click();
+      });
     }
-    function finish(type, evt){
-      if(!bridgeState.active) return;
-      bridgeState.active = false;
-      cleanupListeners();
-      dispatchToRecorder(type, evt || {});
-    }
-    function onWindowPointerUp(evt){ finish('pointerup', evt); }
-    function onWindowPointerCancel(evt){ finish('pointercancel', evt); }
-    function onWindowMouseUp(evt){ finish('pointerup', evt); }
-    function onWindowTouchEnd(evt){ finish('pointerup', evt); }
-    function onWindowTouchCancel(evt){ finish('pointercancel', evt); }
-    function startForwarding(evt){
-      if(bridgeState.active) return;
-      bridgeState.active = true;
-      bridgeState.pointerId = typeof evt.pointerId === 'number' ? evt.pointerId : 9000;
-      try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
-      dispatchToRecorder('pointerdown', evt);
-      window.addEventListener('pointerup', onWindowPointerUp, true);
-      window.addEventListener('pointercancel', onWindowPointerCancel, true);
-      window.addEventListener('mouseup', onWindowMouseUp, true);
-      window.addEventListener('touchend', onWindowTouchEnd, true);
-      window.addEventListener('touchcancel', onWindowTouchCancel, true);
-    }
-    quickRecBtn.addEventListener('pointerdown', startForwarding);
-    quickRecBtn.addEventListener('mousedown', startForwarding);
-    quickRecBtn.addEventListener('touchstart', startForwarding, {passive:false});
-    quickRecBtn.addEventListener('click', e => {
-      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-    }, true);
-  }
-  const quickCamBtn = document.getElementById('btnQuickCam');
-  if(quickCamBtn && !quickCamBtn.dataset.bound){
-    quickCamBtn.dataset.bound = '1';
-    quickCamBtn.addEventListener('click', e => {
-      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
-      const openCamBtn = document.getElementById('btnOpenCam');
-      if(openCamBtn){
-        openCamBtn.click();
-        return;
-      }
-      const chooseImgBtn = document.getElementById('btnChooseImg');
-      if(chooseImgBtn) chooseImgBtn.click();
-    });
-  }
-})();
     // POS visibility toggles + autofill placeholders
     function togglePOSUI(){
       const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();
@@ -791,6 +749,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const f=e.target.files?.[0];
       if(!f)return;
       $("#imgName").textContent=f.name;
+      showImageBadge(f.name);
       lastImageKey="my-"+Date.now().toString(36)+"-img";
       await idbPutSafe(lastImageKey,f);
       lastImageUrl=null;
@@ -806,6 +765,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!f) return;
       resetAudioPreview();
       $("#audName").textContent=f.name;
+      showAudioBadge(f.name);
       lastAudioUrl=null;
       lastAudioBlob=null;
       lastAudioKey="my-"+Date.now().toString(36)+"-aud";
@@ -837,6 +797,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         img.removeAttribute('src');
       }
       $("#imgName").textContent="";
+      hideImageBadge();
     });
     $("#btnClearAud").addEventListener("click",()=>{
       lastAudioKey=null;
@@ -845,10 +806,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       $("#uAudio").value="";
       resetAudioPreview();
       $("#audName").textContent="";
+      hideAudioBadge();
     });
-    $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
-    $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
-    $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPutSafe(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
                         // Hold-to-record: press and hold to record; release to stop
     (function(){
       var recBtn = $("#btnRec");
@@ -937,6 +896,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           a.classList.remove("hidden");
           try{ a.load(); }catch(_e){}
         }
+        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = 'Recording';
+        showAudioBadge('Recording');
         if(stored){
           recorderLog('handleRecordedBlob stored via IDB');
         } else {
@@ -1114,6 +1075,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       $("#uAudio").value="";
       $("#imgPrev").classList.add("hidden");
       resetAudioPreview();
+      hideImageBadge();
       $("#imgName").textContent="";
       $("#audName").textContent="";
       lastImageKey=null;
