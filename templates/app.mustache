@@ -59,24 +59,27 @@
             </div>
           </div>
           <div class="card-form-content" id="cardCreationForm">
-            <div class="slot">
-              <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
-            </div>
             <div class="fc-quick-media">
               <div class="fc-quick-media-row fc-media-large-row">
                 <button id="btnRec" class="fc-quick-media-btn fc-media-large micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#127897;&#65039;</span>
-                  <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
-                  <span id="recHint" class="fc-media-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</span>
+                  <span class="fc-media-content">
+                    <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+                    <span id="recHint" class="fc-media-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</span>
+                  </span>
                   <span id="recTimer" class="rec-timer hidden">00:00</span>
                 </button>
                 <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#128247;</span>
-                  <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+                  <span class="fc-media-content">
+                    <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+                  </span>
                 </button>
               </div>
               <div class="fc-media-actions">
                 <button id="btnAudioUpload" class="fc-link-btn fc-media-subaction">{{#str}} choosefile, mod_flashcards {{/str}}</button>
+                <button id="btnResetAudio" class="fc-link-btn fc-media-subaction">Clear audio</button>
+                <button id="btnResetImage" class="fc-link-btn fc-media-subaction">Clear photo</button>
               </div>
             </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>

@@ -385,6 +385,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const nameEl=document.getElementById('imgName');
       if(nameEl) nameEl.textContent = '';
     }
+    function clearAudioSelection(){
+      lastAudioKey=null;
+      lastAudioUrl=null;
+      lastAudioBlob=null;
+      const audioInput=$("#uAudio");
+      if(audioInput) audioInput.value="";
+      resetAudioPreview();
+    }
+    function clearImageSelection(){
+      lastImageKey=null;
+      lastImageUrl=null;
+      const imageInput=$("#uImage");
+      if(imageInput) imageInput.value="";
+      const img=$("#imgPrev");
+      if(img){
+        img.classList.add("hidden");
+        img.removeAttribute('src');
+      }
+      hideImageBadge();
+    }
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
     const btnEdit = $("#btnEdit"), btnDel=$("#btnDel"), btnPlayBtn=$("#btnPlay"), btnPlaySlowBtn=$("#btnPlaySlow"), btnUpdate=$("#btnUpdate");
@@ -712,6 +732,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       if(h){ const f = await h.getFile(); if(f){
         $("#audName").textContent = f.name;
+        showAudioBadge(f.name);
         lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
         const stored = await idbPutSafe(lastAudioKey, f);
         if(!stored){
@@ -731,6 +752,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
   const input=document.getElementById('uAudio');
   if(input) input.click();
       });
+    }
+    const resetAudioBtn=document.getElementById('btnResetAudio');
+    if(resetAudioBtn && !resetAudioBtn.dataset.bound){
+      resetAudioBtn.dataset.bound='1';
+      resetAudioBtn.addEventListener('click', e=>{ e.preventDefault(); clearAudioSelection(); });
+    }
+    const resetImageBtn=document.getElementById('btnResetImage');
+    if(resetImageBtn && !resetImageBtn.dataset.bound){
+      resetImageBtn.dataset.bound='1';
+      resetImageBtn.addEventListener('click', e=>{ e.preventDefault(); clearImageSelection(); });
     }
     // POS visibility toggles + autofill placeholders
     function togglePOSUI(){
@@ -787,27 +818,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{a.load();}catch(_e){}
       }
     });
-    $("#btnClearImg").addEventListener("click",()=>{
-      lastImageKey=null;
-      lastImageUrl=null;
-      $("#uImage").value="";
-      const img=$("#imgPrev");
-      if(img){
-        img.classList.add("hidden");
-        img.removeAttribute('src');
-      }
-      $("#imgName").textContent="";
-      hideImageBadge();
-    });
-    $("#btnClearAud").addEventListener("click",()=>{
-      lastAudioKey=null;
-      lastAudioUrl=null;
-      lastAudioBlob=null;
-      $("#uAudio").value="";
-      resetAudioPreview();
-      $("#audName").textContent="";
-      hideAudioBadge();
-    });
+    $("#btnClearImg").addEventListener("click",()=>{ clearImageSelection(); });
+    $("#btnClearAud").addEventListener("click",()=>{ clearAudioSelection(); });
                         // Hold-to-record: press and hold to record; release to stop
     (function(){
       var recBtn = $("#btnRec");
@@ -1071,18 +1083,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       togglePOSUI();
       updatePOSHelp();
       setAdvancedVisibility(false);
-      $("#uImage").value="";
-      $("#uAudio").value="";
-      $("#imgPrev").classList.add("hidden");
-      resetAudioPreview();
-      hideImageBadge();
-      $("#imgName").textContent="";
-      $("#audName").textContent="";
-      lastImageKey=null;
-      lastAudioKey=null;
-      lastImageUrl=null;
-      lastAudioUrl=null;
-      lastAudioBlob=null;
+      clearImageSelection();
+      clearAudioSelection();
       if(useIOSRecorderGlobal && iosRecorderGlobal){ try{ iosRecorderGlobal.releaseMic(); }catch(_e){} }
       editingCardId=null; // Clear editing card ID when resetting form
       orderChosen=[];
