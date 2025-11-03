@@ -344,11 +344,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-tab-icon {
   font-size: 20px;
-  color: #9ca3af;
+  color: #a78bfa;
 }
 
 .fc-tab-active .fc-tab-icon {
-  color: #3b82f6;
+  color: #8b5cf6;
 }
 
 .fc-tab-label {
