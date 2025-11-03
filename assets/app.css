@@ -296,3 +296,381 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
   .bottom-actions button:active, .row2 button:active { transform:none !important }
 }
+
+/* ========== TAB NAVIGATION (v0.7.0) ========== */
+.fc-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 20px;
+  background: var(--card);
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+}
+
+.fc-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  border-bottom: 3px solid transparent;
+}
+
+.fc-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.fc-tab.fc-tab-active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.fc-tab-icon {
+  font-size: 20px;
+}
+
+.fc-tab-label {
+  display: none;
+}
+
+.fc-tab-badge {
+  background: var(--primary);
+  color: white;
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+@media (min-width: 480px) {
+  .fc-tab-label {
+    display: inline;
+  }
+}
+
+/* Tab Content */
+.fc-tab-content {
+  display: none;
+}
+
+.fc-tab-content.fc-tab-active {
+  display: block;
+}
+
+/* ========== QUICK INPUT SECTION (v0.7.0) ========== */
+.fc-quick-input-wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.fc-quick-input-form {
+  padding: 24px;
+}
+
+.fc-quick-input-form h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.fc-quick-media {
+  margin-bottom: 20px;
+}
+
+.fc-quick-media-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.fc-quick-media-btn {
+  background: rgba(59, 130, 246, 0.15);
+  border: 2px solid rgba(59, 130, 246, 0.4);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.fc-quick-media-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.6);
+  transform: translateY(-2px);
+}
+
+.fc-media-icon {
+  font-size: 32px;
+}
+
+.fc-quick-preview {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  position: relative;
+}
+
+.fc-quick-preview .iconbtn.cross {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.fc-quick-field {
+  margin-bottom: 16px;
+}
+
+.fc-quick-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+
+.fc-quick-field textarea,
+.fc-quick-field input[type="text"],
+.fc-quick-field select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.fc-quick-field textarea {
+  min-height: 80px;
+}
+
+.fc-quick-field textarea:first-child {
+  min-height: 100px;
+  font-size: 16px;
+}
+
+.fc-quick-save {
+  width: 100%;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.fc-quick-advanced-toggle {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.fc-link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+}
+
+.fc-link-btn:hover {
+  text-decoration: underline;
+}
+
+.fc-quick-advanced {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.fc-quick-success {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 8px;
+  color: #4ade80;
+  font-weight: 500;
+  margin-top: 16px;
+}
+
+.fc-success-icon {
+  font-size: 20px;
+}
+
+/* ========== DASHBOARD SECTION (v0.7.0) ========== */
+.fc-dashboard-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 0;
+}
+
+.fc-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.fc-stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.fc-stat-card:hover {
+  transform: translateY(-4px);
+}
+
+.fc-stat-card.fc-stat-streak {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.fc-stat-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.fc-stat-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.fc-stat-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.fc-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.fc-chart-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.fc-chart-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.fc-chart-card canvas {
+  max-height: 300px;
+}
+
+.fc-achievements {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.fc-achievements h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.fc-achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+
+.fc-achievement-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.fc-achievement-card:hover {
+  transform: scale(1.05);
+}
+
+.fc-achievement-card.fc-achievement-completed {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.fc-achievement-icon {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.fc-achievement-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.fc-achievement-progress {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+@media (max-width: 620px) {
+  .fc-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fc-charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fc-achievement-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

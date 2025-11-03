@@ -1586,6 +1586,313 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       debugLog('[Flashcards] Active decks:', Object.keys(state.active || {}).filter(id => state.active[id]));
     })();
+
+    // ========== TAB NAVIGATION & DASHBOARD (v0.7.0) ==========
+    (function initTabs() {
+      const tabQuickInput = $('#tabQuickInput');
+      const tabStudy = $('#tabStudy');
+      const tabDashboard = $('#tabDashboard');
+      const quickInputSection = $('#quickInputSection');
+      const studySection = $('#studySection');
+      const dashboardSection = $('#dashboardSection');
+      const quickInputBadge = $('#quickInputBadge');
+
+      if (!tabQuickInput || !tabStudy || !tabDashboard) {
+        debugLog('[Tabs] Tab elements not found, skipping tab init');
+        return;
+      }
+
+      // Helper: Switch to a tab
+      function switchTab(tabName) {
+        // Hide all sections
+        [quickInputSection, studySection, dashboardSection].forEach(el => {
+          if (el) el.classList.remove('fc-tab-active');
+        });
+
+        // Deactivate all tabs
+        [tabQuickInput, tabStudy, tabDashboard].forEach(el => {
+          if (el) {
+            el.classList.remove('fc-tab-active');
+            el.setAttribute('aria-selected', 'false');
+          }
+        });
+
+        // Activate selected tab
+        if (tabName === 'quickInput' && quickInputSection) {
+          quickInputSection.classList.add('fc-tab-active');
+          tabQuickInput.classList.add('fc-tab-active');
+          tabQuickInput.setAttribute('aria-selected', 'true');
+          // Auto-focus text input
+          const quickFront = $('#quickFront');
+          if (quickFront) setTimeout(() => quickFront.focus(), 100);
+        } else if (tabName === 'study' && studySection) {
+          studySection.classList.add('fc-tab-active');
+          tabStudy.classList.add('fc-tab-active');
+          tabStudy.setAttribute('aria-selected', 'true');
+          // Refresh study view
+          buildQueue();
+          showNext();
+        } else if (tabName === 'dashboard' && dashboardSection) {
+          dashboardSection.classList.add('fc-tab-active');
+          tabDashboard.classList.add('fc-tab-active');
+          tabDashboard.setAttribute('aria-selected', 'true');
+          // Load dashboard data
+          loadDashboard();
+        }
+
+        debugLog(`[Tabs] Switched to ${tabName}`);
+      }
+
+      // Tab click handlers
+      if (tabQuickInput) tabQuickInput.addEventListener('click', () => switchTab('quickInput'));
+      if (tabStudy) tabStudy.addEventListener('click', () => switchTab('study'));
+      if (tabDashboard) tabDashboard.addEventListener('click', () => switchTab('dashboard'));
+
+      // Update Quick Input badge (cards created today)
+      function updateQuickInputBadge() {
+        if (!quickInputBadge) return;
+        // This will be updated when dashboard data is loaded
+        // For now, placeholder
+        quickInputBadge.textContent = '';
+      }
+
+      // Load Dashboard Data
+      async function loadDashboard() {
+        try {
+          const resp = await fetch(baseurl + '/ajax.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              sesskey,
+              cmid: isGlobalMode ? 0 : cmid,
+              action: 'get_dashboard_data'
+            })
+          });
+          const json = await resp.json();
+          if (!json.ok) throw new Error('Dashboard API failed');
+
+          const data = json.data;
+          debugLog('[Dashboard] Loaded data:', data);
+
+          // Update stats
+          const statDueToday = $('#statDueToday');
+          const statTotalCards = $('#statTotalCards');
+          const statStreak = $('#statStreak');
+          const statStudyTime = $('#statStudyTime');
+
+          if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
+          if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
+          if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
+          if (statStudyTime) {
+            const hours = Math.floor((data.stats.totalStudyTime || 0) / 3600);
+            const mins = Math.floor(((data.stats.totalStudyTime || 0) % 3600) / 60);
+            statStudyTime.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+          }
+
+          // Update Quick Input badge
+          if (quickInputBadge && data.stats.cardsCreatedToday > 0) {
+            quickInputBadge.textContent = data.stats.cardsCreatedToday;
+          }
+
+          // Render charts
+          renderStageChart(data.stageDistribution);
+          renderActivityChart(data.activityData);
+
+          // Update achievements
+          updateAchievements(data.stats);
+        } catch (err) {
+          debugLog('[Dashboard] Error loading data:', err);
+        }
+      }
+
+      // Render Stage Distribution Chart (Chart.js)
+      function renderStageChart(stageData) {
+        const canvas = $('#stageChart');
+        if (!canvas || typeof Chart === 'undefined') {
+          debugLog('[Dashboard] Chart.js not loaded or canvas not found');
+          return;
+        }
+
+        const labels = stageData.map(d => `Stage ${d.stage}`);
+        const data = stageData.map(d => d.count);
+        const stageEmojis = ['🌰', '🌱', '🌿', '☘️', '🍀', '🌷', '🌼', '🌳', '🌴', '✅', '🏆', '👑'];
+
+        new Chart(canvas, {
+          type: 'doughnut',
+          data: {
+            labels: labels.map((label, i) => `${stageEmojis[i] || ''} ${label}`),
+            datasets: [{
+              data: data,
+              backgroundColor: [
+                '#8B4513', '#90EE90', '#32CD32', '#228B22', '#00FF00',
+                '#FFB6C1', '#FFD700', '#00CED1', '#1E90FF', '#FF69B4'
+              ]
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { position: 'right' }
+            }
+          }
+        });
+      }
+
+      // Render Activity Chart (Chart.js)
+      function renderActivityChart(activityData) {
+        const canvas = $('#activityChart');
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        const labels = activityData.map(d => {
+          const date = new Date(d.date * 1000);
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        const reviews = activityData.map(d => d.reviews);
+        const cardsCreated = activityData.map(d => d.cardsCreated);
+
+        new Chart(canvas, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Reviews',
+                data: reviews,
+                backgroundColor: '#3B82F6'
+              },
+              {
+                label: 'Cards Created',
+                data: cardsCreated,
+                backgroundColor: '#10B981'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+          }
+        });
+      }
+
+      // Update Achievement Progress
+      function updateAchievements(stats) {
+        const achievements = [
+          { id: 1, threshold: 1, current: stats.totalCardsCreated, icon: '🎯' },
+          { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
+          { id: 3, threshold: 100, current: stats.totalCardsCreated, icon: '💯' },
+          { id: 4, threshold: 36000, current: stats.totalStudyTime, icon: '⏰' }, // 10 hours in seconds
+          { id: 5, threshold: 1, current: 0, icon: '🌳' } // TODO: Count cards at stage 7+
+        ];
+
+        achievements.forEach(ach => {
+          const card = $(`#achievement${ach.id}`);
+          const progress = $(`#ach${ach.id}Progress`);
+          if (!card || !progress) return;
+
+          const completed = ach.current >= ach.threshold;
+          if (completed) {
+            card.classList.add('fc-achievement-completed');
+            progress.textContent = '✅ Completed';
+          } else {
+            progress.textContent = `${ach.current}/${ach.threshold}`;
+          }
+        });
+      }
+
+      // Initialize: Default to Quick Input tab
+      switchTab('quickInput');
+    })();
+
+    // ========== QUICK INPUT FORM (v0.7.0) ==========
+    (function initQuickInput() {
+      const quickFront = $('#quickFront');
+      const quickTranslation = $('#quickTranslation');
+      const btnQuickSave = $('#btnQuickSave');
+      const btnQuickAdvanced = $('#btnQuickAdvanced');
+      const quickAdvancedFields = $('#quickAdvancedFields');
+      const quickSuccessMsg = $('#quickSuccessMsg');
+      const quickAdvancedLabel = $('#quickAdvancedLabel');
+      const quickAdvancedIcon = $('#quickAdvancedIcon');
+
+      if (!quickFront || !btnQuickSave) {
+        debugLog('[QuickInput] Quick input elements not found');
+        return;
+      }
+
+      // Toggle advanced fields
+      let advancedVisible = false;
+      if (btnQuickAdvanced) {
+        btnQuickAdvanced.addEventListener('click', () => {
+          advancedVisible = !advancedVisible;
+          if (quickAdvancedFields) {
+            quickAdvancedFields.classList.toggle('hidden', !advancedVisible);
+          }
+          if (quickAdvancedLabel) {
+            quickAdvancedLabel.textContent = advancedVisible ? 'Hide Advanced' : 'Show Advanced';
+          }
+          if (quickAdvancedIcon) {
+            quickAdvancedIcon.textContent = advancedVisible ? '▲' : '▼';
+          }
+        });
+      }
+
+      // Save button
+      btnQuickSave.addEventListener('click', async () => {
+        const front = quickFront.value.trim();
+        if (!front) {
+          alert('Please enter card text');
+          return;
+        }
+
+        const translation = quickTranslation.value.trim();
+        const cardData = {
+          deckId: MY_DECK_ID,
+          cardId: uniq([front]).join('-').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 64) || Date.now().toString(),
+          scope: 'private',
+          payload: {
+            text: front,
+            translations: translation ? { [currentLang]: translation } : {},
+            explanation: $('#quickExplanation')?.value || '',
+            transcription: $('#quickTranscription')?.value || '',
+            pos: $('#quickPOS')?.value || '',
+            collocations: $('#quickCollocations')?.value || '',
+            examples: $('#quickExamples')?.value || ''
+          }
+        };
+
+        try {
+          await upsertCard(cardData);
+
+          // Show success message
+          if (quickSuccessMsg) {
+            quickSuccessMsg.classList.remove('hidden');
+            setTimeout(() => quickSuccessMsg.classList.add('hidden'), 3000);
+          }
+
+          // Clear form
+          quickFront.value = '';
+          if (quickTranslation) quickTranslation.value = '';
+          if ($('#quickExplanation')) $('#quickExplanation').value = '';
+          if ($('#quickTranscription')) $('#quickTranscription').value = '';
+          if ($('#quickPOS')) $('#quickPOS').value = '';
+          if ($('#quickCollocations')) $('#quickCollocations').value = '';
+          if ($('#quickExamples')) $('#quickExamples').value = '';
+
+          // Re-focus
+          setTimeout(() => quickFront.focus(), 100);
+
+          debugLog('[QuickInput] Card created successfully');
+        } catch (err) {
+          alert('Error saving card: ' + err.message);
+          debugLog('[QuickInput] Error:', err);
+        }
+      });
+    })();
+
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }
 export { flashcardsInit };

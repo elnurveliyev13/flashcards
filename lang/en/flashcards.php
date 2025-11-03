@@ -143,3 +143,37 @@ $string['rating_actions'] = 'Rating actions';
 $string['progress_label'] = 'Review progress';
 // Overrides
 $string['title_slow'] = 'Play slowly';
+
+// Tab navigation (v0.7.0)
+$string['tab_quickinput'] = 'Quick Input';
+$string['tab_study'] = 'Study';
+$string['tab_dashboard'] = 'Dashboard';
+
+// Quick Input
+$string['quickinput_title'] = 'Add New Card';
+$string['quick_audio'] = 'Record Audio';
+$string['quick_photo'] = 'Take Photo';
+$string['show_advanced'] = 'Show Advanced ▼';
+$string['hide_advanced'] = 'Hide Advanced ▲';
+$string['card_created'] = 'Card created!';
+$string['quickinput_created_today'] = '{$a} created today';
+
+// Dashboard
+$string['dashboard_cards_due'] = 'Cards Due Today';
+$string['dashboard_total_cards'] = 'Total Cards Created';
+$string['dashboard_streak'] = 'Current Streak (days)';
+$string['dashboard_study_time'] = 'Study Time This Week';
+$string['dashboard_stage_chart'] = 'Card Stages Distribution';
+$string['dashboard_activity_chart'] = 'Review Activity (Last 7 Days)';
+$string['dashboard_achievements'] = 'Achievements';
+
+// Achievements
+$string['achievement_first_card'] = 'First Card';
+$string['achievement_week_warrior'] = 'Week Warrior (7-day streak)';
+$string['achievement_century'] = 'Century (100 cards)';
+$string['achievement_study_bug'] = 'Study Bug (10 hours)';
+$string['achievement_master'] = 'Master (1 card at stage 7+)';
+
+// Placeholders
+$string['collocations_ph'] = 'One per line...';
+$string['examples_ph'] = 'Example sentences...';

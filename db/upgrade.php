@@ -806,5 +806,77 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025102712, 'flashcards');
     }
 
+    // Add dashboard tables: user stats and daily log (v0.7.0)
+    if ($oldversion < 2025110301) {
+        mtrace('Flashcards: Adding dashboard tables (user_stats and daily_log)...');
+
+        // Create flashcards_user_stats table
+        $table = new xmldb_table('flashcards_user_stats');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('total_reviews', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('total_cards_created', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('current_streak_days', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('longest_streak_days', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('last_study_date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('first_study_date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('easy_count', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('normal_count', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('hard_count', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('total_study_time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('userid_uix', XMLDB_INDEX_UNIQUE, ['userid']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_user_stats table');
+        }
+
+        // Create flashcards_daily_log table
+        $table = new xmldb_table('flashcards_daily_log');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('log_date', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('reviews_count', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('cards_created', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('study_time', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('userid_date_uix', XMLDB_INDEX_UNIQUE, ['userid', 'log_date']);
+        $table->add_index('userid_idx', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        $table->add_index('date_idx', XMLDB_INDEX_NOTUNIQUE, ['log_date']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_daily_log table');
+        }
+
+        // Initialize stats for existing users
+        mtrace('  - Initializing stats for existing users...');
+        $users = $DB->get_records_sql("SELECT DISTINCT userid FROM {flashcards_progress}");
+        foreach ($users as $user) {
+            if (!$DB->record_exists('flashcards_user_stats', ['userid' => $user->userid])) {
+                $record = (object)[
+                    'userid' => $user->userid,
+                    'total_reviews' => 0,
+                    'total_cards_created' => 0,
+                    'current_streak_days' => 0,
+                    'longest_streak_days' => 0,
+                    'last_study_date' => 0,
+                    'first_study_date' => 0,
+                    'easy_count' => 0,
+                    'normal_count' => 0,
+                    'hard_count' => 0,
+                    'total_study_time' => 0,
+                    'timemodified' => time()
+                ];
+                $DB->insert_record('flashcards_user_stats', $record);
+            }
+        }
+
+        mtrace('Flashcards: Dashboard tables created and initialized successfully.');
+        upgrade_mod_savepoint(true, 2025110301, 'flashcards');
+    }
+
     return true;
 }

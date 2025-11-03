@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025103107; // YYYYMMDDXX. Align indents, fix create flow, POS help
+$plugin->version   = 2025110301; // YYYYMMDDXX. v0.7.0 - Dashboard + Quick Input tabs
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.6.3-pwa-minimal'; // Minimal SW cache - fix 404 errors on icons
+$plugin->release   = '0.7.0-dashboard'; // Dashboard with stats, Quick Input tab, 3-tab navigation

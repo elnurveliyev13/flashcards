@@ -423,6 +423,7 @@ class api {
         // Ensure initial progress for the owner so the card appears in due list.
         // Stage 0: newly created card with due=now (appears immediately)
         // PROGRESS SYNC FIX: Check by userid+cardid only (new unique constraint)
+        $isnewcard = false;
         if (!$DB->record_exists('flashcards_progress', ['userid' => $userid, 'cardid' => $cardid])) {
             $p = (object)[
                 'flashcardsid' => $globalmode ? null : 0,
@@ -437,8 +438,14 @@ class api {
                 'timemodified' => $now,
             ];
             $DB->insert_record('flashcards_progress', $p);
+            $isnewcard = true;
         }
-    
+
+        // Track card creation in stats (only for new cards, not updates)
+        if ($isnewcard) {
+            self::update_card_creation_stats($userid);
+        }
+
         // Return deckId and cardId so client can update localStorage with correct IDs
         return [
             'deckId' => $deckid,
@@ -584,5 +591,223 @@ class api {
         $p->lastat = $now;
         $p->timemodified = $now;
         $DB->update_record('flashcards_progress', $p);
+
+        // Track review stats
+        // TODO: Calculate actual study time (time between card shown and rated)
+        // For now, use 0 as we don't track card show time yet
+        self::update_review_stats($userid, $rating, 0);
+    }
+
+    // ----------------- Dashboard & Statistics Methods -----------------
+
+    /**
+     * Get or create user stats record
+     * @param int $userid User ID
+     * @return stdClass User stats record
+     */
+    private static function get_user_stats($userid) {
+        global $DB;
+
+        $stats = $DB->get_record('flashcards_user_stats', ['userid' => $userid]);
+        if (!$stats) {
+            // Create new stats record
+            $now = time();
+            $stats = (object)[
+                'userid' => $userid,
+                'total_reviews' => 0,
+                'total_cards_created' => 0,
+                'current_streak_days' => 0,
+                'longest_streak_days' => 0,
+                'last_study_date' => 0,
+                'first_study_date' => 0,
+                'easy_count' => 0,
+                'normal_count' => 0,
+                'hard_count' => 0,
+                'total_study_time' => 0,
+                'timemodified' => $now
+            ];
+            $stats->id = $DB->insert_record('flashcards_user_stats', $stats);
+        }
+        return $stats;
+    }
+
+    /**
+     * Update user stats after a review
+     * @param int $userid User ID
+     * @param int $rating Rating (1=hard, 2=normal, 3=easy)
+     * @param int $studytime Study time in seconds
+     */
+    public static function update_review_stats($userid, $rating, $studytime = 0) {
+        global $DB;
+
+        $stats = self::get_user_stats($userid);
+        $now = time();
+        $today = strtotime('today', $now);
+
+        // Increment total reviews
+        $stats->total_reviews++;
+
+        // Increment rating-specific counter
+        if ($rating <= 1) {
+            $stats->hard_count++;
+        } else if ($rating == 2) {
+            $stats->normal_count++;
+        } else {
+            $stats->easy_count++;
+        }
+
+        // Update study time
+        $stats->total_study_time += $studytime;
+
+        // Calculate streak
+        $lastStudyDay = strtotime('today', $stats->last_study_date);
+        if ($stats->last_study_date == 0) {
+            // First study ever
+            $stats->first_study_date = $now;
+            $stats->current_streak_days = 1;
+        } else if ($lastStudyDay == $today) {
+            // Same day - streak doesn't change
+        } else if ($lastStudyDay == strtotime('-1 day', $today)) {
+            // Consecutive day - increment streak
+            $stats->current_streak_days++;
+        } else {
+            // Streak broken - reset to 1
+            $stats->current_streak_days = 1;
+        }
+
+        // Update longest streak
+        if ($stats->current_streak_days > $stats->longest_streak_days) {
+            $stats->longest_streak_days = $stats->current_streak_days;
+        }
+
+        $stats->last_study_date = $now;
+        $stats->timemodified = $now;
+        $DB->update_record('flashcards_user_stats', $stats);
+
+        // Update daily log
+        self::update_daily_log($userid, $today, 'reviews_count', 1);
+        self::update_daily_log($userid, $today, 'study_time', $studytime);
+    }
+
+    /**
+     * Update user stats after creating a card
+     * @param int $userid User ID
+     */
+    public static function update_card_creation_stats($userid) {
+        global $DB;
+
+        $stats = self::get_user_stats($userid);
+        $now = time();
+        $today = strtotime('today', $now);
+
+        // Increment total cards created
+        $stats->total_cards_created++;
+
+        // Set first study date if not set
+        if ($stats->first_study_date == 0) {
+            $stats->first_study_date = $now;
+        }
+
+        $stats->timemodified = $now;
+        $DB->update_record('flashcards_user_stats', $stats);
+
+        // Update daily log
+        self::update_daily_log($userid, $today, 'cards_created', 1);
+    }
+
+    /**
+     * Update daily log for a specific metric
+     * @param int $userid User ID
+     * @param int $logdate Date timestamp (midnight)
+     * @param string $field Field to increment (reviews_count, cards_created, study_time)
+     * @param int $increment Amount to increment
+     */
+    private static function update_daily_log($userid, $logdate, $field, $increment) {
+        global $DB;
+
+        $log = $DB->get_record('flashcards_daily_log', ['userid' => $userid, 'log_date' => $logdate]);
+        if (!$log) {
+            // Create new log entry
+            $log = (object)[
+                'userid' => $userid,
+                'log_date' => $logdate,
+                'reviews_count' => 0,
+                'cards_created' => 0,
+                'study_time' => 0
+            ];
+            $log->id = $DB->insert_record('flashcards_daily_log', $log);
+        }
+
+        // Increment the field
+        $log->$field += $increment;
+        $DB->update_record('flashcards_daily_log', $log);
+    }
+
+    /**
+     * Get dashboard data for a user
+     * @param int $userid User ID
+     * @return array Dashboard data
+     */
+    public static function get_dashboard_data($userid) {
+        global $DB;
+
+        $stats = self::get_user_stats($userid);
+        $now = time();
+        $today = strtotime('today', $now);
+
+        // Get cards due today count
+        $dueToday = $DB->count_records_select('flashcards_progress',
+            'userid = :userid AND due <= :now AND hidden = 0',
+            ['userid' => $userid, 'now' => $now]
+        );
+
+        // Get stage distribution
+        $sql = "SELECT step, COUNT(*) as count
+                FROM {flashcards_progress}
+                WHERE userid = :userid AND hidden = 0
+                GROUP BY step
+                ORDER BY step ASC";
+        $stageData = $DB->get_records_sql($sql, ['userid' => $userid]);
+
+        $stageDistribution = [];
+        foreach ($stageData as $row) {
+            $stageDistribution[] = [
+                'stage' => (int)$row->step,
+                'count' => (int)$row->count
+            ];
+        }
+
+        // Get last 7 days of activity
+        $activityData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = strtotime("-{$i} days", $today);
+            $log = $DB->get_record('flashcards_daily_log', ['userid' => $userid, 'log_date' => $date]);
+            $activityData[] = [
+                'date' => $date,
+                'reviews' => $log ? (int)$log->reviews_count : 0,
+                'cardsCreated' => $log ? (int)$log->cards_created : 0
+            ];
+        }
+
+        // Get today's cards created count
+        $todayLog = $DB->get_record('flashcards_daily_log', ['userid' => $userid, 'log_date' => $today]);
+        $cardsCreatedToday = $todayLog ? (int)$todayLog->cards_created : 0;
+
+        return [
+            'stats' => [
+                'dueToday' => $dueToday,
+                'totalCardsCreated' => (int)$stats->total_cards_created,
+                'currentStreak' => (int)$stats->current_streak_days,
+                'longestStreak' => (int)$stats->longest_streak_days,
+                'totalStudyTime' => (int)$stats->total_study_time,
+                'totalReviews' => (int)$stats->total_reviews,
+                'easyCount' => (int)$stats->easy_count,
+                'normalCount' => (int)$stats->normal_count,
+                'hardCount' => (int)$stats->hard_count,
+                'cardsCreatedToday' => $cardsCreatedToday
+            ],
+            'stageDistribution' => $stageDistribution,
+            'activityData' => $activityData
+        ];
     }
 }

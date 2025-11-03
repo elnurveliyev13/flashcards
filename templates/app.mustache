@@ -20,6 +20,24 @@
         </div>
       </div>
     </header>
+
+    <!-- Tab Navigation -->
+    <nav class="fc-tabs" role="tablist">
+      <button class="fc-tab fc-tab-active" id="tabQuickInput" role="tab" aria-selected="true" aria-controls="quickInputSection">
+        <span class="fc-tab-icon">&#128221;</span>
+        <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
+        <span class="fc-tab-badge" id="quickInputBadge"></span>
+      </button>
+      <button class="fc-tab" id="tabStudy" role="tab" aria-selected="false" aria-controls="studySection">
+        <span class="fc-tab-icon">&#128218;</span>
+        <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
+      </button>
+      <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
+        <span class="fc-tab-icon">&#128200;</span>
+        <span class="fc-tab-label" id="t_tab_dashboard">{{#str}} tab_dashboard, mod_flashcards {{/str}}</span>
+      </button>
+    </nav>
+
     <div class="row hidden">
       <select id="deckSelect"></select>
       <button id="btnActivate">{{#str}} activate, mod_flashcards {{/str}}</button>
@@ -27,6 +45,94 @@
       <span id="dueInfo" class="pill" data-label="{{#str}} list_due, mod_flashcards {{/str}}">{{#str}} due, mod_flashcards {{/str}}</span>
       <label class="pill"><input id="packFile" type="file" accept="application/json"><span id="t_loadPack">{{#str}} loadpack, mod_flashcards {{/str}}</span></label>
     </div>
+
+    <!-- Quick Input Section (Default) -->
+    <div class="fc-tab-content fc-tab-active" id="quickInputSection" role="tabpanel" aria-labelledby="tabQuickInput">
+      <div class="fc-quick-input-wrap">
+        <div class="fc-quick-input-form card">
+          <h2 id="t_quick_input_title">{{#str}} quickinput_title, mod_flashcards {{/str}}</h2>
+
+          <!-- Media Inputs (Large buttons at top) -->
+          <div class="fc-quick-media">
+            <div class="fc-quick-media-row">
+              <button id="btnQuickRec" class="fc-quick-media-btn" title="{{#str}} title_record, mod_flashcards {{/str}}">
+                <span class="fc-media-icon">&#127897;&#65039;</span>
+                <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+              </button>
+              <button id="btnQuickCam" class="fc-quick-media-btn" title="{{#str}} title_camera, mod_flashcards {{/str}}">
+                <span class="fc-media-icon">&#128247;</span>
+                <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+              </button>
+            </div>
+            <div id="quickMediaPreview" class="fc-quick-preview hidden">
+              <audio id="quickAudPrev" class="hidden" controls preload="metadata"></audio>
+              <img id="quickImgPrev" class="media hidden" alt=""/>
+              <button id="btnQuickClearMedia" class="iconbtn cross" title="Clear">&times;</button>
+            </div>
+          </div>
+
+          <!-- Text Input -->
+          <div class="fc-quick-field">
+            <textarea id="quickFront" placeholder="{{#str}} front, mod_flashcards {{/str}}..." autofocus></textarea>
+          </div>
+
+          <!-- Translation Input -->
+          <div class="fc-quick-field">
+            <textarea id="quickTranslation" placeholder="{{#str}} translation, mod_flashcards {{/str}}..."></textarea>
+          </div>
+
+          <!-- Save Button -->
+          <button id="btnQuickSave" class="fc-quick-save primary">{{#str}} save, mod_flashcards {{/str}}</button>
+
+          <!-- Advanced Toggle -->
+          <div class="fc-quick-advanced-toggle">
+            <button id="btnQuickAdvanced" class="fc-link-btn">
+              <span id="quickAdvancedLabel">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
+              <span id="quickAdvancedIcon">&#9660;</span>
+            </button>
+          </div>
+
+          <!-- Advanced Fields (Initially Hidden) -->
+          <div id="quickAdvancedFields" class="fc-quick-advanced hidden">
+            <div class="fc-quick-field">
+              <label>{{#str}} explanation, mod_flashcards {{/str}}</label>
+              <textarea id="quickExplanation" placeholder="{{#str}} explanation, mod_flashcards {{/str}}..."></textarea>
+            </div>
+            <div class="fc-quick-field">
+              <label>{{#str}} transcription, mod_flashcards {{/str}}</label>
+              <input id="quickTranscription" type="text" placeholder="[?sp?l?]">
+            </div>
+            <div class="fc-quick-field">
+              <label>{{#str}} pos, mod_flashcards {{/str}}</label>
+              <select id="quickPOS">
+                <option value="">-</option>
+                <option value="substantiv">Substantiv</option>
+                <option value="adjektiv">Adjektiv</option>
+                <option value="verb">Verb</option>
+                <option value="adverb">Adverb</option>
+              </select>
+            </div>
+            <div class="fc-quick-field">
+              <label>{{#str}} collocations, mod_flashcards {{/str}}</label>
+              <textarea id="quickCollocations" placeholder="{{#str}} collocations_ph, mod_flashcards {{/str}}..."></textarea>
+            </div>
+            <div class="fc-quick-field">
+              <label>{{#str}} examples, mod_flashcards {{/str}}</label>
+              <textarea id="quickExamples" placeholder="{{#str}} examples_ph, mod_flashcards {{/str}}..."></textarea>
+            </div>
+          </div>
+
+          <!-- Success Message -->
+          <div id="quickSuccessMsg" class="fc-quick-success hidden">
+            <span class="fc-success-icon">&#10004;</span>
+            <span class="fc-success-text">{{#str}} card_created, mod_flashcards {{/str}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Study Section -->
+    <div class="fc-tab-content" id="studySection" role="tabpanel" aria-labelledby="tabStudy">
     <div class="grid">
       <div class="card">
         <div class="actionTop">
@@ -276,6 +382,85 @@
         <button id="btnPageNext" class="btn">Next</button>
       </div>
     </div>
+  </div>
+  </div>
+  </div>
+  <!-- End Study Section -->
+
+  <!-- Dashboard Section -->
+  <div class="fc-tab-content" id="dashboardSection" role="tabpanel" aria-labelledby="tabDashboard">
+    <div class="fc-dashboard-wrap">
+      <!-- Stats Cards -->
+      <div class="fc-stats-grid">
+        <div class="fc-stat-card">
+          <div class="fc-stat-icon">&#128218;</div>
+          <div class="fc-stat-value" id="statDueToday">0</div>
+          <div class="fc-stat-label" id="t_stat_due">{{#str}} dashboard_cards_due, mod_flashcards {{/str}}</div>
+        </div>
+        <div class="fc-stat-card">
+          <div class="fc-stat-icon">&#10133;</div>
+          <div class="fc-stat-value" id="statTotalCards">0</div>
+          <div class="fc-stat-label" id="t_stat_total">{{#str}} dashboard_total_cards, mod_flashcards {{/str}}</div>
+        </div>
+        <div class="fc-stat-card fc-stat-streak">
+          <div class="fc-stat-icon">&#128293;</div>
+          <div class="fc-stat-value" id="statStreak">0</div>
+          <div class="fc-stat-label" id="t_stat_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
+        </div>
+        <div class="fc-stat-card">
+          <div class="fc-stat-icon">&#9200;</div>
+          <div class="fc-stat-value" id="statStudyTime">0</div>
+          <div class="fc-stat-label" id="t_stat_time">{{#str}} dashboard_study_time, mod_flashcards {{/str}}</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="fc-charts-grid">
+        <div class="fc-chart-card">
+          <h3 id="t_chart_stages">{{#str}} dashboard_stage_chart, mod_flashcards {{/str}}</h3>
+          <canvas id="stageChart" width="300" height="300"></canvas>
+        </div>
+        <div class="fc-chart-card">
+          <h3 id="t_chart_activity">{{#str}} dashboard_activity_chart, mod_flashcards {{/str}}</h3>
+          <canvas id="activityChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+
+      <!-- Achievements -->
+      <div class="fc-achievements">
+        <h3 id="t_achievements">{{#str}} dashboard_achievements, mod_flashcards {{/str}}</h3>
+        <div class="fc-achievement-grid">
+          <div class="fc-achievement-card" id="achievement1">
+            <div class="fc-achievement-icon">&#127919;</div>
+            <div class="fc-achievement-title" id="t_ach1_title">{{#str}} achievement_first_card, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-progress" id="ach1Progress">0/1</div>
+          </div>
+          <div class="fc-achievement-card" id="achievement2">
+            <div class="fc-achievement-icon">&#128293;</div>
+            <div class="fc-achievement-title" id="t_ach2_title">{{#str}} achievement_week_warrior, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-progress" id="ach2Progress">0/7</div>
+          </div>
+          <div class="fc-achievement-card" id="achievement3">
+            <div class="fc-achievement-icon">&#128175;</div>
+            <div class="fc-achievement-title" id="t_ach3_title">{{#str}} achievement_century, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-progress" id="ach3Progress">0/100</div>
+          </div>
+          <div class="fc-achievement-card" id="achievement4">
+            <div class="fc-achievement-icon">&#9200;</div>
+            <div class="fc-achievement-title" id="t_ach4_title">{{#str}} achievement_study_bug, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-progress" id="ach4Progress">0/10</div>
+          </div>
+          <div class="fc-achievement-card" id="achievement5">
+            <div class="fc-achievement-icon">&#127795;</div>
+            <div class="fc-achievement-title" id="t_ach5_title">{{#str}} achievement_master, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-progress" id="ach5Progress">0/1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End Dashboard Section -->
+
   </div>
 <!-- Field prompt modal for staged tasks -->
 <div id="fieldPrompt" class="modal" role="dialog" aria-modal="true">

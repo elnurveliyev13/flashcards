@@ -185,6 +185,12 @@ switch ($action) {
         echo json_encode(['ok' => true]);
         break;
 
+    // --- Dashboard & Statistics ---
+    case 'get_dashboard_data':
+        $data = \mod_flashcards\local\api::get_dashboard_data($userid);
+        echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
     default:
         throw new moodle_exception('invalidaction');
 }
