@@ -2,6 +2,12 @@
 .wrap{max-width:1000px;margin:0 auto;padding:18px 18px 120px;display:grid;gap:14px}
 /* Fill viewport background for this module */
 #mod_flashcards_container{background:var(--bg);color:var(--fg)}
+/* Disable text selection for all UI elements */
+#mod_flashcards_container *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Allow selection only in input fields */
+#mod_flashcards_container textarea,
+#mod_flashcards_container input[type="text"],
+#mod_flashcards_container input[type="search"]{-webkit-user-select:text;user-select:text}
 @media (max-width:620px){
   /* On small screens, remove side paddings and stretch to full width */
   .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
@@ -345,10 +351,32 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-tab-icon {
   font-size: 20px;
   color: #a78bfa;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Purple plus icon for all plus icons */
+.header-stat-icon,
+.fc-tab-icon,
+.fc-stat-icon {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: transparent;
+  font-size: 0;
+  text-indent: -9999px;
 }
 
 .fc-tab-active .fc-tab-icon {
-  color: #8b5cf6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
 }
 
 .fc-tab-label {
