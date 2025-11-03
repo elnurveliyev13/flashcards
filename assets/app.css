@@ -227,10 +227,10 @@ input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12p
 .ios-hint .step-add::after{
   content:'';
   display:inline-block;
-  width:clamp(14px, 3.5vw, 20px);
-  height:clamp(14px, 3.5vw, 20px);
-  margin-left:clamp(6px, 2vw, 10px);
-  vertical-align:-1px;
+  width:clamp(18px, 5vw, 26px);
+  height:clamp(18px, 5vw, 26px);
+  margin-left:clamp(8px, 2.5vw, 12px);
+  vertical-align:-2px;
   background-repeat:no-repeat;
   background-size:100% 100%;
 }
