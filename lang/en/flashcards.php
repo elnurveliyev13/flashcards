@@ -72,7 +72,7 @@ $string['autofill_soon'] = 'Auto-fill will be available soon';
 // iOS Install Instructions
 $string['ios_install_title'] = 'Install this app on your Home Screen:';
 $string['ios_install_step1'] = '1. Tap the';
-$string['ios_install_step1_suffix'] = 'button.';
+$string['ios_install_step1_suffix'] = 'button';
 $string['ios_install_step2'] = '2. Select';
 $string['ios_install_step2_suffix'] = '';
 $string['ios_share_button'] = 'Share';
