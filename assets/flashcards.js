@@ -1720,21 +1720,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const statDueToday = $('#statDueToday');
           const statTotalCards = $('#statTotalCards');
           const statStreak = $('#statStreak');
-          const statStudyTime = $('#statStudyTime');
 
           if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
           if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
-          if (statStudyTime) {
-            const hours = Math.floor((data.stats.totalStudyTime || 0) / 3600);
-            const mins = Math.floor(((data.stats.totalStudyTime || 0) % 3600) / 60);
-            statStudyTime.textContent = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-          }
-
-          // Update Quick Input badge
-          if (quickInputBadge && data.stats.cardsCreatedToday > 0) {
-            quickInputBadge.textContent = data.stats.cardsCreatedToday;
-          }
 
           // Update header stats
           const headerTotalCards = $('#headerTotalCards');
@@ -1838,8 +1827,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           { id: 1, threshold: 1, current: stats.totalCardsCreated, icon: '🎯' },
           { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
           { id: 3, threshold: 100, current: stats.totalCardsCreated, icon: '💯' },
-          { id: 4, threshold: 36000, current: stats.totalStudyTime, icon: '⏰' }, // 10 hours in seconds
-          { id: 5, threshold: 1, current: 0, icon: '🌳' } // TODO: Count cards at stage 7+
+          { id: 4, threshold: 1, current: 0, icon: '🌳' } // TODO: Count cards at stage 7+
         ];
 
         achievements.forEach(ach => {
@@ -1897,23 +1885,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
       }
 
-      // Wire up recorder button (reuse existing recorder from main form)
+      // Wire up audio recorder button (trigger file picker)
       const btnQuickRec = $('#btnQuickRec');
-      const btnRec = $('#btnRec');
-      if (btnQuickRec && btnRec) {
+      const uAudio = $('#uAudio');
+      if (btnQuickRec && uAudio) {
         btnQuickRec.addEventListener('click', () => {
-          // Trigger the main form's recorder button
-          btnRec.click();
+          // Trigger the audio file picker
+          uAudio.click();
         });
       }
 
-      // Wire up camera button (reuse existing camera from main form)
+      // Wire up camera button (trigger image file picker)
       const btnQuickCam = $('#btnQuickCam');
-      const btnOpenCam = $('#btnOpenCam');
-      if (btnQuickCam && btnOpenCam) {
+      const uImage = $('#uImage');
+      if (btnQuickCam && uImage) {
         btnQuickCam.addEventListener('click', () => {
-          // Trigger the main form's camera button
-          btnOpenCam.click();
+          // Trigger the image file picker
+          uImage.click();
         });
       }
 
