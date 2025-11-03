@@ -342,6 +342,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
+    function resetAudioPreview(){
+      try{
+        if(previewAudioURL){
+          try{ URL.revokeObjectURL(previewAudioURL); }catch(_e){}
+          previewAudioURL=null;
+        }
+        const mainAudio=$("#audPrev");
+        if(mainAudio){
+          try{ mainAudio.pause(); }catch(_e){}
+          mainAudio.removeAttribute('src');
+          try{ mainAudio.load(); }catch(_e){}
+          mainAudio.classList.add("hidden");
+        }
+        const quickAudio=$("#quickAudPrev");
+        if(quickAudio){
+          try{ quickAudio.pause(); }catch(_e){}
+          quickAudio.removeAttribute('src');
+          try{ quickAudio.load(); }catch(_e){}
+          quickAudio.classList.add("hidden");
+        }
+        const quickImg=$("#quickImgPrev");
+        const quickWrap=$("#quickMediaPreview");
+        if(quickWrap){
+          const hasImg=!!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
+          const hasAudio=!!(quickAudio && !quickAudio.classList.contains("hidden") && quickAudio.getAttribute('src'));
+          if(!hasImg && !hasAudio){
+            quickWrap.classList.add("hidden");
+          }
+        }
+      }catch(_e){}
+    }
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
     const btnEdit = $("#btnEdit"), btnDel=$("#btnDel"), btnPlayBtn=$("#btnPlay"), btnPlaySlowBtn=$("#btnPlaySlow"), btnUpdate=$("#btnUpdate");
@@ -797,37 +828,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return '';
       }
       function stopMicStream(){ try{ if(micStream){ micStream.getTracks().forEach(function(t){ try{t.stop();}catch(_e){} }); micStream = null; } }catch(_e){} }
-      function resetAudioPreview(){
-        try{
-          if(previewAudioURL){
-            try{ URL.revokeObjectURL(previewAudioURL); }catch(_e){}
-            previewAudioURL = null;
-          }
-          const a = $("#audPrev");
-          if(a){
-            try{ a.pause(); }catch(_e){}
-            a.removeAttribute('src');
-            try{ a.load(); }catch(_e){}
-            a.classList.add("hidden");
-          }
-          const quickAud = $("#quickAudPrev");
-          if(quickAud){
-            try{ quickAud.pause(); }catch(_e){}
-            quickAud.removeAttribute('src');
-            try{ quickAud.load(); }catch(_e){}
-            quickAud.classList.add("hidden");
-          }
-          const quickWrap = $("#quickMediaPreview");
-          if(quickWrap){
-            const quickImg = $("#quickImgPrev");
-            const hasImg = !!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
-            const hasAudio = !!(quickAud && !quickAud.classList.contains("hidden") && quickAud.getAttribute('src'));
-            if(!hasImg && !hasAudio){
-              quickWrap.classList.add("hidden");
-            }
-          }
-        }catch(_e){}
-      }
       function fallbackCapture(){
         try{
           if(useIOSRecorder && iosRecorderInstance){ try{ iosRecorderInstance.releaseMic(); }catch(_e){} }
@@ -2004,7 +2004,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if (btnQuickRec && mainRecorderBtn) {
         if (!btnQuickRec.dataset.recorderBound) {
           btnQuickRec.dataset.recorderBound = '1';
-          const bridgeState = { active: false, pointerId: 4096 };
+          const bridgeState = { active: false, pointerId: 4096, dispatching: false };
 
           const syncRecordingClass = () => {
             btnQuickRec.classList.toggle('recording', mainRecorderBtn.classList.contains('recording'));
@@ -2015,59 +2015,64 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           syncRecordingClass();
 
           const dispatchToMain = (type, srcEvent) => {
-            const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
-            const pointerType = srcEvent?.pointerType || (srcEvent?.type?.indexOf('touch') === 0 ? 'touch' : 'mouse');
-            const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
-            const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
-            const clientX = srcEvent?.clientX ?? 0;
-            const clientY = srcEvent?.clientY ?? 0;
-            let dispatched = false;
-            if (window.PointerEvent) {
-              try {
-                mainRecorderBtn.dispatchEvent(new PointerEvent(type, {
-                  bubbles: true,
-                  cancelable: true,
-                  pointerId,
-                  pointerType,
-                  button,
-                  buttons,
-                  clientX,
-                  clientY
-                }));
-                dispatched = true;
-              } catch(_e){}
-            }
-            if (!dispatched) {
-              const fallback = type === 'pointerdown' ? 'mousedown' :
-                               type === 'pointerup' ? 'mouseup' :
-                               type === 'pointercancel' ? 'mouseleave' : type;
-              try {
-                mainRecorderBtn.dispatchEvent(new MouseEvent(fallback, {
-                  bubbles: true,
-                  cancelable: true,
-                  button,
-                  buttons,
-                  clientX,
-                  clientY,
-                  view: window
-                }));
-                dispatched = true;
-              } catch(_e){}
-            }
-            if (!dispatched) {
-              const touchType = type === 'pointerdown' ? 'touchstart' :
-                                type === 'pointerup' ? 'touchend' :
-                                type === 'pointercancel' ? 'touchcancel' : null;
-              if (touchType) {
+            if (bridgeState.dispatching) return;
+            bridgeState.dispatching = true;
+            try {
+              const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
+              const pointerType = srcEvent?.pointerType || (srcEvent?.type?.indexOf('touch') === 0 ? 'touch' : 'mouse');
+              const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
+              const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
+              const clientX = srcEvent?.clientX ?? 0;
+              const clientY = srcEvent?.clientY ?? 0;
+              let dispatched = false;
+              if (window.PointerEvent) {
                 try {
-                  mainRecorderBtn.dispatchEvent(new Event(touchType, { bubbles: true, cancelable: true }));
+                  mainRecorderBtn.dispatchEvent(new PointerEvent(type, {
+                    bubbles: true,
+                    cancelable: true,
+                    pointerId,
+                    pointerType,
+                    button,
+                    buttons,
+                    clientX,
+                    clientY
+                  }));
+                  dispatched = true;
                 } catch(_e){}
               }
+              if (!dispatched) {
+                const fallback = type === 'pointerdown' ? 'mousedown' :
+                                 type === 'pointerup' ? 'mouseup' :
+                                 type === 'pointercancel' ? 'mouseleave' : type;
+                try {
+                  mainRecorderBtn.dispatchEvent(new MouseEvent(fallback, {
+                    bubbles: true,
+                    cancelable: true,
+                    button,
+                    buttons,
+                    clientX,
+                    clientY,
+                    view: window
+                  }));
+                  dispatched = true;
+                } catch(_e){}
+              }
+              if (!dispatched) {
+                const touchType = type === 'pointerdown' ? 'touchstart' :
+                                  type === 'pointerup' ? 'touchend' :
+                                  type === 'pointercancel' ? 'touchcancel' : null;
+                if (touchType) {
+                  try {
+                    mainRecorderBtn.dispatchEvent(new Event(touchType, { bubbles: true, cancelable: true }));
+                  } catch(_e){}
+                }
+              }
+            } finally {
+              bridgeState.dispatching = false;
             }
           };
 
           const cleanupBridge = () => {
-            bridgeState.active = false;
             window.removeEventListener('pointerup', onGlobalPointerUp, true);
             window.removeEventListener('pointercancel', onGlobalPointerCancel, true);
             window.removeEventListener('mouseup', onGlobalMouseUp, true);
@@ -2078,28 +2083,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           function onGlobalPointerUp(evt) {
             if (!bridgeState.active) return;
             try{ evt.preventDefault(); }catch(_e){}
-            dispatchToMain('pointerup', evt);
+            bridgeState.active = false;
             cleanupBridge();
+            dispatchToMain('pointerup', evt);
           }
           function onGlobalPointerCancel(evt) {
             if (!bridgeState.active) return;
-            dispatchToMain('pointercancel', evt);
+            bridgeState.active = false;
             cleanupBridge();
+            dispatchToMain('pointercancel', evt);
           }
           function onGlobalMouseUp(evt) {
             if (!bridgeState.active) return;
-            dispatchToMain('pointerup', evt);
+            bridgeState.active = false;
             cleanupBridge();
+            dispatchToMain('pointerup', evt);
           }
           function onGlobalTouchEnd(evt) {
             if (!bridgeState.active) return;
-            dispatchToMain('pointerup', evt);
+            bridgeState.active = false;
             cleanupBridge();
+            dispatchToMain('pointerup', evt);
           }
           function onGlobalTouchCancel(evt) {
             if (!bridgeState.active) return;
-            dispatchToMain('pointercancel', evt);
+            bridgeState.active = false;
             cleanupBridge();
+            dispatchToMain('pointercancel', evt);
           }
 
           const onPointerDown = evt => {
