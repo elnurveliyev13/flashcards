@@ -661,10 +661,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function autofillSoon(){ const s=document.getElementById('status'); if(s){ s.textContent=(M?.str?.mod_flashcards?.autofill_soon)||'Auto-fill will be available soon'; setTimeout(()=>{s.textContent='';},1200);} }
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
-    $("#uImage").addEventListener("change", async e=>{const f=e.target.files?.[0]; if(!f)return; $("#imgName").textContent=f.name; lastImageKey="my-"+Date.now().toString(36)+"-img"; await idbPutSafe(lastImageKey,f); lastImageUrl=null; $("#imgPrev").src=URL.createObjectURL(f); $("#imgPrev").classList.remove("hidden");});
+    $("#uImage").addEventListener("change", async e=>{
+      const f=e.target.files?.[0];
+      if(!f)return;
+      $("#imgName").textContent=f.name;
+      lastImageKey="my-"+Date.now().toString(36)+"-img";
+      await idbPutSafe(lastImageKey,f);
+      lastImageUrl=null;
+      const objectURL = URL.createObjectURL(f);
+      const imgPrev=$("#imgPrev");
+      if(imgPrev){
+        imgPrev.src=objectURL;
+        imgPrev.classList.remove("hidden");
+      }
+      const quickImg=$("#quickImgPrev");
+      if(quickImg){
+        quickImg.src=objectURL;
+        quickImg.classList.remove("hidden");
+      }
+      const quickWrap=$("#quickMediaPreview");
+      if(quickWrap){
+        quickWrap.classList.remove("hidden");
+      }
+    });
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
       if(!f) return;
+      resetAudioPreview();
       $("#audName").textContent=f.name;
       lastAudioUrl=null;
       lastAudioBlob=null;
@@ -677,12 +700,60 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         lastAudioBlob=null;
       }
-      const url=URL.createObjectURL(f);
+      const objectURL=URL.createObjectURL(f);
+      previewAudioURL = objectURL;
       const a=$("#audPrev");
-      if(a){ try{a.pause();}catch(_e){} a.src=url; a.classList.remove("hidden"); try{a.load();}catch(_e){} }
+      if(a){
+        try{a.pause();}catch(_e){}
+        a.src=objectURL;
+        a.classList.remove("hidden");
+        try{a.load();}catch(_e){}
+      }
+      const quickAud=$("#quickAudPrev");
+      if(quickAud){
+        try{quickAud.pause();}catch(_e){}
+        quickAud.src=objectURL;
+        quickAud.classList.remove("hidden");
+        try{quickAud.load();}catch(_e){}
+      }
+      const quickWrap=$("#quickMediaPreview");
+      if(quickWrap){
+        quickWrap.classList.remove("hidden");
+      }
     });
-    $("#btnClearImg").addEventListener("click",()=>{ lastImageKey=null; lastImageUrl=null; $("#uImage").value=""; const img=$("#imgPrev"); if(img){ img.classList.add("hidden"); img.removeAttribute('src'); } $("#imgName").textContent=""; });
-    $("#btnClearAud").addEventListener("click",()=>{ lastAudioKey=null; lastAudioUrl=null; lastAudioBlob=null; $("#uAudio").value=""; const a=$("#audPrev"); if(a){ try{a.pause();}catch(e){} a.removeAttribute('src'); a.load(); a.classList.add("hidden"); } if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } $("#audName").textContent=""; });
+    $("#btnClearImg").addEventListener("click",()=>{
+      lastImageKey=null;
+      lastImageUrl=null;
+      $("#uImage").value="";
+      const img=$("#imgPrev");
+      if(img){
+        img.classList.add("hidden");
+        img.removeAttribute('src');
+      }
+      const quickImg=$("#quickImgPrev");
+      if(quickImg){
+        quickImg.classList.add("hidden");
+        quickImg.removeAttribute('src');
+      }
+      const quickAud=$("#quickAudPrev");
+      const quickWrap=$("#quickMediaPreview");
+      if(quickWrap){
+        const hasAud=!!(quickAud && !quickAud.classList.contains("hidden") && quickAud.getAttribute('src'));
+        const hasImg=!!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
+        if(!hasAud && !hasImg){
+          quickWrap.classList.add("hidden");
+        }
+      }
+      $("#imgName").textContent="";
+    });
+    $("#btnClearAud").addEventListener("click",()=>{
+      lastAudioKey=null;
+      lastAudioUrl=null;
+      lastAudioBlob=null;
+      $("#uAudio").value="";
+      resetAudioPreview();
+      $("#audName").textContent="";
+    });
     $("#btnOpenCam").addEventListener("click",async()=>{try{camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false});const v=$("#cam");v.srcObject=camStream;v.classList.remove("hidden");$("#btnShot").classList.remove("hidden");$("#btnCloseCam").classList.remove("hidden");}catch{}});
     $("#btnCloseCam").addEventListener("click",()=>{if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}$("#cam").classList.add("hidden");$("#btnShot").classList.add("hidden");$("#btnCloseCam").classList.add("hidden");});
     $("#btnShot").addEventListener("click",()=>{const v=$("#cam");if(!v.srcObject)return;const c=document.createElement("canvas");c.width=v.videoWidth;c.height=v.videoHeight;c.getContext("2d").drawImage(v,0,0,c.width,c.height);c.toBlob(async b=>{lastImageKey="my-"+Date.now().toString(36)+"-img";await idbPutSafe(lastImageKey,b); $("#imgPrev").src=URL.createObjectURL(b);$("#imgPrev").classList.remove("hidden");},"image/jpeg",0.92);});
@@ -726,7 +797,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return '';
       }
       function stopMicStream(){ try{ if(micStream){ micStream.getTracks().forEach(function(t){ try{t.stop();}catch(_e){} }); micStream = null; } }catch(_e){} }
-      function resetAudioPreview(){ try{ const a=$("#audPrev"); if(a){ if(previewAudioURL){ try{URL.revokeObjectURL(previewAudioURL);}catch(_e){} previewAudioURL=null; } try{a.pause();}catch(_e){} a.removeAttribute('src'); a.load(); } }catch(_e){} }
+      function resetAudioPreview(){
+        try{
+          if(previewAudioURL){
+            try{ URL.revokeObjectURL(previewAudioURL); }catch(_e){}
+            previewAudioURL = null;
+          }
+          const a = $("#audPrev");
+          if(a){
+            try{ a.pause(); }catch(_e){}
+            a.removeAttribute('src');
+            try{ a.load(); }catch(_e){}
+            a.classList.add("hidden");
+          }
+          const quickAud = $("#quickAudPrev");
+          if(quickAud){
+            try{ quickAud.pause(); }catch(_e){}
+            quickAud.removeAttribute('src');
+            try{ quickAud.load(); }catch(_e){}
+            quickAud.classList.add("hidden");
+          }
+          const quickWrap = $("#quickMediaPreview");
+          if(quickWrap){
+            const quickImg = $("#quickImgPrev");
+            const hasImg = !!(quickImg && !quickImg.classList.contains("hidden") && quickImg.getAttribute('src'));
+            const hasAudio = !!(quickAud && !quickAud.classList.contains("hidden") && quickAud.getAttribute('src'));
+            if(!hasImg && !hasAudio){
+              quickWrap.classList.add("hidden");
+            }
+          }
+        }catch(_e){}
+      }
       function fallbackCapture(){
         try{
           if(useIOSRecorder && iosRecorderInstance){ try{ iosRecorderInstance.releaseMic(); }catch(_e){} }
@@ -767,12 +868,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           lastAudioBlob = blob;
         }
         const a = $("#audPrev");
+        resetAudioPreview();
+        const objectURL = URL.createObjectURL(blob);
+        previewAudioURL = objectURL;
         if(a){
-          resetAudioPreview();
-          previewAudioURL = URL.createObjectURL(blob);
-          a.src = previewAudioURL;
+          a.src = objectURL;
           a.classList.remove("hidden");
           try{ a.load(); }catch(_e){}
+        }
+        const quickAud = $("#quickAudPrev");
+        if(quickAud){
+          quickAud.src = objectURL;
+          quickAud.classList.remove("hidden");
+          try{ quickAud.load(); }catch(_e){}
+        }
+        const quickWrap = $("#quickMediaPreview");
+        if(quickWrap){
+          quickWrap.classList.remove("hidden");
         }
         if(stored){
           recorderLog('handleRecordedBlob stored via IDB');
@@ -1885,12 +1997,156 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
       }
 
-      // Wire up audio recorder button (trigger file picker)
+      // Wire up audio recorder button: mirror main recorder behaviour
       const btnQuickRec = $('#btnQuickRec');
+      const mainRecorderBtn = $('#btnRec');
       const uAudio = $('#uAudio');
-      if (btnQuickRec && uAudio) {
+      if (btnQuickRec && mainRecorderBtn) {
+        if (!btnQuickRec.dataset.recorderBound) {
+          btnQuickRec.dataset.recorderBound = '1';
+          const bridgeState = { active: false, pointerId: 4096 };
+
+          const syncRecordingClass = () => {
+            btnQuickRec.classList.toggle('recording', mainRecorderBtn.classList.contains('recording'));
+          };
+          const observer = new MutationObserver(syncRecordingClass);
+          observer.observe(mainRecorderBtn, { attributes: true, attributeFilter: ['class'] });
+          btnQuickRec._recorderObserver = observer;
+          syncRecordingClass();
+
+          const dispatchToMain = (type, srcEvent) => {
+            const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
+            const pointerType = srcEvent?.pointerType || (srcEvent?.type?.indexOf('touch') === 0 ? 'touch' : 'mouse');
+            const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
+            const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
+            const clientX = srcEvent?.clientX ?? 0;
+            const clientY = srcEvent?.clientY ?? 0;
+            let dispatched = false;
+            if (window.PointerEvent) {
+              try {
+                mainRecorderBtn.dispatchEvent(new PointerEvent(type, {
+                  bubbles: true,
+                  cancelable: true,
+                  pointerId,
+                  pointerType,
+                  button,
+                  buttons,
+                  clientX,
+                  clientY
+                }));
+                dispatched = true;
+              } catch(_e){}
+            }
+            if (!dispatched) {
+              const fallback = type === 'pointerdown' ? 'mousedown' :
+                               type === 'pointerup' ? 'mouseup' :
+                               type === 'pointercancel' ? 'mouseleave' : type;
+              try {
+                mainRecorderBtn.dispatchEvent(new MouseEvent(fallback, {
+                  bubbles: true,
+                  cancelable: true,
+                  button,
+                  buttons,
+                  clientX,
+                  clientY,
+                  view: window
+                }));
+                dispatched = true;
+              } catch(_e){}
+            }
+            if (!dispatched) {
+              const touchType = type === 'pointerdown' ? 'touchstart' :
+                                type === 'pointerup' ? 'touchend' :
+                                type === 'pointercancel' ? 'touchcancel' : null;
+              if (touchType) {
+                try {
+                  mainRecorderBtn.dispatchEvent(new Event(touchType, { bubbles: true, cancelable: true }));
+                } catch(_e){}
+              }
+            }
+          };
+
+          const cleanupBridge = () => {
+            bridgeState.active = false;
+            window.removeEventListener('pointerup', onGlobalPointerUp, true);
+            window.removeEventListener('pointercancel', onGlobalPointerCancel, true);
+            window.removeEventListener('mouseup', onGlobalMouseUp, true);
+            window.removeEventListener('touchend', onGlobalTouchEnd, true);
+            window.removeEventListener('touchcancel', onGlobalTouchCancel, true);
+          };
+
+          function onGlobalPointerUp(evt) {
+            if (!bridgeState.active) return;
+            try{ evt.preventDefault(); }catch(_e){}
+            dispatchToMain('pointerup', evt);
+            cleanupBridge();
+          }
+          function onGlobalPointerCancel(evt) {
+            if (!bridgeState.active) return;
+            dispatchToMain('pointercancel', evt);
+            cleanupBridge();
+          }
+          function onGlobalMouseUp(evt) {
+            if (!bridgeState.active) return;
+            dispatchToMain('pointerup', evt);
+            cleanupBridge();
+          }
+          function onGlobalTouchEnd(evt) {
+            if (!bridgeState.active) return;
+            dispatchToMain('pointerup', evt);
+            cleanupBridge();
+          }
+          function onGlobalTouchCancel(evt) {
+            if (!bridgeState.active) return;
+            dispatchToMain('pointercancel', evt);
+            cleanupBridge();
+          }
+
+          const onPointerDown = evt => {
+            if (bridgeState.active) return;
+            bridgeState.active = true;
+            bridgeState.pointerId = typeof evt.pointerId === 'number' ? evt.pointerId : 4096;
+            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
+            dispatchToMain('pointerdown', evt);
+            window.addEventListener('pointerup', onGlobalPointerUp, true);
+            window.addEventListener('pointercancel', onGlobalPointerCancel, true);
+            window.addEventListener('mouseup', onGlobalMouseUp, true);
+            window.addEventListener('touchend', onGlobalTouchEnd, true);
+            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
+          };
+          const onMouseDown = evt => {
+            if (bridgeState.active) return;
+            bridgeState.active = true;
+            bridgeState.pointerId = 4096;
+            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
+            dispatchToMain('pointerdown', evt);
+            window.addEventListener('mouseup', onGlobalMouseUp, true);
+            window.addEventListener('touchend', onGlobalTouchEnd, true);
+            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
+          };
+          const onTouchStart = evt => {
+            if (bridgeState.active) return;
+            bridgeState.active = true;
+            bridgeState.pointerId = 8192;
+            try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
+            dispatchToMain('pointerdown', evt);
+            window.addEventListener('touchend', onGlobalTouchEnd, true);
+            window.addEventListener('touchcancel', onGlobalTouchCancel, true);
+          };
+
+          if (window.PointerEvent) {
+            btnQuickRec.addEventListener('pointerdown', onPointerDown);
+          } else {
+            btnQuickRec.addEventListener('mousedown', onMouseDown);
+            btnQuickRec.addEventListener('touchstart', onTouchStart, { passive: false });
+          }
+          btnQuickRec.addEventListener('click', e => {
+            try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
+          }, true);
+        }
+      } else if (btnQuickRec && uAudio) {
+        // Fallback: trigger file picker if main recorder is unavailable
         btnQuickRec.addEventListener('click', () => {
-          // Trigger the audio file picker
           uAudio.click();
         });
       }
@@ -1902,6 +2158,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         btnQuickCam.addEventListener('click', () => {
           // Trigger the image file picker
           uImage.click();
+        });
+      }
+
+      const btnQuickClear = $('#btnQuickClearMedia');
+      if (btnQuickClear) {
+        btnQuickClear.addEventListener('click', e => {
+          try{ e.preventDefault(); }catch(_e){}
+          const clearImgBtn = $('#btnClearImg');
+          const clearAudBtn = $('#btnClearAud');
+          if (clearImgBtn) clearImgBtn.click();
+          if (clearAudBtn) clearAudBtn.click();
+          const quickWrap = $('#quickMediaPreview');
+          if (quickWrap) quickWrap.classList.add('hidden');
         });
       }
 
@@ -1924,6 +2193,59 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           translations[userLang2] = translation;
         }
 
+        // Ensure media is uploaded similarly to the main form flow
+        let resolvedImageUrl = lastImageUrl || null;
+        if (lastImageKey && !resolvedImageUrl) {
+          try {
+            const blob = await idbGetSafe(lastImageKey);
+            if (blob) {
+              resolvedImageUrl = await uploadMedia(new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' }), 'image', cardId);
+              lastImageUrl = resolvedImageUrl;
+            }
+          } catch (e) {
+            console.error('QuickInput image upload failed:', e);
+          }
+        }
+
+        let resolvedAudioUrl = lastAudioUrl || null;
+        if (lastAudioKey && !resolvedAudioUrl) {
+          try {
+            const blob = await idbGetSafe(lastAudioKey);
+            if (blob) {
+              const mt = (blob.type || '').toLowerCase();
+              let ext = 'webm';
+              if (mt.indexOf('audio/wav') === 0) ext = 'wav';
+              else if (mt.indexOf('audio/mp4') === 0 || mt.indexOf('audio/m4a') === 0 || mt.indexOf('video/mp4') === 0) ext = 'mp4';
+              else if (mt.indexOf('audio/mpeg') === 0 || mt.indexOf('audio/mp3') === 0) ext = 'mp3';
+              else if (mt.indexOf('audio/ogg') === 0) ext = 'ogg';
+              else if (mt.indexOf('audio/webm') === 0) ext = 'webm';
+              const file = new File([blob], 'audio.' + ext, { type: blob.type || ('audio/' + ext) });
+              resolvedAudioUrl = await uploadMedia(file, 'audio', cardId);
+              lastAudioUrl = resolvedAudioUrl;
+              lastAudioBlob = null;
+            }
+          } catch (e) {
+            console.error('QuickInput audio upload failed:', e);
+          }
+        } else if (lastAudioBlob && !resolvedAudioUrl) {
+          try {
+            const blob = lastAudioBlob;
+            const mt = (blob.type || '').toLowerCase();
+            let ext = 'webm';
+            if (mt.indexOf('audio/wav') === 0) ext = 'wav';
+            else if (mt.indexOf('audio/mp4') === 0 || mt.indexOf('audio/m4a') === 0 || mt.indexOf('video/mp4') === 0) ext = 'mp4';
+            else if (mt.indexOf('audio/mpeg') === 0 || mt.indexOf('audio/mp3') === 0) ext = 'mp3';
+            else if (mt.indexOf('audio/ogg') === 0) ext = 'ogg';
+            else if (mt.indexOf('audio/webm') === 0) ext = 'webm';
+            const file = new File([blob], 'audio.' + ext, { type: blob.type || ('audio/' + ext) });
+            resolvedAudioUrl = await uploadMedia(file, 'audio', cardId);
+            lastAudioUrl = resolvedAudioUrl;
+            lastAudioBlob = null;
+          } catch (e) {
+            console.error('QuickInput audio upload failed (memory fallback):', e);
+          }
+        }
+
         const payload = {
           text: front,
           translation: translation, // For backward compatibility
@@ -1934,6 +2256,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           collocations: $('#quickCollocations')?.value || '',
           examples: $('#quickExamples')?.value || ''
         };
+
+        if (resolvedImageUrl) {
+          payload.image = resolvedImageUrl;
+        } else if (lastImageKey) {
+          payload.imageKey = lastImageKey;
+        }
+
+        if (resolvedAudioUrl) {
+          payload.audio = resolvedAudioUrl;
+        } else if (lastAudioKey) {
+          payload.audioKey = lastAudioKey;
+        }
 
         try {
           // Use the same API call as the main form
@@ -1958,6 +2292,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if ($('#quickPOS')) $('#quickPOS').value = '';
           if ($('#quickCollocations')) $('#quickCollocations').value = '';
           if ($('#quickExamples')) $('#quickExamples').value = '';
+
+          // Clear media inputs and previews
+          resetAudioPreview();
+          const imgPrev = $('#imgPrev');
+          if (imgPrev) {
+            imgPrev.classList.add('hidden');
+            imgPrev.removeAttribute('src');
+          }
+          const quickImgPrev = $('#quickImgPrev');
+          if (quickImgPrev) {
+            quickImgPrev.classList.add('hidden');
+            quickImgPrev.removeAttribute('src');
+          }
+          const quickMediaWrap = $('#quickMediaPreview');
+          if (quickMediaWrap) {
+            quickMediaWrap.classList.add('hidden');
+          }
+          const audNameEl = $('#audName');
+          if (audNameEl) audNameEl.textContent = '';
+          const imgNameEl = $('#imgName');
+          if (imgNameEl) imgNameEl.textContent = '';
+          const audioInput = $('#uAudio');
+          if (audioInput) audioInput.value = '';
+          const imageInput = $('#uImage');
+          if (imageInput) imageInput.value = '';
+          lastAudioKey = null;
+          lastAudioUrl = null;
+          lastAudioBlob = null;
+          lastImageKey = null;
+          lastImageUrl = null;
 
           // Re-focus
           setTimeout(() => quickFront.focus(), 100);
