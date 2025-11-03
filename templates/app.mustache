@@ -21,14 +21,6 @@
           </select>
         </div>
       </div>
-      <div class="header-progress" id="progressBar">
-        <div class="progress-info">
-          <span class="progress-counter"><span id="progressCurrent">0</span> / <span id="progressTotal">0</span> cards</span>
-        </div>
-        <div class="progress-track">
-          <div class="progress-fill-mini" id="progressFill"></div>
-        </div>
-      </div>
     </header>
 
     <!-- Tab Navigation -->
@@ -40,7 +32,7 @@
       <button class="fc-tab" id="tabStudy" role="tab" aria-selected="false" aria-controls="studySection">
         <span class="fc-tab-icon">&#128218;</span>
         <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
-        <span class="fc-tab-badge" id="studyBadge"></span>
+        <span class="fc-tab-badge hidden" id="studyBadge"></span>
       </button>
       <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
         <span class="fc-tab-icon">&#128200;</span>
@@ -64,12 +56,23 @@
             <h2 id="t_quick_input_title">{{#str}} quickinput_title, mod_flashcards {{/str}}</h2>
             <div class="actionTop">
               <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button>
-              <button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&times;</button>
             </div>
           </div>
           <div class="card-form-content" id="cardCreationForm">
             <div class="slot">
               <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
+            </div>
+            <div class="fc-quick-media">
+              <div class="fc-quick-media-row">
+                <button id="btnQuickRec" class="fc-quick-media-btn" title="{{#str}} title_record, mod_flashcards {{/str}}">
+                  <span class="fc-media-icon">&#127897;&#65039;</span>
+                  <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+                </button>
+                <button id="btnQuickCam" class="fc-quick-media-btn" title="{{#str}} title_camera, mod_flashcards {{/str}}">
+                  <span class="fc-media-icon">&#128247;</span>
+                  <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+                </button>
+              </div>
             </div>
             <div class="slot">
               <span class="tag" id="t_pickAudio">{{#str}} audio, mod_flashcards {{/str}}</span>
@@ -226,7 +229,6 @@
               <button id="btnAdd" class="mid">Create new</button>
             </div>
             <div class="mono" id="status"></div>
-            <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>
           </div>
         </div>
       </div>

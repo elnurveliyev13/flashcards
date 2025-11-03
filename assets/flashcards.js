@@ -261,26 +261,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
       stageBadge.style.justifyContent = "center";
     }
-    function setDue(n){ const el=$("#due"); if(!el) return; el.textContent = String(n); }
-
-    function updateProgressBar(){
-      const pb = $("#progressBar");
-      if(!pb) return;
-
-      const total = parseInt(pb.dataset.total || "0", 10);
-      const remaining = queue.length;
-      const completed = Math.max(0, total - remaining);
-
-      const progressCurrent = $("#progressCurrent");
-      const progressTotal = $("#progressTotal");
-      const progressFill = $("#progressFill");
-
-      if(progressCurrent) progressCurrent.textContent = String(completed);
-      if(progressTotal) progressTotal.textContent = String(total);
-
-      if(progressFill && total > 0){
-        const percent = (completed / total) * 100;
-        progressFill.style.width = `${percent}%`;
+    function setDue(n){
+      const el=$("#due");
+      if(el) el.textContent = String(n);
+      const studyBadge = $("#studyBadge");
+      if(studyBadge){
+        studyBadge.textContent = n > 0 ? String(n) : "";
+        studyBadge.classList.toggle('hidden', !(n > 0));
       }
     }
 
@@ -432,9 +419,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       debugLog(`Total due cards: ${queue.length}`);
       setDue(queue.length);
-      const _pb = $("#progressBar"); if(_pb){ _pb.dataset.total = String(queue.length); }
-      updateProgressBar();
-
       if(queue.length===0){
         slotContainer.innerHTML="";
         const sb=$("#stageBadge"); if(sb) sb.classList.add("hidden");
@@ -479,7 +463,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         visibleSlots = 1;
         showCurrent();
         setDue(queue.length);
-        updateProgressBar();
       }
     }
 
@@ -506,7 +489,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         visibleSlots = 1;
         showCurrent();
         setDue(queue.length);
-        updateProgressBar();
       }
     }
 
@@ -530,7 +512,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       visibleSlots = 1;
       showCurrent();
       setDue(queue.length);
-      updateProgressBar();
     }
 
     $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(); });
@@ -699,6 +680,100 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
   }catch(_e){}
   $("#uAudio").click();
 });
+(function bindQuickMediaButtons(){
+  const quickRecBtn = document.getElementById('btnQuickRec');
+  const mainRecBtn = document.getElementById('btnRec');
+  if(quickRecBtn && mainRecBtn && !quickRecBtn.dataset.bound){
+    quickRecBtn.dataset.bound = '1';
+    const bridgeState = { active:false, pointerId:9000 };
+    const dispatchToRecorder = (type, srcEvent) => {
+      const pointerId = typeof srcEvent?.pointerId === 'number' ? srcEvent.pointerId : bridgeState.pointerId;
+      const pointerType = srcEvent?.pointerType || (srcEvent?.type && srcEvent.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
+      const button = typeof srcEvent?.button === 'number' ? srcEvent.button : 0;
+      const buttons = typeof srcEvent?.buttons === 'number' ? srcEvent.buttons : (type === 'pointerdown' ? 1 : 0);
+      const clientX = srcEvent?.clientX ?? 0;
+      const clientY = srcEvent?.clientY ?? 0;
+      if(window.PointerEvent){
+        try{
+          mainRecBtn.dispatchEvent(new PointerEvent(type, {
+            bubbles:true,
+            cancelable:true,
+            pointerId,
+            pointerType,
+            button,
+            buttons,
+            clientX,
+            clientY
+          }));
+          return;
+        }catch(_e){}
+      }
+      const fallback = type === 'pointerdown' ? 'mousedown' :
+                       type === 'pointerup' ? 'mouseup' : 'mouseleave';
+      try{
+        mainRecBtn.dispatchEvent(new MouseEvent(fallback, {
+          bubbles:true,
+          cancelable:true,
+          button,
+          buttons,
+          clientX,
+          clientY,
+          view:window
+        }));
+      }catch(_e){}
+    };
+    function cleanupListeners(){
+      window.removeEventListener('pointerup', onWindowPointerUp, true);
+      window.removeEventListener('pointercancel', onWindowPointerCancel, true);
+      window.removeEventListener('mouseup', onWindowMouseUp, true);
+      window.removeEventListener('touchend', onWindowTouchEnd, true);
+      window.removeEventListener('touchcancel', onWindowTouchCancel, true);
+    }
+    function finish(type, evt){
+      if(!bridgeState.active) return;
+      bridgeState.active = false;
+      cleanupListeners();
+      dispatchToRecorder(type, evt || {});
+    }
+    function onWindowPointerUp(evt){ finish('pointerup', evt); }
+    function onWindowPointerCancel(evt){ finish('pointercancel', evt); }
+    function onWindowMouseUp(evt){ finish('pointerup', evt); }
+    function onWindowTouchEnd(evt){ finish('pointerup', evt); }
+    function onWindowTouchCancel(evt){ finish('pointercancel', evt); }
+    function startForwarding(evt){
+      if(bridgeState.active) return;
+      bridgeState.active = true;
+      bridgeState.pointerId = typeof evt.pointerId === 'number' ? evt.pointerId : 9000;
+      try{ evt.preventDefault(); evt.stopPropagation(); }catch(_e){}
+      dispatchToRecorder('pointerdown', evt);
+      window.addEventListener('pointerup', onWindowPointerUp, true);
+      window.addEventListener('pointercancel', onWindowPointerCancel, true);
+      window.addEventListener('mouseup', onWindowMouseUp, true);
+      window.addEventListener('touchend', onWindowTouchEnd, true);
+      window.addEventListener('touchcancel', onWindowTouchCancel, true);
+    }
+    quickRecBtn.addEventListener('pointerdown', startForwarding);
+    quickRecBtn.addEventListener('mousedown', startForwarding);
+    quickRecBtn.addEventListener('touchstart', startForwarding, {passive:false});
+    quickRecBtn.addEventListener('click', e => {
+      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
+    }, true);
+  }
+  const quickCamBtn = document.getElementById('btnQuickCam');
+  if(quickCamBtn && !quickCamBtn.dataset.bound){
+    quickCamBtn.dataset.bound = '1';
+    quickCamBtn.addEventListener('click', e => {
+      try{ e.preventDefault(); e.stopPropagation(); }catch(_e){}
+      const openCamBtn = document.getElementById('btnOpenCam');
+      if(openCamBtn){
+        openCamBtn.click();
+        return;
+      }
+      const chooseImgBtn = document.getElementById('btnChooseImg');
+      if(chooseImgBtn) chooseImgBtn.click();
+    });
+  }
+})();
     // POS visibility toggles + autofill placeholders
     function togglePOSUI(){
       const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();
@@ -1059,11 +1134,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{ if(typeof stopMicStream==='function') stopMicStream(); }catch(_e){}
     }
     $("#btnFormReset").addEventListener("click", resetForm);
-        const btnCancel = $("#btnCancelEdit");
-    if(btnCancel && !btnCancel.dataset.bound){
-      btnCancel.dataset.bound = "1";
-      btnCancel.addEventListener("click", e=>{ e.preventDefault(); resetForm(); closeEditor(); });
-    }
     // Bind global "+" (Create new card) button at init
     (function(){
       const addBtn = $("#btnAddNew");
@@ -1721,16 +1791,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         });
 
-        // Show/hide progress bar (only visible on Study tab)
-        const progressBar = $('#progressBar');
-        if (progressBar) {
-          if (tabName === 'study') {
-            progressBar.classList.add('visible');
-          } else {
-            progressBar.classList.remove('visible');
-          }
-        }
-
         // Activate selected tab
         if (tabName === 'quickInput' && quickInputSection) {
           quickInputSection.classList.add('fc-tab-active');
@@ -1823,9 +1883,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
           // Update Study badge (due cards count)
           const studyBadge = $('#studyBadge');
-          if (studyBadge && data.stats.dueToday > 0) {
-            studyBadge.textContent = data.stats.dueToday;
-          }
+        if (studyBadge) {
+          const dueToday = data.stats.dueToday || 0;
+          studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
+          studyBadge.classList.toggle('hidden', dueToday <= 0);
+        }
 
           // Render charts
           renderStageChart(data.stageDistribution);
