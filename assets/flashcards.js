@@ -1604,9 +1604,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Helper: Switch to a tab
       function switchTab(tabName) {
+        console.log('[Tabs] switchTab called with:', tabName);
+        console.log('[Tabs] Elements:', {
+          quickInputSection: !!quickInputSection,
+          studySection: !!studySection,
+          dashboardSection: !!dashboardSection,
+          tabQuickInput: !!tabQuickInput,
+          tabStudy: !!tabStudy,
+          tabDashboard: !!tabDashboard
+        });
+
         // Hide all sections
         [quickInputSection, studySection, dashboardSection].forEach(el => {
-          if (el) el.classList.remove('fc-tab-active');
+          if (el) {
+            el.classList.remove('fc-tab-active');
+            console.log('[Tabs] Removed fc-tab-active from', el.id);
+          }
         });
 
         // Deactivate all tabs
@@ -1614,6 +1627,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if (el) {
             el.classList.remove('fc-tab-active');
             el.setAttribute('aria-selected', 'false');
+            console.log('[Tabs] Deactivated tab', el.id);
           }
         });
 
@@ -1622,6 +1636,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           quickInputSection.classList.add('fc-tab-active');
           tabQuickInput.classList.add('fc-tab-active');
           tabQuickInput.setAttribute('aria-selected', 'true');
+          console.log('[Tabs] Activated Quick Input');
           // Auto-focus text input
           const quickFront = $('#quickFront');
           if (quickFront) setTimeout(() => quickFront.focus(), 100);
@@ -1629,11 +1644,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           studySection.classList.add('fc-tab-active');
           tabStudy.classList.add('fc-tab-active');
           tabStudy.setAttribute('aria-selected', 'true');
+          console.log('[Tabs] Activated Study');
           // Study view will auto-refresh from existing queue
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
           tabDashboard.classList.add('fc-tab-active');
           tabDashboard.setAttribute('aria-selected', 'true');
+          console.log('[Tabs] Activated Dashboard');
           // Load dashboard data
           loadDashboard();
         }
@@ -1642,9 +1659,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
 
       // Tab click handlers
-      if (tabQuickInput) tabQuickInput.addEventListener('click', () => switchTab('quickInput'));
-      if (tabStudy) tabStudy.addEventListener('click', () => switchTab('study'));
-      if (tabDashboard) tabDashboard.addEventListener('click', () => switchTab('dashboard'));
+      if (tabQuickInput) {
+        tabQuickInput.addEventListener('click', () => {
+          console.log('[Tabs] Quick Input tab clicked');
+          switchTab('quickInput');
+        });
+      }
+      if (tabStudy) {
+        tabStudy.addEventListener('click', () => {
+          console.log('[Tabs] Study tab clicked');
+          switchTab('study');
+        });
+      }
+      if (tabDashboard) {
+        tabDashboard.addEventListener('click', () => {
+          console.log('[Tabs] Dashboard tab clicked');
+          switchTab('dashboard');
+        });
+      }
 
       // Update Quick Input badge (cards created today)
       function updateQuickInputBadge() {
@@ -1690,6 +1722,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           // Update Quick Input badge
           if (quickInputBadge && data.stats.cardsCreatedToday > 0) {
             quickInputBadge.textContent = data.stats.cardsCreatedToday;
+          }
+
+          // Update header stats
+          const headerTotalCards = $('#headerTotalCards');
+          const headerStreak = $('#headerStreak');
+          if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
+          if (headerStreak) headerStreak.textContent = data.stats.currentStreak || 0;
+
+          // Update Study badge (due cards count)
+          const studyBadge = $('#studyBadge');
+          if (studyBadge && data.stats.dueToday > 0) {
+            studyBadge.textContent = data.stats.dueToday;
           }
 
           // Render charts
@@ -1803,6 +1847,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Initialize: Default to Quick Input tab
       switchTab('quickInput');
+
+      // Load dashboard data on page load (to update header stats and badges)
+      loadDashboard();
     })();
 
     // ========== QUICK INPUT FORM (v0.7.0) ==========
