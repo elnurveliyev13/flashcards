@@ -1629,9 +1629,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           studySection.classList.add('fc-tab-active');
           tabStudy.classList.add('fc-tab-active');
           tabStudy.setAttribute('aria-selected', 'true');
-          // Refresh study view
-          buildQueue();
-          showNext();
+          // Study view will auto-refresh from existing queue
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
           tabDashboard.classList.add('fc-tab-active');
@@ -1849,23 +1847,35 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
 
         const translation = quickTranslation.value.trim();
-        const cardData = {
-          deckId: MY_DECK_ID,
-          cardId: uniq([front]).join('-').toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 64) || Date.now().toString(),
-          scope: 'private',
-          payload: {
-            text: front,
-            translations: translation ? { [currentLang]: translation } : {},
-            explanation: $('#quickExplanation')?.value || '',
-            transcription: $('#quickTranscription')?.value || '',
-            pos: $('#quickPOS')?.value || '',
-            collocations: $('#quickCollocations')?.value || '',
-            examples: $('#quickExamples')?.value || ''
-          }
+
+        // Generate card ID from front text
+        const normalizedText = front.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 64);
+        const cardId = normalizedText || Date.now().toString();
+
+        const translations = {};
+        if (translation) {
+          translations[userLang2] = translation;
+        }
+
+        const payload = {
+          text: front,
+          translation: translation, // For backward compatibility
+          translations: translations,
+          explanation: $('#quickExplanation')?.value || '',
+          transcription: $('#quickTranscription')?.value || '',
+          pos: $('#quickPOS')?.value || '',
+          collocations: $('#quickCollocations')?.value || '',
+          examples: $('#quickExamples')?.value || ''
         };
 
         try {
-          await upsertCard(cardData);
+          // Use the same API call as the main form
+          const result = await api('upsert_card', {}, 'POST', {
+            deckId: null, // Will use default deck
+            cardId: cardId,
+            scope: 'private',
+            payload: payload
+          });
 
           // Show success message
           if (quickSuccessMsg) {
