@@ -61,8 +61,11 @@ if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
 }
 // Prepare template context with logo URL
 $logourl = new moodle_url('/mod/flashcards/pix/logo.png');
+$logourlstring = $logourl->out(false);
+// Debug: uncomment to see what logourl contains
+echo "<!-- DEBUG logourl: " . htmlspecialchars($logourlstring) . " -->";
 $templatecontext = [
-    'logourl' => $logourl->out(false)
+    'logourl' => $logourlstring
 ];
 echo $OUTPUT->render_from_template('mod_flashcards/app', $templatecontext);
 echo $OUTPUT->footer();
