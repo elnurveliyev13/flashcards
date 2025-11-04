@@ -47,14 +47,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
     function initDebugPanel(){
+      console.log('[DEBUG] initDebugPanel called');
       const debugToggle = document.getElementById('debugToggle');
       const debugPanel = document.getElementById('debugPanel');
       const rightEdgeLine = document.getElementById('rightEdgeLine');
+      console.log('[DEBUG] Elements found:', {debugToggle: !!debugToggle, debugPanel: !!debugPanel, rightEdgeLine: !!rightEdgeLine});
       if(debugToggle && debugPanel && rightEdgeLine){
-        debugToggle.addEventListener('click', () => {
+        console.log('[DEBUG] Setting up debug panel');
+        debugToggle.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('[DEBUG] Toggle clicked');
           debugPanel.classList.toggle('active');
           rightEdgeLine.classList.toggle('active');
-          if(debugPanel.classList.contains('active')){
+          const isActive = debugPanel.classList.contains('active');
+          console.log('[DEBUG] Panel is now:', isActive ? 'ACTIVE' : 'INACTIVE');
+          if(isActive){
             const metrics = updateDebugPanel();
             logDebugHistory('PANEL_OPENED', metrics);
           }
@@ -63,6 +71,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const resizeObserver = new ResizeObserver(() => { if(debugPanel.classList.contains('active')) updateDebugPanel(); });
         resizeObserver.observe(document.body);
         if(document.getElementById('mod_flashcards_container')) resizeObserver.observe(document.getElementById('mod_flashcards_container'));
+        console.log('[DEBUG] Debug panel initialized successfully');
+      } else {
+        console.error('[DEBUG] Failed to initialize - missing elements');
       }
     }
     // === END DEBUG PANEL ===
