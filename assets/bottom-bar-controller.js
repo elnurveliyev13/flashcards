@@ -184,8 +184,11 @@
   BottomBarController.prototype._updateRatingButtons = function(){
     if(!this.ratingBar) return;
 
+    // Read current due count from DOM
+    var dueEl = this.root ? this.root.querySelector('#due') : null;
+    var count = dueEl ? (parseInt(dueEl.textContent) || 0) : this.state.dueCount;
+
     // Disable buttons when nothing due
-    var count = this.state.dueCount;
     var buttons = ['btnEasyBottom', 'btnNormalBottom', 'btnHardBottom'];
     buttons.forEach(function(id){
       var btn = document.getElementById(id);
