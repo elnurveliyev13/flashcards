@@ -1776,6 +1776,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           loadDashboard();
         }
 
+        // Show/hide bottom action bar based on active tab
+        const bottomActions = document.getElementById('bottomActions');
+        if (bottomActions) {
+          if (tabName === 'study') {
+            // Show rating buttons on Study tab
+            bottomActions.classList.remove('hidden');
+            if (root) root.setAttribute('data-bottom-visible', '1');
+          } else {
+            // Hide on Quick Input and Dashboard tabs
+            bottomActions.classList.add('hidden');
+            if (root) root.removeAttribute('data-bottom-visible');
+          }
+        }
+
         debugLog(`[Tabs] Switched to ${tabName}`);
       }
 

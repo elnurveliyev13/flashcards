@@ -143,11 +143,18 @@
 
     function updateBottomBar(){
       const dueCount = $("#due");
+      const studySection = document.getElementById('studySection');
+      const isStudyActive = studySection && studySection.classList.contains('fc-tab-active');
       if(bottomActions && dueCount){
         const count = parseInt(dueCount.textContent) || 0;
-        // Always show bar; disable buttons when nothing due
-        bottomActions.classList.remove("hidden");
-        if(root){ root.setAttribute('data-bottom-visible','1'); }
+        // Show bar only on Study tab; disable buttons when nothing due
+        if(isStudyActive){
+          bottomActions.classList.remove("hidden");
+          if(root){ root.setAttribute('data-bottom-visible','1'); }
+        } else {
+          bottomActions.classList.add("hidden");
+          if(root){ root.removeAttribute('data-bottom-visible'); }
+        }
         try{
           [_btnEasyBottom, _btnNormalBottom, _btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
         }catch(_e){}
@@ -159,10 +166,13 @@
       const listModal = document.getElementById('listModal');
       const fieldPrompt = document.getElementById('fieldPrompt');
       const bar = document.getElementById('bottomActions');
+      const studySection = document.getElementById('studySection');
+      const isStudyActive = studySection && studySection.classList.contains('fc-tab-active');
       const overlaysOpen = !!((listModal && listModal.style.display==='flex') || (fieldPrompt && fieldPrompt.style.display==='flex') || (formWrap && !formWrap.classList.contains('card-form-collapsed')));
       if(bar){
-        // Only hide for overlays; otherwise keep visible
-        bar.classList.toggle('hidden', overlaysOpen);
+        // Only show on Study tab and when no overlays are open
+        const shouldShow = isStudyActive && !overlaysOpen;
+        bar.classList.toggle('hidden', !shouldShow);
         var visible = !bar.classList.contains('hidden');
         if(root){ if(visible){ root.setAttribute('data-bottom-visible','1'); } else { root.removeAttribute('data-bottom-visible'); } }
         if(visible){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} }
