@@ -26,14 +26,14 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025110312; // cache buster; aligns with target version.
+$ver = 2025110313; // cache buster; aligns with target version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/main.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
 // One-time iOS install guide (lightweight modal)
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ios-install-guide.js', ['v' => $ver]));
-// Fixed save bar for editor
-$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/edit-save-bar.js', ['v' => $ver]));
+// Unified bottom bar controller (rating + edit bars)
+$PAGE->requires->js(new moodle_url('/mod/flashcards/assets/bottom-bar-controller.js', ['v' => $ver]));
 // Core app styling
 $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/app.css', ['v' => $ver]));
 // Prefer bottom action bar as the single rating UI

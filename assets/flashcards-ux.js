@@ -40,26 +40,7 @@
       }
     }catch(_e){}
 
-    // 1. Fixed bottom action bar
-    const bottomActions = $("#bottomActions");
-    const btnEasyBottom = $("#btnEasyBottom");
-    const btnNormalBottom = $("#btnNormalBottom");
-    const btnHardBottom = $("#btnHardBottom");
-
-    // Reset bottom buttons to strip any previous listeners (e.g., fallback bindings)
-    function resetButton(b){
-      if(!b || b.dataset._reset === '1') return b;
-      const clone = b.cloneNode(true);
-      b.parentNode.replaceChild(clone, b);
-      clone.dataset._reset = '1';
-      return clone;
-    }
-    const _btnEasyBottom = resetButton(btnEasyBottom);
-    const _btnNormalBottom = resetButton(btnNormalBottom);
-    const _btnHardBottom = resetButton(btnHardBottom);
-
-
-    // 2. Collapsible form toggle
+    // 1. Collapsible form toggle
     const btnToggleForm = $("#btnToggleForm");
     const cardCreationFormWrap = $("#cardCreationFormWrap");
 
@@ -90,12 +71,11 @@
       });
     }
 
-    // 3. Update progress bar on queue changes
+    // 2. Update progress bar on queue changes
     const originalDue = root.querySelector("#due");
     if(originalDue){
       const observer = new MutationObserver(function(mutations){
         updateProgressBar();
-        updateBottomBarPlus();
       });
       observer.observe(originalDue, {childList: true, characterData: true, subtree: true});
     }
@@ -119,46 +99,13 @@
       }
     }
 
-    function updateBottomBar(){
-      const dueCount = $("#due");
-      const studySection = document.getElementById('studySection');
-      const isStudyActive = studySection && studySection.classList.contains('fc-tab-active');
-      if(bottomActions && dueCount){
-        const count = parseInt(dueCount.textContent) || 0;
-        // Show rating bar ONLY on Study tab
-        if(isStudyActive){
-          bottomActions.classList.remove("hidden");
-          if(root){ root.setAttribute('data-bottom-visible','1'); }
-          // Disable buttons when nothing due
-          try{
-            [_btnEasyBottom, _btnNormalBottom, _btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
-          }catch(_e){}
-        } else {
-          // Hide on all other tabs (Dashboard, Quick Input)
-          bottomActions.classList.add("hidden");
-          if(root){ root.removeAttribute('data-bottom-visible'); }
-        }
-      }
-    }
-
-    function updateBottomBarPlus(){
-      // Simply call updateBottomBar - no need for overlay checks on rating bar
-      // Rating bar shows ONLY on Study tab, edit bar handles Quick Input tab
-      updateBottomBar();
-    }
-
     // Initial update
     updateProgressBar();
-    updateBottomBarPlus();
 
-    try{ const _wrap=document.getElementById('cardCreationFormWrap'); if(_wrap){ new MutationObserver(()=>updateBottomBarPlus()).observe(_wrap,{attributes:true, attributeFilter:['class']}); } }catch(_e){}
-    try{ const _lm=document.getElementById('listModal'); if(_lm){ new MutationObserver(()=>updateBottomBarPlus()).observe(_lm,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
-    try{ const _fp=document.getElementById('fieldPrompt'); if(_fp){ new MutationObserver(()=>updateBottomBarPlus()).observe(_fp,{attributes:true, attributeFilter:['style','class']}); } }catch(_e){}
-
-    // 4. No auto-hide for iOS hint (per UX request) – handled elsewhere
+    // 3. No auto-hide for iOS hint (per UX request) – handled elsewhere
 
 
-    // 5. Fullscreen toggle (native + fallback)
+    // 4. Fullscreen toggle (native + fallback)
     const btnFullscreen = $("#btnFullscreen");
     if(btnFullscreen){
       const updateIcon = () => {
