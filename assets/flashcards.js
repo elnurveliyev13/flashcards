@@ -1602,8 +1602,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
+      // Prevent zoom on modal open (fixes old devices)
+      const viewportMeta = document.querySelector('meta[name="viewport"]');
+      const originalViewport = viewportMeta ? viewportMeta.getAttribute('content') : null;
+      if(viewportMeta){
+        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no');
+      }
+      // Force scroll to top to prevent zoom
+      setTimeout(()=>{
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+      }, 10);
       fp.style.display='flex';
-      function close(){ fp.style.display='none'; }
+      function close(){
+        fp.style.display='none';
+        // Restore original viewport if needed
+        if(viewportMeta && originalViewport){
+          viewportMeta.setAttribute('content', originalViewport);
+        }
+      }
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
       const btnSkip = document.getElementById('fpSkip'); if(btnSkip){ btnSkip.onclick = close; }
       const btnSave = document.getElementById('fpSave');
