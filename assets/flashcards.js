@@ -1602,34 +1602,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
-      // DIAGNOSTIC MODE: Show debug info on screen
-      let debugDiv = document.getElementById('zoomDebug');
-      if(!debugDiv){
-        debugDiv = document.createElement('div');
-        debugDiv.id = 'zoomDebug';
-        debugDiv.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:rgba(255,0,0,0.9);color:#fff;padding:8px;font-size:11px;z-index:99999;border-radius:6px;max-height:180px;overflow:auto;font-family:monospace;line-height:1.3';
-        document.body.appendChild(debugDiv);
-      }
-      function updateDebug(){
-        const fpBox = fp.querySelector('.box');
-        const cont = document.getElementById('mod_flashcards_container');
-        const realWidth = window.innerWidth || document.documentElement.clientWidth;
-        const info = [
-          'ZOOM DEBUG (v2):',
-          `realWidth: ${realWidth}px`,
-          `window.innerWidth: ${window.innerWidth}px`,
-          `visualViewport: ${window.visualViewport ? window.visualViewport.width : 'N/A'}px`,
-          `zoom: ${window.visualViewport ? (window.innerWidth / window.visualViewport.width).toFixed(2) : 'N/A'}`,
-          `fp.style.width: ${fp.style.width}`,
-          `fp.offsetWidth: ${fp.offsetWidth}px`,
-          `fpBox.style.width: ${fpBox ? fpBox.style.width : 'N/A'}`,
-          `fpBox.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`,
-          `body.getBoundingClientRect().left: ${document.body.getBoundingClientRect().left.toFixed(0)}px`,
-          `cont.getBoundingClientRect().left: ${cont ? cont.getBoundingClientRect().left.toFixed(0) : 'N/A'}px`
-        ];
-        debugDiv.innerHTML = info.join('<br>');
-      }
-      // AGGRESSIVE FIX: Prevent zoom on modal open (fixes old devices like Xiaomi Mi1, iPhone SE 2020)
+      // FIX: Prevent zoom on modal open (fixes old devices like Xiaomi Mi1, iPhone SE 2020)
       const viewportMeta = document.querySelector('meta[name="viewport"]');
       const originalViewport = viewportMeta ? viewportMeta.getAttribute('content') : null;
       const bodyOriginalStyle = {overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width, transform: document.body.style.transform};
@@ -1646,12 +1619,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(fpBox){ const boxWidth = realWidth - 16; fpBox.style.maxWidth = boxWidth + 'px'; fpBox.style.width = boxWidth + 'px'; fpBox.style.margin = '0 auto'; fpBox.style.boxSizing = 'border-box'; }
       window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
-      updateDebug();
-      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; updateDebug(); }, 50);
-      setTimeout(()=>{ updateDebug(); }, 200);
+      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; }, 50);
       function close(){
         fp.style.display='none';
-        if(debugDiv && debugDiv.parentNode){ debugDiv.parentNode.removeChild(debugDiv); }
         document.body.classList.remove('modal-open');
         document.body.style.overflow = bodyOriginalStyle.overflow; document.body.style.position = bodyOriginalStyle.position; document.body.style.width = bodyOriginalStyle.width; document.body.style.transform = bodyOriginalStyle.transform; document.body.style.left = ''; document.body.style.right = '';
         document.documentElement.style.overflow = htmlOriginalStyle.overflow; document.documentElement.style.width = htmlOriginalStyle.width;
