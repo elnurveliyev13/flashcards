@@ -1613,19 +1613,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       function updateDebug(){
         const fpBox = fp.querySelector('.box');
         const cont = document.getElementById('mod_flashcards_container');
+        const realWidth = window.innerWidth || document.documentElement.clientWidth;
         const info = [
-          'ZOOM DEBUG INFO:',
-          `body.offsetWidth: ${document.body.offsetWidth}px`,
-          `body.scrollWidth: ${document.body.scrollWidth}px`,
+          'ZOOM DEBUG (v2):',
+          `realWidth: ${realWidth}px`,
           `window.innerWidth: ${window.innerWidth}px`,
           `visualViewport: ${window.visualViewport ? window.visualViewport.width : 'N/A'}px`,
           `zoom: ${window.visualViewport ? (window.innerWidth / window.visualViewport.width).toFixed(2) : 'N/A'}`,
-          `body.style.position: ${document.body.style.position}`,
-          `body.style.left: ${document.body.style.left}`,
+          `fp.style.width: ${fp.style.width}`,
+          `fp.offsetWidth: ${fp.offsetWidth}px`,
+          `fpBox.style.width: ${fpBox ? fpBox.style.width : 'N/A'}`,
+          `fpBox.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`,
           `body.getBoundingClientRect().left: ${document.body.getBoundingClientRect().left.toFixed(0)}px`,
-          `container.offsetLeft: ${cont ? cont.offsetLeft : 'N/A'}px`,
-          `container.getBoundingClientRect().left: ${cont ? cont.getBoundingClientRect().left.toFixed(0) : 'N/A'}px`,
-          `modal.box.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`
+          `cont.getBoundingClientRect().left: ${cont ? cont.getBoundingClientRect().left.toFixed(0) : 'N/A'}px`
         ];
         debugDiv.innerHTML = info.join('<br>');
       }
@@ -1640,9 +1640,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       document.documentElement.style.overflow = 'hidden'; document.documentElement.style.width = '100vw';
       const container = document.getElementById('mod_flashcards_container');
       if(container){ container.style.width = '100vw'; container.style.maxWidth = '100vw'; container.style.overflow = 'hidden'; }
-      fp.style.width = '100vw'; fp.style.maxWidth = '100vw'; fp.style.left = '0'; fp.style.right = '0'; fp.style.padding = '8px'; fp.style.boxSizing = 'border-box'; fp.style.margin = '0';
+      const realWidth = window.innerWidth || document.documentElement.clientWidth;
+      fp.style.width = realWidth + 'px'; fp.style.maxWidth = realWidth + 'px'; fp.style.left = '0px'; fp.style.right = '0px'; fp.style.top = '0px'; fp.style.bottom = '0px'; fp.style.padding = '8px'; fp.style.boxSizing = 'border-box'; fp.style.margin = '0'; fp.style.position = 'fixed';
       const fpBox = fp.querySelector('.box');
-      if(fpBox){ fpBox.style.maxWidth = 'calc(100vw - 16px)'; fpBox.style.width = 'calc(100vw - 16px)'; fpBox.style.margin = '0 auto'; fpBox.style.boxSizing = 'border-box'; }
+      if(fpBox){ const boxWidth = realWidth - 16; fpBox.style.maxWidth = boxWidth + 'px'; fpBox.style.width = boxWidth + 'px'; fpBox.style.margin = '0 auto'; fpBox.style.boxSizing = 'border-box'; }
       window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
       updateDebug();
