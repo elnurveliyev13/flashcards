@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025110308; // YYYYMMDDXX. v0.7.6 - Tab-aware bottom bar visibility
+$plugin->version   = 2025110310; // YYYYMMDDXX. v0.7.8 - Removed duplicate rating buttons from Study section
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.7.6-css-important-fix'; // Bottom bar now shows only on Study tab
+$plugin->release   = '0.7.8-remove-duplicate-buttons'; // Removed old .row2 with btnEasy/Normal/Hard
