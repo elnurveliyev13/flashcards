@@ -15,15 +15,6 @@
       // Ensure bottom bar feature flag is enabled even if UX script loads late
       root.setAttribute('data-ux-bottom','1');
       // Hide only the in-card rating buttons (keep edit form buttons visible)
-      var s=document.getElementById('ux-boot-hide-rating');
-      if(!s){
-        s=document.createElement('style');
-        s.id='ux-boot-hide-rating';
-        s.textContent = '#mod_flashcards_container[data-ux-bottom="1"] #btnEasy,\
- #mod_flashcards_container[data-ux-bottom="1"] #btnNormal,\
- #mod_flashcards_container[data-ux-bottom="1"] #btnHard{display:none !important}';
-        (document.head||document.documentElement).appendChild(s);
-      }
       // If the bar exists, make sure it’s not hidden by default class
       var bar = root.querySelector('#bottomActions');
       if(bar){ bar.classList.remove('hidden'); bar.style.display=''; }

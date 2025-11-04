@@ -560,9 +560,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(); });
-    $("#btnEasy").addEventListener("click",rateEasy);
-    $("#btnNormal").addEventListener("click",rateNormal);
-    $("#btnHard").addEventListener("click",rateHard);
 
     // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
     const _btnEasyBottom = $("#btnEasyBottom");
