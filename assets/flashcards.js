@@ -1839,11 +1839,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           debugLog('[Dashboard] Loaded data:', data);
 
           // Update stats
-          const statDueToday = $('#statDueToday');
           const statTotalCards = $('#statTotalCards');
           const statStreak = $('#statStreak');
 
-          if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
           if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
 

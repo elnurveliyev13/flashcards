@@ -107,8 +107,8 @@
   };
 
   BottomBarController.prototype._bindEvents = function(){
-    // Observe due count changes (use global search)
-    var dueEl = document.getElementById('statDueToday');
+    // Observe due count changes (use Study badge instead of Dashboard stat)
+    var dueEl = document.getElementById('studyBadge');
     if(dueEl){
       var self = this;
       var observer = new MutationObserver(function(){
@@ -183,8 +183,8 @@
   BottomBarController.prototype._updateRatingButtons = function(){
     if(!this.ratingBar) return;
 
-    // Read current due count from DOM (use global search, not root.querySelector)
-    var dueEl = document.getElementById('statDueToday');
+    // Read current due count from DOM (use Study badge instead of Dashboard stat)
+    var dueEl = document.getElementById('studyBadge');
     var count = dueEl ? (parseInt(dueEl.textContent) || 0) : this.state.dueCount;
 
     console.log('[BottomBarController] _updateRatingButtons: count =', count, 'dueEl =', dueEl);
