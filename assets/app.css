@@ -315,12 +315,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 /* ========== TAB NAVIGATION (v0.7.0) ========== */
 .fc-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 6px;
-  background: rgba(15, 23, 42, 0.6);
-  border-radius: 14px;
-  border: 1px solid #374151;
+  gap: 0;
+  margin-bottom: 24px;
+  padding: 0;
+  background: transparent;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.5);
+  position: relative;
 }
 
 .fc-tab {
@@ -328,28 +328,43 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   background: transparent;
   border: none;
   color: #9ca3af;
-  padding: 12px 16px;
+  padding: 16px 20px;
   cursor: pointer;
   font-size: 15px;
   font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
+  gap: 10px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  border-radius: 10px;
+  border-radius: 0;
+}
+
+.fc-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px 3px 0 0;
 }
 
 .fc-tab:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #d1d5db;
+  color: #e5e7eb;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .fc-tab.fc-tab-active {
-  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+  color: #60a5fa;
+}
+
+.fc-tab.fc-tab-active::after {
+  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
 .fc-tab-icon {
@@ -392,7 +407,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-tab-active .icon-plus {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
 }
 
 .fc-tab-label {
