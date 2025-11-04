@@ -1623,9 +1623,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       function close(){
         fp.style.display='none';
         document.body.classList.remove('modal-open');
-        document.body.style.overflow = bodyOriginalStyle.overflow; document.body.style.position = bodyOriginalStyle.position; document.body.style.width = bodyOriginalStyle.width; document.body.style.transform = bodyOriginalStyle.transform; document.body.style.left = ''; document.body.style.right = '';
-        document.documentElement.style.overflow = htmlOriginalStyle.overflow; document.documentElement.style.width = htmlOriginalStyle.width;
-        if(container){ container.style.width = ''; container.style.maxWidth = ''; container.style.overflow = ''; }
+        document.body.style.overflow = ''; document.body.style.position = ''; document.body.style.width = ''; document.body.style.transform = ''; document.body.style.left = ''; document.body.style.right = ''; document.body.style.top = '';
+        document.documentElement.style.overflow = ''; document.documentElement.style.width = '';
+        if(container){ container.style.width = ''; container.style.maxWidth = ''; container.style.overflow = ''; container.style.marginLeft = ''; container.style.marginRight = ''; }
         if(viewportMeta && originalViewport){ viewportMeta.setAttribute('content', originalViewport); }
         setTimeout(()=>{ window.scrollTo(0, 0); }, 0);
       }
