@@ -1623,11 +1623,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       function close(){
         fp.style.display='none';
         document.body.classList.remove('modal-open');
-        document.body.style.overflow = ''; document.body.style.position = ''; document.body.style.width = ''; document.body.style.transform = ''; document.body.style.left = ''; document.body.style.right = ''; document.body.style.top = '';
-        document.documentElement.style.overflow = ''; document.documentElement.style.width = '';
-        if(container){ container.style.width = ''; container.style.maxWidth = ''; container.style.overflow = ''; container.style.marginLeft = ''; container.style.marginRight = ''; }
+        document.body.style.cssText = '';
+        document.documentElement.style.cssText = '';
+        if(container){ container.style.cssText = ''; }
         if(viewportMeta && originalViewport){ viewportMeta.setAttribute('content', originalViewport); }
-        setTimeout(()=>{ window.scrollTo(0, 0); }, 0);
+        setTimeout(()=>{
+          window.scrollTo(0, 0);
+          document.body.style.cssText = '';
+          document.documentElement.style.cssText = '';
+          if(container){ container.style.cssText = ''; }
+          void document.body.offsetHeight;
+        }, 10);
       }
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
       const btnSkip = document.getElementById('fpSkip'); if(btnSkip){ btnSkip.onclick = close; }
