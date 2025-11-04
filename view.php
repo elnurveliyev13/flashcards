@@ -26,7 +26,7 @@ $PAGE->requires->string_for_js('ios_add_to_home', 'mod_flashcards');
 
 // Prepare JS before header to ensure deterministic order.
 $baseurl = (new moodle_url('/mod/flashcards/app/'))->out(false);
-$ver = 2025110414; // cache buster; aligns with target version.
+$ver = 2025110415; // cache buster; aligns with target version.
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/ux-boot.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/main.js', ['v' => $ver]));
 $PAGE->requires->js(new moodle_url('/mod/flashcards/assets/flashcards-ux.js', ['v' => $ver]));
@@ -60,8 +60,9 @@ if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
     exit;
 }
 // Prepare template context with logo URL
+$logourl = new moodle_url('/mod/flashcards/pix/logo.png');
 $templatecontext = [
-    'logourl' => $OUTPUT->image_url('logo', 'mod_flashcards')->out(false)
+    'logourl' => $logourl->out(false)
 ];
 echo $OUTPUT->render_from_template('mod_flashcards/app', $templatecontext);
 echo $OUTPUT->footer();
