@@ -162,7 +162,6 @@
   };
 
   BottomBarController.prototype.setMode = function(mode){
-    if(this.currentMode === mode) return;
     this.currentMode = mode;
 
     // Hide all bars first
@@ -188,11 +187,16 @@
     var dueEl = this.root ? this.root.querySelector('#due') : null;
     var count = dueEl ? (parseInt(dueEl.textContent) || 0) : this.state.dueCount;
 
+    console.log('[BottomBarController] _updateRatingButtons: count =', count, 'dueEl =', dueEl);
+
     // Disable buttons when nothing due
     var buttons = ['btnEasyBottom', 'btnNormalBottom', 'btnHardBottom'];
     buttons.forEach(function(id){
       var btn = document.getElementById(id);
-      if(btn){ btn.disabled = (count <= 0); }
+      if(btn){
+        btn.disabled = (count <= 0);
+        console.log('[BottomBarController]', id, 'disabled =', btn.disabled, 'count =', count);
+      }
     });
   };
 
