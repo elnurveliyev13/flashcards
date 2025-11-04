@@ -1612,6 +1612,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       function updateDebug(){
         const fpBox = fp.querySelector('.box');
+        const cont = document.getElementById('mod_flashcards_container');
         const info = [
           'ZOOM DEBUG INFO:',
           `body.offsetWidth: ${document.body.offsetWidth}px`,
@@ -1619,12 +1620,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           `window.innerWidth: ${window.innerWidth}px`,
           `visualViewport: ${window.visualViewport ? window.visualViewport.width : 'N/A'}px`,
           `zoom: ${window.visualViewport ? (window.innerWidth / window.visualViewport.width).toFixed(2) : 'N/A'}`,
-          `body.style.width: ${document.body.style.width}`,
-          `html.style.width: ${document.documentElement.style.width}`,
-          `scrollX: ${window.scrollX}, scrollY: ${window.scrollY}`,
-          `modal.offsetWidth: ${fp.offsetWidth}px`,
-          `modal.box.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`,
-          `modal.box.scrollWidth: ${fpBox ? fpBox.scrollWidth : 'N/A'}px`
+          `body.style.position: ${document.body.style.position}`,
+          `body.style.left: ${document.body.style.left}`,
+          `body.getBoundingClientRect().left: ${document.body.getBoundingClientRect().left.toFixed(0)}px`,
+          `container.offsetLeft: ${cont ? cont.offsetLeft : 'N/A'}px`,
+          `container.getBoundingClientRect().left: ${cont ? cont.getBoundingClientRect().left.toFixed(0) : 'N/A'}px`,
+          `modal.box.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`
         ];
         debugDiv.innerHTML = info.join('<br>');
       }
