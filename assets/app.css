@@ -74,6 +74,22 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
   .fc-tab-icon{font-size:18px}
   .fc-tab-label{font-size:13px}
 }
+/* Extra small devices (Xiaomi Mi 1, old Android) - 360px and smaller */
+@media (max-width:370px){
+  header{padding:10px 4px 10px 4px}
+  .header-top{margin-bottom:6px}
+  .header-title-wrap{gap:4px}
+  .header-logo{width:24px;height:24px}
+  h1{font-size:16px}
+  .header-actions{gap:6px}
+  .header-stats{gap:8px}
+  .header-stat{font-size:12px;gap:3px}
+  .header-stat-icon{font-size:13px}
+  /* Tabs: even more compact */
+  .fc-tab{padding:10px 4px;gap:4px;font-size:13px}
+  .fc-tab-icon{font-size:16px}
+  .fc-tab-label{font-size:12px}
+}
 .install-btn-compact{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;background:rgba(103,126,234,0.15);border:1px solid rgba(103,126,234,0.3);border-radius:8px;color:#9ca3af;transition:all 0.2s}
 .install-btn-compact:hover{background:rgba(103,126,234,0.25);color:#e5e7eb}
 .install-btn-compact svg{display:block}
