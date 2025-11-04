@@ -20,12 +20,19 @@ input, textarea, select{font-size:16px !important}
 }
 header{padding:16px 18px 12px 18px}
 .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.header-title-wrap{display:flex;align-items:center;gap:10px}
+.header-logo{width:32px;height:32px;object-fit:contain}
 h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .header-actions{display:flex;gap:12px;align-items:center}
 .header-stats{display:flex;gap:16px;align-items:center}
 .header-stat{display:flex;align-items:center;gap:6px;font-size:14px;color:#e5e7eb;font-weight:600}
 .header-stat-icon{font-size:16px}
-@media (max-width:620px){.header-stat{font-size:13px}.header-stat-icon{font-size:14px}}
+@media (max-width:620px){
+  header{padding:16px 12px 12px 12px}
+  .header-logo{width:28px;height:28px}
+  .header-stat{font-size:13px}
+  .header-stat-icon{font-size:14px}
+}
 .install-btn-compact{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;background:rgba(103,126,234,0.15);border:1px solid rgba(103,126,234,0.3);border-radius:8px;color:#9ca3af;transition:all 0.2s}
 .install-btn-compact:hover{background:rgba(103,126,234,0.25);color:#e5e7eb}
 .install-btn-compact svg{display:block}
