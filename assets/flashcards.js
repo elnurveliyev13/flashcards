@@ -1602,25 +1602,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
-      // Prevent zoom on modal open (fixes old devices)
+      // AGGRESSIVE FIX: Prevent zoom on modal open (fixes old devices like Xiaomi Mi1, iPhone SE 2020)
       const viewportMeta = document.querySelector('meta[name="viewport"]');
       const originalViewport = viewportMeta ? viewportMeta.getAttribute('content') : null;
-      if(viewportMeta){
-        viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no');
-      }
-      // Force scroll to top to prevent zoom
-      setTimeout(()=>{
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-      }, 10);
+      const bodyOriginalStyle = {overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width, transform: document.body.style.transform};
+      const htmlOriginalStyle = {overflow: document.documentElement.style.overflow, width: document.documentElement.style.width};
+      if(viewportMeta){ viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no'); }
+      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden'; document.body.style.position = 'relative'; document.body.style.width = '100vw'; document.body.style.transform = 'translate3d(0,0,0)';
+      document.documentElement.style.overflow = 'hidden'; document.documentElement.style.width = '100vw';
+      window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
+      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; }, 0);
       function close(){
         fp.style.display='none';
-        // Restore original viewport if needed
-        if(viewportMeta && originalViewport){
-          viewportMeta.setAttribute('content', originalViewport);
-        }
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = bodyOriginalStyle.overflow; document.body.style.position = bodyOriginalStyle.position; document.body.style.width = bodyOriginalStyle.width; document.body.style.transform = bodyOriginalStyle.transform;
+        document.documentElement.style.overflow = htmlOriginalStyle.overflow; document.documentElement.style.width = htmlOriginalStyle.width;
+        if(viewportMeta && originalViewport){ viewportMeta.setAttribute('content', originalViewport); }
+        setTimeout(()=>{ window.scrollTo(0, 0); }, 0);
       }
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
       const btnSkip = document.getElementById('fpSkip'); if(btnSkip){ btnSkip.onclick = close; }
