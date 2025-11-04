@@ -125,36 +125,26 @@
       const isStudyActive = studySection && studySection.classList.contains('fc-tab-active');
       if(bottomActions && dueCount){
         const count = parseInt(dueCount.textContent) || 0;
-        // Show bar only on Study tab; disable buttons when nothing due
+        // Show rating bar ONLY on Study tab
         if(isStudyActive){
           bottomActions.classList.remove("hidden");
           if(root){ root.setAttribute('data-bottom-visible','1'); }
+          // Disable buttons when nothing due
+          try{
+            [_btnEasyBottom, _btnNormalBottom, _btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
+          }catch(_e){}
         } else {
+          // Hide on all other tabs (Dashboard, Quick Input)
           bottomActions.classList.add("hidden");
           if(root){ root.removeAttribute('data-bottom-visible'); }
         }
-        try{
-          [_btnEasyBottom, _btnNormalBottom, _btnHardBottom].forEach(function(b){ if(b){ b.disabled = (count <= 0); }});
-        }catch(_e){}
       }
     }
 
-    function updateBottomBarPlus(){ updateBottomBar();
-      const formWrap = document.getElementById('cardCreationFormWrap');
-      const listModal = document.getElementById('listModal');
-      const fieldPrompt = document.getElementById('fieldPrompt');
-      const bar = document.getElementById('bottomActions');
-      const studySection = document.getElementById('studySection');
-      const isStudyActive = studySection && studySection.classList.contains('fc-tab-active');
-      const overlaysOpen = !!((listModal && listModal.style.display==='flex') || (fieldPrompt && fieldPrompt.style.display==='flex') || (formWrap && !formWrap.classList.contains('card-form-collapsed')));
-      if(bar){
-        // Only show on Study tab and when no overlays are open
-        const shouldShow = isStudyActive && !overlaysOpen;
-        bar.classList.toggle('hidden', !shouldShow);
-        var visible = !bar.classList.contains('hidden');
-        if(root){ if(visible){ root.setAttribute('data-bottom-visible','1'); } else { root.removeAttribute('data-bottom-visible'); } }
-        if(visible){ try{ window.dispatchEvent(new Event('resize')); }catch(_e){} }
-      }
+    function updateBottomBarPlus(){
+      // Simply call updateBottomBar - no need for overlay checks on rating bar
+      // Rating bar shows ONLY on Study tab, edit bar handles Quick Input tab
+      updateBottomBar();
     }
 
     // Initial update

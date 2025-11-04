@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025110311; // YYYYMMDDXX. v0.7.9 - Fixed edit save bar visibility per tab
+$plugin->version   = 2025110312; // YYYYMMDDXX. v0.8.0 - Fixed bottom bars per-tab visibility
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.7.9-fix-edit-bar-visibility'; // Removed old .row2 with btnEasy/Normal/Hard
+$plugin->release   = '0.8.0-bottom-bars-per-tab'; // Study: rating bar, Quick Input: edit bar, Dashboard: nothing

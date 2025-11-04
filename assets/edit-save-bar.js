@@ -40,15 +40,13 @@
     if(sbUpdate){ sbUpdate.addEventListener('click', function(e){ try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();}catch(_){} btnUpdate.click(); }, true); }
     if(sbAdd){ sbAdd.addEventListener('click', function(e){ try{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();}catch(_){} btnAdd.click(); }, true); }
 
-    // Visibility: show when editing form is expanded or in edit-mode
+    // Visibility: show on Quick Input tab (always, regardless of form state)
     function refresh(){
-      var grid = $('.grid', root);
-      var formOpen = formWrap && !formWrap.classList.contains('card-form-collapsed');
-      var editMode = grid && grid.classList.contains('edit-mode');
       var isQuickInputActive = (function(){ try{ var q=document.getElementById('quickInputSection'); return q && q.classList.contains('fc-tab-active'); }catch(e){ return false; } })();
-      var visible = !!(formOpen || editMode) && isQuickInputActive;
-      // Hide rating bar while editing to avoid overlap
-      try{ var ratingBar = once('bottomActions'); if(ratingBar){ ratingBar.classList.toggle('hidden', visible); } }catch(_e){}
+      var visible = isQuickInputActive;
+      bar.classList.toggle('hidden', !visible);
+      // Show bar attribute for coordination
+      if(root){ if(visible){ root.setAttribute('data-edit-bar-visible','1'); } else { root.removeAttribute('data-edit-bar-visible'); } }
       // Mirror disabled state
       try{ sbUpdate.disabled = !!btnUpdate.disabled; }catch(_e){}
     }
