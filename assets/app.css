@@ -59,10 +59,20 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .header-stat{display:flex;align-items:center;gap:6px;font-size:14px;color:#e5e7eb;font-weight:600}
 .header-stat-icon{font-size:16px}
 @media (max-width:620px){
-  header{padding:16px 12px 12px 12px}
-  .header-logo{width:28px;height:28px}
-  .header-stat{font-size:13px}
+  header{padding:12px 8px 12px 8px}
+  .header-top{margin-bottom:8px}
+  .header-title-wrap{gap:6px;flex-shrink:1;min-width:0}
+  .header-logo{width:28px;height:28px;flex-shrink:0}
+  h1{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .header-actions{gap:8px;flex-shrink:0}
+  .header-stats{gap:10px}
+  .header-stat{font-size:13px;gap:4px}
   .header-stat-icon{font-size:14px}
+  /* Tabs: reduce padding and gap */
+  .fc-tabs{margin-bottom:16px;padding:0}
+  .fc-tab{padding:12px 8px;gap:6px;font-size:14px}
+  .fc-tab-icon{font-size:18px}
+  .fc-tab-label{font-size:13px}
 }
 .install-btn-compact{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;background:rgba(103,126,234,0.15);border:1px solid rgba(103,126,234,0.3);border-radius:8px;color:#9ca3af;transition:all 0.2s}
 .install-btn-compact:hover{background:rgba(103,126,234,0.25);color:#e5e7eb}
