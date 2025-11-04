@@ -1611,6 +1611,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         document.body.appendChild(debugDiv);
       }
       function updateDebug(){
+        const fpBox = fp.querySelector('.box');
         const info = [
           'ZOOM DEBUG INFO:',
           `body.offsetWidth: ${document.body.offsetWidth}px`,
@@ -1621,7 +1622,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           `body.style.width: ${document.body.style.width}`,
           `html.style.width: ${document.documentElement.style.width}`,
           `scrollX: ${window.scrollX}, scrollY: ${window.scrollY}`,
-          `modal.offsetWidth: ${fp.offsetWidth}px`
+          `modal.offsetWidth: ${fp.offsetWidth}px`,
+          `modal.box.offsetWidth: ${fpBox ? fpBox.offsetWidth : 'N/A'}px`,
+          `modal.box.scrollWidth: ${fpBox ? fpBox.scrollWidth : 'N/A'}px`
         ];
         debugDiv.innerHTML = info.join('<br>');
       }
@@ -1636,6 +1639,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       document.documentElement.style.overflow = 'hidden'; document.documentElement.style.width = '100vw';
       const container = document.getElementById('mod_flashcards_container');
       if(container){ container.style.width = '100vw'; container.style.maxWidth = '100vw'; container.style.overflow = 'hidden'; }
+      fp.style.width = '100vw'; fp.style.maxWidth = '100vw'; fp.style.left = '0'; fp.style.right = '0'; fp.style.padding = '8px'; fp.style.boxSizing = 'border-box'; fp.style.margin = '0';
+      const fpBox = fp.querySelector('.box');
+      if(fpBox){ fpBox.style.maxWidth = 'calc(100vw - 16px)'; fpBox.style.width = 'calc(100vw - 16px)'; fpBox.style.margin = '0 auto'; fpBox.style.boxSizing = 'border-box'; }
       window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
       updateDebug();
