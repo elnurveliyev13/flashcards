@@ -1602,6 +1602,29 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
+      // DIAGNOSTIC MODE: Show debug info on screen
+      let debugDiv = document.getElementById('zoomDebug');
+      if(!debugDiv){
+        debugDiv = document.createElement('div');
+        debugDiv.id = 'zoomDebug';
+        debugDiv.style.cssText = 'position:fixed;top:60px;left:10px;right:10px;background:rgba(255,0,0,0.9);color:#fff;padding:8px;font-size:11px;z-index:99999;border-radius:6px;max-height:180px;overflow:auto;font-family:monospace;line-height:1.3';
+        document.body.appendChild(debugDiv);
+      }
+      function updateDebug(){
+        const info = [
+          'ZOOM DEBUG INFO:',
+          `body.offsetWidth: ${document.body.offsetWidth}px`,
+          `body.scrollWidth: ${document.body.scrollWidth}px`,
+          `window.innerWidth: ${window.innerWidth}px`,
+          `visualViewport: ${window.visualViewport ? window.visualViewport.width : 'N/A'}px`,
+          `zoom: ${window.visualViewport ? (window.innerWidth / window.visualViewport.width).toFixed(2) : 'N/A'}`,
+          `body.style.width: ${document.body.style.width}`,
+          `html.style.width: ${document.documentElement.style.width}`,
+          `scrollX: ${window.scrollX}, scrollY: ${window.scrollY}`,
+          `modal.offsetWidth: ${fp.offsetWidth}px`
+        ];
+        debugDiv.innerHTML = info.join('<br>');
+      }
       // AGGRESSIVE FIX: Prevent zoom on modal open (fixes old devices like Xiaomi Mi1, iPhone SE 2020)
       const viewportMeta = document.querySelector('meta[name="viewport"]');
       const originalViewport = viewportMeta ? viewportMeta.getAttribute('content') : null;
@@ -1609,16 +1632,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const htmlOriginalStyle = {overflow: document.documentElement.style.overflow, width: document.documentElement.style.width};
       if(viewportMeta){ viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no'); }
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden'; document.body.style.position = 'relative'; document.body.style.width = '100vw'; document.body.style.transform = 'translate3d(0,0,0)';
+      document.body.style.overflow = 'hidden'; document.body.style.position = 'fixed'; document.body.style.width = '100vw'; document.body.style.left = '0'; document.body.style.right = '0'; document.body.style.transform = 'translate3d(0,0,0)';
       document.documentElement.style.overflow = 'hidden'; document.documentElement.style.width = '100vw';
+      const container = document.getElementById('mod_flashcards_container');
+      if(container){ container.style.width = '100vw'; container.style.maxWidth = '100vw'; container.style.overflow = 'hidden'; }
       window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
-      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; }, 0);
+      updateDebug();
+      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; updateDebug(); }, 50);
+      setTimeout(()=>{ updateDebug(); }, 200);
       function close(){
         fp.style.display='none';
+        if(debugDiv && debugDiv.parentNode){ debugDiv.parentNode.removeChild(debugDiv); }
         document.body.classList.remove('modal-open');
-        document.body.style.overflow = bodyOriginalStyle.overflow; document.body.style.position = bodyOriginalStyle.position; document.body.style.width = bodyOriginalStyle.width; document.body.style.transform = bodyOriginalStyle.transform;
+        document.body.style.overflow = bodyOriginalStyle.overflow; document.body.style.position = bodyOriginalStyle.position; document.body.style.width = bodyOriginalStyle.width; document.body.style.transform = bodyOriginalStyle.transform; document.body.style.left = ''; document.body.style.right = '';
         document.documentElement.style.overflow = htmlOriginalStyle.overflow; document.documentElement.style.width = htmlOriginalStyle.width;
+        if(container){ container.style.width = ''; container.style.maxWidth = ''; container.style.overflow = ''; }
         if(viewportMeta && originalViewport){ viewportMeta.setAttribute('content', originalViewport); }
         setTimeout(()=>{ window.scrollTo(0, 0); }, 0);
       }
