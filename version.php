@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025110304; // YYYYMMDDXX. v0.7.3 - Audio file picker fix for iOS
+$plugin->version   = 2025110305; // YYYYMMDDXX. v0.7.3 - iOS audio picker - use label instead of button
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.7.2-audio-picker-fix'; // Fixed audio file picker on iOS, added badges
+$plugin->release   = '0.7.3-ios-audio-fix'; // iOS: label+specific MIME types instead of accept="audio/*"

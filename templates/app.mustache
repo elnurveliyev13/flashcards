@@ -67,11 +67,11 @@
                 </button>
               </div>
               <div class="fc-media-actions">
-                <button id="btnAudioUpload" class="fc-link-btn fc-media-subaction">{{#str}} choosefile, mod_flashcards {{/str}}</button>
+                <label for="uAudio" class="fc-link-btn fc-media-subaction" style="cursor:pointer;margin:0">{{#str}} choosefile, mod_flashcards {{/str}}</label>
               </div>
             </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
-            <input id="uAudio" type="file" accept="audio/*" class="hidden">
+            <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
             <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
             <input id="uImage" type="file" accept="image/*" class="hidden">
             <div class="fc-media-badges">

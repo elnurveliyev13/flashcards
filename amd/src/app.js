@@ -304,12 +304,7 @@ define(['core/str'], function(str) {
     let camStream=null, rec=null, recChunks=[], lastImageKey=null, lastAudioKey=null;
     $("#btnChooseImg").addEventListener("click",()=>$("#uImage").click());
     $("#btnChooseAud").addEventListener("click",()=>$("#uAudio").click());
-    // Quick Input section - audio upload button
-    const btnAudioUpload = $("#btnAudioUpload");
-    if(btnAudioUpload) {
-      btnAudioUpload.addEventListener("click",()=>$("#uAudio").click());
-    }
-    // Quick Input section - image picker button
+    // Quick Input section - image picker button (audio now uses <label>)
     const btnImagePicker = $("#btnImagePicker");
     if(btnImagePicker) {
       btnImagePicker.addEventListener("click",()=>$("#uImage").click());
