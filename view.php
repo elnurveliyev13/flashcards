@@ -59,7 +59,11 @@ if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
     echo $OUTPUT->footer();
     exit;
 }
-echo $OUTPUT->render_from_template('mod_flashcards/app', []);
+// Prepare template context with logo URL
+$templatecontext = [
+    'logourl' => $OUTPUT->image_url('logo(192x192)', 'mod_flashcards')->out(false)
+];
+echo $OUTPUT->render_from_template('mod_flashcards/app', $templatecontext);
 echo $OUTPUT->footer();
 
 
