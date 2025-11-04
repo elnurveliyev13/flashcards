@@ -1609,10 +1609,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const htmlOriginalStyle = {overflow: document.documentElement.style.overflow, width: document.documentElement.style.width};
       if(viewportMeta){ viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no'); }
       document.body.classList.add('modal-open');
-      document.body.style.overflow = 'hidden'; document.body.style.position = 'fixed'; document.body.style.width = '100vw'; document.body.style.left = '0'; document.body.style.right = '0'; document.body.style.transform = 'translate3d(0,0,0)';
-      document.documentElement.style.overflow = 'hidden'; document.documentElement.style.width = '100vw';
       const container = document.getElementById('mod_flashcards_container');
-      if(container){ container.style.width = '100vw'; container.style.maxWidth = '100vw'; container.style.overflow = 'hidden'; }
       const realWidth = window.innerWidth || document.documentElement.clientWidth;
       fp.style.width = realWidth + 'px'; fp.style.maxWidth = realWidth + 'px'; fp.style.left = '0px'; fp.style.right = '0px'; fp.style.top = '0px'; fp.style.bottom = '0px'; fp.style.padding = '8px'; fp.style.boxSizing = 'border-box'; fp.style.margin = '0'; fp.style.position = 'fixed';
       const fpBox = fp.querySelector('.box');
