@@ -45,8 +45,8 @@
       var grid = $('.grid', root);
       var formOpen = formWrap && !formWrap.classList.contains('card-form-collapsed');
       var editMode = grid && grid.classList.contains('edit-mode');
-      var isQuickInputActive = (function(){ try{ var q=document.getElementById('quickInputSection'); return q && q.classList.contains('fc-tab-active'); }catch(e){ return false; } })();
-      var visible = !!(formOpen || editMode) && isQuickInputActive;
+      var visible = !!(formOpen || editMode);
+      bar.classList.toggle('hidden', !visible);
       // Hide rating bar while editing to avoid overlap
       try{ var ratingBar = once('bottomActions'); if(ratingBar){ ratingBar.classList.toggle('hidden', visible); } }catch(_e){}
       // Mirror disabled state
@@ -59,7 +59,6 @@
     try{ var grid=$('.grid', root); if(grid){ new MutationObserver(refresh).observe(grid, {attributes:true, attributeFilter:['class']}); } }catch(_e){}
     // Also observe button disabled state
     try{ new MutationObserver(refresh).observe(btnUpdate, {attributes:true, attributeFilter:['disabled']}); }catch(_e){}
-    try{ var qis=document.getElementById('quickInputSection'); if(qis){ new MutationObserver(refresh).observe(qis, {attributes:true, attributeFilter:['class']}); } }catch(_e){}
 
     return true;
   }
