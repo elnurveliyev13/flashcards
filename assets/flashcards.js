@@ -10,6 +10,63 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const $$ = s => Array.from(root.querySelectorAll(s));
     const uniq = a => [...new Set(a.filter(Boolean))];
 
+    // === DEBUG PANEL FUNCTIONS (mobile only) ===
+    let debugHistory = [];
+    function getDebugMetrics(){
+      const html = document.documentElement;
+      const body = document.body;
+      const container = document.getElementById('mod_flashcards_container');
+      const bodyStyles = window.getComputedStyle(body);
+      return {
+        viewport: { innerWidth: window.innerWidth, innerHeight: window.innerHeight, clientWidth: html.clientWidth, clientHeight: html.clientHeight, scrollWidth: html.scrollWidth, scrollHeight: html.scrollHeight },
+        body: { clientWidth: body.clientWidth, scrollWidth: body.scrollWidth, offsetWidth: body.offsetWidth, clientHeight: body.clientHeight, scrollHeight: body.scrollHeight, offsetHeight: body.offsetHeight },
+        container: container ? { clientWidth: container.clientWidth, scrollWidth: container.scrollWidth, offsetWidth: container.offsetWidth, clientHeight: container.clientHeight, scrollHeight: container.scrollHeight } : {},
+        bodyStyles: { position: bodyStyles.position, width: bodyStyles.width, maxWidth: bodyStyles.maxWidth, overflow: bodyStyles.overflow, overflowX: bodyStyles.overflowX, transform: bodyStyles.transform }
+      };
+    }
+    function updateDebugPanel(){
+      const m = getDebugMetrics();
+      const dbgViewport = document.getElementById('dbgViewport');
+      const dbgBody = document.getElementById('dbgBody');
+      const dbgContainer = document.getElementById('dbgContainer');
+      const dbgBodyStyles = document.getElementById('dbgBodyStyles');
+      if(dbgViewport) dbgViewport.textContent = `inner:${m.viewport.innerWidth}x${m.viewport.innerHeight} | client:${m.viewport.clientWidth}x${m.viewport.clientHeight} | scroll:${m.viewport.scrollWidth}x${m.viewport.scrollHeight}`;
+      if(dbgBody) dbgBody.textContent = `client:${m.body.clientWidth} | scroll:${m.body.scrollWidth} | offset:${m.body.offsetWidth} | h:${m.body.clientHeight}/${m.body.scrollHeight}/${m.body.offsetHeight}`;
+      if(dbgContainer) dbgContainer.textContent = `client:${m.container.clientWidth} | scroll:${m.container.scrollWidth} | offset:${m.container.offsetWidth}`;
+      if(dbgBodyStyles) dbgBodyStyles.textContent = `pos:${m.bodyStyles.position} | w:${m.bodyStyles.width} | max:${m.bodyStyles.maxWidth} | ovf:${m.bodyStyles.overflow}/${m.bodyStyles.overflowX} | tf:${m.bodyStyles.transform}`;
+      return m;
+    }
+    function logDebugHistory(event, metrics){
+      const entry = { time: new Date().toLocaleTimeString(), event: event, bodyWidth: metrics.body.clientWidth, containerWidth: metrics.container.clientWidth, viewportWidth: metrics.viewport.innerWidth, cropped: metrics.body.scrollWidth > metrics.body.clientWidth };
+      debugHistory.push(entry);
+      console.log(`[DEBUG ${event}]`, entry);
+      const dbgHistory = document.getElementById('dbgHistory');
+      if(dbgHistory){
+        const historyText = debugHistory.map(h => `${h.time} ${h.event}: vp=${h.viewportWidth} body=${h.bodyWidth} cont=${h.containerWidth} ${h.cropped ? '⚠️CROPPED' : '✓OK'}`).join(' | ');
+        dbgHistory.textContent = 'HISTORY: ' + historyText;
+      }
+    }
+    function initDebugPanel(){
+      const debugToggle = document.getElementById('debugToggle');
+      const debugPanel = document.getElementById('debugPanel');
+      const rightEdgeLine = document.getElementById('rightEdgeLine');
+      if(debugToggle && debugPanel && rightEdgeLine){
+        debugToggle.addEventListener('click', () => {
+          debugPanel.classList.toggle('active');
+          rightEdgeLine.classList.toggle('active');
+          if(debugPanel.classList.contains('active')){
+            const metrics = updateDebugPanel();
+            logDebugHistory('PANEL_OPENED', metrics);
+          }
+        });
+        // Auto-update on resize
+        const resizeObserver = new ResizeObserver(() => { if(debugPanel.classList.contains('active')) updateDebugPanel(); });
+        resizeObserver.observe(document.body);
+        if(document.getElementById('mod_flashcards_container')) resizeObserver.observe(document.getElementById('mod_flashcards_container'));
+      }
+    }
+    // === END DEBUG PANEL ===
+
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
 
@@ -1607,6 +1664,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const originalViewport = viewportMeta ? viewportMeta.getAttribute('content') : null;
       const bodyOriginalStyle = {overflow: document.body.style.overflow, position: document.body.style.position, width: document.body.style.width, transform: document.body.style.transform};
       const htmlOriginalStyle = {overflow: document.documentElement.style.overflow, width: document.documentElement.style.width};
+      // DEBUG: Log before modal open
+      if(window.innerWidth <= 620){ const beforeMetrics = updateDebugPanel(); logDebugHistory('BEFORE_OPEN', beforeMetrics); }
       if(viewportMeta){ viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, shrink-to-fit=no'); }
       document.body.classList.add('modal-open');
       const container = document.getElementById('mod_flashcards_container');
@@ -1616,8 +1675,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(fpBox){ const boxWidth = realWidth - 16; fpBox.style.maxWidth = boxWidth + 'px'; fpBox.style.width = boxWidth + 'px'; fpBox.style.margin = '0 auto'; fpBox.style.boxSizing = 'border-box'; }
       window.scrollTo(0, 0); document.body.scrollTop = 0; document.documentElement.scrollTop = 0;
       fp.style.display='flex';
-      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; }, 50);
+      setTimeout(()=>{ window.scrollTo(0, 0); void fp.offsetHeight; if(window.innerWidth <= 620){ const afterMetrics = updateDebugPanel(); logDebugHistory('AFTER_OPEN', afterMetrics); } }, 50);
       function close(){
+        // DEBUG: Log before close
+        if(window.innerWidth <= 620){ const beforeMetrics = updateDebugPanel(); logDebugHistory('BEFORE_CLOSE', beforeMetrics); }
         fp.style.display='none';
         document.body.classList.remove('modal-open');
         document.body.style.cssText = '';
@@ -1630,6 +1691,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           document.documentElement.style.cssText = '';
           if(container){ container.style.cssText = ''; }
           void document.body.offsetHeight;
+          // DEBUG: Log after close
+          if(window.innerWidth <= 620){ const afterMetrics = updateDebugPanel(); logDebugHistory('AFTER_CLOSE', afterMetrics); }
         }, 10);
       }
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
@@ -2000,6 +2063,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Load dashboard data on page load (to update header stats and badges)
       loadDashboard();
+
+      // Initialize debug panel (mobile only)
+      initDebugPanel();
     })();
 
     // ========== QUICK EDITOR PANEL ==========
