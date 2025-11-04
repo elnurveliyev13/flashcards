@@ -398,7 +398,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-tab-label {
-  display: none;
+  display: none !important;
 }
 
 .fc-tab-badge {
@@ -420,11 +420,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 /* Tab Content */
 .fc-tab-content {
-  display: none;
+  display: none !important;
 }
 
 .fc-tab-content.fc-tab-active {
-  display: block;
+  display: block !important;
 }
 
 /* ========== QUICK INPUT SECTION (v0.7.0) ========== */
@@ -588,7 +588,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-quick-field label {
-  display: block;
+  display: block !important;
   font-size: 13px;
   font-weight: 500;
   color: var(--text-dim);
