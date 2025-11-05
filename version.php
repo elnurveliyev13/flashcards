@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025110313; // YYYYMMDDXX. v0.9.0 - Unified bottom bar controller architecture
+$plugin->version   = 2025110418; // YYYYMMDDXX. v0.9.0 - Unified bottom bar controller architecture
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.9.0-unified-controller'; // Single controller manages rating + edit bars
