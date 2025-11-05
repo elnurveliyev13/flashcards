@@ -46,13 +46,13 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .header-stat-icon{font-size:16px}
 @media (max-width:620px){
   header{padding:12px 0 12px 0}
-  .header-top{margin-bottom:8px}
-  .header-title-wrap{gap:6px;flex-shrink:1;min-width:0}
+  .header-top{margin-bottom:8px;gap:8px}
+  .header-title-wrap{gap:6px;flex-shrink:1;min-width:0;overflow:hidden}
   .header-logo{width:42px;height:42px;flex-shrink:0}
-  h1{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .header-actions{gap:8px;flex-shrink:0}
-  .header-stats{gap:8px}
-  .header-stat{font-size:13px;gap:4px}
+  h1{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1}
+  .header-actions{gap:6px;flex-shrink:0;min-width:0}
+  .header-stats{gap:6px;flex-shrink:1;min-width:0}
+  .header-stat{font-size:13px;gap:3px;flex-shrink:0}
   .header-stat-icon{font-size:14px}
   /* Tabs: reduce padding and gap */
   .fc-tabs{margin-bottom:16px;padding:0}
@@ -64,13 +64,13 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 @media (max-width:370px){
   .wrap{padding-left:14px;padding-right:14px}
   header{padding:8px 0 8px 0}
-  .header-top{margin-bottom:4px}
-  .header-title-wrap{gap:3px;flex-shrink:1;min-width:0}
+  .header-top{margin-bottom:4px;gap:6px}
+  .header-title-wrap{gap:3px;flex-shrink:1;min-width:0;overflow:hidden}
   .header-logo{width:30px;height:30px;flex-shrink:0}
-  h1{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .header-actions{gap:3px;flex-shrink:0}
-  .header-stats{gap:3px}
-  .header-stat{font-size:11px;gap:1px}
+  h1{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1}
+  .header-actions{gap:4px;flex-shrink:0;min-width:0}
+  .header-stats{gap:4px;flex-shrink:1;min-width:0}
+  .header-stat{font-size:11px;gap:2px;flex-shrink:0}
   .header-stat-icon{font-size:11px}
   /* Tabs: hide text labels, show only icons */
   .fc-tabs{margin-bottom:12px;padding:0}
