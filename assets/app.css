@@ -451,7 +451,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-tab-label {
-  display: none !important;
+  display: inline;
 }
 
 .fc-tab-badge {
@@ -463,17 +463,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-weight: 600;
   min-width: 20px;
   text-align: center;
-}
-
-@media (min-width: 480px) {
-  .fc-tab-label {
-    display: inline;
-  }
-}
-
-/* Tab Content */
-.fc-tab-content {
-  display: none !important;
 }
 
 .fc-tab-content.fc-tab-active {
