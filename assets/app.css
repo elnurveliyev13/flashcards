@@ -47,7 +47,11 @@ button{background:var(--btn);color:#d1d5db;border:1px solid #374151;border-radiu
 button:hover{filter:brightness(1.05)}
 button:disabled{opacity:0.5;cursor:not-allowed}
 button:disabled:hover{filter:none}
-.iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}`r`n  .iconbtn.ghost{background:#0b1220;border:1px solid #374151}`r`n  .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}`r`n  .iconbtn.plus{font-size:20px}`r`n  .iconbtn.cross{font-size:20px}
+.iconbtn{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px}
+.iconbtn.ghost{background:#0b1220;border:1px solid #374151}
+.iconbtn .rot{display:inline-block; transform:rotate(-25deg)}
+.iconbtn.plus{font-size:20px}
+.iconbtn.cross{font-size:20px}
 .iconbtn, .btnFile{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
 .iconbtn *{ pointer-events:none }
 .iconbtn.recording{ background:#7f1d1d; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6) }
@@ -56,7 +60,7 @@ button:disabled:hover{filter:none}
 .rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
 .micbtn{ width:72px; height:72px; border-radius:50%; font-size:32px; display:inline-flex; align-items:center; justify-content:center }
 .rec-hint{ color:var(--muted); font-size:13px }
-`r`n
+
 select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:12px;padding:10px 12px;font-size:14px}
 #langSel{padding:6px 10px;font-size:13px;min-width:60px}
 .grid{display:grid;grid-template-columns:1fr;gap:14px}
@@ -79,7 +83,8 @@ select{background:#0b1220;color:#d1d5db;border:1px solid #374151;border-radius:1
 .back{color:#e2e8f0}
 .table td{color:#e5e7eb}
 .table th{color:#f1f5f9}
-textarea, input[type=search]{color:#f1f5f9}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
+textarea, input[type=search]{color:#f1f5f9}
+#listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
 /* Make text inputs visually consistent with textareas */
 input[type=text]{color:#f1f5f9; background:#0b1220; border:1px solid #374151; border-radius:10px; padding:10px}
 textarea::placeholder{color:#64748b;opacity:0.7}
@@ -134,9 +139,12 @@ audio{max-width:260px}
 .modal>.box{max-width:960px;width:100%;max-height:85vh;overflow:auto;background:#0b1220;border:1px solid #374151;border-radius:16px;padding:16px}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{border-bottom:1px solid #253047;padding:8px;text-align:left;font-size:14px}
-.table th{color:#9aa3b1;font-weight:600;position:sticky;top:0;background:#0b1220}`r`n  .table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}`r`n
+.table th{color:#9aa3b1;font-weight:600;position:sticky;top:0;background:#0b1220}
+.table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}
+
 input[type=search]{background:#0b1220;border:1px solid #374151;border-radius:12px;color:#e5e7eb;padding:8px 10px}
-#mod_flashcards_container input[type=search]{background:#0b1220 !important;border-color:#374151 !important;color:#e5e7eb !important;}`r`n  #listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
+#mod_flashcards_container input[type=search]{background:#0b1220 !important;border-color:#374151 !important;color:#e5e7eb !important;}
+#listSearch{ height:38px; padding:8px 14px; border-radius:14px; border-color:#3b4456 }
 .badge{padding:2px 8px;border-radius:999px;border:1px solid #374151;font-size:12px;background:#0b1220}
 #listSearch{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; padding:8px 14px; border-radius:12px !important; }
 #listFilterDue{ background:#0b1220 !important; border:1px solid #374151 !important; color:#e5e7eb !important; height:36px; border-radius:12px !important; }
@@ -299,8 +307,53 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 #mod_flashcards_container.fs-active .wrap{max-width:none;width:100%;min-height:100%;padding-left:12px;padding-right:12px}
 /* On iOS account for safe areas */
 @supports(padding:max(env(safe-area-inset-bottom),0px)){
-  #mod_flashcards_container.fs-active{padding-bottom:max(env(safe-area-inset-bottom),0px)}
+  #mod_flashcards_container.fs-active{
+    padding-bottom:max(env(safe-area-inset-bottom),0px);
+    padding-top:max(env(safe-area-inset-top),0px);
+    padding-left:max(env(safe-area-inset-left),0px);
+    padding-right:max(env(safe-area-inset-right),0px);
+  }
+  /* Additional safe-area support for header and other elements */
+  header{
+    padding-top: max(16px, calc(16px + env(safe-area-inset-top)));
+  }
+  .bottom-actions{
+    padding-left: max(14px, calc(14px + env(safe-area-inset-left)));
+    padding-right: max(14px, calc(14px + env(safe-area-inset-right)));
+  }
 }
+/* Orientation-specific adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Landscape mode on small screens - adjust bottom bar positioning */
+  .bottom-actions {
+    padding-top: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+  .bottom-actions button {
+    padding: 12px 16px;
+    font-size: 14px;
+    max-width: 120px;
+  }
+  /* Reduce header padding in landscape */
+  header {
+    padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
+    padding-bottom: 8px;
+  }
+  .header-top {
+    margin-bottom: 8px;
+  }
+  /* Adjust card padding for landscape */
+  .card {
+    padding: 12px;
+  }
+  .front {
+    font-size: 28px;
+  }
+  .back {
+    font-size: 16px;
+  }
+}
+
 /* Mobile offsets removed - now handled globally with padding */
 /* Rating buttons inside the card: match fixed bar palette */
 .row2 .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
