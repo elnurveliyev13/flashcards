@@ -383,7 +383,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   color: var(--text-dim);
   padding: 14px 16px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: clamp(12px, 3vw, 16px);
   font-weight: 500;
   display: flex;
   align-items: center;
