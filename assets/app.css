@@ -30,8 +30,8 @@ input, textarea, select{font-size:16px !important}
 #mod_flashcards_container input[type="text"],
 #mod_flashcards_container input[type="search"]{-webkit-user-select:text;user-select:text}
 @media (max-width:620px){
-  /* On small screens, remove side paddings and stretch to full width */
-  .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
+  /* On small screens, keep minimal side padding */
+  .wrap{max-width:none;width:100%;padding-left:8px;padding-right:8px}
   /* FIX: Remove problematic calc() that breaks on old devices */
   #mod_flashcards_container{
     width:100vw !important;
@@ -59,7 +59,7 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .header-stat{display:flex;align-items:center;gap:6px;font-size:14px;color:#e5e7eb;font-weight:600}
 .header-stat-icon{font-size:16px}
 @media (max-width:620px){
-  header{padding:12px 8px 12px 8px}
+  header{padding:12px 0 12px 0}
   .header-top{margin-bottom:8px}
   .header-title-wrap{gap:6px;flex-shrink:1;min-width:0}
   .header-logo{width:28px;height:28px;flex-shrink:0}
@@ -76,7 +76,7 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 }
 /* Extra small devices (Xiaomi Mi 1, old Android) - 360px and smaller */
 @media (max-width:370px){
-  header{padding:8px 6px 8px 6px}
+  header{padding:8px 0 8px 0}
   .header-top{margin-bottom:4px}
   .header-title-wrap{gap:3px;flex-shrink:1;min-width:0}
   .header-logo{width:20px;height:20px;flex-shrink:0}
@@ -86,7 +86,7 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
   .header-stat{font-size:11px;gap:1px}
   .header-stat-icon{font-size:11px}
   /* Tabs: hide text labels, show only icons */
-  .fc-tabs{margin-bottom:12px;padding:0 6px}
+  .fc-tabs{margin-bottom:12px;padding:0}
   .fc-tab{padding:8px 4px;gap:0;font-size:13px;flex-direction:column;min-width:0}
   .fc-tab-icon{font-size:17px}
   .fc-tab-label{display:none !important}
