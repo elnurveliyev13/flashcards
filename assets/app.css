@@ -17,7 +17,7 @@ input, textarea, select{font-size:16px !important}
 #mod_flashcards_container input[type="search"]{-webkit-user-select:text;user-select:text}
 @media (max-width:620px){
   /* On small screens, keep comfortable side padding */
-  .wrap{max-width:none;width:100%;padding-left:12px;padding-right:12px}
+  .wrap{max-width:none;width:100%;padding-left:16px;padding-right:16px;box-sizing:border-box}
   /* FIX: Remove problematic calc() that breaks on old devices */
   #mod_flashcards_container{
     width:100vw !important;
@@ -38,7 +38,7 @@ input, textarea, select{font-size:16px !important}
 header{padding:16px 18px 12px 18px}
 .header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .header-title-wrap{display:flex;align-items:center;gap:10px}
-.header-logo{width:32px;height:32px;object-fit:contain}
+.header-logo{width:48px;height:48px;object-fit:contain}
 h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 .header-actions{display:flex;gap:12px;align-items:center}
 .header-stats{display:flex;gap:16px;align-items:center}
@@ -48,10 +48,10 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
   header{padding:12px 0 12px 0}
   .header-top{margin-bottom:8px}
   .header-title-wrap{gap:6px;flex-shrink:1;min-width:0}
-  .header-logo{width:28px;height:28px;flex-shrink:0}
+  .header-logo{width:42px;height:42px;flex-shrink:0}
   h1{font-size:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .header-actions{gap:8px;flex-shrink:0}
-  .header-stats{gap:10px}
+  .header-stats{gap:8px}
   .header-stat{font-size:13px;gap:4px}
   .header-stat-icon{font-size:14px}
   /* Tabs: reduce padding and gap */
@@ -62,10 +62,11 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 }
 /* Extra small devices (Xiaomi Mi 1, old Android) - 360px and smaller */
 @media (max-width:370px){
+  .wrap{padding-left:14px;padding-right:14px}
   header{padding:8px 0 8px 0}
   .header-top{margin-bottom:4px}
   .header-title-wrap{gap:3px;flex-shrink:1;min-width:0}
-  .header-logo{width:20px;height:20px;flex-shrink:0}
+  .header-logo{width:30px;height:30px;flex-shrink:0}
   h1{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .header-actions{gap:3px;flex-shrink:0}
   .header-stats{gap:3px}
@@ -545,6 +546,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  padding: 0;
+  margin: 0;
 }
 
 .fc-quick-media-btn.fc-media-large {
@@ -560,6 +563,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   width: auto !important;
   height: auto !important;
   border-radius: 12px !important;
+  /* Center within grid cell */
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .fc-quick-media-btn.fc-media-large .fc-media-icon {
