@@ -17,7 +17,16 @@ input, textarea, select{font-size:16px !important}
 #mod_flashcards_container input[type="search"]{-webkit-user-select:text;user-select:text}
 @media (max-width:620px){
   /* On small screens, keep comfortable side padding */
-  .wrap{max-width:none;width:100%;padding-left:16px;padding-right:16px;box-sizing:border-box}
+  .wrap{
+    max-width:none;
+    width:100%;
+    padding-left:16px;
+    padding-right:16px;
+    box-sizing:border-box;
+    /* Add safe area insets for iOS PWA */
+    padding-left:max(16px, env(safe-area-inset-left));
+    padding-right:max(16px, env(safe-area-inset-right));
+  }
   /* FIX: Remove problematic calc() that breaks on old devices */
   #mod_flashcards_container{
     width:100vw !important;
@@ -62,7 +71,13 @@ h1{margin:0;font-size:20px;color:#f8fafc;font-weight:700}
 }
 /* Extra small devices (Xiaomi Mi 1, old Android) - 360px and smaller */
 @media (max-width:370px){
-  .wrap{padding-left:14px;padding-right:14px}
+  .wrap{
+    padding-left:14px;
+    padding-right:14px;
+    /* Add safe area insets for iOS PWA */
+    padding-left:max(14px, env(safe-area-inset-left));
+    padding-right:max(14px, env(safe-area-inset-right));
+  }
   header{padding:8px 0 8px 0}
   .header-top{margin-bottom:4px;gap:6px}
   .header-title-wrap{gap:3px;flex-shrink:1;min-width:0;overflow:hidden}
