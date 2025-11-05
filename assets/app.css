@@ -465,6 +465,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   text-align: center;
 }
 
+.fc-tab-content {
+  display: none !important;
+}
+
 .fc-tab-content.fc-tab-active {
   display: block !important;
 }
