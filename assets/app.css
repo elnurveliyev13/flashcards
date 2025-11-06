@@ -752,11 +752,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-tab-content {
-  display: none !important;
+  display: none;
 }
 
 .fc-tab-content.fc-tab-active {
-  display: block !important;
+  display: block;
 }
 
 /* ========== QUICK INPUT SECTION (v0.7.0) ========== */
