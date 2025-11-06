@@ -1,6 +1,6 @@
 {
-  "name": "Карточки SRS",
-  "short_name": "SRS Cards",
+  "name": "MyMemory_ABCnorsk",
+  "short_name": "MyMemory",
   "start_url": "/mod/flashcards/my/index.php",
   "scope": "/mod/flashcards/",
   "display": "standalone",

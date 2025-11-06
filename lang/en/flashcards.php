@@ -11,7 +11,7 @@ $string['pluginadministration'] = 'Flashcards administration';
 $string['flashcardsname'] = 'Activity name';
 
 // App UI strings
-$string['app_title'] = 'SRS Cards';
+$string['app_title'] = 'MyMemory';
 $string['intervals'] = 'Intervals: 1,3,7,15,31,62,125,251';
 $string['export'] = 'Export';
 $string['import'] = 'Import';
