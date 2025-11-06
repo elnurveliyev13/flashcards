@@ -1020,6 +1020,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       let holdActive = false;
       let activePointerToken = null;
+      let holdTimeout = null;
       function onDown(e){
         if(e.type === 'mousedown' && e.button !== 0) return;
         if(e.pointerType === 'mouse' && e.button !== 0) return;
@@ -1027,10 +1028,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         holdActive = true;
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
-        const startPromise = startRecording();
-        if(startPromise && typeof startPromise.then === 'function'){
-          startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
-        }
+        // Add 0.5-second delay before starting recording to prevent accidental permission requests
+        holdTimeout = setTimeout(() => {
+          const startPromise = startRecording();
+          if(startPromise && typeof startPromise.then === 'function'){
+            startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
+          }
+        }, 500);
         function onceUp(ev){
           if(activePointerToken !== null){
             if(typeof activePointerToken === 'number'){
@@ -1044,6 +1048,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           window.removeEventListener("touchcancel", onceUp);
           holdActive = false;
           activePointerToken = null;
+          // Clear the timeout if button released before delay
+          if(holdTimeout){
+            clearTimeout(holdTimeout);
+            holdTimeout = null;
+          }
           const stopPromise = stopRecording();
           if(stopPromise && typeof stopPromise.then === 'function'){
             stopPromise.catch(err=>{ recorderLog('stop promise rejected: '+(err?.message||err)); });
