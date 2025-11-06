@@ -1350,10 +1350,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }catch(e){
         console.error('upsert_card error:', e);
-        // Check if it's an access error
+        // Check if it's an access error and provide specific messaging
         if(e.message && (e.message.includes('access') || e.message.includes('grace') || e.message.includes('blocked'))) {
-          $("#status").textContent = "Access denied. Cannot create cards.";
-          setTimeout(()=>$("#status").textContent="", 3000);
+          // Determine specific error message based on access status
+          let errorMessage = "Access denied. Cannot create cards.";
+          if (window.flashcardsAccessInfo) {
+            const access = window.flashcardsAccessInfo;
+            if (access.status === 'grace') {
+              const daysLeft = access.days_remaining || 0;
+              errorMessage = (M?.str?.mod_flashcards?.access_status_grace || 'Grace Period ({$a} days remaining)').replace('{$a}', daysLeft) +
+                           ': ' + (M?.str?.mod_flashcards?.access_create_blocked || 'You cannot create new cards without an active course enrolment.');
+            } else if (access.status === 'expired') {
+              errorMessage = (M?.str?.mod_flashcards?.access_status_expired || 'Access Expired') +
+                           ': ' + (M?.str?.mod_flashcards?.access_expired_message || 'You no longer have access to flashcards. Please enrol in a course to regain access.');
+            }
+          }
+          $("#status").textContent = errorMessage;
+          setTimeout(()=>$("#status").textContent="", 5000); // Show longer for access errors
           return; // STOP - don't save to localStorage
         }
         // For other errors (network, etc), continue with local save
@@ -1814,10 +1827,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       debugLog('[Flashcards] Cache cleared successfully');
     }
 
-    // Check access permissions and hide card creation form if needed
+    // Check access permissions and show status banner
     if (window.flashcardsAccessInfo) {
       const access = window.flashcardsAccessInfo;
       debugLog('[Flashcards] Access info:', access);
+
+      // Show access status banner
+      showAccessStatusBanner(access);
 
       if (!access.can_create) {
         // Hide card creation form during grace period or when access expired
@@ -1827,6 +1843,74 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           debugLog('[Flashcards] Card creation form hidden (can_create=false)');
         }
       }
+    }
+
+    // Function to show access status banner
+    function showAccessStatusBanner(access) {
+      const banner = $("#accessStatusBanner");
+      const title = $("#accessStatusTitle");
+      const desc = $("#accessStatusDesc");
+      const icon = $("#accessStatusIcon");
+      const actions = $("#accessStatusActions");
+
+      if (!banner || !title || !desc || !icon) return;
+
+      // Clear previous content
+      actions.innerHTML = '';
+
+      // Determine status and styling
+      let statusClass = '';
+      let statusTitle = '';
+      let statusDesc = '';
+      let statusIcon = '';
+
+      if (access.status === 'active') {
+        statusClass = 'access-active';
+        statusTitle = M?.str?.mod_flashcards?.access_status_active || 'Active Access';
+        statusDesc = M?.str?.mod_flashcards?.access_status_active_desc || 'You have full access to create and review flashcards.';
+        statusIcon = '✅';
+      } else if (access.status === 'grace') {
+        statusClass = 'access-grace';
+        const daysLeft = access.days_remaining || 0;
+        statusTitle = (M?.str?.mod_flashcards?.access_status_grace || 'Grace Period ({$a} days remaining)').replace('{$a}', daysLeft);
+        statusDesc = M?.str?.mod_flashcards?.access_status_grace_desc || 'You can review your existing cards but cannot create new ones. Enrol in a course to restore full access.';
+        statusIcon = '⏰';
+
+        // Add enrol button for grace period
+        const enrolBtn = document.createElement('button');
+        enrolBtn.className = 'btn-secondary';
+        enrolBtn.textContent = M?.str?.mod_flashcards?.access_enrol_now || 'Enrol in a Course';
+        enrolBtn.onclick = () => {
+          // Redirect to course enrolment page or show message
+          alert(M?.str?.mod_flashcards?.access_enrol_now || 'Please enrol in a course to restore full access.');
+        };
+        actions.appendChild(enrolBtn);
+      } else if (access.status === 'expired') {
+        statusClass = 'access-expired';
+        statusTitle = M?.str?.mod_flashcards?.access_status_expired || 'Access Expired';
+        statusDesc = M?.str?.mod_flashcards?.access_status_expired_desc || 'Your access has expired. Enrol in a course to regain access to flashcards.';
+        statusIcon = '❌';
+
+        // Add enrol button for expired access
+        const enrolBtn = document.createElement('button');
+        enrolBtn.className = 'btn-primary';
+        enrolBtn.textContent = M?.str?.mod_flashcards?.access_enrol_now || 'Enrol in a Course';
+        enrolBtn.onclick = () => {
+          // Redirect to course enrolment page or show message
+          alert(M?.str?.mod_flashcards?.access_enrol_now || 'Please enrol in a course to regain access.');
+        };
+        actions.appendChild(enrolBtn);
+      }
+
+      // Apply styling and content
+      banner.className = `access-status-banner ${statusClass}`;
+      title.textContent = statusTitle;
+      desc.textContent = statusDesc;
+      icon.textContent = statusIcon;
+
+      // Show banner
+      banner.classList.remove('hidden');
+      debugLog('[Access Banner] Showing banner with status:', access.status);
     }
 
     loadState(); (async()=>{

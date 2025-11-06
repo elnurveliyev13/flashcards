@@ -3,6 +3,18 @@
 <div id="mod_flashcards_container">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    <!-- Access Status Banner -->
+    <div id="accessStatusBanner" class="access-status-banner hidden">
+      <div class="access-status-content">
+        <div class="access-status-icon" id="accessStatusIcon">ℹ️</div>
+        <div class="access-status-text">
+          <div class="access-status-title" id="accessStatusTitle"></div>
+          <div class="access-status-desc" id="accessStatusDesc"></div>
+        </div>
+        <div class="access-status-actions" id="accessStatusActions"></div>
+      </div>
+    </div>
+
     <header>
       <div class="header-top">
         <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
