@@ -564,7 +564,12 @@ img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
   transform:scale(1.04);
 }
 audio{max-width:260px}
-.slot{margin:var(--space-2) 0}
+/* Ensure form slots have a consistent horizontal safe zone */
+.slot{
+  margin: var(--space-2) 0;
+  padding: 0 var(--space-2);
+  box-sizing: border-box;
+}
 .slot .tag{
   font-size: var(--font-size-sm);
   font-weight: 500;
@@ -577,6 +582,7 @@ audio{max-width:260px}
   width: 100%;
   gap: var(--space-1);
   align-items: center;
+  box-sizing: border-box;
 }
 #mod_flashcards_container .slot .row.has-action{
   align-items: flex-start;
