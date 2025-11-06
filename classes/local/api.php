@@ -476,6 +476,14 @@ class api {
             // Rationale: Card no longer exists, so all progress references are orphaned
             $DB->delete_records('flashcards_progress', ['deckid' => $deckid, 'cardid' => $cardid]);
             $DB->delete_records('flashcards_card_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
+
+            // Decrement total_cards_created counter for the card owner
+            $stats = self::get_user_stats($rec->ownerid);
+            if ($stats->total_cards_created > 0) {
+                $stats->total_cards_created--;
+                $stats->timemodified = time();
+                $DB->update_record('flashcards_user_stats', $stats);
+            }
         } else {
             // User "deleting" a SHARED card → just hide it for this user
             // Card remains in database, but marked as hidden in progress

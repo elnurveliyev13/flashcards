@@ -708,7 +708,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
     });
-    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); } catch(e) { /* May fail for shared cards, fallback to local removal */ } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); });
+    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); } catch(e) { /* May fail for shared cards, fallback to local removal */ } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); await loadDashboard(); });
 
     // removed duplicate var line
     const imagePickerBtn = document.getElementById('btnImagePicker');
@@ -1377,6 +1377,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           saveState();
           buildQueue();
           buildListRows();
+          await loadDashboard();
         };
         cell.appendChild(del);
         tbody.appendChild(tr);
