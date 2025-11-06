@@ -13,6 +13,12 @@ define(['core/str'], function(str) {
     const $$ = s => Array.from(root.querySelectorAll(s));
     const uniq = a => [...new Set(a.filter(Boolean))];
     const fmtDateTime = ts => ts ? new Date(ts).toLocaleString() : "-";
+    const liveRegion = $("#srStatus");
+    function announce(message){
+      if(!liveRegion || !message) return;
+      liveRegion.textContent = "";
+      window.requestAnimationFrame(()=>{ liveRegion.textContent = message; });
+    }
 
     // Resolve relative asset to plugin base URL
     function resolveAsset(u) {
@@ -32,7 +38,7 @@ define(['core/str'], function(str) {
           order:"Order (click in sequence)",empty:"Nothing due today",
           titles:{camera:"Camera",take:"Take photo",closeCam:"Close camera",play:"Play",slow:"Play 0.67??",edit:"Edit",del:"Delete/Hide",record:"Record",stop:"Stop"},
           listCols:{front:"Front",deck:"Deck",stage:"Stage",added:"Added",due:"Next due",play:"Play"},resetForm:"Reset form",addToMine:'Add to "Mine"',
-          chips:{text:"Text",translation:"Translation",image:"Image",audio:"Audio"},searchPh:"Search..."},
+          chips:{text:"Text",translation:"Translation",image:"Image",audio:"Audio"},searchPh:"Search...",autosave:"Progress saved"},
       no:{appTitle:"SRS-kort",intervals:"Intervaller: 1,3,7,15,31,62,125,251",
           export:"Eksporter",import:"Importer",reset:"Tilbakestill",profile:"Profil:",activate:"Aktiver leksjon",
           choose:"Velg leksjon",loadPack:"Last opp kortstokk",due:n=>`Til repetisjon: ${n}`,list:"Kortliste",
@@ -41,13 +47,13 @@ define(['core/str'], function(str) {
           order:"Rekkef??lge (klikk i ??nsket rekkef??lge)",empty:"Ingen kort i dag",
           titles:{camera:"Kamera",take:"Ta bilde",closeCam:"Lukk kamera",play:"Spill av",slow:"Sakte 0.67??",edit:"Rediger",del:"Slett/Skjul",record:"Ta opp",stop:"Stopp"},
           listCols:{front:"Forside",deck:"Leksjon",stage:"Trinn",added:"Lagt til",due:"Neste",play:"Spill"},resetForm:"Nullstill",addToMine:'Legg til i "Mine"',
-          chips:{text:"Tekst",translation:"Overs.",image:"Bilde",audio:"Lyd"},searchPh:"S??k..."},
+          chips:{text:"Tekst",translation:"Overs.",image:"Bilde",audio:"Lyd"},searchPh:"S??k...",autosave:"Lagret automatisk"},
     };
     let LANG=localStorage.getItem("srs-lang")||"en";
     // Load Moodle strings and map them into existing I18N structure to avoid large refactors.
     function loadStrings() {
       const keys = [
-        'export','import','reset','profile','activate','choose','loadpack','due','list','addown','front','back','image','audio','choosefile','showmore','easy','normal','hard','order','empty','resetform','addtomine','title_camera','title_take','title_closecam','title_play','title_slow','title_edit','title_del','title_record','title_stop','list_front','list_deck','list_stage','list_added','list_due','list_play','search_ph'
+        'export','import','reset','profile','activate','choose','loadpack','due','list','addown','front','back','image','audio','choosefile','showmore','easy','normal','hard','order','empty','resetform','addtomine','title_camera','title_take','title_closecam','title_play','title_slow','title_edit','title_del','title_record','title_stop','list_front','list_deck','list_stage','list_added','list_due','list_play','search_ph','autosave'
       ].map(k=>({key:k, component:'mod_flashcards'}));
       return str.get_strings(keys).then(values=>{
         const STR = {}; keys.forEach((k,i)=> STR[k.key]=values[i]);
@@ -58,11 +64,13 @@ define(['core/str'], function(str) {
         m.titles={ camera:STR.title_camera, take:STR.title_take, closeCam:STR.title_closecam, play:STR.title_play, slow:STR.title_slow, edit:STR.title_edit, del:STR.title_del, record:STR.title_record, stop:STR.title_stop };
         m.listCols={ front:STR.list_front, deck:STR.list_deck, stage:STR.list_stage, added:STR.list_added, due:STR.list_due, play:STR.list_play };
         m.chips={ text:STR.front, translation:STR.back, image:STR.image, audio:STR.audio };
+        if(STR.autosave) m.autosave=STR.autosave;
         // Template with placeholder: replace {$a} later in applyI18N calls
         m.due = n => (STR.due||'Due: {$a}').replace('{$a}', n);
       });
     }
     function t(k,...a){const v=I18N[LANG] && I18N[LANG][k]; return typeof v==="function"?v(...a):v;}
+    function autosaveMessage(){ return t("autosave") || "Progress saved"; }
     function applyI18N(){
       document.documentElement.lang=LANG; document.title=t("appTitle")||"SRS Cards";
       $("#t_appTitle").textContent=t("appTitle"); $("#t_intervals").textContent=t("intervals");
@@ -108,7 +116,10 @@ define(['core/str'], function(str) {
     function today0(){const d=new Date();d.setHours(0,0,0,0);return +d;}
     function addDays(t,days){const d=new Date(t);d.setDate(d.getDate()+days);return +d;}
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
-    function saveState(){localStorage.setItem(storageKey(STORAGE_STATE),JSON.stringify(state));}
+    function saveState(announceMessage){
+      localStorage.setItem(storageKey(STORAGE_STATE), JSON.stringify(state));
+      if(announceMessage) announce(announceMessage);
+    }
     function saveRegistry(){localStorage.setItem(storageKey(STORAGE_REG),JSON.stringify(registry));}
     function ensureDeckProgress(deckId,cards){
       if(!state.decks[deckId]) state.decks[deckId]={};
@@ -164,10 +175,48 @@ define(['core/str'], function(str) {
       if(stageText) stageText.textContent=step===0?"0":String(INTERVALS[Math.min(step,INTERVALS.length)-1]);
       if(stageBadge) stageBadge.classList.remove("hidden");
     }
-    let audioURL=null; const player=new Audio();
-    function attachAudio(url){audioURL=url; $("#btnPlay").classList.remove("hidden"); $("#btnPlaySlow").classList.remove("hidden");
-      $("#btnPlay").onclick=()=>{if(!audioURL)return; player.src=audioURL; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{});};
-      $("#btnPlaySlow").onclick=()=>{if(!audioURL)return; player.src=audioURL; player.playbackRate=0.67; player.currentTime=0; player.play().catch(()=>{});};
+    let audioURL=null;
+    let audioTileButton=null;
+    const player=new Audio();
+    function setAudioPressed(state){
+      if(!audioTileButton) return;
+      audioTileButton.setAttribute("aria-pressed", state ? "true" : "false");
+    }
+    player.addEventListener("play", ()=>setAudioPressed(true));
+    player.addEventListener("pause", ()=>setAudioPressed(false));
+    player.addEventListener("ended", ()=>setAudioPressed(false));
+    function startAudioPlayback(rate){
+      if(!audioURL) return;
+      if(player.src!==audioURL) player.src=audioURL;
+      player.playbackRate=rate;
+      player.currentTime=0;
+      const attempt=player.play();
+      if(attempt && attempt.catch){
+        attempt.catch(()=>setAudioPressed(false));
+      }
+    }
+    function attachAudio(url, tileButton){
+      audioURL=url;
+      if(tileButton){
+        audioTileButton=tileButton;
+        tileButton.setAttribute("aria-pressed","false");
+      }
+      $("#btnPlay").classList.remove("hidden");
+      $("#btnPlaySlow").classList.remove("hidden");
+      $("#btnPlay").onclick=()=>{ startAudioPlayback(1); };
+      $("#btnPlaySlow").onclick=()=>{ startAudioPlayback(0.67); };
+    }
+    function toggleAudioFromTile(btn){
+      if(!audioURL) return;
+      const isPlaying=btn.getAttribute("aria-pressed")==="true";
+      audioTileButton=btn;
+      if(isPlaying){
+        player.pause();
+        player.currentTime=0;
+        setAudioPressed(false);
+      } else {
+        startAudioPlayback(1);
+      }
     }
     function normalizeLessonCard(c){
       if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back;
@@ -180,20 +229,53 @@ define(['core/str'], function(str) {
       if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; }
       if(kind==="image" && (card.image||card.imageKey)){
         const url=card.imageKey?await urlFor(card.imageKey):resolveAsset(card.image);
-        if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; }
+        if(url){
+          const btn=document.createElement("button");
+          btn.type="button";
+          btn.className="media-tile image-tile";
+          btn.setAttribute("aria-expanded","false");
+          btn.setAttribute("aria-label",`${t("image")||"Image"} preview`);
+          const img=document.createElement("img");
+          img.src=url;
+          img.className="media";
+          img.alt=card.text || card.translation || (t("image")||"Card image");
+          btn.appendChild(img);
+          btn.addEventListener("click",()=>{
+            const expanded=btn.getAttribute("aria-expanded")==="true";
+            btn.setAttribute("aria-expanded", expanded?"false":"true");
+            btn.classList.toggle("is-expanded", !expanded);
+          });
+          el.appendChild(btn);
+          return el;
+        }
       }
       if(kind==="audio" && (card.audio||card.audioKey)){
         const url=card.audioKey?await urlFor(card.audioKey):resolveAsset(card.audio);
-        if(url){ attachAudio(url); el.innerHTML=`<div class="pill">??? ${ (t("audio")||"Audio").split(" ")[0] }</div>`; el.dataset.autoplay=url; return el; }
+        if(url){
+          const btn=document.createElement("button");
+          btn.type="button";
+          btn.className="media-tile audio-tile";
+          btn.setAttribute("aria-pressed","false");
+          const label=t("audio")||"Audio";
+          btn.setAttribute("aria-label",`${label} playback`);
+          btn.innerHTML=`<span class="media-tile-icon" aria-hidden="true">&#128266;</span><span class="media-tile-label">${label}</span>`;
+          btn.addEventListener("click",()=>toggleAudioFromTile(btn));
+          el.appendChild(btn);
+          attachAudio(url, btn);
+          el.dataset.autoplay=url;
+          return el;
+        }
       }
       return null;
     }
     async function renderCard(card, count){
       slotContainer.innerHTML=""; $("#btnPlay").classList.add("hidden"); $("#btnPlaySlow").classList.add("hidden"); audioURL=null;
+      if(audioTileButton){ audioTileButton.setAttribute("aria-pressed","false"); }
+      audioTileButton=null;
       const items=[]; for(const kind of card.order.slice(0,count)){ const el=await buildSlot(kind,card); if(el) items.push(el); }
       if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); }
       items.forEach(x=>slotContainer.appendChild(x));
-      if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); }
+      if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ startAudioPlayback(1); }
     }
 
     /* ===== build queue ===== */
@@ -244,7 +326,7 @@ define(['core/str'], function(str) {
       const idx=Math.min(it.rec.step,INTERVALS.length);
       it.rec.lastAt=today0();
       it.rec.due=addDays(it.rec.lastAt, idx?INTERVALS[idx-1]:0);
-      saveState();
+      saveState(autosaveMessage());
       queue.splice(current,1);
       if(queue.length===0){ buildQueue(); } else { currentItem=queue[Math.min(current,queue.length-1)]; visibleSlots=1; showCurrent(); $("#dueInfo").textContent=t("due",queue.length); }
     }
@@ -253,7 +335,7 @@ define(['core/str'], function(str) {
       const it=currentItem;
       it.rec.lastAt=today0();
       it.rec.due=addDays(it.rec.lastAt,1);
-      saveState();
+      saveState(autosaveMessage());
       queue.splice(current,1);
       if(queue.length===0){ buildQueue(); } else { currentItem=queue[Math.min(current,queue.length-1)]; visibleSlots=1; showCurrent(); $("#dueInfo").textContent=t("due",queue.length); }
     }
@@ -262,7 +344,7 @@ define(['core/str'], function(str) {
       const it=currentItem;
       it.rec.lastAt=today0();
       it.rec.due=today0();
-      saveState();
+      saveState(autosaveMessage());
       queue.push(it); queue.splice(current,1);
       currentItem=queue[Math.min(current,queue.length-1)]; visibleSlots=1; showCurrent(); $("#dueInfo").textContent=t("due",queue.length);
     }
@@ -437,7 +519,7 @@ define(['core/str'], function(str) {
       registry[MY_DECK_ID].cards.push(card); saveRegistry();
       if(!state.decks[MY_DECK_ID]) state.decks[MY_DECK_ID]={};
       state.decks[MY_DECK_ID][id]={step:0,due:today0(),addedAt:today0(),lastAt:null};
-      state.active[MY_DECK_ID]=true; saveState();
+      state.active[MY_DECK_ID]=true; saveState(autosaveMessage());
       resetForm(); refreshSelect(); updateBadge(); buildQueue(); $("#status").textContent="Added"; setTimeout(()=>$("#status").textContent="",1200);
     });
 

@@ -30,6 +30,7 @@ $string['image'] = 'Image';
 $string['audio'] = 'Audio';
 $string['choosefile'] = 'Choose file';
 $string['showmore'] = 'Show more';
+$string['autosave'] = 'Progress saved';
 $string['easy'] = 'Easy';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Hard';
