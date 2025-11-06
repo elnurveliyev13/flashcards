@@ -152,62 +152,113 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
+    function normalizeServerCard(item){
+      if(!item) return null;
+      const payload = item.payload || {};
+      return {
+        id: item.cardId,
+        text: payload.text || payload.front || "",
+        translation: pickTranslationFromPayload(payload),
+        translations: (payload.translations && typeof payload.translations === 'object') ? payload.translations : null,
+        explanation: payload.explanation || "",
+        image: payload.image || null,
+        imageKey: payload.imageKey || null,
+        audio: payload.audio || null,
+        audioKey: payload.audioKey || null,
+        order: Array.isArray(payload.order) ? payload.order : [],
+        transcription: payload.transcription || "",
+        pos: payload.pos || "",
+        gender: payload.gender || "",
+        forms: payload.forms || null,
+        antonyms: Array.isArray(payload.antonyms) ? payload.antonyms : [],
+        collocations: Array.isArray(payload.collocations) ? payload.collocations : [],
+        examples: Array.isArray(payload.examples) ? payload.examples : [],
+        cognates: Array.isArray(payload.cognates) ? payload.cognates : [],
+        sayings: Array.isArray(payload.sayings) ? payload.sayings : [],
+        scope: item.scope || 'private',
+        ownerid: (typeof item.ownerid === 'number' || item.ownerid === null) ? item.ownerid : null
+      };
+    }
+
     async function syncFromServer(){
       try{
-        // OPTIMIZED: Load only due cards initially (pagination + caching)
-        const dueItems = await api('get_due_cards', {limit: 100});
-
-        // Group cards by deckId (support multiple decks from server)
+        const dueItems = await api('get_due_cards', {limit: 1000}).catch(()=>[]);
         const deckCards = {};
-        (dueItems||[]).forEach(it => {
-          const deckId = String(it.deckId || MY_DECK_ID); // Convert numeric deckId to string
-          if(!deckCards[deckId]) deckCards[deckId] = [];
+        const deckTitles = {};
+        const fallbackProgress = {};
+        let progressData = null;
 
-          const p = it.payload||{};
-          deckCards[deckId].push({
-            id: it.cardId,
-            text: p.text||p.front||"",
-            translation: pickTranslationFromPayload(p),
-            translations: (p.translations && typeof p.translations==='object') ? p.translations : null,
-            explanation: p.explanation||"",
-            image: p.image||null,
-            imageKey: p.imageKey||null,
-            audio: p.audio||null,
-            audioKey: p.audioKey||null,
-            order: Array.isArray(p.order)?p.order:[],
-            // Enrichment fields
-            transcription: p.transcription||"",
-            pos: p.pos||"",
-            gender: p.gender||"",
-            forms: p.forms||null,
-            antonyms: Array.isArray(p.antonyms)?p.antonyms:[],
-            collocations: Array.isArray(p.collocations)?p.collocations:[],
-            examples: Array.isArray(p.examples)?p.examples:[],
-            cognates: Array.isArray(p.cognates)?p.cognates:[],
-            sayings: Array.isArray(p.sayings)?p.sayings:[],
-            scope: it.scope || 'private',
-            ownerid: (typeof it.ownerid === 'number' || it.ownerid === null) ? it.ownerid : null,
-            _progress: it.progress // Keep progress for later
-          });
+        (dueItems||[]).forEach(it => {
+          const deckId = String(it.deckId || MY_DECK_ID);
+          if(!deckCards[deckId]) deckCards[deckId] = [];
+          const card = normalizeServerCard(it);
+          if(card) deckCards[deckId].push(card);
+          if(!deckTitles[deckId]) {
+            deckTitles[deckId] = deckId === MY_DECK_ID ? "My cards" : `Deck ${deckId}`;
+          }
+          if(it.progress){
+            if(!fallbackProgress[deckId]) fallbackProgress[deckId] = {};
+            fallbackProgress[deckId][it.cardId] = it.progress;
+          }
         });
 
-        // Merge server cards into registry (preserving existing cards)
-        Object.entries(deckCards).forEach(([deckId, cards]) => {
-          // Create deck if doesn't exist
+        try{
+          progressData = await api('fetch');
+        }catch(err){
+          console.error('fetch progress failed', err);
+        }
+
+        const deckIdsToFetch = new Set(Object.keys(deckCards));
+        if(progressData && typeof progressData === 'object'){
+          Object.keys(progressData).forEach(deckKey => deckIdsToFetch.add(String(deckKey)));
+        }
+        if(state && state.decks){
+          Object.keys(state.decks).forEach(id => deckIdsToFetch.add(String(id)));
+        }
+
+        if(isGlobalMode){
+          const meta = await api('list_decks').catch(()=>[]);
+          (meta||[]).forEach(d => {
+            const deckId = String((d && d.id) || MY_DECK_ID);
+            deckIdsToFetch.add(deckId);
+            if(d && d.title){
+              deckTitles[deckId] = d.title;
+            }
+          });
+        }
+
+        for(const deckId of deckIdsToFetch){
+          if(deckId === MY_DECK_ID) continue;
+          const numericId = Number(deckId);
+          if(!Number.isFinite(numericId)) continue;
+          try{
+            const cards = await api('get_deck_cards', {deckid:numericId, offset:0, limit:1000});
+            if(cards && cards.length){
+              if(!deckCards[deckId]) deckCards[deckId] = [];
+              cards.forEach(item => {
+                const card = normalizeServerCard(item);
+                if(card) deckCards[deckId].push(card);
+              });
+            }
+          }catch(err){
+            console.error('get_deck_cards failed', err);
+          }
+        }
+
+        Object.entries(deckCards).forEach(([deckId, cards])=>{
           if(!registry[deckId]) {
             registry[deckId] = {
               id: deckId,
-              title: deckId === MY_DECK_ID ? "My cards" : `Deck ${deckId}`,
+              title: deckTitles[deckId] || (deckId === MY_DECK_ID ? "My cards" : `Deck ${deckId}`),
               cards: []
             };
+          } else if(deckTitles[deckId]) {
+            registry[deckId].title = deckTitles[deckId];
           }
 
-          // Merge cards (update existing, add new, but DON'T remove old)
-          const existingCardIds = new Set(registry[deckId].cards.map(c => c.id));
           cards.forEach(card => {
             const existingIdx = registry[deckId].cards.findIndex(c => c.id === card.id);
-            if(existingIdx >= 0) {
-              // Update existing card (preserve order if not specified)
+            if(existingIdx >= 0){
               const existing = registry[deckId].cards[existingIdx];
               registry[deckId].cards[existingIdx] = {
                 ...existing,
@@ -215,29 +266,55 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
                 order: card.order.length > 0 ? card.order : existing.order
               };
             } else {
-              // Add new card
               registry[deckId].cards.push(card);
             }
           });
         });
         saveRegistry();
 
-        // Update progress from server (without destroying existing progress)
         if(!state.decks) state.decks = {};
+        if(!state.hidden) state.hidden = {};
 
-        (dueItems||[]).forEach(it => {
-          const deckId = String(it.deckId || MY_DECK_ID);
+        if(!progressData){
+          try{
+            progressData = await api('fetch');
+          }catch(err){
+            console.error('fetch progress failed', err);
+          }
+        }
+
+        const applyProgress = (deckId, cardId, prog)=>{
+          if(!prog) return;
           if(!state.decks[deckId]) state.decks[deckId] = {};
-
-          const prog = it.progress || {};
-          state.decks[deckId][it.cardId] = {
+          state.decks[deckId][cardId] = {
             step: prog.step || 0,
             due: (prog.due || 0) * 1000,
             addedAt: (prog.addedAt || 0) * 1000,
             lastAt: (prog.lastAt || 0) * 1000,
-            hidden: 0
+            hidden: prog.hidden ? 1 : 0
           };
-        });
+          if(prog.hidden){
+            if(!state.hidden[deckId]) state.hidden[deckId] = {};
+            state.hidden[deckId][cardId] = true;
+          } else if(state.hidden && state.hidden[deckId]) {
+            delete state.hidden[deckId][cardId];
+          }
+        };
+
+        if(progressData && typeof progressData === 'object'){
+          Object.entries(progressData).forEach(([deckKey, cards])=>{
+            const deckId = String(deckKey || MY_DECK_ID);
+            Object.entries(cards || {}).forEach(([cardId, prog])=>{
+              applyProgress(deckId, cardId, prog);
+            });
+          });
+        } else {
+          Object.entries(fallbackProgress).forEach(([deckId, cards])=>{
+            Object.entries(cards || {}).forEach(([cardId, prog])=>{
+              applyProgress(deckId, cardId, prog);
+            });
+          });
+        }
         saveState();
 
         ensureAllProgress();
@@ -1354,11 +1431,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Apply due date filter
       const dueFilter=$("#listFilterDue").value;
-      const now=today0();
       if(dueFilter==='due'){
-        filtered=filtered.filter(r=>r.due<=now);
-      } else if(dueFilter==='future'){
-        filtered=filtered.filter(r=>r.due>now);
+        const now=today0();
+        filtered=filtered.filter(r=> (r.due ?? 0) <= now);
       }
 
       // Sort by due date
