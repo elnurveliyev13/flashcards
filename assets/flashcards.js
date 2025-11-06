@@ -2034,35 +2034,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
       }
 
-      // Recalculate stats button handler
-      const btnRecalcStats = $('#btnRecalcStats');
-      if (btnRecalcStats && !btnRecalcStats.dataset.bound) {
-        btnRecalcStats.dataset.bound = '1';
-        btnRecalcStats.addEventListener('click', async () => {
-          if (!confirm('This will recalculate Total Cards from database. Continue?')) return;
-          btnRecalcStats.disabled = true;
-          btnRecalcStats.textContent = '⏳';
-          try {
-            console.log('[RECALC] Recalculating stats from database...');
-            const result = await api('recalculate_stats', {}, 'POST');
-            console.log('[RECALC] Stats recalculated:', result);
-            await refreshDashboardStats();
-            alert('Stats synchronized! Total cards: ' + result.totalCardsCreated);
-          } catch (e) {
-            console.error('[RECALC] Error:', e);
-            alert('Error recalculating stats: ' + e.message);
-          } finally {
-            btnRecalcStats.disabled = false;
-            btnRecalcStats.textContent = '🔄';
-          }
-        });
-      }
-
       // Initialize: Default to Quick Input tab
       switchTab('quickInput');
 
-      // Load dashboard data on page load (to update header stats and badges)
-      loadDashboard();
+      // Auto-sync stats with database on EVERY page load
+      console.log('[INIT] Synchronizing stats with database...');
+      (async () => {
+        try {
+          await api('recalculate_stats', {}, 'POST');
+          console.log('[INIT] Stats synchronized with database successfully');
+          // Refresh dashboard to show updated stats
+          await loadDashboard();
+        } catch (e) {
+          console.error('[INIT] Stats sync failed:', e);
+          // Still load dashboard even if sync failed
+          loadDashboard();
+        }
+      })();
     })();
 
     // ========== QUICK EDITOR PANEL ==========
