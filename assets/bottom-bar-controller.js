@@ -107,16 +107,7 @@
   };
 
   BottomBarController.prototype._bindEvents = function(){
-    // Observe due count changes (use global search)
-    var dueEl = document.getElementById('studyDueCount');
-    if(dueEl){
-      var self = this;
-      var observer = new MutationObserver(function(){
-        self.state.dueCount = parseInt(dueEl.textContent) || 0;
-        self._updateVisibility();
-      });
-      observer.observe(dueEl, {childList: true, characterData: true, subtree: true});
-    }
+    // Due count tracking removed (studyDueCount element no longer exists)
   };
 
   BottomBarController.prototype._observeTabs = function(){
@@ -183,19 +174,16 @@
   BottomBarController.prototype._updateRatingButtons = function(){
     if(!this.ratingBar) return;
 
-    // Read current due count from DOM (use global search, not root.querySelector)
-    var dueEl = document.getElementById('studyDueCount');
-    var count = dueEl ? (parseInt(dueEl.textContent) || 0) : this.state.dueCount;
+    // Note: studyDueCount element removed, buttons enabled by default
+    console.log('[BottomBarController] _updateRatingButtons: studyDueCount element no longer exists');
 
-    console.log('[BottomBarController] _updateRatingButtons: count =', count, 'dueEl =', dueEl);
-
-    // Disable buttons when nothing due
+    // Disable buttons when nothing due (count determined by queue in main app)
     var buttons = ['btnEasyBottom', 'btnNormalBottom', 'btnHardBottom'];
     buttons.forEach(function(id){
       var btn = document.getElementById(id);
       if(btn){
-        btn.disabled = (count <= 0);
-        console.log('[BottomBarController]', id, 'disabled =', btn.disabled, 'count =', count);
+        // Buttons will be managed by main flashcards.js logic
+        console.log('[BottomBarController]', id, 'state =', btn.disabled ? 'disabled' : 'enabled');
       }
     });
   };

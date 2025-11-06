@@ -154,16 +154,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const headerTotalCards = $('#headerTotalCards');
         if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
 
-        // Update study tab due indicator
-        const studyDueValue = $('#studyDueCount');
-        if (studyDueValue) {
-          studyDueValue.textContent = String(dueToday);
-        }
-        const studyDueInfo = $('#studyDueInfo');
-        if (studyDueInfo && studyDueInfo.classList.contains('hidden')) {
-          studyDueInfo.classList.remove('hidden');
-        }
-
         // Update study badge
         const studyBadge = $('#studyBadge');
         if (studyBadge) {
@@ -412,14 +402,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(studyBadge){
         studyBadge.textContent = n > 0 ? String(n) : "";
         studyBadge.classList.toggle('hidden', !(n > 0));
-      }
-      const studyDueValue = $("#studyDueCount");
-      if(studyDueValue){
-        studyDueValue.textContent = String(n);
-      }
-      const studyDueInfo = $("#studyDueInfo");
-      if(studyDueInfo && studyDueInfo.classList.contains('hidden')){
-        studyDueInfo.classList.remove('hidden');
       }
     }
 
@@ -2022,16 +2004,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const headerStreak = $('#headerStreak');
           if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (headerStreak) headerStreak.textContent = data.stats.currentStreak || 0;
-
-          // Update study tab due indicator
-          const studyDueValue = $('#studyDueCount');
-          if (studyDueValue) {
-            studyDueValue.textContent = String(dueToday);
-          }
-          const studyDueInfo = $('#studyDueInfo');
-          if (studyDueInfo && studyDueInfo.classList.contains('hidden')) {
-            studyDueInfo.classList.remove('hidden');
-          }
 
           // Update Study badge (due cards count)
           const studyBadge = $('#studyBadge');
