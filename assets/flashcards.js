@@ -708,7 +708,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
     });
-    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); } catch(e) { /* May fail for shared cards, fallback to local removal */ } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); await loadDashboard(); });
+    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; console.log('[DELETE] Deleting card:', card.id, 'from deck:', deckId); try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); console.log('[DELETE] Card deleted successfully'); } catch(e) { console.error('[DELETE] API error:', e); } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); console.log('[DELETE] Refreshing dashboard...'); await loadDashboard(); console.log('[DELETE] Dashboard refreshed'); });
 
     // removed duplicate var line
     const imagePickerBtn = document.getElementById('btnImagePicker');
@@ -1366,9 +1366,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;
+          console.log('[DELETE-LIST] Deleting card:', r.id, 'from deck:', r.deckId);
           try {
             await api('delete_card', {deckid:r.deckId, cardid:r.id}, 'POST');
-          } catch(e) { }
+            console.log('[DELETE-LIST] Card deleted successfully');
+          } catch(e) { console.error('[DELETE-LIST] API error:', e); }
           const arr=registry[r.deckId]?.cards||[];
           const ix=arr.findIndex(x=>x.id===r.id);
           if(ix>=0){arr.splice(ix,1); saveRegistry();}
@@ -1377,7 +1379,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           saveState();
           buildQueue();
           buildListRows();
+          console.log('[DELETE-LIST] Refreshing dashboard...');
           await loadDashboard();
+          console.log('[DELETE-LIST] Dashboard refreshed');
         };
         cell.appendChild(del);
         tbody.appendChild(tr);

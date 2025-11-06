@@ -478,11 +478,17 @@ class api {
             $DB->delete_records('flashcards_card_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
 
             // Decrement total_cards_created counter for the card owner
-            $stats = self::get_user_stats($rec->ownerid);
-            if ($stats->total_cards_created > 0) {
-                $stats->total_cards_created--;
-                $stats->timemodified = time();
-                $DB->update_record('flashcards_user_stats', $stats);
+            if ($rec->ownerid !== null) {
+                try {
+                    $stats = self::get_user_stats((int)$rec->ownerid);
+                    if ($stats && isset($stats->total_cards_created) && $stats->total_cards_created > 0) {
+                        $stats->total_cards_created--;
+                        $stats->timemodified = time();
+                        $DB->update_record('flashcards_user_stats', $stats);
+                    }
+                } catch (Exception $e) {
+                    error_log("Flashcards: Failed to update stats after deletion: " . $e->getMessage());
+                }
             }
         } else {
             // User "deleting" a SHARED card → just hide it for this user
