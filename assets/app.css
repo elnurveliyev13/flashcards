@@ -684,6 +684,24 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .card-form-toggle{background:#1f2937;border:1px dashed #374151;border-radius:12px;padding:16px;text-align:center;cursor:pointer;transition:all 0.2s ease;font-size:16px;color:#9ca3af}
 .card-form-toggle:hover{background:#374151;border-color:#4b5563;color:#e5e7eb}
 .card-form-toggle .icon{font-size:24px;margin-bottom:4px}.meta{margin-top:var(--space-2)}
+.study-due-info{
+  display:flex;
+  align-items:baseline;
+  gap:var(--space-1);
+  margin-top:var(--space-1);
+  color:var(--text);
+}
+.study-due-label{
+  font-size:var(--font-size-sm);
+  color:var(--text-muted);
+  letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.study-due-value{
+  font-size:var(--font-size-lg);
+  font-weight:600;
+  color:var(--text-strong);
+}
 @media (max-width:600px){#langSel{display:none}}
 /* Fullscreen (native or fallback) */
 #mod_flashcards_container.fs-active{position:fixed;inset:0;z-index:99999;background:var(--bg);width:100vw;height:100svh;overflow:auto}

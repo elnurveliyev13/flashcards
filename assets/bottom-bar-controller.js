@@ -108,7 +108,7 @@
 
   BottomBarController.prototype._bindEvents = function(){
     // Observe due count changes (use global search)
-    var dueEl = document.getElementById('statDueToday');
+    var dueEl = document.getElementById('studyDueCount');
     if(dueEl){
       var self = this;
       var observer = new MutationObserver(function(){
@@ -184,7 +184,7 @@
     if(!this.ratingBar) return;
 
     // Read current due count from DOM (use global search, not root.querySelector)
-    var dueEl = document.getElementById('statDueToday');
+    var dueEl = document.getElementById('studyDueCount');
     var count = dueEl ? (parseInt(dueEl.textContent) || 0) : this.state.dueCount;
 
     console.log('[BottomBarController] _updateRatingButtons: count =', count, 'dueEl =', dueEl);

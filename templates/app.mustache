@@ -242,6 +242,10 @@
         <div class="meta">
           <button id="btnRevealNext" class="primary">{{#str}} showmore, mod_flashcards {{/str}}</button>
         </div>
+        <div class="study-due-info" id="studyDueInfo">
+          <span class="study-due-label" id="t_study_due">{{#str}} dashboard_cards_due, mod_flashcards {{/str}}</span>
+          <span class="study-due-value" id="studyDueCount">0</span>
+        </div>
         <button id="btnInstallApp" class="hidden install-btn install-btn-block" title="{{#str}} install_app, mod_flashcards {{/str}}">
           📱 {{#str}} install_app, mod_flashcards {{/str}}
         </button>
@@ -480,11 +484,6 @@
           <div class="fc-stat-icon">&#128293;</div>
           <div class="fc-stat-value" id="statStreak">0</div>
           <div class="fc-stat-label" id="t_stat_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
-        </div>
-        <div class="fc-stat-card">
-          <div class="fc-stat-icon">&#128337;</div>
-          <div class="fc-stat-value" id="statDueToday">0</div>
-          <div class="fc-stat-label" id="t_stat_due">{{#str}} dashboard_cards_due, mod_flashcards {{/str}}</div>
         </div>
       </div>
 

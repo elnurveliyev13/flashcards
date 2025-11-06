@@ -127,6 +127,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         const data = json.data;
         console.log('[STATS] Dashboard stats refreshed:', data.stats);
+        const dueToday = data.stats.dueToday || 0;
 
         // Update stats in dashboard tab
         const statTotalCards = $('#statTotalCards');
@@ -136,14 +137,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const headerTotalCards = $('#headerTotalCards');
         if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
 
-        // Update due today count
-        const statDueToday = $('#statDueToday');
-        if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
+        // Update study tab due indicator
+        const studyDueValue = $('#studyDueCount');
+        if (studyDueValue) {
+          studyDueValue.textContent = String(dueToday);
+        }
+        const studyDueInfo = $('#studyDueInfo');
+        if (studyDueInfo && studyDueInfo.classList.contains('hidden')) {
+          studyDueInfo.classList.remove('hidden');
+        }
 
         // Update study badge
         const studyBadge = $('#studyBadge');
         if (studyBadge) {
-          const dueToday = data.stats.dueToday || 0;
           studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
           studyBadge.classList.toggle('hidden', dueToday <= 0);
         }
@@ -389,6 +395,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(studyBadge){
         studyBadge.textContent = n > 0 ? String(n) : "";
         studyBadge.classList.toggle('hidden', !(n > 0));
+      }
+      const studyDueValue = $("#studyDueCount");
+      if(studyDueValue){
+        studyDueValue.textContent = String(n);
+      }
+      const studyDueInfo = $("#studyDueInfo");
+      if(studyDueInfo && studyDueInfo.classList.contains('hidden')){
+        studyDueInfo.classList.remove('hidden');
       }
     }
 
@@ -1977,13 +1991,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
           const data = json.data;
           debugLog('[Dashboard] Loaded data:', data);
+          const dueToday = data.stats.dueToday || 0;
 
           // Update stats
-          const statDueToday = $('#statDueToday');
           const statTotalCards = $('#statTotalCards');
           const statStreak = $('#statStreak');
 
-          if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
           if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
 
@@ -1993,13 +2006,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (headerStreak) headerStreak.textContent = data.stats.currentStreak || 0;
 
+          // Update study tab due indicator
+          const studyDueValue = $('#studyDueCount');
+          if (studyDueValue) {
+            studyDueValue.textContent = String(dueToday);
+          }
+          const studyDueInfo = $('#studyDueInfo');
+          if (studyDueInfo && studyDueInfo.classList.contains('hidden')) {
+            studyDueInfo.classList.remove('hidden');
+          }
+
           // Update Study badge (due cards count)
           const studyBadge = $('#studyBadge');
-        if (studyBadge) {
-          const dueToday = data.stats.dueToday || 0;
-          studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
-          studyBadge.classList.toggle('hidden', dueToday <= 0);
-        }
+          if (studyBadge) {
+            studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
+            studyBadge.classList.toggle('hidden', dueToday <= 0);
+          }
 
           // Render charts
           renderStageChart(data.stageDistribution);
