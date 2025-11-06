@@ -1050,7 +1050,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-quick-media-grid > .fc-link-btn {
   grid-area: link;
-  justify-self: center;
+  justify-self: start;
   padding: 12px 16px;
 }
 
