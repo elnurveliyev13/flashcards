@@ -1,4 +1,4 @@
-﻿:root{
+:root{
 
   /* Core palette */
 
@@ -8,7 +8,7 @@
 
   --surface-2: #1F2937;
 
-  --border: #2A3647;
+  --border: #334155;
 
   --hover: #273244;
 
@@ -18,11 +18,11 @@
 
   --text: #E5E7EB;
 
-  --text-muted: #B6BDCB;
+  --text-muted: #CDD4E3;
 
-  --text-subtle: #8A93A7;
+  --text-subtle: #7B8498;
 
-  --icon-muted: #9AA3B2;
+  --icon-muted: #9CA7B9;
 
 
 
@@ -255,7 +255,7 @@ h1{
 
 .header-stat-icon{
   font-size: var(--font-size-base);
-  color: var(--text-muted);
+  color: var(--text-subtle);
 }
 
 @media (max-width: 620px){
@@ -632,9 +632,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 
 .dropzone:hover {
+  background: var(--primary-ghost);
   border-color: var(--primary);
   color: var(--text);
-  background: var(--hover);
 }
 
 .dropzone.dragover {
@@ -889,8 +889,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-tab {
   flex: 1;
-  background: var(--surface-1);
   border: none;
+  background: var(--surface-1);
   color: var(--text-muted);
   padding: var(--space-2);
   cursor: pointer;
@@ -1204,7 +1204,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: block !important;
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -1283,7 +1283,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .disclosure .chevron {
   font-size: 16px;
   transition: transform 0.2s ease;
-  color: var(--text-muted);
+  color: var(--text-subtle);
 }
 
 .disclosure[aria-expanded="true"] .chevron {
@@ -1526,7 +1526,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   z-index: 1;
 }
 .input-addon:hover{
-  background: var(--hover);
+  background: var(--primary-ghost);
+  border-color: var(--primary);
   color: var(--text);
 }
 #mod_flashcards_container .slot .row.has-action .input-wrap input:focus + .input-addon,
@@ -1555,7 +1556,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 #mod_flashcards_container .slot .row.has-action .iconbtn:hover{
-  background: var(--hover);
+  background: var(--primary-ghost);
+  border-color: var(--primary);
   color: var(--text);
   transform: none;
 }
