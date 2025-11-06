@@ -191,6 +191,11 @@ switch ($action) {
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
+    case 'recalculate_stats':
+        $actual_count = \mod_flashcards\local\api::recalculate_total_cards($userid);
+        echo json_encode(['ok' => true, 'data' => ['totalCardsCreated' => $actual_count]]);
+        break;
+
     default:
         throw new moodle_exception('invalidaction');
 }

@@ -758,6 +758,31 @@ class api {
     }
 
     /**
+     * Recalculate total_cards_created from actual database count
+     * This fixes any discrepancies that may have occurred
+     * @param int $userid User ID
+     * @return int The actual card count
+     */
+    public static function recalculate_total_cards($userid) {
+        global $DB;
+
+        // Count actual cards owned by this user
+        $actual_count = $DB->count_records_select(
+            'flashcards_cards',
+            'ownerid = :userid AND scope = :scope',
+            ['userid' => $userid, 'scope' => 'private']
+        );
+
+        // Update stats table
+        $stats = self::get_user_stats($userid);
+        $stats->total_cards_created = $actual_count;
+        $stats->timemodified = time();
+        $DB->update_record('flashcards_user_stats', $stats);
+
+        return $actual_count;
+    }
+
+    /**
      * Get dashboard data for a user
      * @param int $userid User ID
      * @return array Dashboard data

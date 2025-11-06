@@ -108,6 +108,50 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!j || j.ok!==true) throw new Error(j && j.error || 'Server error');
       return j.data;
     }
+
+    // Helper function to refresh dashboard stats (callable from anywhere)
+    async function refreshDashboardStats(){
+      try {
+        const ajaxUrl = baseurl.replace(/\/app\/?$/, '') + '/ajax.php';
+        const resp = await fetch(ajaxUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            sesskey,
+            cmid: isGlobalMode ? 0 : cmid,
+            action: 'get_dashboard_data'
+          })
+        });
+        const json = await resp.json();
+        if (!json.ok) return;
+
+        const data = json.data;
+        console.log('[STATS] Dashboard stats refreshed:', data.stats);
+
+        // Update stats in dashboard tab
+        const statTotalCards = $('#statTotalCards');
+        if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
+
+        // Update stats in header
+        const headerTotalCards = $('#headerTotalCards');
+        if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
+
+        // Update due today count
+        const statDueToday = $('#statDueToday');
+        if (statDueToday) statDueToday.textContent = data.stats.dueToday || 0;
+
+        // Update study badge
+        const studyBadge = $('#studyBadge');
+        if (studyBadge) {
+          const dueToday = data.stats.dueToday || 0;
+          studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
+          studyBadge.classList.toggle('hidden', dueToday <= 0);
+        }
+      } catch (err) {
+        console.error('[STATS] Error refreshing stats:', err);
+      }
+    }
+
     async function syncFromServer(){
       try{
         // OPTIMIZED: Load only due cards initially (pagination + caching)
@@ -708,7 +752,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
     });
-    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; console.log('[DELETE] Deleting card:', card.id, 'from deck:', deckId); try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); console.log('[DELETE] Card deleted successfully'); } catch(e) { console.error('[DELETE] API error:', e); } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); console.log('[DELETE] Refreshing dashboard...'); await loadDashboard(); console.log('[DELETE] Dashboard refreshed'); });
+    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; console.log('[DELETE] Deleting card:', card.id, 'from deck:', deckId); try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); console.log('[DELETE] Card deleted successfully'); } catch(e) { console.error('[DELETE] API error:', e); } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); console.log('[DELETE] Refreshing dashboard...'); await refreshDashboardStats(); console.log('[DELETE] Dashboard refreshed'); });
 
     // removed duplicate var line
     const imagePickerBtn = document.getElementById('btnImagePicker');
@@ -1243,6 +1287,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       saveRegistry();
 
+      const isNewCard = !isUpdate || !editingCardId;
       if(!state.decks[localDeckId]) state.decks[localDeckId]={};
       if(!state.decks[localDeckId][id]){
         state.decks[localDeckId][id]={step:0,due:today0(),addedAt:today0(),lastAt:null};
@@ -1258,6 +1303,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       buildQueue();
       closeEditor();
       $("#status").textContent= isUpdate ? "Updated" : "Added";
+
+      // Refresh stats if new card was created
+      if(isNewCard){
+        console.log('[SAVE] New card created, refreshing stats...');
+        await refreshDashboardStats();
+      }
       setTimeout(()=>$("#status").textContent="",1200);
     }
 
@@ -1380,7 +1431,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           buildQueue();
           buildListRows();
           console.log('[DELETE-LIST] Refreshing dashboard...');
-          await loadDashboard();
+          await refreshDashboardStats();
           console.log('[DELETE-LIST] Dashboard refreshed');
         };
         cell.appendChild(del);
@@ -1979,6 +2030,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             progress.textContent = '✅ Completed';
           } else {
             progress.textContent = `${ach.current}/${ach.threshold}`;
+          }
+        });
+      }
+
+      // Recalculate stats button handler
+      const btnRecalcStats = $('#btnRecalcStats');
+      if (btnRecalcStats && !btnRecalcStats.dataset.bound) {
+        btnRecalcStats.dataset.bound = '1';
+        btnRecalcStats.addEventListener('click', async () => {
+          if (!confirm('This will recalculate Total Cards from database. Continue?')) return;
+          btnRecalcStats.disabled = true;
+          btnRecalcStats.textContent = '⏳';
+          try {
+            console.log('[RECALC] Recalculating stats from database...');
+            const result = await api('recalculate_stats', {}, 'POST');
+            console.log('[RECALC] Stats recalculated:', result);
+            await refreshDashboardStats();
+            alert('Stats synchronized! Total cards: ' + result.totalCardsCreated);
+          } catch (e) {
+            console.error('[RECALC] Error:', e);
+            alert('Error recalculating stats: ' + e.message);
+          } finally {
+            btnRecalcStats.disabled = false;
+            btnRecalcStats.textContent = '🔄';
           }
         });
       }
