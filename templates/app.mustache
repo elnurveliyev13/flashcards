@@ -1,5 +1,5 @@
 ﻿<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#0B1220">
 <div id="mod_flashcards_container">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -69,7 +69,7 @@
                 </button>
               </div>
               <div class="fc-media-actions">
-                <label for="uAudio" class="fc-link-btn fc-media-subaction" style="cursor:pointer;margin:0">{{#str}} choosefile, mod_flashcards {{/str}}</label>
+                <label for="uAudio" class="fc-link-btn fc-media-subaction">{{#str}} choosefile, mod_flashcards {{/str}}</label>
               </div>
             </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
@@ -117,7 +117,7 @@
               <div class="slot">
                 <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+                  <input id="uTranscription" type="text" placeholder="[?sp?l?]">
                   <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
@@ -329,7 +329,7 @@
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-            <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+            <input id="uTranscription" type="text" placeholder="[?sp?l?]">
             <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
@@ -366,10 +366,10 @@
         <div class="slot hidden" id="slot_noun_forms">
           <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;flex-wrap:wrap">
-            <input id="uNounIndefSg" type="text" placeholder="{{#str}} indef_sg, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
-            <input id="uNounDefSg" type="text" placeholder="{{#str}} def_sg, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
-            <input id="uNounIndefPl" type="text" placeholder="{{#str}} indef_pl, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
-            <input id="uNounDefPl" type="text" placeholder="{{#str}} def_pl, mod_flashcards {{/str}}" style="min-width:200px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+            <input id="uNounIndefSg" type="text" placeholder="{{#str}} indef_sg, mod_flashcards {{/str}}">
+            <input id="uNounDefSg" type="text" placeholder="{{#str}} def_sg, mod_flashcards {{/str}}">
+            <input id="uNounIndefPl" type="text" placeholder="{{#str}} indef_pl, mod_flashcards {{/str}}">
+            <input id="uNounDefPl" type="text" placeholder="{{#str}} def_pl, mod_flashcards {{/str}}">
             <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
