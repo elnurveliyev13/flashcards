@@ -191,9 +191,8 @@
 
     // Disable buttons when nothing due
     var buttons = ['btnEasyBottom', 'btnNormalBottom', 'btnHardBottom'];
-    var self = this;
     buttons.forEach(function(id){
-      var btn = self.root.querySelector('#' + id);
+      var btn = document.getElementById(id);
       if(btn){
         btn.disabled = (count <= 0);
         console.log('[BottomBarController]', id, 'disabled =', btn.disabled, 'count =', count);

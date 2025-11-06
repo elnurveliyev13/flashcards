@@ -565,9 +565,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const _btnEasyBottom = $("#btnEasyBottom");
     const _btnNormalBottom = $("#btnNormalBottom");
     const _btnHardBottom = $("#btnHardBottom");
-    if(_btnEasyBottom && !_btnEasyBottom.dataset.bound){ _btnEasyBottom.dataset.bound = '1'; _btnEasyBottom.addEventListener('click', e=>{ e.preventDefault(); rateEasy(); }); }
-    if(_btnNormalBottom && !_btnNormalBottom.dataset.bound){ _btnNormalBottom.dataset.bound = '1'; _btnNormalBottom.addEventListener('click', e=>{ e.preventDefault(); rateNormal(); }); }
-    if(_btnHardBottom && !_btnHardBottom.dataset.bound){ _btnHardBottom.dataset.bound = '1'; _btnHardBottom.addEventListener('click', e=>{ e.preventDefault(); rateHard(); }); }
+    if(_btnEasyBottom && !_btnEasyBottom.dataset.bound){ _btnEasyBottom.dataset.bound = '1'; _btnEasyBottom.addEventListener('click', e=>{ e.preventDefault(); rateEasy(); }); _btnEasyBottom.disabled = false; }
+    if(_btnNormalBottom && !_btnNormalBottom.dataset.bound){ _btnNormalBottom.dataset.bound = '1'; _btnNormalBottom.addEventListener('click', e=>{ e.preventDefault(); rateNormal(); }); _btnNormalBottom.disabled = false; }
+    if(_btnHardBottom && !_btnHardBottom.dataset.bound){ _btnHardBottom.dataset.bound = '1'; _btnHardBottom.addEventListener('click', e=>{ e.preventDefault(); rateHard(); }); _btnHardBottom.disabled = false; }
 
     // Keep bottom action bar aligned to content width (avoids overflow on Android themes)
     function syncBottomBarWidth(){
