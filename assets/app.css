@@ -533,14 +533,12 @@ img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
 }
 .media-tile:hover{
   background:var(--hover);
-  border-color:var(--primary);
   transform:translateY(-1px);
 }
 .media-tile-icon{font-size:22px}
 .media-tile-label{font-weight:600;font-size:var(--font-size-sm)}
 .media-tile.audio-tile[aria-pressed="true"]{
-  background:var(--primary-ghost);
-  border-color:var(--primary);
+  background:var(--hover);
 }
 .media-tile.image-tile{
   background:var(--surface-2);
@@ -935,7 +933,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-tab.fc-tab-active {
   color: var(--text);
-  background: var(--primary-ghost);
+  background: var(--surface-1);
 }
 
 .fc-tab.fc-tab-active::after {
@@ -1588,4 +1586,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 12px;
   color: var(--text);
   min-height: 44px;
+}
+
+/* Hide study due info element (duplicates Practice badge count) */
+#mod_flashcards_container #studyDueInfo,
+#mod_flashcards_container .study-due-info {
+  display: none !important;
 }
