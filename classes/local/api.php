@@ -794,11 +794,24 @@ class api {
         $now = time();
         $today = strtotime('today', $now);
 
-        // Get cards due today count
-        $dueToday = $DB->count_records_select('flashcards_progress',
-            'userid = :userid AND due <= :now AND hidden = 0',
-            ['userid' => $userid, 'now' => $now]
-        );
+        // Get cards due today count (only cards that still exist and are visible to the user)
+        $sqlDue = "SELECT COUNT(1)
+                     FROM {flashcards_progress} p
+                     JOIN {flashcards_cards} c ON c.deckid = p.deckid AND c.cardid = p.cardid
+                     JOIN {flashcards_decks} d ON d.id = c.deckid
+                    WHERE p.userid = :userid
+                      AND p.due <= :now
+                      AND p.hidden = 0
+                      AND ((d.scope = 'private' AND (d.userid IS NULL OR d.userid = :userid2))
+                           OR d.scope = 'shared')
+                      AND ((c.scope = 'private' AND c.ownerid = :ownerid)
+                           OR c.scope = 'shared')";
+        $dueToday = (int)$DB->count_records_sql($sqlDue, [
+            'userid' => $userid,
+            'userid2' => $userid,
+            'ownerid' => $userid,
+            'now' => $now,
+        ]);
 
         // Get stage distribution
         $sql = "SELECT step, COUNT(*) as count
