@@ -10,6 +10,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const $$ = s => Array.from(root.querySelectorAll(s));
     const uniq = a => [...new Set(a.filter(Boolean))];
 
+    function initAutogrow(){
+      $$('.autogrow').forEach(el=>{
+        if(!el || el.dataset.autogrowBound) return;
+        const resize = ()=>{
+          el.style.height = 'auto';
+          const min = parseFloat(window.getComputedStyle(el).minHeight) || 0;
+          const next = Math.max(el.scrollHeight, min);
+          el.style.height = `${next}px`;
+        };
+        el.addEventListener('input', resize);
+        el.dataset.autogrowBound = '1';
+        resize();
+      });
+    }
+
+    initAutogrow();
+
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
 

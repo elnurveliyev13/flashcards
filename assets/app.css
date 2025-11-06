@@ -491,7 +491,8 @@ input[type=text]::placeholder {
   transform:translateY(0);
 }
 .small{font-size:12px;color:var(--muted)}
-textarea{width:100%;min-height:80px;border-radius:10px;padding:10px;background:var(--surface-2);color:var(--text);border:1px solid var(--border)}
+textarea{width:100%;min-height:96px;border-radius:10px;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);line-height:var(--line-height-normal);resize:vertical}
+textarea.autogrow{overflow-y:hidden}
 label{display:inline-flex;align-items:center;gap:var(--space-1)}
 /* Old stage badge styles (deprecated) */
 #stageEmoji{display:none}
@@ -566,18 +567,26 @@ img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
 }
 audio{max-width:260px}
 .slot{margin:var(--space-2) 0}
-.slot .tag{font-size:12px;color:#9aa3b1;margin-bottom:var(--space-1)}
-/* Ensure new enrichment rows align to full width, and fields flex like textareas */
-#mod_flashcards_container .slot .row{width:100%}
-#mod_flashcards_container .slot .row textarea{flex:1 1 auto; min-width:220px}
-#mod_flashcards_container .slot .row input[type=text]{flex:1 1 auto; min-width:220px}
-/* Reserve space for inline action icon so borders align with full-width fields */
-/* Action rows: behave like full-width blocks (exactly like legacy textareas), icon overlays on the right */
-#mod_flashcards_container .slot .row.has-action{ position:relative; display:block; width:100%; padding-left:16px }
-#mod_flashcards_container .slot .row.has-action > .iconbtn{ position:absolute; right:10px; top:50%; transform:translateY(-50%); z-index:1 }
-#mod_flashcards_container .slot .row.has-action > input[type=text],
-#mod_flashcards_container .slot .row.has-action > textarea,
-#mod_flashcards_container .slot .row.has-action > select{ width:100%; box-sizing:border-box; padding-right:44px; margin-left:0 }
+.slot .tag{
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: inline-block;
+}
+/* Advanced field rows align and stretch gracefully */
+#mod_flashcards_container .slot .row{
+  width: 100%;
+  gap: var(--space-1);
+  align-items: center;
+}
+#mod_flashcards_container .slot .row.has-action{
+  align-items: flex-start;
+}
+#mod_flashcards_container .slot .row.has-action textarea{
+  flex: 1 1 240px;
+  min-width: 220px;
+}
 /* Bright text inside modal prompt editors */
 #mod_flashcards_container .modal .box input[type=text],
 #mod_flashcards_container .modal .box textarea{
@@ -1231,11 +1240,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-quick-field textarea {
-  min-height: 80px;
+  min-height: 96px;
 }
 
 .fc-quick-field textarea:first-child {
-  min-height: 100px;
+  min-height: 112px;
   font-size: 16px;
 }
 
@@ -1480,4 +1489,103 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   .fc-achievement-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+#mod_flashcards_container .slot .row.has-action .input-wrap{
+  position: relative;
+  flex: 1 1 240px;
+  display: block;
+}
+#mod_flashcards_container .slot .row.has-action .input-wrap input,
+#mod_flashcards_container .slot .row.has-action .input-wrap select{
+  width: 100%;
+  padding-right: 48px;
+  min-height: 44px;
+}
+#mod_flashcards_container .slot .row.has-action .input-wrap select{
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: none;
+}
+.input-addon{
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--icon-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+  font-size: 18px;
+  line-height: 1;
+  z-index: 1;
+}
+.input-addon:hover{
+  background: var(--hover);
+  color: var(--text);
+}
+#mod_flashcards_container .slot .row.has-action .input-wrap input:focus + .input-addon,
+#mod_flashcards_container .slot .row.has-action .input-wrap select:focus + .input-addon{
+  border-color: var(--primary);
+  color: var(--text);
+}
+.input-addon:focus-visible{
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--primary);
+  color: var(--text);
+}
+#mod_flashcards_container .slot .row.has-action .iconbtn{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  color: var(--icon-muted);
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+#mod_flashcards_container .slot .row.has-action .iconbtn:hover{
+  background: var(--hover);
+  color: var(--text);
+  transform: none;
+}
+#mod_flashcards_container .slot .row.has-action .iconbtn:focus-visible{
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+  border-color: var(--primary);
+  color: var(--text);
+  transform: none;
+}
+#mod_flashcards_container .grid-forms{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-1);
+}
+#mod_flashcards_container .grid-forms label{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+#mod_flashcards_container .grid-forms label input{
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  color: var(--text);
+  min-height: 44px;
 }

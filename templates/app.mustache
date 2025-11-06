@@ -89,11 +89,11 @@
             <img id="imgPrev" class="media hidden" alt=""/>
             <div class="slot">
               <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
-              <textarea id="uFront" placeholder="Front..." autofocus></textarea>
+              <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
             </div>
             <div class="slot" id="slot_translation_local">
               <span class="tag" id="tag_trans_local">Translation (?)</span>
-              <textarea id="uTransLocal" placeholder="Translation..."></textarea>
+              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
             </div>
 
             <div class="fc-quick-advanced-toggle">
@@ -106,23 +106,26 @@
             <div id="editorAdvancedFields" class="fc-quick-advanced hidden">
               <div class="slot" id="slot_translation_en">
                 <span class="tag">Translation (English)</span>
-                <textarea id="uTransEn" placeholder="Translation (English)..."></textarea>
+                <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
               </div>
               <div class="slot">
                 <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
-                <textarea id="uExplanation" placeholder="Explanation..."></textarea>
+                <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <input id="uTranscription" type="text" placeholder="[?sp?l?]">
-                  <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <div class="input-wrap">
+                    <input id="uTranscription" type="text" placeholder="[?sp?l?]">
+                    <button type="button" id="btnFetchTranscription" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                  </div>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <select id="uPOS">
+                <div class="row has-action">
+                  <div class="input-wrap">
+                    <select id="uPOS">
                     <option value="">-</option>
                     <option value="substantiv">Substantiv ? navn pa steder, personer, ting og fenomener</option>
                     <option value="adjektiv">Adjektiv ? beskriver substantiv</option>
@@ -136,7 +139,8 @@
                     <option value="interjeksjon">Interjeksjon ? lydmalende ord, folelser eller meninger</option>
                     <option value="andre">Andre</option>
                   </select>
-                  <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                  <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                  </div>
                 </div>
                 <div id="uPOSHelp" class="small"></div>
               </div>
@@ -158,43 +162,43 @@
                   <label>Indef. plural<input id="uNounIndefPl" type="text"></label>
                   <label>Def. plural<input id="uNounDefPl" type="text"></label>
                 </div>
-                <div class="row" style="gap:6px;flex-wrap:wrap">
-                  <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <textarea id="uCollocations" placeholder="collocations..." style="flex:1"></textarea>
-                  <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <textarea id="uCollocations" class="autogrow" placeholder="collocations..."></textarea>
+                  <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <textarea id="uExamples" placeholder="examples..." style="flex:1"></textarea>
-                  <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <textarea id="uExamples" class="autogrow" placeholder="examples..."></textarea>
+                  <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <textarea id="uAntonyms" placeholder="antonyms..." style="flex:1"></textarea>
-                  <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <textarea id="uAntonyms" class="autogrow" placeholder="antonyms..."></textarea>
+                  <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <textarea id="uCognates" placeholder="cognates..." style="flex:1"></textarea>
-                  <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <textarea id="uCognates" class="autogrow" placeholder="cognates..."></textarea>
+                  <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
-                <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <textarea id="uSayings" placeholder="sayings..." style="flex:1"></textarea>
-                  <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                <div class="row has-action">
+                  <textarea id="uSayings" class="autogrow" placeholder="sayings..."></textarea>
+                  <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
@@ -304,33 +308,36 @@
         </div>
         <div class="slot">
           <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
-          <textarea id="uFront" placeholder="Front..."></textarea>
+          <textarea id="uFront" class="autogrow" placeholder="Front..."></textarea>
         </div>
         <div class="slot">
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
-          <textarea id="uExplanation" placeholder="Explanation..."></textarea>
+          <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
           <span class="tag" id="tag_trans_local">Translation (?)</span>
-          <textarea id="uTransLocal" placeholder="Translation..."></textarea>
+          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
           <span class="tag">Translation (English)</span>
-          <textarea id="uTransEn" placeholder="Translation (English)..."></textarea>
+          <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
         </div>
         <!-- Linguistic enrichment fields -->
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-            <input id="uTranscription" type="text" placeholder="[?sp?l?]">
-            <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <div class="input-wrap">
+              <input id="uTranscription" type="text" placeholder="[?sp?l?]">
+              <button type="button" id="btnFetchTranscription" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+            </div>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-            <select id="uPOS">
+          <div class="row has-action">
+            <div class="input-wrap">
+              <select id="uPOS">
               <option value="">-</option>
               <option value="substantiv">Substantiv ? navn pa steder, personer, ting og fenomener</option>
               <option value="adjektiv">Adjektiv ? beskriver substantiv</option>
@@ -344,7 +351,8 @@
               <option value="interjeksjon">Interjeksjon ? spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
               <option value="other">Annet</option>
             </select>
-            <button id="btnFetchPOS" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+            <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+            </div>
           </div>
           <div id="uPOSHelp" class="small"></div>
         </div>
@@ -359,47 +367,47 @@
         </div>
         <div class="slot hidden" id="slot_noun_forms">
           <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;flex-wrap:wrap">
+          <div class="row has-action">
             <input id="uNounIndefSg" type="text" placeholder="{{#str}} indef_sg, mod_flashcards {{/str}}">
             <input id="uNounDefSg" type="text" placeholder="{{#str}} def_sg, mod_flashcards {{/str}}">
             <input id="uNounIndefPl" type="text" placeholder="{{#str}} indef_pl, mod_flashcards {{/str}}">
             <input id="uNounDefPl" type="text" placeholder="{{#str}} def_pl, mod_flashcards {{/str}}">
-            <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+            <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
-            <textarea id="uCollocations" placeholder="one per line..." style="min-height:66px"></textarea>
-            <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <textarea id="uCollocations" class="autogrow" placeholder="one per line..."></textarea>
+            <button id="btnFetchCollocations" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
-            <textarea id="uExamples" placeholder="one per line..." style="min-height:66px"></textarea>
-            <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <textarea id="uExamples" class="autogrow" placeholder="one per line..."></textarea>
+            <button id="btnFetchExamples" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
-            <textarea id="uAntonyms" placeholder="one per line..." style="min-height:66px"></textarea>
-            <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <textarea id="uAntonyms" class="autogrow" placeholder="one per line..."></textarea>
+            <button id="btnFetchAntonyms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
-            <textarea id="uCognates" placeholder="one per line..." style="min-height:66px"></textarea>
-            <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <textarea id="uCognates" class="autogrow" placeholder="one per line..."></textarea>
+            <button id="btnFetchCognates" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
-          <div class="row has-action" style="gap:6px;align-items:flex-start;flex-wrap:wrap">
-            <textarea id="uSayings" placeholder="one per line..." style="min-height:66px"></textarea>
-            <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          <div class="row has-action">
+            <textarea id="uSayings" class="autogrow" placeholder="one per line..."></textarea>
+            <button id="btnFetchSayings" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
