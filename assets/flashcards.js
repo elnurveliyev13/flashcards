@@ -762,6 +762,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
       const _genSel = document.getElementById('uGender'); if(_genSel) { _genSel.value = c.gender||''; }
       const nf=(c.forms&&c.forms.noun)||{}; const _nf1=document.getElementById('uNounIndefSg'); if(_nf1) _nf1.value = nf.indef_sg||''; const _nf2=document.getElementById('uNounDefSg'); if(_nf2) _nf2.value = nf.def_sg||''; const _nf3=document.getElementById('uNounIndefPl'); if(_nf3) _nf3.value = nf.indef_pl||''; const _nf4=document.getElementById('uNounDefPl'); if(_nf4) _nf4.value = nf.def_pl||'';
+      const vf=(c.forms&&c.forms.verb)||{}; const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1) _vf1.value = vf.infinitiv||''; const _vf2=document.getElementById('uVerbPresens'); if(_vf2) _vf2.value = vf.presens||''; const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3) _vf3.value = vf.preteritum||''; const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4) _vf4.value = vf.perfektum_partisipp||''; const _vf5=document.getElementById('uVerbImperativ'); if(_vf5) _vf5.value = vf.imperativ||'';
+      const af=(c.forms&&c.forms.adj)||{}; const _af1=document.getElementById('uAdjPositiv'); if(_af1) _af1.value = af.positiv||''; const _af2=document.getElementById('uAdjKomparativ'); if(_af2) _af2.value = af.komparativ||''; const _af3=document.getElementById('uAdjSuperlativ'); if(_af3) _af3.value = af.superlativ||'';
       const _ant=document.getElementById('uAntonyms'); if(_ant) _ant.value = Array.isArray(c.antonyms)?c.antonyms.join('\n'):'';
       const _col=document.getElementById('uCollocations'); if(_col) _col.value = Array.isArray(c.collocations)?c.collocations.join('\n'):'';
       const _exs=document.getElementById('uExamples'); if(_exs) _exs.value = Array.isArray(c.examples)?c.examples.join('\n'):'';
@@ -898,8 +900,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const pos = (document.getElementById('uPOS')?.value||'').toLowerCase();
       const genderSlot = document.getElementById('slot_gender');
       const nounFormsSlot = document.getElementById('slot_noun_forms');
+      const verbFormsSlot = document.getElementById('slot_verb_forms');
+      const adjFormsSlot = document.getElementById('slot_adj_forms');
       if(genderSlot) genderSlot.classList.toggle('hidden', pos !== 'substantiv');
       if(nounFormsSlot) nounFormsSlot.classList.toggle('hidden', pos !== 'substantiv');
+      if(verbFormsSlot) verbFormsSlot.classList.toggle('hidden', pos !== 'verb');
+      if(adjFormsSlot) adjFormsSlot.classList.toggle('hidden', pos !== 'adjektiv');
     }
     const _uPOS = document.getElementById('uPOS');
     if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); updatePOSHelp(); }
@@ -1218,7 +1224,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = '';
       const _posField = document.getElementById('uPOS'); if(_posField) _posField.value = '';
       const _genderField = document.getElementById('uGender'); if(_genderField) _genderField.value = '';
-      ['uNounIndefSg','uNounDefSg','uNounIndefPl','uNounDefPl','uAntonyms','uCollocations','uExamples','uCognates','uSayings']
+      ['uNounIndefSg','uNounDefSg','uNounIndefPl','uNounDefPl','uVerbInfinitiv','uVerbPresens','uVerbPreteritum','uVerbPerfektum','uVerbImperativ','uAdjPositiv','uAdjKomparativ','uAdjSuperlativ','uAntonyms','uCollocations','uExamples','uCognates','uSayings']
         .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
       togglePOSUI();
       updatePOSHelp();
@@ -1334,6 +1340,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           def_pl:(document.getElementById('uNounDefPl')?.value||'').trim(),
         };
         if(nf.indef_sg||nf.def_sg||nf.indef_pl||nf.def_pl){ payload.forms={noun:nf}; }
+      }
+      if(posv==='verb'){
+        const vf={
+          infinitiv:(document.getElementById('uVerbInfinitiv')?.value||'').trim(),
+          presens:(document.getElementById('uVerbPresens')?.value||'').trim(),
+          preteritum:(document.getElementById('uVerbPreteritum')?.value||'').trim(),
+          perfektum_partisipp:(document.getElementById('uVerbPerfektum')?.value||'').trim(),
+          imperativ:(document.getElementById('uVerbImperativ')?.value||'').trim(),
+        };
+        if(vf.infinitiv||vf.presens||vf.preteritum||vf.perfektum_partisipp||vf.imperativ){ payload.forms={verb:vf}; }
+      }
+      if(posv==='adjektiv'){
+        const af={
+          positiv:(document.getElementById('uAdjPositiv')?.value||'').trim(),
+          komparativ:(document.getElementById('uAdjKomparativ')?.value||'').trim(),
+          superlativ:(document.getElementById('uAdjSuperlativ')?.value||'').trim(),
+        };
+        if(af.positiv||af.komparativ||af.superlativ){ payload.forms={adj:af}; }
       }
       function linesToArr(id){ return (document.getElementById(id)?.value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean); }
       const antonyms=linesToArr('uAntonyms'); if(antonyms.length) payload.antonyms=antonyms;

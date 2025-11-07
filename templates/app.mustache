@@ -154,7 +154,6 @@
                     <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
                     <option value="interjeksjon">Interjeksjon ? lydmalende ord, folelser eller meninger</option>
                     <option value="phrase">Phrase</option>
-                    <option value="andre">Andre</option>
                   </select>
                   <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                   </div>
@@ -181,6 +180,30 @@
                 </div>
                 <div class="row has-action">
                   <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot" id="slot_verb_forms">
+                <span class="tag">{{#str}} verb_forms, mod_flashcards {{/str}}</span>
+                <div class="grid-forms">
+                  <label>Infinitiv<input id="uVerbInfinitiv" type="text"></label>
+                  <label>Presens<input id="uVerbPresens" type="text"></label>
+                  <label>Preteritum<input id="uVerbPreteritum" type="text"></label>
+                  <label>Perfektum partisipp<input id="uVerbPerfektum" type="text"></label>
+                  <label>Imperativ<input id="uVerbImperativ" type="text"></label>
+                </div>
+                <div class="row has-action">
+                  <button id="btnFetchVerbForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+                </div>
+              </div>
+              <div class="slot" id="slot_adj_forms">
+                <span class="tag">{{#str}} adj_forms, mod_flashcards {{/str}}</span>
+                <div class="grid-forms">
+                  <label>Positiv<input id="uAdjPositiv" type="text"></label>
+                  <label>Komparativ<input id="uAdjKomparativ" type="text"></label>
+                  <label>Superlativ<input id="uAdjSuperlativ" type="text"></label>
+                </div>
+                <div class="row has-action">
+                  <button id="btnFetchAdjForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
               <div class="slot">
@@ -371,7 +394,6 @@
               <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
               <option value="interjeksjon">Interjeksjon ? spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
               <option value="phrase">Phrase</option>
-              <option value="other">Annet</option>
             </select>
             <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
             </div>
@@ -395,6 +417,26 @@
             <input id="uNounIndefPl" type="text" placeholder="{{#str}} indef_pl, mod_flashcards {{/str}}">
             <input id="uNounDefPl" type="text" placeholder="{{#str}} def_pl, mod_flashcards {{/str}}">
             <button id="btnFetchNounForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          </div>
+        </div>
+        <div class="slot hidden" id="slot_verb_forms">
+          <span class="tag">{{#str}} verb_forms, mod_flashcards {{/str}}</span>
+          <div class="row has-action">
+            <input id="uVerbInfinitiv" type="text" placeholder="Infinitiv">
+            <input id="uVerbPresens" type="text" placeholder="Presens">
+            <input id="uVerbPreteritum" type="text" placeholder="Preteritum">
+            <input id="uVerbPerfektum" type="text" placeholder="Perfektum partisipp">
+            <input id="uVerbImperativ" type="text" placeholder="Imperativ">
+            <button id="btnFetchVerbForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
+          </div>
+        </div>
+        <div class="slot hidden" id="slot_adj_forms">
+          <span class="tag">{{#str}} adj_forms, mod_flashcards {{/str}}</span>
+          <div class="row has-action">
+            <input id="uAdjPositiv" type="text" placeholder="Positiv">
+            <input id="uAdjKomparativ" type="text" placeholder="Komparativ">
+            <input id="uAdjSuperlativ" type="text" placeholder="Superlativ">
+            <button id="btnFetchAdjForms" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
         <div class="slot">
