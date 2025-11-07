@@ -137,3 +137,38 @@ function mod_flashcards_pluginfile($course, $cm, $context, $filearea, $args, $fo
     // Send the file
     send_stored_file($file, 0, 0, $forcedownload, $options);
 }
+
+/**
+ * Provide non-sensitive runtime configuration for the JS app.
+ */
+function mod_flashcards_get_runtime_config(): array {
+    $config = get_config('mod_flashcards');
+    $voices = [];
+    $rawvoicemap = $config->elevenlabs_voice_map ?? '';
+    if ($rawvoicemap !== '') {
+        $lines = preg_split("/\r?\n/", $rawvoicemap);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || strpos($line, '=') === false) {
+                continue;
+            }
+            [$label, $voice] = array_map('trim', explode('=', $line, 2));
+            if ($label !== '' && $voice !== '') {
+                $voices[] = [
+                    'label' => $label,
+                    'voice' => $voice,
+                ];
+            }
+        }
+    }
+
+    return [
+        'ai' => [
+            'enabled' => !empty($config->ai_focus_enabled) && !empty($config->openai_apikey),
+            'ttsEnabled' => !empty($config->elevenlabs_apikey),
+            'defaultVoice' => $config->elevenlabs_default_voice ?? '',
+            'voices' => $voices,
+            'dictionaryEnabled' => !empty($config->orbokene_enabled),
+        ],
+    ];
+}

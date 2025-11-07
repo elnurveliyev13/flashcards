@@ -913,5 +913,30 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025110302, 'flashcards');
     }
 
+    if ($oldversion < 2025110700) {
+        $table = new xmldb_table('flashcards_orbokene');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('entry', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('normalized', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('baseform', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('grammar', XMLDB_TYPE_CHAR, '100', null, null, null, null);
+        $table->add_field('definition', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('translation', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('examplesjson', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('meta', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('normalized_uix', XMLDB_INDEX_UNIQUE, ['normalized']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('Flashcards: Added flashcards_orbokene table for AI dictionary cache.');
+        }
+
+        upgrade_mod_savepoint(true, 2025110700, 'flashcards');
+    }
+
     return true;
 }

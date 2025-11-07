@@ -39,7 +39,10 @@ $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/app.css', ['v' => $v
 // Prefer bottom action bar as the single rating UI
 $PAGE->requires->css(new moodle_url('/mod/flashcards/assets/ux-bottom.css', ['v' => $ver]));
 // Force client profile to Moodle user id for automatic sync.
-$init = "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
+$runtimeconfig = mod_flashcards_get_runtime_config();
+$runtimejson = json_encode($runtimeconfig, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+$init = "window.__flashcardsRuntimeConfig = ".$runtimejson.";";
+$init .= "try{localStorage.setItem('srs-profile','U".$USER->id."');}catch(e){};";
 $init .= "window.__flashcardsInitQueue = window.__flashcardsInitQueue || [];";
 $init .= "if (typeof window.flashcardsInit === 'function') {"
   . "window.flashcardsInit('mod_flashcards_container', '".$baseurl."', ".$cm->id.", ".$cm->instance.", '".sesskey()."');"
@@ -61,6 +64,5 @@ if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
 }
 echo $OUTPUT->render_from_template('mod_flashcards/app', []);
 echo $OUTPUT->footer();
-
 
 

@@ -25,10 +25,26 @@ $string['list'] = 'Cards list';
 $string['addown'] = 'Add your card';
 $string['front'] = 'Front text';
 $string['fokus'] = 'Fokus word/phrase';
+$string['focus_baseform'] = 'Base form';
+$string['focus_baseform_ph'] = 'Lemma or infinitive (optional)';
+$string['ai_helper_label'] = 'AI focus helper';
+$string['ai_click_hint'] = 'Tap any word above to detect a fixed expression';
+$string['ai_helper_disabled'] = 'AI helper is disabled by the administrator';
+$string['ai_detecting'] = 'Detecting expression...';
+$string['ai_helper_success'] = 'Focus phrase added';
+$string['ai_helper_error'] = 'Could not detect an expression';
+$string['ai_no_text'] = 'Type a sentence to enable the helper';
+$string['focus_audio_badge'] = 'Focus audio';
+$string['front_audio_badge'] = 'Front audio';
 $string['explanation'] = 'Explanation';
 $string['back'] = 'Translation';
 $string['image'] = 'Image';
 $string['audio'] = 'Audio';
+$string['tts_voice'] = 'Voice';
+$string['tts_voice_hint'] = 'Select a voice before asking the AI helper to generate audio.';
+$string['tts_voice_placeholder'] = 'Default voice';
+$string['tts_voice_missing'] = 'Add ElevenLabs voices in the plugin settings.';
+$string['tts_voice_disabled'] = 'Enter your ElevenLabs API key to enable audio generation.';
 $string['choosefile'] = 'Choose file';
 $string['chooseaudiofile'] = 'Choose audio file';
 $string['showmore'] = 'Show more';
@@ -192,3 +208,37 @@ $string['achievement_master'] = 'Master (1 card at stage 7+)';
 // Placeholders
 $string['collocations_ph'] = 'One per line...';
 $string['examples_ph'] = 'Example sentences...';
+
+// Settings - AI & TTS
+$string['settings_ai_section'] = 'AI assistant';
+$string['settings_ai_section_desc'] = 'Configure the ChatGPT model used to detect fixed expressions when a learner clicks a word.';
+$string['settings_ai_enable'] = 'Enable AI focus helper';
+$string['settings_ai_enable_desc'] = 'Allow learners to highlight a word in the Front text and let AI detect the matching expression.';
+$string['settings_openai_key'] = 'OpenAI API key';
+$string['settings_openai_key_desc'] = 'Stored securely on the server. Required for the focus helper.';
+$string['settings_openai_model'] = 'OpenAI model';
+$string['settings_openai_model_desc'] = 'For example gpt-4o-mini. The helper uses chat-completions.';
+$string['settings_openai_url'] = 'OpenAI endpoint';
+$string['settings_openai_url_desc'] = 'Override only when using a proxy-compatible endpoint.';
+
+$string['settings_tts_section'] = 'Text-to-Speech (ElevenLabs)';
+$string['settings_tts_section_desc'] = 'Used to generate audio for the full sentence and the detected expression.';
+$string['settings_elevenlabs_key'] = 'ElevenLabs API key';
+$string['settings_elevenlabs_key_desc'] = 'Stored securely on the server and never exposed to learners.';
+$string['settings_elevenlabs_voice'] = 'Default voice ID';
+$string['settings_elevenlabs_voice_desc'] = 'Used when the learner does not select a specific voice.';
+$string['settings_elevenlabs_voice_map'] = 'Voice options';
+$string['settings_elevenlabs_voice_map_desc'] = 'Define one voice per line using the format Name=voice-id. Example: Ida=21m00Tcm4TlvDq8ikWAM';
+$string['settings_elevenlabs_model'] = 'ElevenLabs model ID';
+$string['settings_elevenlabs_model_desc'] = 'Defaults to eleven_monolingual_v2. Update only if your account uses a different model.';
+
+$string['settings_orbokene_section'] = 'Orbøkene dictionary';
+$string['settings_orbokene_section_desc'] = 'When enabled the AI helper will try to enrich detected expressions with data from the flashcards_orbokene table.';
+$string['settings_orbokene_enable'] = 'Enable dictionary auto-fill';
+$string['settings_orbokene_enable_desc'] = 'If enabled, matching entries in the Orbøkene cache populate definition, translation and examples.';
+
+// Errors
+$string['ai_http_error'] = 'The AI service is unavailable. Please try again later.';
+$string['ai_invalid_json'] = 'Unexpected response from the AI service.';
+$string['ai_disabled'] = 'The AI helper is not configured yet.';
+$string['tts_http_error'] = 'Text-to-speech is temporarily unavailable.';

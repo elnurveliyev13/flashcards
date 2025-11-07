@@ -29,6 +29,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
+    const runtimeConfig = window.__flashcardsRuntimeConfig || {};
+    const aiConfig = runtimeConfig.ai || {};
+    const aiEnabled = !!aiConfig.enabled;
+    const voiceOptionsRaw = Array.isArray(aiConfig.voices) ? aiConfig.voices : [];
+    let selectedVoice = aiConfig.defaultVoice || (voiceOptionsRaw[0]?.voice || '');
+    const dataset = root?.dataset || {};
+    const aiStrings = {
+      click: dataset.aiClick || 'Tap a word to highlight an expression',
+      disabled: dataset.aiDisabled || 'AI focus helper is disabled',
+      detecting: dataset.aiDetecting || 'Detecting expression…',
+      success: dataset.aiSuccess || 'Focus phrase updated',
+      error: dataset.aiError || 'Unable to detect an expression',
+      notext: dataset.aiNoText || 'Type a sentence first',
+      focusAudio: dataset.focusAudioLabel || 'Focus audio',
+      frontAudio: dataset.frontAudioLabel || 'Audio',
+      voicePlaceholder: dataset.voicePlaceholder || 'Default voice',
+      voiceMissing: dataset.voiceMissing || 'Add ElevenLabs voices in plugin settings',
+      voiceDisabled: dataset.voiceDisabled || 'Enter your ElevenLabs API key to enable audio.'
+    };
 
     // Language detection (prefer Moodle, fallback to browser)
     // Prefer Moodle page lang and URL param over browser
@@ -44,6 +63,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const rawLang = pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
     const userLang = (rawLang || 'en').toLowerCase();
     const userLang2 = userLang.split(/[\-_]/)[0] || 'en';
+
+    const voiceSelectEl = document.getElementById('ttsVoice');
+    const voiceSlotEl = document.getElementById('slot_ttsVoice');
+    const voiceStatusEl = document.getElementById('ttsVoiceStatus');
+    if(voiceSelectEl){
+      if(voiceOptionsRaw.length){
+        const placeholderOpt=document.createElement('option');
+        placeholderOpt.value='';
+        placeholderOpt.textContent = aiStrings.voicePlaceholder;
+        voiceSelectEl.appendChild(placeholderOpt);
+        voiceOptionsRaw.forEach(opt=>{
+          if(!opt || !opt.voice) return;
+          const option=document.createElement('option');
+          option.value = opt.voice;
+          option.textContent = opt.label || opt.voice;
+          voiceSelectEl.appendChild(option);
+        });
+        voiceSelectEl.value = selectedVoice || '';
+        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; });
+        if(voiceSlotEl) voiceSlotEl.classList.remove('hidden');
+        if(!aiConfig.ttsEnabled && voiceStatusEl){
+          voiceStatusEl.textContent = aiStrings.voiceDisabled;
+        }
+      } else {
+        if(voiceSlotEl) voiceSlotEl.classList.add('hidden');
+        if(voiceStatusEl) voiceStatusEl.textContent = aiStrings.voiceMissing;
+      }
+    } else if(voiceSlotEl){
+      voiceSlotEl.classList.add('hidden');
+    }
 
     function languageName(code){
       const c = (code||'').toLowerCase();
@@ -102,6 +151,182 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     compactPOSOptions();
 
+    const frontInput = $("#uFront");
+    const fokusInput = $("#uFokus");
+    const focusBaseInput = document.getElementById('uFocusBase');
+    const focusWordList = document.getElementById('focusWordList');
+    const focusStatusEl = document.getElementById('focusHelperStatus');
+    const focusHintEl = document.getElementById('focusHelperHint');
+    const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
+    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'’\-]+/gu; } catch(_e){ return /[A-Za-z0-9'’\-]+/g; } })();
+
+    function setFocusStatus(state, text){
+      if(!focusStatusEl) return;
+      focusStatusEl.dataset.state = state || '';
+      focusStatusEl.textContent = text || '';
+    }
+
+    function updateFocusHint(){
+      if(!focusHintEl) return;
+      focusHintEl.textContent = aiEnabled ? aiStrings.click : aiStrings.disabled;
+    }
+
+    function extractFocusTokens(text){
+      if(!text) return [];
+      const matches = text.match(wordRegex);
+      if(!matches) return [];
+      return matches.map((token, index)=>({ text: token, index }));
+    }
+
+    function updateChipActiveState(){
+      if(!focusWordList) return;
+      Array.from(focusWordList.querySelectorAll('.focus-chip')).forEach(btn=>{
+        const idx = Number(btn.dataset.index || -1);
+        btn.classList.toggle('active', idx === focusHelperState.activeIndex);
+      });
+    }
+
+    function renderFocusChips(){
+      if(!focusWordList) return;
+      const text = frontInput ? frontInput.value : '';
+      const tokens = extractFocusTokens(text);
+      focusHelperState.tokens = tokens;
+      focusWordList.innerHTML = '';
+      if(!text || !text.trim()){
+        setFocusStatus('', '');
+      }
+      if(!tokens.length){
+        const span=document.createElement('span');
+        span.className='focus-helper-empty';
+        span.textContent = aiStrings.notext;
+        focusWordList.appendChild(span);
+        return;
+      }
+      tokens.forEach((token, idx)=>{
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='focus-chip';
+        btn.textContent = token.text;
+        btn.dataset.index = String(idx);
+        if(!aiEnabled){
+          btn.disabled = true;
+        }else{
+          btn.addEventListener('click', ()=> triggerFocusHelper(token, idx));
+        }
+        if(idx === focusHelperState.activeIndex){
+          btn.classList.add('active');
+        }
+        focusWordList.appendChild(btn);
+      });
+    }
+
+    function applyAiPayload(data){
+      if(!data) return;
+      if(data.focusWord && fokusInput){
+        fokusInput.value = data.focusWord;
+        try{
+          fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
+        }catch(_e){}
+      }
+      if(data.focusBaseform && focusBaseInput && !focusBaseInput.value.trim()){
+        focusBaseInput.value = data.focusBaseform;
+      }
+      if(data.definition){
+        const expl = document.getElementById('uExplanation');
+        if(expl && !expl.value.trim()){
+          expl.value = data.definition;
+        }
+      }
+      if(data.translation){
+        const transLocal = document.getElementById('uTransLocal');
+        if(transLocal && !transLocal.value.trim()){
+          transLocal.value = data.translation;
+        }
+      }
+      if(Array.isArray(data.examples) && data.examples.length){
+        const examplesEl = document.getElementById('uExamples');
+        if(examplesEl && !examplesEl.value.trim()){
+          examplesEl.value = data.examples.join('\\n');
+        }
+      }
+      if(data.audio && data.audio.front && data.audio.front.url){
+        lastAudioUrl = data.audio.front.url;
+        lastAudioKey = null;
+        showAudioBadge(aiStrings.frontAudio);
+        const prev=document.getElementById('audPrev');
+        if(prev){
+          try{prev.pause();}catch(_e){}
+          prev.src = lastAudioUrl;
+          prev.classList.remove('hidden');
+          try{prev.load();}catch(_e){}
+        }
+      }
+      if(data.audio && data.audio.focus && data.audio.focus.url){
+        setFocusAudio(data.audio.focus.url, aiStrings.focusAudio);
+      }
+    }
+
+    async function triggerFocusHelper(token, idx){
+      if(!aiEnabled){
+        setFocusStatus('disabled', aiStrings.disabled);
+        return;
+      }
+      if(!frontInput || !frontInput.value.trim()){
+        setFocusStatus('idle', aiStrings.notext);
+        return;
+      }
+      focusHelperState.activeIndex = idx;
+      updateChipActiveState();
+      if(focusHelperState.abortController){
+        focusHelperState.abortController.abort();
+      }
+      const controller = new AbortController();
+      focusHelperState.abortController = controller;
+      setFocusStatus('loading', aiStrings.detecting);
+      try{
+        const payload = {
+          frontText: frontInput.value.trim(),
+          focusWord: token.text,
+          language: userLang2
+        };
+        if(selectedVoice){
+          payload.voiceId = selectedVoice;
+        }
+        const data = await api('ai_focus_helper', {}, 'POST', payload, {signal: controller.signal});
+        applyAiPayload(data);
+        setFocusStatus('success', aiStrings.success);
+      }catch(err){
+        if(controller.signal.aborted){
+          return;
+        }
+        console.error('[Flashcards][AI] focus helper failed', err);
+        setFocusStatus('error', err?.message || aiStrings.error);
+      }finally{
+        if(focusHelperState.abortController === controller){
+          focusHelperState.abortController = null;
+        }
+      }
+    }
+
+    updateFocusHint();
+    if(frontInput){
+      frontInput.addEventListener('input', ()=>{
+        focusHelperState.activeIndex = null;
+        if(focusHelperState.abortController){
+          focusHelperState.abortController.abort();
+          focusHelperState.abortController = null;
+        }
+        renderFocusChips();
+        if(aiEnabled){
+          setFocusStatus('', '');
+        }
+      });
+    }
+    renderFocusChips();
+    if(!aiEnabled){
+      setFocusStatus('disabled', aiStrings.disabled);
+    }
+
     function pickTranslationFromPayload(p){
       const t = p && p.translations ? p.translations : null;
       if(t && typeof t === 'object'){
@@ -111,9 +336,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function resolveAsset(u){ if(!u) return null; if(/^https?:|^blob:|^data:/.test(u)) return u; u=(u+'').replace(/^\/+/, ''); return baseurl + u; }
-    async function api(action, params={}, method='GET', body){
+    async function api(action, params={}, method='GET', body, extraOpts){
       const opts = {method, headers:{'Content-Type':'application/json'}};
-      if(body!==undefined && body!==null) opts.body = JSON.stringify(body);
+      if(body!==undefined && body!==null){
+        opts.body = JSON.stringify(body);
+      }
+      if(extraOpts){
+        if(extraOpts.headers){
+          opts.headers = Object.assign({}, opts.headers, extraOpts.headers);
+        }
+        if(extraOpts.signal){
+          opts.signal = extraOpts.signal;
+        }
+      }
       const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
       // In global mode, pass cmid=0; in activity mode, pass actual cmid
       url.searchParams.set('cmid', isGlobalMode ? 0 : cmid);
@@ -168,17 +403,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function normalizeServerCard(item){
       if(!item) return null;
       const payload = item.payload || {};
+      const frontAudio = payload.audioFront || payload.audio || null;
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
         fokus: payload.fokus || "",
+        focusBase: payload.focusBase || payload.focus_baseform || "",
         translation: pickTranslationFromPayload(payload),
         translations: (payload.translations && typeof payload.translations === 'object') ? payload.translations : null,
         explanation: payload.explanation || "",
         image: payload.image || null,
         imageKey: payload.imageKey || null,
-        audio: payload.audio || null,
+        audio: frontAudio,
+        audioFront: frontAudio,
         audioKey: payload.audioKey || null,
+        focusAudio: payload.focusAudio || payload.audioFocus || null,
+        focusAudioKey: payload.focusAudioKey || null,
         order: Array.isArray(payload.order) ? payload.order : [],
         transcription: payload.transcription || "",
         pos: payload.pos || "",
@@ -408,6 +648,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     let audioURL=null; const player=new Audio();
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[];
+    let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const DEBUG_REC = (function(){
       try{
@@ -508,6 +749,44 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const nameEl=document.getElementById('audName');
       if(nameEl) nameEl.textContent = '';
     }
+    function showFocusAudioBadge(label){
+      const badge=document.getElementById('focusAudBadge');
+      const nameEl=document.getElementById('focusAudName');
+      if(nameEl) nameEl.textContent = label || aiStrings.focusAudio;
+      if(badge) badge.classList.remove('hidden');
+    }
+    function hideFocusAudioBadge(){
+      const badge=document.getElementById('focusAudBadge');
+      if(badge) badge.classList.add('hidden');
+      const nameEl=document.getElementById('focusAudName');
+      if(nameEl) nameEl.textContent = '';
+    }
+    function clearFocusAudio(){
+      focusAudioUrl = null;
+      hideFocusAudioBadge();
+      const audio=document.getElementById('focusAudPrev');
+      if(audio){
+        try{ audio.pause(); }catch(_e){}
+        audio.removeAttribute('src');
+        try{ audio.load(); }catch(_e){}
+        audio.classList.add('hidden');
+      }
+    }
+    function setFocusAudio(url, label){
+      if(!url){
+        clearFocusAudio();
+        return;
+      }
+      focusAudioUrl = url;
+      showFocusAudioBadge(label || aiStrings.focusAudio);
+      const audio=document.getElementById('focusAudPrev');
+      if(audio){
+        try{audio.pause();}catch(_e){}
+        audio.src = url;
+        audio.classList.remove('hidden');
+        try{audio.load();}catch(_e){}
+      }
+    }
     function showImageBadge(label){
       const badge=document.getElementById('imgBadge');
       const nameEl=document.getElementById('imgName');
@@ -549,7 +828,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnDel){ btnDel.classList.remove('hidden'); btnDel.disabled = !hasCard; }
     }
     function hidePlayIcons(){ if(btnPlayBtn) btnPlayBtn.classList.add('hidden'); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden'); }
-    function attachAudio(url){ audioURL=url; if(btnPlayBtn) btnPlayBtn.classList.remove("hidden"); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.remove("hidden"); if(btnPlayBtn){ btnPlayBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); }; } if(btnPlaySlowBtn){ btnPlaySlowBtn.onclick=()=>{ if(!audioURL)return; player.src=audioURL; player.playbackRate=0.67; player.currentTime=0; player.play().catch(()=>{}); }; }
+    function playAudioFromUrl(url, rate){
+      if(!url) return;
+      try{
+        player.src = url;
+        player.playbackRate = rate || 1;
+        player.currentTime = 0;
+        player.play().catch(()=>{});
+      }catch(_e){}
+    }
+    function attachAudio(url){
+      audioURL=url;
+      if(btnPlayBtn) btnPlayBtn.classList.remove("hidden");
+      if(btnPlaySlowBtn) btnPlaySlowBtn.classList.remove("hidden");
+      if(btnPlayBtn){
+        btnPlayBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,1); };
+      }
+      if(btnPlaySlowBtn){
+        btnPlaySlowBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,0.67); };
+      }
     }
     function openEditor(){
       const front = $("#uFront");
@@ -563,8 +860,91 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(_btnUpdate) _btnUpdate.disabled = true;
       setAdvancedVisibility(false);
     }
-    function normalizeLessonCard(c){ if(c.front && !c.text) c.text=c.front; if(c.back&&!c.translation) c.translation=c.back; if(!Array.isArray(c.order)||!c.order.length){ c.order=[]; if(c.audio||c.audioKey) c.order.push("audio"); if(c.image||c.imageKey) c.order.push("image"); if(c.text) c.order.push("text"); if(c.explanation) c.order.push("explanation"); if(c.translation) c.order.push("translation"); } c.order=uniq(c.order); return c; }
-    async function buildSlot(kind, card){ const el=document.createElement("div"); el.className="slot"; if(kind==="text" && card.text){ const tr = card.transcription ? `<div class=\"small\" style=\"opacity:.85\">[${card.transcription}]</div>` : ""; el.innerHTML=`<div class="front">${card.text}</div>${tr}`; return el; } if(kind==="explanation" && card.explanation){ el.innerHTML=`<div class="back">${card.explanation}</div>`; return el; } if(kind==="translation" && card.translation){ el.innerHTML=`<div class="back">${card.translation}</div>`; return el; } if(kind==="image" && (card.image||card.imageKey)){ const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image); if(url){ const img=document.createElement("img"); img.src=url; img.className="media"; el.appendChild(img); return el; } } if(kind==="audio" && (card.audio||card.audioKey)){ const url=card.audioKey?await urlForSafe(card.audioKey):resolveAsset(card.audio); if(url){ attachAudio(url); el.innerHTML=`<div class="pill">Audio</div>`; el.dataset.autoplay=url; return el; } } return null; }
+    function normalizeLessonCard(c){
+      if(c.front && !c.text) c.text=c.front;
+      if(c.back&&!c.translation) c.translation=c.back;
+      if(!Array.isArray(c.order)||!c.order.length){
+        c.order=[];
+        if(c.audio||c.audioKey||c.focusAudio||c.focusAudioKey) c.order.push("audio");
+        if(c.image||c.imageKey) c.order.push("image");
+        if(c.text) c.order.push("text");
+        if(c.explanation) c.order.push("explanation");
+        if(c.translation) c.order.push("translation");
+      }
+      c.order=uniq(c.order);
+      return c;
+    }
+    async function buildSlot(kind, card){
+      const el=document.createElement("div");
+      el.className="slot";
+      if(kind==="text" && card.text){
+        const tr = card.transcription ? `<div class="small" style="opacity:.85">[${card.transcription}]</div>` : "";
+        el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
+        return el;
+      }
+      if(kind==="explanation" && card.explanation){
+        el.innerHTML=`<div class="back">${card.explanation}</div>`;
+        return el;
+      }
+      if(kind==="translation" && card.translation){
+        el.innerHTML=`<div class="back">${card.translation}</div>`;
+        return el;
+      }
+      if(kind==="image" && (card.image||card.imageKey)){
+        const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image);
+        if(url){
+          const img=document.createElement("img");
+          img.src=url;
+          img.className="media";
+          el.appendChild(img);
+          return el;
+        }
+      }
+      if(kind==="audio"){
+        const tracks=[];
+        let frontUrl=null;
+        if(card.audioKey){
+          frontUrl=await urlForSafe(card.audioKey);
+        }else if(card.audio){
+          frontUrl=resolveAsset(card.audio);
+        }
+        if(frontUrl){
+          tracks.push({url:frontUrl,type:'front'});
+        }
+        let focusUrl=null;
+        if(card.focusAudioKey){
+          focusUrl=await urlForSafe(card.focusAudioKey);
+        }else if(card.focusAudio){
+          focusUrl=resolveAsset(card.focusAudio) || card.focusAudio;
+        }
+        if(focusUrl){
+          tracks.push({url:focusUrl,type:'focus'});
+        }
+        if(!tracks.length){
+          return null;
+        }
+        const row=document.createElement("div");
+        row.className="audio-chip-row";
+        tracks.forEach((track, idx)=>{
+          const btn=document.createElement("button");
+          btn.type="button";
+          btn.className="pill"+(track.type==='focus'?' pill-focus':'');
+          btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
+          btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
+          row.appendChild(btn);
+          if(track.type==='front'){
+            attachAudio(track.url);
+            el.dataset.autoplay=track.url;
+          }
+          if(!el.dataset.autoplay && idx===0){
+            el.dataset.autoplay = track.url;
+          }
+        });
+        el.appendChild(row);
+        return el;
+      }
+      return null;
+    }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -754,9 +1134,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       lastAudioKey = c.audioKey || null;
       lastImageUrl = c.image || null;
       lastAudioUrl = c.audio || null;
+      if(c.focusAudio){
+        setFocusAudio(c.focusAudio, aiStrings.focusAudio);
+      } else {
+        clearFocusAudio();
+      }
 
       $("#uFront").value=c.text||"";
       $("#uFokus").value=c.fokus||"";
+      const focusBaseField=document.getElementById('uFocusBase');
+      if(focusBaseField) focusBaseField.value = c.focusBase || '';
       $("#uExplanation").value=c.explanation||"";
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = c.transcription||'';
       const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
@@ -788,6 +1175,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         (Array.isArray(c.order) && c.order.length && c.order.length !== DEFAULT_ORDER.length)
       );
       setAdvancedVisibility(hasAdvanced);
+      renderFocusChips();
+      setFocusStatus('', '');
 
       (async()=>{
         $("#imgPrev").classList.add("hidden");
@@ -956,6 +1345,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     });
     $("#btnClearImg").addEventListener("click",()=>{ clearImageSelection(); });
     $("#btnClearAud").addEventListener("click",()=>{ clearAudioSelection(); });
+    const btnClearFocusAud = $("#btnClearFocusAud");
+    if(btnClearFocusAud){
+      btnClearFocusAud.addEventListener("click", ()=>{ clearFocusAudio(); });
+    }
                         // Hold-to-record: press and hold to record; release to stop
     (function(){
       var recBtn = $("#btnRec");
@@ -1218,6 +1611,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function resetForm(){
       $("#uFront").value="";
       $("#uFokus").value="";
+      const baseField=document.getElementById('uFocusBase');
+      if(baseField) baseField.value='';
       const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
       const _te=$("#uTransEn"); if(_te) _te.value="";
       $("#uExplanation").value="";
@@ -1231,10 +1626,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setAdvancedVisibility(false);
       clearImageSelection();
       clearAudioSelection();
+      clearFocusAudio();
       if(useIOSRecorderGlobal && iosRecorderGlobal){ try{ iosRecorderGlobal.releaseMic(); }catch(_e){} }
       editingCardId=null; // Clear editing card ID when resetting form
       orderChosen=[];
       updateOrderPreview();
+      renderFocusChips();
+      if(aiEnabled){
+        setFocusStatus('', '');
+      }else{
+        setFocusStatus('disabled', aiStrings.disabled);
+      }
 
       // Disable Update button when no card is being edited
       const btnUpdate = $("#btnUpdate");
@@ -1328,6 +1730,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
       const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
+      if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
       const trscr=(document.getElementById('uTranscription')?.value||'').trim(); if(trscr) payload.transcription=trscr;
       const posv=(document.getElementById('uPOS')?.value||''); if(posv) payload.pos=posv;
@@ -1366,7 +1770,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const cognates=linesToArr('uCognates'); if(cognates.length) payload.cognates=cognates;
       const sayings=linesToArr('uSayings'); if(sayings.length) payload.sayings=sayings;
       if(lastImageUrl) payload.image=lastImageUrl; else if(lastImageKey) payload.imageKey=lastImageKey;
-      if(lastAudioUrl) payload.audio=lastAudioUrl; else if(lastAudioKey) payload.audioKey=lastAudioKey;
+      if(lastAudioUrl){
+        payload.audio=lastAudioUrl;
+        payload.audioFront=lastAudioUrl;
+      } else if(lastAudioKey){
+        payload.audioKey=lastAudioKey;
+      }
+      if(focusAudioUrl){
+        payload.focusAudio = focusAudioUrl;
+      }
 
       // Save to server and get back the real deckId
       let serverDeckId = MY_DECK_ID;
@@ -1825,7 +2237,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }; }
     }
     function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
-    function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
+    function buildPayloadFromCard(c){
+      const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
+      if(c.focusBase) p.focusBase = c.focusBase;
+      if(c.image) p.image=c.image;
+      if(c.imageKey) p.imageKey=c.imageKey;
+      if(c.audio) p.audio=c.audio;
+      if(c.audioFront) p.audioFront=c.audioFront;
+      if(c.audioKey) p.audioKey=c.audioKey;
+      if(c.focusAudio) p.focusAudio=c.focusAudio;
+      if(c.focusAudioKey) p.focusAudioKey=c.focusAudioKey;
+      if(c.transcription) p.transcription=c.transcription;
+      if(c.pos) p.pos=c.pos;
+      if(c.gender) p.gender=c.gender;
+      if(c.forms) p.forms=c.forms;
+      if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms;
+      if(Array.isArray(c.collocations)) p.collocations=c.collocations;
+      if(Array.isArray(c.examples)) p.examples=c.examples;
+      if(Array.isArray(c.cognates)) p.cognates=c.cognates;
+      if(Array.isArray(c.sayings)) p.sayings=c.sayings;
+      return p;
+    }
 
     // Auto-clear cache on plugin version update
     const CACHE_VERSION = "2025103107"; // Must match version.php

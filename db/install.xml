@@ -135,6 +135,27 @@
         <INDEX NAME="lang_idx" UNIQUE="false" FIELDS="lang"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="flashcards_orbokene" COMMENT="Dictionary cache for Norwegian fixed expressions">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="entry" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="normalized" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="baseform" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="grammar" TYPE="char" LENGTH="100" NOTNULL="false"/>
+        <FIELD NAME="definition" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="translation" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="examplesjson" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="meta" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="normalized_uix" UNIQUE="true" FIELDS="normalized"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="flashcards_user_stats" COMMENT="User statistics for dashboard and gamification">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

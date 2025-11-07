@@ -1,6 +1,17 @@
 ﻿<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0B1220">
-<div id="mod_flashcards_container">
+<div id="mod_flashcards_container"
+     data-ai-click="{{#str}} ai_click_hint, mod_flashcards {{/str}}"
+     data-ai-disabled="{{#str}} ai_helper_disabled, mod_flashcards {{/str}}"
+     data-ai-detecting="{{#str}} ai_detecting, mod_flashcards {{/str}}"
+     data-ai-success="{{#str}} ai_helper_success, mod_flashcards {{/str}}"
+     data-ai-error="{{#str}} ai_helper_error, mod_flashcards {{/str}}"
+     data-ai-no-text="{{#str}} ai_no_text, mod_flashcards {{/str}}"
+     data-focus-audio-label="{{#str}} focus_audio_badge, mod_flashcards {{/str}}"
+     data-front-audio-label="{{#str}} front_audio_badge, mod_flashcards {{/str}}"
+     data-voice-placeholder="{{#str}} tts_voice_placeholder, mod_flashcards {{/str}}"
+     data-voice-missing="{{#str}} tts_voice_missing, mod_flashcards {{/str}}"
+     data-voice-disabled="{{#str}} tts_voice_disabled, mod_flashcards {{/str}}">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     <!-- Access Status Banner -->
@@ -85,12 +96,18 @@
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
             <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
+            <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
             <input id="uImage" type="file" accept="image/*" class="hidden">
             <div class="fc-media-badges">
               <span id="audBadge" class="media-pill hidden">
                 <span class="icon">&#127897;&#65039;</span>
                 <span id="audName" class="media-name"></span>
                 <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+              </span>
+              <span id="focusAudBadge" class="media-pill hidden">
+                <span class="icon">&#128266;</span>
+                <span id="focusAudName" class="media-name"></span>
+                <button id="btnClearFocusAud" class="iconbtn" title="Clear">&times;</button>
               </span>
               <span id="imgBadge" class="media-pill hidden">
                 <span class="icon">&#128247;</span>
@@ -99,13 +116,30 @@
               </span>
             </div>
             <img id="imgPrev" class="media hidden" alt=""/>
+            <div class="slot hidden" id="slot_ttsVoice">
+              <span class="tag">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
+              <select id="ttsVoice"></select>
+              <div class="small" id="ttsVoiceStatus">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
+            </div>
             <div class="slot">
               <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
             </div>
+            <div class="slot focus-helper-slot">
+              <div class="focus-helper-head">
+                <span class="tag">{{#str}} ai_helper_label, mod_flashcards {{/str}}</span>
+                <span class="focus-helper-hint" id="focusHelperHint">{{#str}} ai_click_hint, mod_flashcards {{/str}}</span>
+              </div>
+              <div id="focusWordList" class="focus-word-list"></div>
+              <div id="focusHelperStatus" class="focus-helper-status small"></div>
+            </div>
             <div class="slot">
               <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+            </div>
+            <div class="slot">
+              <span class="tag">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
+              <input id="uFocusBase" type="text" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}">
             </div>
             <div class="slot" id="slot_translation_local">
               <span class="tag" id="tag_trans_local">Translation (?)</span>

@@ -24,7 +24,7 @@ if ($globalmode) {
     $access = \mod_flashcards\access_manager::check_user_access($USER->id);
 
     // Check permissions based on action
-    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media') {
+    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'ai_focus_helper') {
         // Allow site administrators and managers regardless of grace period/access
         $createallowed = !empty($access['can_create']);
         if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
@@ -196,7 +196,27 @@ switch ($action) {
         echo json_encode(['ok' => true, 'data' => ['totalCardsCreated' => $actual_count]]);
         break;
 
+    case 'ai_focus_helper':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $fronttext = trim($payload['frontText'] ?? '');
+        $clickedword = trim($payload['focusWord'] ?? '');
+        if ($fronttext === '' || $clickedword === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $language = clean_param($payload['language'] ?? 'no', PARAM_ALPHANUMEXT);
+        $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
+        $helper = new \mod_flashcards\local\ai_helper();
+        $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
+            'language' => $language,
+            'voice' => $voiceid ?: null,
+        ]);
+        echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
     default:
         throw new moodle_exception('invalidaction');
 }
-
