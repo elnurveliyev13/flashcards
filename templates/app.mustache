@@ -103,6 +103,10 @@
               <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
             </div>
+            <div class="slot">
+              <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
+              <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+            </div>
             <div class="slot" id="slot_translation_local">
               <span class="tag" id="tag_trans_local">Translation (?)</span>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
@@ -149,6 +153,7 @@
                     <option value="konjunksjon">Konjunksjon ? binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
                     <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
                     <option value="interjeksjon">Interjeksjon ? lydmalende ord, folelser eller meninger</option>
+                    <option value="phrase">Phrase</option>
                     <option value="andre">Andre</option>
                   </select>
                   <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
@@ -323,6 +328,10 @@
           <textarea id="uFront" class="autogrow" placeholder="Front..."></textarea>
         </div>
         <div class="slot">
+          <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
+          <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+        </div>
+        <div class="slot">
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
           <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
         </div>
@@ -361,6 +370,7 @@
               <option value="konjunksjon">Konjunksjon ? binder sammen to og to ord av samme ordklasse eller to helsetninger</option>
               <option value="subjunksjon">Subjunksjon ? innleder leddsetninger</option>
               <option value="interjeksjon">Interjeksjon ? spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
+              <option value="phrase">Phrase</option>
               <option value="other">Annet</option>
             </select>
             <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>

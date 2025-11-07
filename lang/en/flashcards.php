@@ -24,6 +24,7 @@ $string['due'] = 'Due: {$a}';
 $string['list'] = 'Cards list';
 $string['addown'] = 'Add your card';
 $string['front'] = 'Front text';
+$string['fokus'] = 'Fokus word/phrase';
 $string['explanation'] = 'Explanation';
 $string['back'] = 'Translation';
 $string['image'] = 'Image';

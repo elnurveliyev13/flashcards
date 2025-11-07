@@ -171,6 +171,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
+        fokus: payload.fokus || "",
         translation: pickTranslationFromPayload(payload),
         translations: (payload.translations && typeof payload.translations === 'object') ? payload.translations : null,
         explanation: payload.explanation || "",
@@ -755,6 +756,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       lastAudioUrl = c.audio || null;
 
       $("#uFront").value=c.text||"";
+      $("#uFokus").value=c.fokus||"";
       $("#uExplanation").value=c.explanation||"";
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = c.transcription||'';
       const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
@@ -1209,6 +1211,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
+      $("#uFokus").value="";
       const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
       const _te=$("#uTransEn"); if(_te) _te.value="";
       $("#uExplanation").value="";
@@ -1255,7 +1258,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     })();
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
-      const text=$("#uFront").value.trim(), expl=$("#uExplanation").value.trim();
+      const text=$("#uFront").value.trim(), fokus=$("#uFokus").value.trim(), expl=$("#uExplanation").value.trim();
       const trLocalEl=$("#uTransLocal"), trEnEl=$("#uTransEn");
       const trLocal = trLocalEl ? trLocalEl.value.trim() : "";
       const trEn = trEnEl ? trEnEl.value.trim() : "";
@@ -1318,7 +1321,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(userLang2 !== 'en' && trLocal){ translations[userLang2]=trLocal; }
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
-      const payload={id,text,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
       // Enrichment fields
       const trscr=(document.getElementById('uTranscription')?.value||'').trim(); if(trscr) payload.transcription=trscr;
       const posv=(document.getElementById('uPOS')?.value||''); if(posv) payload.pos=posv;
@@ -1798,7 +1801,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }; }
     }
     function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
-    function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
+    function buildPayloadFromCard(c){ const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] }; if(c.image) p.image=c.image; if(c.imageKey) p.imageKey=c.imageKey; if(c.audio) p.audio=c.audio; if(c.audioKey) p.audioKey=c.audioKey; if(c.transcription) p.transcription=c.transcription; if(c.pos) p.pos=c.pos; if(c.gender) p.gender=c.gender; if(c.forms) p.forms=c.forms; if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms; if(Array.isArray(c.collocations)) p.collocations=c.collocations; if(Array.isArray(c.examples)) p.examples=c.examples; if(Array.isArray(c.cognates)) p.cognates=c.cognates; if(Array.isArray(c.sayings)) p.sayings=c.sayings; return p; }
 
     // Auto-clear cache on plugin version update
     const CACHE_VERSION = "2025103107"; // Must match version.php
