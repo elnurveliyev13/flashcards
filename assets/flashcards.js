@@ -46,7 +46,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontAudio: dataset.frontAudioLabel || 'Audio',
       voicePlaceholder: dataset.voicePlaceholder || 'Default voice',
       voiceMissing: dataset.voiceMissing || 'Add ElevenLabs voices in plugin settings',
-      voiceDisabled: dataset.voiceDisabled || 'Enter your ElevenLabs API key to enable audio.'
+      voiceDisabled: dataset.voiceDisabled || 'Enter your ElevenLabs API key to enable audio.',
+      ttsSuccess: dataset.ttsSuccess || 'Audio ready.',
+      ttsError: dataset.ttsError || 'Audio generation failed.'
     };
 
     // Language detection (prefer Moodle, fallback to browser)
@@ -67,6 +69,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const voiceSelectEl = document.getElementById('ttsVoice');
     const voiceSlotEl = document.getElementById('slot_ttsVoice');
     const voiceStatusEl = document.getElementById('ttsVoiceStatus');
+    const setTtsStatus = (text, state) => {
+      if(!voiceStatusEl) return;
+      voiceStatusEl.textContent = text || '';
+      voiceStatusEl.dataset.state = state || '';
+    };
     if(voiceSelectEl){
       if(voiceOptionsRaw.length){
         const placeholderOpt=document.createElement('option');
@@ -81,14 +88,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           voiceSelectEl.appendChild(option);
         });
         voiceSelectEl.value = selectedVoice || '';
-        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; });
+        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; setTtsStatus('', ''); });
         if(voiceSlotEl) voiceSlotEl.classList.remove('hidden');
-        if(!aiConfig.ttsEnabled && voiceStatusEl){
-          voiceStatusEl.textContent = aiStrings.voiceDisabled;
+        if(!aiConfig.ttsEnabled){
+          setTtsStatus(aiStrings.voiceDisabled, 'warn');
         }
       } else {
         if(voiceSlotEl) voiceSlotEl.classList.add('hidden');
-        if(voiceStatusEl) voiceStatusEl.textContent = aiStrings.voiceMissing;
+        setTtsStatus(aiStrings.voiceMissing, 'warn');
       }
     } else if(voiceSlotEl){
       voiceSlotEl.classList.add('hidden');
@@ -273,6 +280,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           posField.value = data.pos;
           updatePOSHelp();
         }
+      }
+      if(data.errors && (data.errors.tts_front || data.errors.tts_focus)){
+        const msgs = [];
+        if(data.errors.tts_front) msgs.push(`Front: ${data.errors.tts_front}`);
+        if(data.errors.tts_focus) msgs.push(`Focus: ${data.errors.tts_focus}`);
+        setTtsStatus(`${aiStrings.ttsError} ${msgs.join(' | ')}`, 'error');
+      } else if(data.audio && (data.audio.front || data.audio.focus)){
+        setTtsStatus(aiStrings.ttsSuccess, 'success');
+      } else {
+        setTtsStatus('', '');
       }
     }
 

@@ -69,6 +69,7 @@ class ai_helper {
         }
 
         $audio = [];
+        $errors = [];
         if ($this->tts->is_enabled()) {
             $voice = $options['voice'] ?? null;
             try {
@@ -77,7 +78,9 @@ class ai_helper {
                     'label' => 'front',
                 ]);
             } catch (Throwable $e) {
-                debugging('[flashcards] TTS front_text failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                $message = $e->getMessage();
+                debugging('[flashcards] TTS front_text failed: ' . $message, DEBUG_DEVELOPER);
+                $errors['tts_front'] = $message;
             }
             try {
                 if ($focusword !== '') {
@@ -87,12 +90,17 @@ class ai_helper {
                     ]);
                 }
             } catch (Throwable $e) {
-                debugging('[flashcards] TTS focus failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+                $message = $e->getMessage();
+                debugging('[flashcards] TTS focus failed: ' . $message, DEBUG_DEVELOPER);
+                $errors['tts_focus'] = $message;
             }
         }
 
         if (!empty($audio)) {
             $result['audio'] = $audio;
+        }
+        if (!empty($errors)) {
+            $result['errors'] = $errors;
         }
 
         return $result;
