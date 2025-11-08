@@ -50,7 +50,7 @@ class ai_helper {
             'pos' => $pos,
         ];
 
-        if ($dict = orbokene_repository::find($focus)) {
+        if ($focusword !== '' && orbokene_repository::is_enabled() && ($dict = orbokene_repository::find($focusword))) {
             if (!empty($dict['baseform'])) {
                 $result['focusBaseform'] = $dict['baseform'];
             }
@@ -80,10 +80,12 @@ class ai_helper {
                 debugging('[flashcards] TTS front_text failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
             try {
-                $audio['focus'] = $this->tts->synthesize($userid, $focus, [
-                    'voice' => $voice,
-                    'label' => 'focus',
-                ]);
+                if ($focusword !== '') {
+                    $audio['focus'] = $this->tts->synthesize($userid, $focusword, [
+                        'voice' => $voice,
+                        'label' => 'focus',
+                    ]);
+                }
             } catch (Throwable $e) {
                 debugging('[flashcards] TTS focus failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             }
