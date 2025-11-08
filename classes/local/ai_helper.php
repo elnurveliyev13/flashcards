@@ -38,11 +38,16 @@ class ai_helper {
         }
 
         $language = trim($options['language'] ?? '') ?: 'no';
-        $focus = $this->openai->detect_focus_phrase($fronttext, $clickedword, $language);
+        $focusdata = $this->openai->detect_focus_data($fronttext, $clickedword, $language);
+
+        $focusword = trim($focusdata['focus'] ?? '') ?: $clickedword;
+        $baseform = trim($focusdata['baseform'] ?? '') ?: $focusword;
+        $pos = trim($focusdata['pos'] ?? '');
 
         $result = [
-            'focusWord' => $focus,
-            'focusBaseform' => $focus,
+            'focusWord' => $focusword,
+            'focusBaseform' => $baseform,
+            'pos' => $pos,
         ];
 
         if ($dict = orbokene_repository::find($focus)) {

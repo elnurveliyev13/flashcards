@@ -228,8 +228,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
         }catch(_e){}
       }
-      if(data.focusBaseform && focusBaseInput && !focusBaseInput.value.trim()){
-        focusBaseInput.value = data.focusBaseform;
+      if(data.focusBaseform && focusBaseInput){
+        const current = (focusBaseInput.value || '').trim();
+        if(!current || /ingen/i.test(current)){
+          focusBaseInput.value = data.focusBaseform;
+        }
       }
       if(data.definition){
         const expl = document.getElementById('uExplanation');
@@ -263,6 +266,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(data.audio && data.audio.focus && data.audio.focus.url){
         setFocusAudio(data.audio.focus.url, aiStrings.focusAudio);
+      }
+      if(data.pos){
+        const posField = document.getElementById('uPOS');
+        if(posField){
+          posField.value = data.pos;
+          updatePOSHelp();
+        }
       }
     }
 

@@ -53,7 +53,7 @@ class openai_client {
      * @return string
      * @throws moodle_exception
      */
-    public function detect_focus_phrase(string $fronttext, string $clickedword, string $language = 'no'): string {
+    public function detect_focus_data(string $fronttext, string $clickedword, string $language = 'no'): array {
         if (!$this->is_enabled()) {
             throw new coding_exception('openai client is not configured');
         }
@@ -64,15 +64,24 @@ class openai_client {
             throw new coding_exception('Missing text for focus detection');
         }
 
-        $systemprompt = 'Du er en språkekspert som hjelper med å identifisere faste uttrykk i norsk. '
-            . 'Svar kun med selve uttrykket (én linje) uten forklaring. '
-            . 'Hvis du ikke finner et uttrykk, svar med bare det opprinnelige ordet.';
+        $systemprompt = 'Du er en norsk språkekspert. Du mottar en hel setning og et ord brukeren klikket på. '
+            . 'Du skal svare med ett JSON-objekt uten forklaring. '
+            . 'Format: {"focus":"...","baseform":"...","pos":"..."}'
+            . 'Regler: '
+            . '1) Finn et fast uttrykk som inneholder ordet. Hvis det finnes (f.eks. "å ha lyst på"), sett "focus" til hele uttrykket slik det vanligvis skrives, '
+            . 'og "baseform" til leksikalsk form (for verb start alltid med "å", for uttrykk behold samme tekst). '
+            . '2) Hvis ingen uttrykk finnes, bruk selve ordet i dictionary-form: '
+            . 'verb -> infinitiv med "å", adjektiv -> positiv form, substantiv -> inkluder ubestemt artikkel i parentes (f.eks. "(en) sjokolade" eller "et hus"), '
+            . 'pronomen/determinativ/preposisjon -> originalt ord. '
+            . '3) "pos" må være én av: substantiv, adjektiv, pronomen, determinativ, verb, adverb, preposisjon, konjunksjon, subjunksjon, interjeksjon, phrase, other. '
+            . '4) Ikke skriv tekst utenfor JSON. Ingen kommentarer.'
+            . 'Eksempel: Setning "Jeg har lyst på sjokolade", ord "har" -> {"focus":"å ha lyst på","baseform":"å ha lyst på","pos":"phrase"}.';
 
         $userprompt = implode("\n", [
             "Setning: {$fronttext}",
             "Ord: {$clickedword}",
             "Språk: {$language}",
-            "Gi meg kun uttrykket som matcher."
+            "Returner JSON i henhold til reglene."
         ]);
 
         $payload = [
@@ -91,14 +100,57 @@ class openai_client {
         ];
 
         $response = $this->request($payload);
-        if (empty($response->choices[0]->message->content)) {
+        $content = $response->choices[0]->message->content ?? '';
+        if ($content === '') {
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
         }
-        $phrase = $response->choices[0]->message->content;
-        // Some responses may contain quotes or markdown code fences.
-        $phrase = trim(str_replace(['`', '"'], '', $phrase));
-        $phrase = preg_replace("/\s+/", ' ', $phrase);
-        return core_text::substr($phrase, 0, 200);
+        $json = $this->extract_json($content);
+        if (!$json || !is_array($json)) {
+            return $this->fallback_focus($clickedword);
+        }
+
+        $focus = trim((string)($json['focus'] ?? ''));
+        $base = trim((string)($json['baseform'] ?? ''));
+        $pos = trim((string)($json['pos'] ?? ''));
+        if ($focus === '' || preg_match('/ingen\s+uttryk/i', $focus)) {
+            return $this->fallback_focus($clickedword);
+        }
+        if ($base === '') {
+            $base = $focus;
+        }
+        if ($pos === '') {
+            $pos = 'other';
+        }
+
+        return [
+            'focus' => core_text::substr($focus, 0, 200),
+            'baseform' => core_text::substr($base, 0, 200),
+            'pos' => $pos,
+        ];
+    }
+
+    protected function extract_json(string $content): ?array {
+        $content = trim($content);
+        if ($content === '') {
+            return null;
+        }
+        if (preg_match('/\{.*\}/s', $content, $m)) {
+            $content = $m[0];
+        }
+        $decoded = json_decode($content, true);
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    protected function fallback_focus(string $word): array {
+        $word = trim($word);
+        if ($word === '') {
+            $word = '?';
+        }
+        return [
+            'focus' => $word,
+            'baseform' => $word,
+            'pos' => 'other',
+        ];
     }
 
     protected function request(array $payload) {
