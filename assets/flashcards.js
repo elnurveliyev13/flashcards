@@ -9,6 +9,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const $ = s => root.querySelector(s);
     const $$ = s => Array.from(root.querySelectorAll(s));
     const uniq = a => [...new Set(a.filter(Boolean))];
+    const formatActiveVocab = value => {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric) || numeric < 0) {
+        return '0';
+      }
+      const decimals = numeric >= 100 ? 0 : 1;
+      return numeric.toLocaleString(undefined, {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
+    };
 
     function initAutogrow(){
       $$('.autogrow').forEach(el=>{
@@ -407,14 +418,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const data = json.data;
         console.log('[STATS] Dashboard stats refreshed:', data.stats);
         const dueToday = data.stats.dueToday || 0;
+        const activeVocabValue = data.stats.activeVocab ?? 0;
 
         // Update stats in dashboard tab
         const statTotalCards = $('#statTotalCards');
         if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
+        const statActiveVocab = $('#statActiveVocab');
+        if (statActiveVocab) statActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
         // Update stats in header
         const headerTotalCards = $('#headerTotalCards');
         if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
+        const headerActiveVocab = $('#headerActiveVocab');
+        if (headerActiveVocab) headerActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
         // Update study badge
         const studyBadge = $('#studyBadge');
@@ -2561,19 +2577,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const data = json.data;
           debugLog('[Dashboard] Loaded data:', data);
           const dueToday = data.stats.dueToday || 0;
+          const activeVocabValue = data.stats.activeVocab ?? 0;
 
           // Update stats
           const statTotalCards = $('#statTotalCards');
           const statStreak = $('#statStreak');
+          const statActiveVocab = $('#statActiveVocab');
 
           if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
+          if (statActiveVocab) statActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
           // Update header stats
           const headerTotalCards = $('#headerTotalCards');
           const headerStreak = $('#headerStreak');
+          const headerActiveVocab = $('#headerActiveVocab');
           if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
           if (headerStreak) headerStreak.textContent = data.stats.currentStreak || 0;
+          if (headerActiveVocab) headerActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
           // Update Study badge (due cards count)
           const studyBadge = $('#studyBadge');

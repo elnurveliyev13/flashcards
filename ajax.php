@@ -193,7 +193,11 @@ switch ($action) {
 
     case 'recalculate_stats':
         $actual_count = \mod_flashcards\local\api::recalculate_total_cards($userid);
-        echo json_encode(['ok' => true, 'data' => ['totalCardsCreated' => $actual_count]]);
+        $active_vocab = \mod_flashcards\local\api::calculate_active_vocab($userid);
+        echo json_encode(['ok' => true, 'data' => [
+            'totalCardsCreated' => $actual_count,
+            'activeVocab' => round($active_vocab, 2),
+        ]]);
         break;
 
     case 'ai_focus_helper':

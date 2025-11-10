@@ -820,6 +820,7 @@ class api {
                 GROUP BY step
                 ORDER BY step ASC";
         $stageData = $DB->get_records_sql($sql, ['userid' => $userid]);
+        $activeVocabScore = self::calculate_active_vocab_from_rows($stageData);
 
         $stageDistribution = [];
         foreach ($stageData as $row) {
@@ -849,6 +850,7 @@ class api {
             'stats' => [
                 'dueToday' => $dueToday,
                 'totalCardsCreated' => (int)$stats->total_cards_created,
+                'activeVocab' => round($activeVocabScore, 2),
                 'currentStreak' => (int)$stats->current_streak_days,
                 'longestStreak' => (int)$stats->longest_streak_days,
                 'totalStudyTime' => (int)$stats->total_study_time,
@@ -861,5 +863,48 @@ class api {
             'stageDistribution' => $stageDistribution,
             'activityData' => $activityData
         ];
+    }
+
+    /**
+     * Calculate the active vocabulary score for a user using the normalized log formula.
+     *
+     * @param int $userid User ID
+     * @return float
+     */
+    public static function calculate_active_vocab($userid): float {
+        global $DB;
+
+        $sql = "SELECT step, COUNT(*) as count
+                  FROM {flashcards_progress}
+                 WHERE userid = :userid AND hidden = 0
+              GROUP BY step";
+        $rows = $DB->get_records_sql($sql, ['userid' => $userid]);
+        return self::calculate_active_vocab_from_rows($rows);
+    }
+
+    /**
+     * Convert stage distribution rows into an active vocabulary score.
+     *
+     * @param iterable $stageRows Rows with ->step and ->count
+     * @return float
+     */
+    private static function calculate_active_vocab_from_rows($stageRows): float {
+        $logmax = log(11);
+        if ($logmax <= 0) {
+            return 0.0;
+        }
+
+        $score = 0.0;
+        if (!empty($stageRows)) {
+            foreach ($stageRows as $row) {
+                $step = isset($row->step) ? (int)$row->step : 0;
+                $count = isset($row->count) ? (int)$row->count : 0;
+                if ($step < 1 || $step > 10 || $count <= 0) {
+                    continue;
+                }
+                $score += $count * (log(1 + $step) / $logmax);
+            }
+        }
+        return $score;
     }
 }

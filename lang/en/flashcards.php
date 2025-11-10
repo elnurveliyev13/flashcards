@@ -194,6 +194,7 @@ $string['quickinput_created_today'] = '{$a} created today';
 // Dashboard
 $string['dashboard_cards_due'] = 'Cards Due Today';
 $string['dashboard_total_cards'] = 'Total Cards Created';
+$string['dashboard_active_vocab'] = 'Active vocabulary';
 $string['dashboard_streak'] = 'Current Streak (days)';
 $string['dashboard_study_time'] = 'Study Time This Week';
 $string['dashboard_stage_chart'] = 'Card Stages Distribution';
