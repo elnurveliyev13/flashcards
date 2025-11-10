@@ -899,8 +899,11 @@ class api {
             foreach ($stageRows as $row) {
                 $step = isset($row->step) ? (int)$row->step : 0;
                 $count = isset($row->count) ? (int)$row->count : 0;
-                if ($step < 1 || $step > 10 || $count <= 0) {
+                if ($count <= 0 || $step < 1) {
                     continue;
+                }
+                if ($step > 10) {
+                    $step = 10;
                 }
                 $score += $count * (log(1 + $step) / $logmax);
             }
