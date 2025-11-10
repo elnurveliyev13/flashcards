@@ -4,14 +4,14 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage('modsettingflashcards', get_string('pluginname', 'mod_flashcards'));
-    $ADMIN->add('modsettings', $settings);
 
-    // AI focus helper (ChatGPT)
-    $settings->add(new admin_setting_heading(
-        'mod_flashcards/ai_heading',
-        get_string('settings_ai_section', 'mod_flashcards'),
-        get_string('settings_ai_section_desc', 'mod_flashcards')
-    ));
+    if ($ADMIN->fulltree) {
+        // AI focus helper (ChatGPT)
+        $settings->add(new admin_setting_heading(
+            'mod_flashcards/ai_heading',
+            get_string('settings_ai_section', 'mod_flashcards'),
+            get_string('settings_ai_section_desc', 'mod_flashcards')
+        ));
 
     $settings->add(new admin_setting_configcheckbox(
         'mod_flashcards/ai_focus_enabled',
@@ -83,11 +83,13 @@ if ($hassiteconfig) {
         get_string('settings_orbokene_section_desc', 'mod_flashcards')
     ));
 
-    $settings->add(new admin_setting_configcheckbox(
-        'mod_flashcards/orbokene_enabled',
-        get_string('settings_orbokene_enable', 'mod_flashcards'),
-        get_string('settings_orbokene_enable_desc', 'mod_flashcards'),
-        0
-    ));
-
+        $settings->add(new admin_setting_configcheckbox(
+            'mod_flashcards/orbokene_enabled',
+            get_string('settings_orbokene_enable', 'mod_flashcards'),
+            get_string('settings_orbokene_enable_desc', 'mod_flashcards'),
+            0
+        ));
+    }
+} else {
+    $settings = null;
 }
