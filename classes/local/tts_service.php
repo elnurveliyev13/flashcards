@@ -71,9 +71,22 @@ class tts_service {
             'text' => $text,
             'model_id' => $this->model,
             'voice_settings' => [
-                'stability' => 0.45,
-                'similarity_boost' => 0.8,
+                'stability' => 0.8,
+                'similarity_boost' => 0.4,
+                'style' => 0,
+                'speed' => 0.9,
+                'use_speaker_boost' => false,
             ],
+            'pronunciation_dictionary_locators' => [],
+            'seed' => 0,
+            'previous_text' => '',
+            'next_text' => '',
+            'previous_request_ids' => [],
+            'next_request_ids' => [],
+            'apply_text_normalization' => 'off',
+            'apply_language_text_normalization' => false,
+            'use_pvc_as_ivc' => false,
+            'language_code' => 'no',
         ], JSON_UNESCAPED_UNICODE);
 
         $curl = new \curl();
@@ -82,7 +95,7 @@ class tts_service {
             'content-type: application/json',
             'xi-api-key: ' . $this->apikey,
         ];
-        $endpoint = 'https://api.elevenlabs.io/v1/text-to-speech/' . rawurlencode($voice);
+        $endpoint = 'https://api.elevenlabs.io/v1/text-to-speech/' . rawurlencode($voice) . '?output_format=mp3_44100_128';
         $response = $curl->post($endpoint, $payload, [
             'CURLOPT_HTTPHEADER' => $headers,
             'CURLOPT_TIMEOUT' => 40,
