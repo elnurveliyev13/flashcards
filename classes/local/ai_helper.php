@@ -53,6 +53,7 @@ class ai_helper {
             'focusBaseform' => $baseform,
             'pos' => $pos,
             'gender' => $focusdata['gender'] ?? '',
+            'translation_lang' => $focusdata['translation_lang'] ?? $language,
         ];
 
         if (!empty($focusdata['definition'])) {

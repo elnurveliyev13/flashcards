@@ -390,7 +390,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             if(!item) return '';
             if(typeof item === 'string') return item;
             const left = (item.no||'').trim();
-            const right = (item.uk||'').trim();
+            const right = (item.trans||item.uk||'').trim();
             if(left && right) return `${left} | ${right}`;
             return left || right;
           }).filter(Boolean);
@@ -1048,6 +1048,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function normalizeLessonCard(c){
       if(c.front && !c.text) c.text=c.front;
       if(c.back&&!c.translation) c.translation=c.back;
+
+      // Select translation based on user language
+      if(c.translations && typeof c.translations === 'object'){
+        const preferredTranslation = c.translations[userLang2] || c.translations['en'] || '';
+        if(preferredTranslation){
+          c.translation = preferredTranslation;
+        }
+      }
+
       if(!Array.isArray(c.order)||!c.order.length){
         c.order=[];
         if(c.audio||c.audioKey||c.focusAudio||c.focusAudioKey) c.order.push("audio");
