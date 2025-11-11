@@ -117,6 +117,9 @@ RULES:
 - Use the sentence context to determine the part of speech. If the clicked word acts as an adverbial destination (e.g., "dra hjem"), mark it as "adverb" even if the lemma can be a noun.
 - If an adjective is used adverbially (e.g., "spise sunt", "løpe fort"), classify it as "adverb".
 - When the expression contains 2+ lexical words (after removing leading "å" or articles), mark POS as "phrase".
+- If the clicked form belongs to a verb + particle/preposition expression (e.g., "gå opp", "se etter", "holde ut"), return the entire fixed expression as the WORD/base form.
+- Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
+- Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
 
@@ -140,6 +143,7 @@ NOTES:
 - {$targetlang} translations must sound natural; whenever a literal rendering would feel awkward, rewrite it naturally and add parentheses with a short explanation. Apply this rule only to EX sentence translations.
 - Skip COLL entirely if you are unsure about natural usage; never invent awkward translations.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
+- When the clicked form is part of an idiomatic verb + particle/preposition, keep the whole expression together (e.g., "å gå opp") and explain that idiomatic sense (e.g., "å forstå noe").
 PROMPT;
 
         $userprompt = implode("\n", [
@@ -149,6 +153,8 @@ PROMPT;
             "ui_lang: {$uilang}",
             'instructions: Identify the expression in context that includes the clicked word. Decide POS by how the expression functions in this sentence (e.g., motion + destination => adverb). '
                 . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
+                . 'If the clicked form belongs to a verb or verb phrase, output it in infinitive with a leading "å" and include any attached particles/prepositions that change the meaning. '
+                . 'Prefer the idiomatic/contextual sense over literal tense explanations. '
                 . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
         ]);
 
