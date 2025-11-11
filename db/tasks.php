@@ -18,5 +18,14 @@ $tasks = [
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
+    ],
+    [
+        'classname' => 'mod_flashcards\task\cleanup_orphans',
+        'blocking' => 0,
+        'minute' => '30',
+        'hour' => '3',    // After access check, nightly
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
     ]
 ];

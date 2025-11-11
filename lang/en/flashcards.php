@@ -170,6 +170,7 @@ $string['browse_courses'] = 'Browse available courses';
 
 // Scheduled tasks
 $string['task_check_user_access'] = 'Check flashcards user access and grace periods';
+$string['task_cleanup_orphans'] = 'Cleanup orphaned flashcards progress records';
 
 $string['cards_remaining'] = 'cards remaining';
 $string['rating_actions'] = 'Rating actions';
