@@ -62,7 +62,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ttsError: dataset.ttsError || 'Audio generation failed.'
     };
 
-    // Language detection (prefer Moodle, fallback to browser)
+    // Language detection (prefer saved preference, then Moodle, fallback to browser)
     // Prefer Moodle page lang and URL param over browser
     function pageLang(){
       try{
@@ -73,9 +73,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }catch(_e){}
       return null;
     }
-    const rawLang = pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
+
+    // Load saved translation language preference
+    function getSavedTransLang(){
+      try{
+        return localStorage.getItem('flashcards_translation_lang') || null;
+      }catch(_e){
+        return null;
+      }
+    }
+
+    function saveTransLang(lang){
+      try{
+        localStorage.setItem('flashcards_translation_lang', lang);
+      }catch(_e){}
+    }
+
+    const savedTransLang = getSavedTransLang();
+    const rawLang = savedTransLang || pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
     const userLang = (rawLang || 'en').toLowerCase();
-    const userLang2 = userLang.split(/[\-_]/)[0] || 'en';
+    let userLang2 = userLang.split(/[\-_]/)[0] || 'en';
 
     const voiceSelectEl = document.getElementById('ttsVoice');
     const voiceSlotEl = document.getElementById('slot_ttsVoice');
@@ -121,20 +138,64 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return map[c] || c.toUpperCase();
     }
 
-    // Prepare translation inputs visibility/labels
-    try {
-      const slotLocal = $("#slot_translation_local");
-      const slotEn = $("#slot_translation_en");
-      const tagLocal = $("#tag_trans_local");
-      if(tagLocal){ tagLocal.textContent = `Translation (${languageName(userLang2)})`; }
-      if(userLang2 === 'en'){
-        if(slotLocal) slotLocal.classList.add('hidden');
-        if(slotEn) slotEn.classList.remove('hidden');
-      } else {
-        if(slotLocal) slotLocal.classList.remove('hidden');
-        if(slotEn) slotEn.classList.remove('hidden');
+    // Function to update translation language UI
+    function updateTranslationLangUI(){
+      try {
+        const slotLocal = $("#slot_translation_local");
+        const slotEn = $("#slot_translation_en");
+        const tagLocal = $("#tag_trans_local");
+        if(tagLocal){ tagLocal.innerHTML = `Translation (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">✎</span>`; }
+        if(userLang2 === 'en'){
+          if(slotLocal) slotLocal.classList.add('hidden');
+          if(slotEn) slotEn.classList.remove('hidden');
+        } else {
+          if(slotLocal) slotLocal.classList.remove('hidden');
+          if(slotEn) slotEn.classList.remove('hidden');
+        }
+
+        // Add click handler for language change hint
+        const langChangeHint = document.getElementById('langChangeHint');
+        if(langChangeHint && !langChangeHint.dataset.bound){
+          langChangeHint.dataset.bound = '1';
+          langChangeHint.addEventListener('click', showLanguageSelector);
+        }
+      } catch(_e){}
+    }
+
+    // Show language selector dialog
+    function showLanguageSelector(){
+      const languages = [
+        {code: 'uk', name: 'Ukrainian'},
+        {code: 'en', name: 'English'},
+        {code: 'ru', name: 'Russian'},
+        {code: 'pl', name: 'Polish'},
+        {code: 'de', name: 'German'},
+        {code: 'fr', name: 'French'},
+        {code: 'es', name: 'Spanish'}
+      ];
+
+      const currentLang = userLang2;
+      const msg = `Current translation language: ${languageName(currentLang)}\n\nSelect new translation language:\n\n` +
+        languages.map((l, i) => `${i+1}. ${l.name} ${l.code === currentLang ? '(current)' : ''}`).join('\n');
+
+      const choice = prompt(msg + '\n\nEnter number (1-' + languages.length + ') or cancel to keep current:');
+
+      if(choice){
+        const index = parseInt(choice, 10) - 1;
+        if(index >= 0 && index < languages.length){
+          const newLang = languages[index].code;
+          if(newLang !== currentLang){
+            userLang2 = newLang;
+            saveTransLang(newLang);
+            updateTranslationLangUI();
+            alert(`Translation language changed to ${languages[index].name}.\n\nNew cards will be created with ${languages[index].name} translations.\nExisting cards will show ${languages[index].name} translations if available.`);
+          }
+        }
       }
-    } catch(_e){}
+    }
+
+    // Prepare translation inputs visibility/labels
+    updateTranslationLangUI();
 
     // Dynamic Examples and Collocations Lists
     let examplesData = []; // Array of {no: "Norwegian text", trans: "Translation"}
