@@ -455,10 +455,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const formatted = data.collocations.map(item=>{
             if(!item) return '';
             if(typeof item === 'string') return item;
-            const left = (item.no||'').trim();
-            const right = (item.trans||item.uk||'').trim();
-            if(left && right) return `${left} | ${right}`;
-            return left || right;
+            return (item.no||item.text||'').trim();
           }).filter(Boolean);
           if(formatted.length){
             collEl.value = formatted.join('\n');

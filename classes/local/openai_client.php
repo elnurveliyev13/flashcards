@@ -126,7 +126,7 @@ POS: <one of substantiv|adjektiv|pronomen|determinativ|verb|adverb|preposisjon|k
 GENDER: <hankjønn|hunkjønn|intetkjønn|-> (nouns only)
 EXPL-NO: <simple Norwegian explanation>
 {$translabel}: <{$targetlang} translation of meaning>
-COLL: <3-5 collocations as "Norwegian phrase | {$targetlang} translation", semicolon-separated>
+COLL: <0-5 common Norwegian collocations (no translations), semicolon-separated>
 EX1: <NO sentence using a top collocation> | <{$targetlang}>
 EX2: <NO> | <{$targetlang}>
 EX3: <NO> | <{$targetlang}>
@@ -136,9 +136,9 @@ NOTES:
 - Focus on everyday, high-frequency uses.
 - One core sense for A1; add secondary sense only if clearly frequent/relevant (B1).
 - Avoid grammar lectures; show usage via collocations/examples.
-- Translate each collocation into {$targetlang} so the learner sees both parts.
-- {$targetlang} translations must sound natural; whenever a literal rendering would feel awkward, rewrite it naturally and add parentheses with a short explanation. Apply this rule to both COLL translations and EX sentence translations.
-- If a literal {$targetlang} translation sounds unnatural, add parentheses with a short paraphrase/explanation that conveys the intended meaning naturally.
+- Include collocations only when they are common, level-appropriate Norwegian combinations. If none apply, leave COLL blank.
+- {$targetlang} translations must sound natural; whenever a literal rendering would feel awkward, rewrite it naturally and add parentheses with a short explanation. Apply this rule only to EX sentence translations.
+- Skip COLL entirely if you are unsure about natural usage; never invent awkward translations.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 PROMPT;
 
@@ -149,7 +149,7 @@ PROMPT;
             "ui_lang: {$uilang}",
             'instructions: Identify the expression in context that includes the clicked word. Decide POS by how the expression functions in this sentence (e.g., motion + destination => adverb). '
                 . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
-                . 'Separate collocations with ";" and format each item as "Norwegian | ' . $targetlang . '". Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
+                . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
         ]);
 
         $payload = [
@@ -173,7 +173,7 @@ PROMPT;
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
         }
 
-        $parsed = $this->parse_structured_response($content, $translabel, $uilang);
+        $parsed = $this->parse_structured_response($content, $translabel);
         $focus = trim($parsed['word'] ?? '');
         if ($focus === '') {
             return $this->fallback_focus($clickedword);
@@ -258,7 +258,7 @@ PROMPT;
         return count($tokens) >= 2;
     }
 
-    protected function parse_structured_response(string $content, string $translationlabel, string $translang = 'uk'): array {
+    protected function parse_structured_response(string $content, string $translationlabel): array {
         $lines = preg_split('/\r\n|\r|\n/', trim($content));
         $data = [];
         foreach ($lines as $line) {
@@ -280,7 +280,7 @@ PROMPT;
             'definition' => $data['EXPL-NO'] ?? '',
             'translation' => $data[$translationlabel] ?? ($data['TR-UK'] ?? ''),
             'gender' => $data['GENDER'] ?? '',
-            'collocations' => $this->parse_collocations($data['COLL'] ?? '', $translang),
+            'collocations' => $this->parse_collocations($data['COLL'] ?? ''),
             'examples' => $this->collect_examples($data),
             'forms' => $data['FORMS'] ?? '',
         ];
@@ -317,21 +317,15 @@ PROMPT;
         return $examples;
     }
 
-    protected function parse_collocations(string $text, string $translang = 'uk'): array {
+    protected function parse_collocations(string $text): array {
         $raw = $this->split_list($text, 5);
         $parsed = [];
         foreach ($raw as $entry) {
-            $parts = array_map('trim', explode('|', $entry, 2));
-            $no = $parts[0] ?? '';
-            $trans = $parts[1] ?? '';
-            if ($no === '') {
+            $entry = core_text::substr(trim($entry), 0, 160);
+            if ($entry === '') {
                 continue;
             }
-            $parsed[] = [
-                'no' => core_text::substr($no, 0, 160),
-                'trans' => core_text::substr($trans, 0, 200),
-                'lang' => $translang,
-            ];
+            $parsed[] = $entry;
         }
         return $parsed;
     }
