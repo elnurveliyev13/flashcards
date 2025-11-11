@@ -89,6 +89,13 @@ if ($hassiteconfig) {
             get_string('settings_orbokene_enable_desc', 'mod_flashcards'),
             0
         ));
+
+        $ADMIN->add('modsettings', new admin_externalpage(
+            'mod_flashcards_mediareport',
+            get_string('mediareport_title', 'mod_flashcards'),
+            new moodle_url('/mod/flashcards/admin/media_report.php'),
+            'moodle/site:config'
+        ));
     }
 } else {
     $settings = null;

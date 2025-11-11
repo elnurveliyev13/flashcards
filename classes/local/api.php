@@ -7,7 +7,6 @@ use Exception;
 use invalid_parameter_exception;
 use moodle_exception;
 use stdClass;
-use mod_flashcards\local\media_storage;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -447,9 +446,6 @@ class api {
             self::update_card_creation_stats($userid);
         }
 
-        // Mirror media files into readable storage
-        media_storage::sync_from_payload($userid, $cardid, $pp, $deckid);
-
         // Return deckId and cardId so client can update localStorage with correct IDs
         return [
             'deckId' => $deckid,
@@ -480,7 +476,6 @@ class api {
             // Rationale: Card no longer exists, so all progress references are orphaned
             $DB->delete_records('flashcards_progress', ['deckid' => $deckid, 'cardid' => $cardid]);
             $DB->delete_records('flashcards_card_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
-            media_storage::delete_card_media((int)$userid, $cardid);
 
             // Decrement total_cards_created counter for the card owner
             if ($rec->ownerid !== null) {
