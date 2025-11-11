@@ -1027,7 +1027,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const icon = $("#editorAdvancedIcon");
       if(icon){
-        icon.textContent = advancedVisible ? 'в–І' : 'в–ј';
+        icon.textContent = advancedVisible ? '▼' : '▲';
       }
     }
     function showAudioBadge(label){
