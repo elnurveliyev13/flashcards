@@ -214,6 +214,7 @@ class api {
             if ($r->scope === 'private' && (int)$r->ownerid !== (int)$userid) { continue; }
             $payload = json_decode($r->payload, true);
             if (!is_array($payload)) { $payload = []; }
+            $payload = self::populate_transcription_if_missing($payload);
             if (!empty($transmap[$r->cardid])) {
                 $payload['translations'] = $transmap[$r->cardid];
             }
@@ -308,6 +309,7 @@ class api {
         foreach ($recs as $r) {
             $payload = json_decode($r->payload, true);
             if (!is_array($payload)) { $payload = []; }
+            $payload = self::populate_transcription_if_missing($payload);
             $key = ((int)$r->deckid).'::'.$r->cardid;
             if (!empty($transmap[$key])) { $payload['translations'] = $transmap[$key]; }
             $out[] = [
@@ -328,6 +330,32 @@ class api {
         return $out;
     }
     
+    protected static function populate_transcription_if_missing(array $payload): array {
+        $current = trim((string)($payload['transcription'] ?? ''));
+        if ($current !== '') {
+            return $payload;
+        }
+        $pos = $payload['pos'] ?? null;
+        $candidates = [
+            $payload['focusBase'] ?? '',
+            $payload['focus_baseform'] ?? '',
+            $payload['fokus'] ?? '',
+            $payload['text'] ?? '',
+        ];
+        foreach ($candidates as $candidate) {
+            $candidate = trim((string)$candidate);
+            if ($candidate === '') {
+                continue;
+            }
+            $transcription = pronunciation_manager::lookup_transcription($candidate, $pos);
+            if ($transcription) {
+                $payload['transcription'] = $transcription;
+                break;
+            }
+        }
+        return $payload;
+    }
+    
     public static function normalize_card_id($text) {
         $text = trim((string)$text);
         if ($text === '') { $text = uniqid('c', false); }
@@ -343,6 +371,7 @@ class api {
         // Extract payload and translations
         $pp = $payload['payload'] ?? [];
         if (!is_array($pp)) { $pp = []; }
+        $pp = self::populate_transcription_if_missing($pp);
         $translations = [];
         if (isset($pp['translations']) && is_array($pp['translations'])) {
             foreach ($pp['translations'] as $lng => $txt) {
@@ -554,7 +583,10 @@ class api {
             $p = $prog[$key] ?? null;
             if ($p) {
                 if ((int)$p->due <= $now && (int)$p->hidden === 0) {
-                    $out[] = ['deckId' => (int)$c->deckid, 'cardId' => $c->cardid, 'payload' => json_decode($c->payload, true)];
+                    $payload = json_decode($c->payload, true);
+                    if (!is_array($payload)) { $payload = []; }
+                    $payload = self::populate_transcription_if_missing($payload);
+                    $out[] = ['deckId' => (int)$c->deckid, 'cardId' => $c->cardid, 'payload' => $payload];
                 }
             }
         }

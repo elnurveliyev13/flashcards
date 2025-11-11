@@ -86,6 +86,17 @@ class ai_helper {
             }
         }
 
+        $lookupWord = trim($result['focusBaseform'] ?? '') ?: $focusword;
+        if ($lookupWord !== '') {
+            $transcription = pronunciation_manager::lookup_transcription($lookupWord, $pos);
+            if (!$transcription && $lookupWord !== $clickedword) {
+                $transcription = pronunciation_manager::lookup_transcription($clickedword, $pos);
+            }
+            if ($transcription) {
+                $result['transcription'] = $transcription;
+            }
+        }
+
         $audio = [];
         $errors = [];
         if ($this->tts->is_enabled()) {

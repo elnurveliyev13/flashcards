@@ -119,7 +119,7 @@
               <div class="slot">
                 <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-                  <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+                  <input id="uTranscription" type="text" placeholder="[IPA e.g. /hu:s/]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
                   <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                 </div>
               </div>
@@ -333,7 +333,7 @@
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
           <div class="row has-action" style="gap:6px;align-items:center;flex-wrap:wrap">
-            <input id="uTranscription" type="text" placeholder="[?sp?l?]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
+            <input id="uTranscription" type="text" placeholder="[IPA e.g. /hu:s/]" style="flex:1;min-width:220px;background:#0b1220;color:#e5e7eb;border:1px solid #374151;border-radius:10px;padding:10px">
             <button id="btnFetchTranscription" class="iconbtn" title="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
           </div>
         </div>
