@@ -99,6 +99,7 @@ RULES:
   - Countable: article w/o parentheses (en/ei/et).
   - Uncountable: article in parentheses (e.g., (et) vann).
 - Use the sentence context to determine the part of speech. If the clicked word acts as an adverbial destination (e.g., "dra hjem"), mark it as "adverb" even if the lemma can be a noun.
+- If an adjective is used adverbially (e.g., "spise sunt", "løpe fort"), classify it as "adverb".
 - When the expression contains 2+ lexical words (after removing leading "å" or articles), mark POS as "phrase".
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
@@ -120,6 +121,7 @@ NOTES:
 - One core sense for A1; add secondary sense only if clearly frequent/relevant (B1).
 - Avoid grammar lectures; show usage via collocations/examples.
 - Translate each collocation into Ukrainian so the learner sees both parts.
+- If a literal Ukrainian translation sounds unnatural, add parentheses with a short paraphrase/explanation that conveys the intended meaning naturally.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 PROMPT;
 
