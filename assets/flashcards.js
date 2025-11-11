@@ -2718,10 +2718,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const activeVocab = Math.round(stats.activeVocab || 0);
 
         const achievements = [
-          { id: 1, threshold: 1, current: stats.totalCardsCreated, icon: '🎯' },
           { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
-          { id: 3, threshold: 100, current: stats.totalCardsCreated, icon: '💯' },
-          { id: 4, threshold: 1, current: 0, icon: '🌳' }, // TODO: Count cards at stage 7+
 
           // Language Level Achievements (based on Active Vocabulary)
           { id: 5, threshold: 100, current: activeVocab, icon: '🌱' },  // A0
