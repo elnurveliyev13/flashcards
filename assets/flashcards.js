@@ -317,16 +317,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // POS helper: compact option labels + info text
     const POS_INFO = {
-      substantiv: '<i>Substantiv navn pa steder, personer, ting og fenomener</i>',
-      adjektiv: '<i>Adjektiv beskriver substantiv</i>',
-      pronomen: '<i>Pronomen settes i stedet for et substantiv</i>',
-      determinativ: '<i>Determinativ bestemmer substantivet n?rmere</i>',
-      verb: '<i>Verb navn pa en handling</i>',
-      adverb: '<i>Adverb beskriver/modifiserer verb, adjektiv eller andre adverb</i>',
-      preposisjon: '<i>Preposisjon plassering i tid/rom i forhold til annet ord</i>',
-      konjunksjon: '<i>Konjunksjon binder sammen like ordledd eller helsetninger</i>',
-      subjunksjon: '<i>Subjunksjon innleder leddsetninger</i>',
-      interjeksjon: '<i>Interjeksjon lydmalende ord, folelser eller meninger</i>'
+      substantiv: '<i>Substantiv - navn pa steder, personer, ting og fenomener</i>',
+      adjektiv: '<i>Adjektiv - beskriver substantiv</i>',
+      pronomen: '<i>Pronomen - settes i stedet for et substantiv</i>',
+      determinativ: '<i>Determinativ - bestemmer substantivet n?rmere</i>',
+      verb: '<i>Verb - navn pa en handling</i>',
+      adverb: '<i>Adverb - beskriver/modifiserer verb, adjektiv eller andre adverb</i>',
+      preposisjon: '<i>Preposisjon - plassering i tid/rom i forhold til annet ord</i>',
+      konjunksjon: '<i>Konjunksjon - binder sammen like ordledd eller helsetninger</i>',
+      subjunksjon: '<i>Subjunksjon - innleder leddsetninger</i>',
+      interjeksjon: '<i>Interjeksjon - lydmalende ord, folelser eller meninger</i>'
     };
     function compactPOSOptions(){
       const sel = document.getElementById('uPOS');
@@ -978,7 +978,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const label = $("#editorAdvancedLabel");
       if(label){
-        label.textContent = advancedVisible ? 'Hide Advanced' : 'Show Advanced';
+        label.textContent = advancedVisible ? 'Hide advanced' : 'Show Advanced';
       }
       const icon = $("#editorAdvancedIcon");
       if(icon){
@@ -1135,7 +1135,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const el=document.createElement("div");
       el.className="slot";
       if(kind==="text" && card.text){
-        const tr = card.transcription ? `<div class="small" style="opacity:.85">[${card.transcription}]</div>` : "";
+        const tr = card.transcription ? `<div class="small">[${card.transcription}]</div>` : "";
         el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
         return el;
       }
