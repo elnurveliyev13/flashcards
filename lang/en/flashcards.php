@@ -226,6 +226,13 @@ $string['achievement_century'] = 'Century (100 cards)';
 $string['achievement_study_bug'] = 'Study Bug (10 hours)';
 $string['achievement_master'] = 'Master (1 card at stage 7+)';
 
+// Language Level Achievements (based on Active Vocabulary)
+$string['achievement_level_a0'] = 'Level A0 - Beginner';
+$string['achievement_level_a1'] = 'Level A1 - Elementary';
+$string['achievement_level_a2'] = 'Level A2 - Pre-Intermediate';
+$string['achievement_level_b1'] = 'Level B1 - Intermediate';
+$string['achievement_level_b2'] = 'Level B2 - Upper-Intermediate';
+
 // Placeholders
 $string['collocations_ph'] = 'One per line...';
 $string['examples_ph'] = 'Example sentences...';

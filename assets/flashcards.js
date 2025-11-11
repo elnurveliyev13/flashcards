@@ -2715,11 +2715,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Update Achievement Progress
       function updateAchievements(stats) {
+        const activeVocab = Math.round(stats.activeVocab || 0);
+
         const achievements = [
           { id: 1, threshold: 1, current: stats.totalCardsCreated, icon: '🎯' },
           { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
           { id: 3, threshold: 100, current: stats.totalCardsCreated, icon: '💯' },
-          { id: 4, threshold: 1, current: 0, icon: '🌳' } // TODO: Count cards at stage 7+
+          { id: 4, threshold: 1, current: 0, icon: '🌳' }, // TODO: Count cards at stage 7+
+
+          // Language Level Achievements (based on Active Vocabulary)
+          { id: 5, threshold: 100, current: activeVocab, icon: '🌱' },  // A0
+          { id: 6, threshold: 600, current: activeVocab, icon: '🌿' },  // A1
+          { id: 7, threshold: 1500, current: activeVocab, icon: '🍀' }, // A2
+          { id: 8, threshold: 2500, current: activeVocab, icon: '🌳' }, // B1
+          { id: 9, threshold: 4500, current: activeVocab, icon: '🏆' }  // B2
         ];
 
         achievements.forEach(ach => {
