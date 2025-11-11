@@ -63,6 +63,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontTransShow: dataset.frontTransShow || 'Show translation',
       frontTransHide: dataset.frontTransHide || 'Hide translation'
     };
+    let frontTranslationSlot = null;
+    let frontTranslationToggle = null;
+    let frontTranslationVisible = false;
 
     // Language detection (prefer saved preference, then Moodle, fallback to browser)
     // Prefer Moodle page lang and URL param over browser
@@ -386,9 +389,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusHintEl = document.getElementById('focusHelperHint');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
-    const frontTranslationSlot = document.getElementById('slot_translation_local');
-    const frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
-    let frontTranslationVisible = false;
+    frontTranslationSlot = document.getElementById('slot_translation_local');
+    frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'вЂ™\-]+/gu; } catch(_e){ return /[A-Za-z0-9'вЂ™\-]+/g; } })();
 
     function setFocusStatus(state, text){
