@@ -143,6 +143,10 @@ function mod_flashcards_pluginfile($course, $cm, $context, $filearea, $args, $fo
  */
 function mod_flashcards_get_runtime_config(): array {
     $config = get_config('mod_flashcards');
+    $elevenenabled = !empty($config->elevenlabs_apikey);
+    $pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: '';
+    $pollysecret = trim($config->amazonpolly_secret_key ?? '') ?: getenv('FLASHCARDS_POLLY_SECRET') ?: '';
+    $pollyenabled = ($pollyaccess !== '' && $pollysecret !== '');
     $voices = [];
     $rawvoicemap = $config->elevenlabs_voice_map ?? '';
     if ($rawvoicemap !== '') {
@@ -165,7 +169,11 @@ function mod_flashcards_get_runtime_config(): array {
     return [
         'ai' => [
             'enabled' => !empty($config->ai_focus_enabled) && !empty($config->openai_apikey),
-            'ttsEnabled' => !empty($config->elevenlabs_apikey),
+            'ttsEnabled' => $elevenenabled || $pollyenabled,
+            'ttsProviders' => [
+                'elevenlabs' => $elevenenabled,
+                'polly' => $pollyenabled,
+            ],
             'defaultVoice' => $config->elevenlabs_default_voice ?? '',
             'voices' => $voices,
             'dictionaryEnabled' => !empty($config->orbokene_enabled),

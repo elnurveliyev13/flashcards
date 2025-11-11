@@ -76,6 +76,48 @@ if ($hassiteconfig) {
         'eleven_monolingual_v2'
     ));
 
+    // Amazon Polly
+    $settings->add(new admin_setting_heading(
+        'mod_flashcards/polly_heading',
+        get_string('settings_polly_section', 'mod_flashcards'),
+        get_string('settings_polly_section_desc', 'mod_flashcards')
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/amazonpolly_access_key',
+        get_string('settings_polly_key', 'mod_flashcards'),
+        get_string('settings_polly_key_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configpasswordunmask(
+        'mod_flashcards/amazonpolly_secret_key',
+        get_string('settings_polly_secret', 'mod_flashcards'),
+        get_string('settings_polly_secret_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/amazonpolly_region',
+        get_string('settings_polly_region', 'mod_flashcards'),
+        get_string('settings_polly_region_desc', 'mod_flashcards'),
+        'eu-west-1'
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/amazonpolly_voice_id',
+        get_string('settings_polly_voice', 'mod_flashcards'),
+        get_string('settings_polly_voice_desc', 'mod_flashcards'),
+        'Liv'
+    ));
+
+    $settings->add(new admin_setting_configtextarea(
+        'mod_flashcards/amazonpolly_voice_map',
+        get_string('settings_polly_voice_map', 'mod_flashcards'),
+        get_string('settings_polly_voice_map_desc', 'mod_flashcards'),
+        ''
+    ));
+
     // Orbøkene dictionary
     $settings->add(new admin_setting_heading(
         'mod_flashcards/orbokene_heading',
