@@ -264,6 +264,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           transLocal.value = data.translation;
         }
       }
+      if(Array.isArray(data.collocations) && data.collocations.length){
+        const collEl = document.getElementById('uCollocations');
+        if(collEl && !collEl.value.trim()){
+          collEl.value = data.collocations.join('\n');
+        }
+      }
       if(Array.isArray(data.examples) && data.examples.length){
         const examplesEl = document.getElementById('uExamples');
         if(examplesEl && !examplesEl.value.trim()){

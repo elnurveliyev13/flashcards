@@ -37,8 +37,12 @@ class ai_helper {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
 
-        $language = trim($options['language'] ?? '') ?: 'no';
-        $focusdata = $this->openai->detect_focus_data($fronttext, $clickedword, $language);
+        $language = trim($options['language'] ?? '') ?: 'uk';
+        $level = trim($options['level'] ?? '');
+        $focusdata = $this->openai->detect_focus_data($fronttext, $clickedword, [
+            'language' => $language,
+            'level' => $level,
+        ]);
 
         $focusword = trim($focusdata['focus'] ?? '') ?: $clickedword;
         $baseform = trim($focusdata['baseform'] ?? '') ?: $focusword;
@@ -49,6 +53,19 @@ class ai_helper {
             'focusBaseform' => $baseform,
             'pos' => $pos,
         ];
+
+        if (!empty($focusdata['definition'])) {
+            $result['definition'] = $focusdata['definition'];
+        }
+        if (!empty($focusdata['translation'])) {
+            $result['translation'] = $focusdata['translation'];
+        }
+        if (!empty($focusdata['collocations']) && is_array($focusdata['collocations'])) {
+            $result['collocations'] = $focusdata['collocations'];
+        }
+        if (!empty($focusdata['examples']) && is_array($focusdata['examples'])) {
+            $result['examples'] = $focusdata['examples'];
+        }
 
         if ($focusword !== '' && orbokene_repository::is_enabled() && ($dict = orbokene_repository::find($focusword))) {
             if (!empty($dict['baseform'])) {

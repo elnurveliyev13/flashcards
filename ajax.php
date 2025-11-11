@@ -212,10 +212,15 @@ switch ($action) {
             throw new invalid_parameter_exception('Missing text');
         }
         $language = clean_param($payload['language'] ?? 'no', PARAM_ALPHANUMEXT);
+        $level = strtoupper(clean_param($payload['level'] ?? '', PARAM_ALPHANUMEXT));
+        if (!in_array($level, ['A1', 'A2', 'B1'], true)) {
+            $level = '';
+        }
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
         $helper = new \mod_flashcards\local\ai_helper();
         $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
             'language' => $language,
+            'level' => $level,
             'voice' => $voiceid ?: null,
         ]);
         echo json_encode(['ok' => true, 'data' => $data]);
