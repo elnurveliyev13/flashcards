@@ -141,7 +141,7 @@
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
             </div>
-            <div class="slot front-translation-slot collapsed" id="slot_translation_local" aria-hidden="true">
+            <div class="slot front-translation-slot collapsed" id="slot_front_translation" aria-hidden="true">
               <span class="tag" id="tag_trans_local">Translation (?)</span>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
             </div>
@@ -159,7 +159,7 @@
             </div>
             <div class="slot">
               <span class="tag">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
-              <input id="uFocusBase" type="text" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}">
+              <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}"></textarea>
             </div>
             <div class="fc-quick-advanced-toggle">
               <button id="btnEditorAdvanced" class="fc-link-btn">
@@ -181,7 +181,7 @@
                 <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                     <div class="input-wrap">
-                     <input id="uTranscription" type="text" placeholder="[IPA e.g. /hu:s/]">
+                     <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]"></textarea>
                   </div>
                 </div>
               </div>
@@ -404,7 +404,7 @@
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
           <div class="row has-action">
               <div class="input-wrap">
-               <input id="uTranscription" type="text" placeholder="[IPA e.g. /hu:s/]">
+               <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]"></textarea>
             </div>
           </div>
         </div>

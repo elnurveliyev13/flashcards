@@ -1527,6 +1527,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: block;
 }
 #mod_flashcards_container .slot .row.has-action .input-wrap input,
+#mod_flashcards_container .slot .row.has-action .input-wrap textarea,
 #mod_flashcards_container .slot .row.has-action .input-wrap select{
   width: 100%;
   padding-right: 48px;
@@ -1564,6 +1565,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   color: var(--text);
 }
 #mod_flashcards_container .slot .row.has-action .input-wrap input:focus + .input-addon,
+#mod_flashcards_container .slot .row.has-action .input-wrap textarea:focus + .input-addon,
 #mod_flashcards_container .slot .row.has-action .input-wrap select:focus + .input-addon{
   border-color: var(--primary);
   color: var(--text);

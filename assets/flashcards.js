@@ -167,13 +167,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontTranslationToggle.setAttribute('aria-expanded', frontTranslationVisible ? 'true' : 'false');
     }
 
-    if(frontTranslationToggle){
-      frontTranslationToggle.addEventListener('click', ()=>{
-        setFrontTranslationVisibility(!frontTranslationVisible);
-      });
-    }
-    setFrontTranslationVisibility(false);
-
     // Function to update translation language UI
     function updateTranslationLangUI(){
       try {
@@ -234,8 +227,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     // Prepare translation inputs visibility/labels
-    updateTranslationLangUI();
-
     // Dynamic Examples and Collocations Lists
     let examplesData = []; // Array of {no: "Norwegian text", trans: "Translation"}
     let collocationsData = [];
@@ -389,8 +380,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusHintEl = document.getElementById('focusHelperHint');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
-    frontTranslationSlot = document.getElementById('slot_translation_local');
+    frontTranslationSlot = document.getElementById('slot_front_translation');
     frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
+    if(frontTranslationToggle){
+      frontTranslationToggle.addEventListener('click', ()=>{
+        setFrontTranslationVisibility(!frontTranslationVisible);
+      });
+    }
+    setFrontTranslationVisibility(false);
+    updateTranslationLangUI();
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'вЂ™\-]+/gu; } catch(_e){ return /[A-Za-z0-9'вЂ™\-]+/g; } })();
 
     function setFocusStatus(state, text){
@@ -1027,7 +1025,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const icon = $("#editorAdvancedIcon");
       if(icon){
-        icon.textContent = advancedVisible ? '▼' : '▲';
+        icon.textContent = advancedVisible ? '▲' : '▼';
       }
     }
     function showAudioBadge(label){
