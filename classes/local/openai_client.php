@@ -121,7 +121,7 @@ RULES:
 - If the clicked verb needs an adjective/noun complement to form the meaning (e.g., "å ha rett", "å ta feil", "å gjøre ferdig"), include that complement so the WORD captures the full idiom and mark POS as "phrase".
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
-- When the learner’s sentence clearly misuses a particle/preposition/article or inflects the expression incorrectly, propose a correction only if you are 90% sure it is wrong.
+- IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction.
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
 
@@ -136,7 +136,7 @@ EX1: <NO sentence using a top collocation> | <{$targetlang}>
 EX2: <NO> | <{$targetlang}>
 EX3: <NO> | <{$targetlang}>
 FORMS: <other useful lexical forms (verb/noun/adj variants) with tiny NO gloss + {$targetlang}>
-CORR: <corrected Norwegian sentence + short reason> (omit line if unsure)
+CORR: <fully corrected sentence> — <list each error: "bruk"→"bruke" (infinitive after å); "tit"→"tid" (spelling); etc.> (include this line whenever you spot ANY error in the sentence, not just when 90% sure)
 
 NOTES:
 - Focus on everyday, high-frequency uses.
@@ -148,7 +148,7 @@ NOTES:
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 - When the clicked form is part of an idiomatic verb + particle/preposition, keep the whole expression together (e.g., "å gå opp") and explain that idiomatic sense (e.g., "å forstå noe").
 - Include the required adjective/noun complement when an expression depends on it (e.g., output "å ha rett" instead of "å ha").
-- Only output CORR when you can confidently fix a specific wording error in the learner sentence; format it as "<correct sentence> — <brief reason>".
+- ALWAYS output CORR line whenever the learner sentence contains ANY error (spelling, grammar, verb forms, prepositions, articles, word order, word choice). List ALL errors found, not just the first one. Format: "<fully corrected sentence> — <error1: wrong→correct (reason); error2: wrong→correct (reason); etc.>".
 PROMPT;
 
         $userprompt = implode("\n", [
@@ -160,7 +160,8 @@ PROMPT;
                 . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
                 . 'If the clicked form belongs to a verb or verb phrase, output it in infinitive with a leading "å" and include any attached particles/prepositions or required complements (adjectives/nouns) that change the meaning. '
                 . 'Prefer the idiomatic/contextual sense over literal tense explanations. '
-                . 'Suggest a correction (CORR) only when a particle/preposition/article or inflection (e.g., missing present-tense -r in "du har") is clearly wrong and you are highly confident; otherwise omit CORR. '
+                . 'IMPORTANT: Carefully analyze the ENTIRE sentence for ALL errors (spelling mistakes, wrong verb forms, incorrect prepositions/articles, word order issues, word choice errors). '
+                . 'ALWAYS include CORR line if you find ANY error. List ALL mistakes you found with brief explanations (e.g., "bruk"→"bruke" (infinitive after å); "tit"→"tid" (spelling)). '
                 . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
         ]);
 
