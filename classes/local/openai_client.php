@@ -121,6 +121,7 @@ NOTES:
 - One core sense for A1; add secondary sense only if clearly frequent/relevant (B1).
 - Avoid grammar lectures; show usage via collocations/examples.
 - Translate each collocation into Ukrainian so the learner sees both parts.
+- Ukrainian translations must sound natural; whenever a literal rendering would feel awkward, rewrite it naturally and add parentheses with a short explanation (e.g., "жити здорово (вести здоровий спосіб життя)"). Apply this rule to both COLL translations and EX sentence translations.
 - If a literal Ukrainian translation sounds unnatural, add parentheses with a short paraphrase/explanation that conveys the intended meaning naturally.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 PROMPT;
