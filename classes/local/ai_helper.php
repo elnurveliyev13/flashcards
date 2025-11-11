@@ -52,6 +52,7 @@ class ai_helper {
             'focusWord' => $focusword,
             'focusBaseform' => $baseform,
             'pos' => $pos,
+            'gender' => $focusdata['gender'] ?? '',
         ];
 
         if (!empty($focusdata['definition'])) {

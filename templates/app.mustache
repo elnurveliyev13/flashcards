@@ -173,7 +173,6 @@
                 <div class="row has-action">
                   <div class="input-wrap">
                     <input id="uTranscription" type="text" placeholder="[?sp?l?]">
-                    <button type="button" id="btnFetchTranscription" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                   </div>
                 </div>
               </div>
@@ -195,7 +194,6 @@
                     <option value="interjeksjon">Interjeksjon ? lydmalende ord, folelser eller meninger</option>
                     <option value="phrase">Phrase</option>
                   </select>
-                  <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
                   </div>
                 </div>
                 <div id="uPOSHelp" class="small"></div>
@@ -204,10 +202,9 @@
                 <span class="tag">{{#str}} gender, mod_flashcards {{/str}}</span>
                 <select id="uGender">
                   <option value="">-</option>
-                  <option value="m">{{#str}} gender_m, mod_flashcards {{/str}}</option>
-                  <option value="f">{{#str}} gender_f, mod_flashcards {{/str}}</option>
-                  <option value="n">{{#str}} gender_n, mod_flashcards {{/str}}</option>
-                  <option value="c">{{#str}} gender_c, mod_flashcards {{/str}}</option>
+                  <option value="hankjonn">hankjønn</option>
+                  <option value="hunkjonn">hunkjønn</option>
+                  <option value="intetkjonn">intetkjønn</option>
                 </select>
               </div>
               <div class="slot" id="slot_noun_forms">
@@ -413,7 +410,6 @@
           <div class="row has-action">
             <div class="input-wrap">
               <input id="uTranscription" type="text" placeholder="[?sp?l?]">
-              <button type="button" id="btnFetchTranscription" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
             </div>
           </div>
         </div>
@@ -435,7 +431,6 @@
               <option value="interjeksjon">Interjeksjon ? spesielle ord som gir et bilde av lyder som ikke kan skrives, folelser eller meninger</option>
               <option value="phrase">Phrase</option>
             </select>
-            <button type="button" id="btnFetchPOS" class="input-addon" title="{{#str}} autofill, mod_flashcards {{/str}}" aria-label="{{#str}} autofill, mod_flashcards {{/str}}">&#128269;</button>
             </div>
           </div>
           <div id="uPOSHelp" class="small"></div>
@@ -444,9 +439,9 @@
           <span class="tag">{{#str}} gender, mod_flashcards {{/str}}</span>
           <select id="uGender">
             <option value="">-</option>
-            <option value="intetkjonn">{{#str}} gender_neuter, mod_flashcards {{/str}}</option>
-            <option value="hankjonn">{{#str}} gender_masculine, mod_flashcards {{/str}}</option>
-            <option value="hunkjonn">{{#str}} gender_feminine, mod_flashcards {{/str}}</option>
+            <option value="hankjonn">hankjønn</option>
+            <option value="hunkjonn">hunkjønn</option>
+            <option value="intetkjonn">intetkjønn</option>
           </select>
         </div>
         <div class="slot hidden" id="slot_noun_forms">
@@ -655,3 +650,4 @@
     </div>
   </div>
 </div>
+

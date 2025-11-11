@@ -29,6 +29,12 @@ class openai_client {
         'other',
     ];
 
+    private const GENDER_OPTIONS = [
+        'hankjonn',
+        'hunkjonn',
+        'intetkjonn',
+    ];
+
     private const DEFAULT_LEVEL = 'A2';
 
     /** @var string|null */
@@ -92,14 +98,18 @@ RULES:
 - Nouns: mark countability and gender via article:
   - Countable: article w/o parentheses (en/ei/et).
   - Uncountable: article in parentheses (e.g., (et) vann).
+- Use the sentence context to determine the part of speech. If the clicked word acts as an adverbial destination (e.g., "dra hjem"), mark it as "adverb" even if the lemma can be a noun.
+- When the expression contains 2+ lexical words (after removing leading "å" or articles), mark POS as "phrase".
+- If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
 
 FORMAT:
 WORD: <base form with article or "å">
 POS: <one of substantiv|adjektiv|pronomen|determinativ|verb|adverb|preposisjon|konjunksjon|subjunksjon|interjeksjon|phrase|other>
+GENDER: <hankjønn|hunkjønn|intetkjønn|-> (nouns only)
 EXPL-NO: <simple Norwegian explanation>
 TR-UK: <Ukrainian translation of meaning>
-COLL: <3-5 most common collocations, most frequent first>
+COLL: <3-5 collocations as "Norwegian phrase | Ukrainian translation", semicolon-separated>
 EX1: <NO sentence using a top collocation> | <UKR>
 EX2: <NO> | <UKR>
 EX3: <NO> | <UKR>
@@ -109,6 +119,7 @@ NOTES:
 - Focus on everyday, high-frequency uses.
 - One core sense for A1; add secondary sense only if clearly frequent/relevant (B1).
 - Avoid grammar lectures; show usage via collocations/examples.
+- Translate each collocation into Ukrainian so the learner sees both parts.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 PROMPT;
 
@@ -117,9 +128,9 @@ PROMPT;
             'clicked_word: ' . $this->trim_prompt_text($clickedword, 60),
             "level: {$level}",
             "ui_lang: {$uilang}",
-            'instructions: Identify the natural expression in the sentence that includes the clicked word. Fill every label exactly as listed in the FORMAT block. '
-                . 'Determine POS using only the allowed values; if the expression has two or more lexical words after removing a leading "å" or articles (en/ei/et), label it as "phrase". '
-                . 'Separate collocations with ";" in frequency order. Each EX line must be "Norwegian sentence | Ukrainian sentence".'
+            'instructions: Identify the expression in context that includes the clicked word. Decide POS by how the expression functions in this sentence (e.g., motion + destination => adverb). '
+                . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
+                . 'Separate collocations with ";" and format each item as "Norwegian | Ukrainian". Keep EX lines as "Norwegian sentence | Ukrainian sentence".'
         ]);
 
         $payload = [
@@ -155,6 +166,7 @@ PROMPT;
             'pos' => $this->normalize_pos($parsed['pos'] ?? '', $focus),
             'definition' => core_text::substr($parsed['definition'] ?? '', 0, 600),
             'translation' => core_text::substr($parsed['translation'] ?? '', 0, 400),
+            'gender' => $this->normalize_gender($parsed['gender'] ?? ''),
             'collocations' => $parsed['collocations'] ?? [],
             'examples' => $parsed['examples'] ?? [],
             'forms' => $parsed['forms'] ?? '',
@@ -172,6 +184,7 @@ PROMPT;
             'pos' => 'other',
             'definition' => '',
             'translation' => '',
+            'gender' => '-',
             'collocations' => [],
             'examples' => [],
             'forms' => '',
@@ -246,7 +259,8 @@ PROMPT;
             'pos' => $data['POS'] ?? '',
             'definition' => $data['EXPL-NO'] ?? '',
             'translation' => $data[$translationlabel] ?? ($data['TR-UK'] ?? ''),
-            'collocations' => $this->split_list($data['COLL'] ?? ''),
+            'gender' => $data['GENDER'] ?? '',
+            'collocations' => $this->parse_collocations($data['COLL'] ?? ''),
             'examples' => $this->collect_examples($data),
             'forms' => $data['FORMS'] ?? '',
         ];
@@ -281,6 +295,54 @@ PROMPT;
             $examples[] = core_text::substr(trim($data[$key]), 0, 240);
         }
         return $examples;
+    }
+
+    protected function parse_collocations(string $text): array {
+        $raw = $this->split_list($text, 5);
+        $parsed = [];
+        foreach ($raw as $entry) {
+            $parts = array_map('trim', explode('|', $entry, 2));
+            $no = $parts[0] ?? '';
+            $uk = $parts[1] ?? '';
+            if ($no === '') {
+                continue;
+            }
+            $parsed[] = [
+                'no' => core_text::substr($no, 0, 160),
+                'uk' => core_text::substr($uk, 0, 200),
+            ];
+        }
+        return $parsed;
+    }
+
+    protected function normalize_gender(string $value): string {
+        $value = core_text::strtolower(trim($value));
+        if ($value === '') {
+            return '-';
+        }
+        $map = [
+            'm' => 'hankjonn',
+            'masculine' => 'hankjonn',
+            'hannkjonn' => 'hankjonn',
+            'hankjønn' => 'hankjonn',
+            'hankjonn' => 'hankjonn',
+            'f' => 'hunkjonn',
+            'feminine' => 'hunkjonn',
+            'hunnkjonn' => 'hunkjonn',
+            'hunkjønn' => 'hunkjonn',
+            'hunkjonn' => 'hunkjonn',
+            'n' => 'intetkjonn',
+            'neuter' => 'intetkjonn',
+            'intetkjønn' => 'intetkjonn',
+            'intetkjonn' => 'intetkjonn',
+        ];
+        if (isset($map[$value])) {
+            return $map[$value];
+        }
+        if (in_array($value, self::GENDER_OPTIONS, true)) {
+            return $value;
+        }
+        return '-';
     }
 
     protected function trim_prompt_text(string $text, int $length = 400): string {

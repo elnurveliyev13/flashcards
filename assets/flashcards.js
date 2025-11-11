@@ -267,7 +267,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(Array.isArray(data.collocations) && data.collocations.length){
         const collEl = document.getElementById('uCollocations');
         if(collEl && !collEl.value.trim()){
-          collEl.value = data.collocations.join('\n');
+          const formatted = data.collocations.map(item=>{
+            if(!item) return '';
+            if(typeof item === 'string') return item;
+            const left = (item.no||'').trim();
+            const right = (item.uk||'').trim();
+            if(left && right) return `${left} | ${right}`;
+            return left || right;
+          }).filter(Boolean);
+          if(formatted.length){
+            collEl.value = formatted.join('\n');
+          }
         }
       }
       if(Array.isArray(data.examples) && data.examples.length){
@@ -296,6 +306,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(posField){
           posField.value = data.pos;
           updatePOSHelp();
+          togglePOSUI();
+        }
+      }
+      if(data.gender && data.gender !== '-'){
+        const genderField = document.getElementById('uGender');
+        if(genderField && !genderField.value){
+          genderField.value = data.gender;
         }
       }
       if(data.errors && (data.errors.tts_front || data.errors.tts_focus)){
@@ -1346,7 +1363,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(adjFormsSlot) adjFormsSlot.classList.toggle('hidden', pos !== 'adjektiv');
     }
     const _uPOS = document.getElementById('uPOS');
-    if(_uPOS && !_uPOS.dataset.bound){ _uPOS.dataset.bound='1'; _uPOS.addEventListener('change', togglePOSUI); updatePOSHelp(); }
+    if(_uPOS && !_uPOS.dataset.bound){
+      _uPOS.dataset.bound='1';
+      _uPOS.addEventListener('change', togglePOSUI);
+      updatePOSHelp();
+      togglePOSUI();
+    }
     function autofillSoon(){ const s=document.getElementById('status'); if(s){ s.textContent=(M?.str?.mod_flashcards?.autofill_soon)||'Auto-fill will be available soon'; setTimeout(()=>{s.textContent='';},1200);} }
     ;['btnFetchTranscription','btnFetchPOS','btnFetchNounForms','btnFetchCollocations','btnFetchExamples','btnFetchAntonyms','btnFetchCognates','btnFetchSayings'].forEach(id=>{ const b=document.getElementById(id); if(b && !b.dataset.bound){ b.dataset.bound='1'; b.addEventListener('click', e=>{ e.preventDefault(); autofillSoon(); }); }});
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
