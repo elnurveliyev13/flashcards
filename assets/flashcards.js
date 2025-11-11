@@ -115,7 +115,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           option.textContent = opt.label || opt.voice;
           voiceSelectEl.appendChild(option);
         });
-        voiceSelectEl.value = selectedVoice || '';
+        // Set default voice after DOM updates (ensure visual selection)
+        requestAnimationFrame(() => {
+          if(selectedVoice){
+            voiceSelectEl.value = selectedVoice;
+          }
+        });
         voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; setTtsStatus('', ''); });
         if(voiceSlotEl) voiceSlotEl.classList.remove('hidden');
         if(!aiConfig.ttsEnabled){
