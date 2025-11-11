@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025111000; // YYYYMMDDXX. AI focus helper + TTS integration baseline
+$plugin->version   = 2025111200; // YYYYMMDDXX. Cleanup cron + dashboard metrics
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.10.0-ai-mvp'; // AI focus helper + TTS baseline
