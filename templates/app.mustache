@@ -13,7 +13,9 @@
      data-voice-missing="{{#str}} tts_voice_missing, mod_flashcards {{/str}}"
      data-voice-disabled="{{#str}} tts_voice_disabled, mod_flashcards {{/str}}"
      data-tts-success="{{#str}} tts_status_success, mod_flashcards {{/str}}"
-     data-tts-error="{{#str}} tts_status_error, mod_flashcards {{/str}}">
+     data-tts-error="{{#str}} tts_status_error, mod_flashcards {{/str}}"
+     data-front-trans-show="{{#str}} front_translation_toggle_show, mod_flashcards {{/str}}"
+     data-front-trans-hide="{{#str}} front_translation_toggle_hide, mod_flashcards {{/str}}">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     <!-- Access Status Banner -->
@@ -127,9 +129,21 @@
               <select id="ttsVoice"></select>
               <div class="small" id="ttsVoiceStatus">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
             </div>
-            <div class="slot">
-              <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+            <div class="slot front-slot">
+              <div class="slot-head">
+                <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+                <button type="button"
+                        id="btnToggleFrontTranslation"
+                        class="front-translation-toggle"
+                        aria-expanded="false">
+                  {{#str}} front_translation_toggle_show, mod_flashcards {{/str}}
+                </button>
+              </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
+            </div>
+            <div class="slot front-translation-slot collapsed" id="slot_translation_local" aria-hidden="true">
+              <span class="tag" id="tag_trans_local">Translation (?)</span>
+              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
             </div>
             <div class="slot focus-helper-slot">
               <div class="focus-helper-head">
@@ -147,11 +161,6 @@
               <span class="tag">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
               <input id="uFocusBase" type="text" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}">
             </div>
-            <div class="slot" id="slot_translation_local">
-              <span class="tag" id="tag_trans_local">Translation (?)</span>
-              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
-            </div>
-
             <div class="fc-quick-advanced-toggle">
               <button id="btnEditorAdvanced" class="fc-link-btn">
                 <span id="editorAdvancedLabel">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
@@ -636,4 +645,3 @@
     </div>
   </div>
 </div>
-

@@ -578,6 +578,32 @@ audio{max-width:260px}
   margin-bottom: 6px;
   display: inline-block;
 }
+.slot-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.front-translation-toggle{
+  background:none;
+  border:none;
+  color:var(--primary);
+  font-size:0.85rem;
+  font-weight:500;
+  cursor:pointer;
+  padding:2px 6px;
+  border-radius:999px;
+  transition:background 0.15s ease,color 0.15s ease;
+}
+.front-translation-toggle:hover,
+.front-translation-toggle:focus-visible{
+  background:rgba(59,130,246,0.15);
+  color:var(--text);
+  outline:none;
+}
+.front-translation-slot.collapsed{
+  display:none;
+}
 /* Advanced field rows align and stretch gracefully */
 #mod_flashcards_container .slot .row{
   width: 100%;
