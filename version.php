@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025111202; // YYYYMMDDXX. Improved explanation fields & POS hints
+$plugin->version   = 2025111203; // YYYYMMDDXX. Dynamic examples/collocations with translations & improved POS hints
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.12.0-explanation-improvements'; // Separated explanation translations, improved POS hints
+$plugin->release   = '0.12.0-examples-translations'; // Examples/collocations with hidden translations, improved POS hints

@@ -136,46 +136,118 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     } catch(_e){}
 
-    // Prepare explanation translation fields visibility/labels
-    try {
-      const tagExplLocal = $("#tag_expl_trans_local");
-      const tagExplLocalExt = $("#tag_expl_trans_local_ext");
-      const explLang = languageName(userLang2);
-      if(tagExplLocal){ tagExplLocal.textContent = `Explanation Translation (${explLang})`; }
-      if(tagExplLocalExt){ tagExplLocalExt.textContent = `Explanation Translation (${explLang})`; }
+    // Dynamic Examples and Collocations Lists
+    let examplesData = []; // Array of {no: "Norwegian text", trans: "Translation"}
+    let collocationsData = [];
 
-      const slotExplLocal = $("#slot_explanation_trans_local");
-      const slotExplEn = $("#slot_explanation_trans_en");
-      const slotExplLocalExt = $("#slot_explanation_trans_local_ext");
-      const slotExplEnExt = $("#slot_explanation_trans_en_ext");
+    function createItemElement(type, index, data) {
+      const container = document.createElement('div');
+      container.style.cssText = 'display: flex; flex-direction: column; gap: 6px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;';
+      container.dataset.index = index;
 
-      if(userLang2 === 'en'){
-        if(slotExplLocal) slotExplLocal.classList.add('hidden');
-        if(slotExplEn) slotExplEn.classList.remove('hidden');
-        if(slotExplLocalExt) slotExplLocalExt.classList.add('hidden');
-        if(slotExplEnExt) slotExplEnExt.classList.remove('hidden');
-      } else {
-        if(slotExplLocal) slotExplLocal.classList.remove('hidden');
-        if(slotExplEn) slotExplEn.classList.add('hidden');
-        if(slotExplLocalExt) slotExplLocalExt.classList.remove('hidden');
-        if(slotExplEnExt) slotExplEnExt.classList.add('hidden');
-      }
-    } catch(_e){}
+      const topRow = document.createElement('div');
+      topRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
 
-    // Toggle buttons for explanation translations
-    function setupToggleButton(btnId, textareaId) {
-      const btn = $(btnId);
-      const textarea = $(textareaId);
-      if(!btn || !textarea) return;
-      btn.addEventListener('click', (e) => {
+      const label = document.createElement('span');
+      label.style.cssText = 'font-size: 0.9em; opacity: 0.7;';
+      label.textContent = `${type} #${index + 1}`;
+
+      const btnRemove = document.createElement('button');
+      btnRemove.type = 'button';
+      btnRemove.className = 'fc-link-btn';
+      btnRemove.style.cssText = 'font-size: 0.85em; padding: 2px 6px; color: #ef4444;';
+      btnRemove.textContent = '× Remove';
+      btnRemove.addEventListener('click', () => {
+        if(type === 'Example') {
+          examplesData.splice(index, 1);
+          renderExamples();
+        } else {
+          collocationsData.splice(index, 1);
+          renderCollocations();
+        }
+      });
+
+      topRow.appendChild(label);
+      topRow.appendChild(btnRemove);
+      container.appendChild(topRow);
+
+      const inputNo = document.createElement('input');
+      inputNo.type = 'text';
+      inputNo.placeholder = 'Norwegian text...';
+      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; color: #f1f5f9; border: 1px solid #374151; border-radius: 6px;';
+      inputNo.value = data.no || '';
+      inputNo.addEventListener('input', (e) => {
+        if(type === 'Example') examplesData[index].no = e.target.value;
+        else collocationsData[index].no = e.target.value;
+      });
+      container.appendChild(inputNo);
+
+      const transRow = document.createElement('div');
+      transRow.style.cssText = 'display: flex; align-items: center; gap: 8px;';
+
+      const inputTrans = document.createElement('input');
+      inputTrans.type = 'text';
+      inputTrans.placeholder = `Translation (${languageName(userLang2)})...`;
+      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #f1f5f9; border: 1px solid #374151; border-radius: 6px;';
+      inputTrans.value = data.trans || '';
+      inputTrans.classList.add('hidden');
+      inputTrans.addEventListener('input', (e) => {
+        if(type === 'Example') examplesData[index].trans = e.target.value;
+        else collocationsData[index].trans = e.target.value;
+      });
+
+      const btnToggle = document.createElement('button');
+      btnToggle.type = 'button';
+      btnToggle.className = 'fc-link-btn';
+      btnToggle.style.cssText = 'font-size: 0.85em; padding: 4px 8px;';
+      btnToggle.textContent = '👁 Show/Hide';
+      btnToggle.addEventListener('click', (e) => {
         e.preventDefault();
-        textarea.classList.toggle('hidden');
+        inputTrans.classList.toggle('hidden');
+      });
+
+      transRow.appendChild(inputTrans);
+      transRow.appendChild(btnToggle);
+      container.appendChild(transRow);
+
+      return container;
+    }
+
+    function renderExamples() {
+      const list = $('#examplesList');
+      if(!list) return;
+      list.innerHTML = '';
+      examplesData.forEach((item, idx) => {
+        list.appendChild(createItemElement('Example', idx, item));
       });
     }
-    setupToggleButton('#btnToggleExplTrans', '#uExplTransLocal');
-    setupToggleButton('#btnToggleExplTransEn', '#uExplTransEn');
-    setupToggleButton('#btnToggleExplTransExt', '#uExplTransLocalExt');
-    setupToggleButton('#btnToggleExplTransEnExt', '#uExplTransEnExt');
+
+    function renderCollocations() {
+      const list = $('#collocationsList');
+      if(!list) return;
+      list.innerHTML = '';
+      collocationsData.forEach((item, idx) => {
+        list.appendChild(createItemElement('Collocation', idx, item));
+      });
+    }
+
+    const btnAddExample = $('#btnAddExample');
+    if(btnAddExample) {
+      btnAddExample.addEventListener('click', (e) => {
+        e.preventDefault();
+        examplesData.push({no: '', trans: ''});
+        renderExamples();
+      });
+    }
+
+    const btnAddCollocation = $('#btnAddCollocation');
+    if(btnAddCollocation) {
+      btnAddCollocation.addEventListener('click', (e) => {
+        e.preventDefault();
+        collocationsData.push({no: '', trans: ''});
+        renderCollocations();
+      });
+    }
 
     // POS helper: compact option labels + info text
     const POS_INFO = {
@@ -525,8 +597,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         translation: pickTranslationFromPayload(payload),
         translations: (payload.translations && typeof payload.translations === 'object') ? payload.translations : null,
         explanation: payload.explanation || "",
-        explanationNo: payload.explanationNo || payload.explanation || "",
-        explanationTranslations: (payload.explanationTranslations && typeof payload.explanationTranslations === 'object') ? payload.explanationTranslations : null,
         image: payload.image || null,
         imageKey: payload.imageKey || null,
         audio: frontAudio,
@@ -997,11 +1067,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
         return el;
       }
-      if(kind==="explanation" && (card.explanationNo || card.explanation)){
-        const norwegianExpl = card.explanationNo || card.explanation || "";
-        const explTrans = card.explanationTranslations && (card.explanationTranslations[userLang2] || card.explanationTranslations.en);
-        const transHtml = explTrans ? `<div class="small" style="opacity:.7; margin-top:8px; font-style:italic;">${explTrans}</div>` : "";
-        el.innerHTML=`<div class="back">${norwegianExpl}${transHtml}</div>`;
+      if(kind==="explanation" && card.explanation){
+        el.innerHTML=`<div class="back">${card.explanation}</div>`;
         return el;
       }
       if(kind==="translation" && card.translation){
@@ -1262,22 +1329,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       $("#uFokus").value=c.fokus||"";
       const focusBaseField=document.getElementById('uFocusBase');
       if(focusBaseField) focusBaseField.value = c.focusBase || '';
-
-      // Load explanation fields (Quick Input)
-      const explNoQuick = $("#uExplanationNo");
-      if(explNoQuick) explNoQuick.value = c.explanationNo || c.explanation || "";
-      const explTransLocalQuick = $("#uExplTransLocal");
-      if(explTransLocalQuick) explTransLocalQuick.value = (c.explanationTranslations && c.explanationTranslations[userLang2]) || "";
-      const explTransEnQuick = $("#uExplTransEn");
-      if(explTransEnQuick) explTransEnQuick.value = (c.explanationTranslations && c.explanationTranslations.en) || "";
-
-      // Load explanation fields (Extended Editor)
-      const explNoExt = $("#uExplanationNoExt");
-      if(explNoExt) explNoExt.value = c.explanationNo || c.explanation || "";
-      const explTransLocalExt = $("#uExplTransLocalExt");
-      if(explTransLocalExt) explTransLocalExt.value = (c.explanationTranslations && c.explanationTranslations[userLang2]) || "";
-      const explTransEnExt = $("#uExplTransEnExt");
-      if(explTransEnExt) explTransEnExt.value = (c.explanationTranslations && c.explanationTranslations.en) || "";
+      $("#uExplanation").value=c.explanation||"";
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = c.transcription||'';
       const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
       const _genSel = document.getElementById('uGender'); if(_genSel) { _genSel.value = c.gender||''; }
@@ -1285,8 +1337,29 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const vf=(c.forms&&c.forms.verb)||{}; const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1) _vf1.value = vf.infinitiv||''; const _vf2=document.getElementById('uVerbPresens'); if(_vf2) _vf2.value = vf.presens||''; const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3) _vf3.value = vf.preteritum||''; const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4) _vf4.value = vf.perfektum_partisipp||''; const _vf5=document.getElementById('uVerbImperativ'); if(_vf5) _vf5.value = vf.imperativ||'';
       const af=(c.forms&&c.forms.adj)||{}; const _af1=document.getElementById('uAdjPositiv'); if(_af1) _af1.value = af.positiv||''; const _af2=document.getElementById('uAdjKomparativ'); if(_af2) _af2.value = af.komparativ||''; const _af3=document.getElementById('uAdjSuperlativ'); if(_af3) _af3.value = af.superlativ||'';
       const _ant=document.getElementById('uAntonyms'); if(_ant) _ant.value = Array.isArray(c.antonyms)?c.antonyms.join('\n'):'';
-      const _col=document.getElementById('uCollocations'); if(_col) _col.value = Array.isArray(c.collocations)?c.collocations.join('\n'):'';
-      const _exs=document.getElementById('uExamples'); if(_exs) _exs.value = Array.isArray(c.examples)?c.examples.join('\n'):'';
+
+      // Parse examples and collocations from string format "text | translation"
+      function parseItems(arr) {
+        if(!Array.isArray(arr)) return [];
+        return arr.map(str => {
+          if(typeof str !== 'string') return {no: String(str), trans: ''};
+          const parts = str.split('|').map(s => s.trim());
+          return {no: parts[0] || '', trans: parts[1] || ''};
+        });
+      }
+
+      // Load into dynamic lists for Extended Editor
+      examplesData = parseItems(c.examples);
+      collocationsData = parseItems(c.collocations);
+      renderExamples();
+      renderCollocations();
+
+      // Also load into Quick Input textareas (for backward compatibility)
+      const _col=document.getElementById('uCollocations');
+      if(_col) _col.value = Array.isArray(c.collocations)?c.collocations.map(s => typeof s === 'string' ? s.split('|')[0].trim() : s).join('\n'):'';
+      const _exs=document.getElementById('uExamples');
+      if(_exs) _exs.value = Array.isArray(c.examples)?c.examples.map(s => typeof s === 'string' ? s.split('|')[0].trim() : s).join('\n'):'';
+
       const _cog=document.getElementById('uCognates'); if(_cog) _cog.value = Array.isArray(c.cognates)?c.cognates.join('\n'):'';
       const _say=document.getElementById('uSayings'); if(_say) _say.value = Array.isArray(c.sayings)?c.sayings.join('\n'):'';
       try{ togglePOSUI(); }catch(_e){}
@@ -1752,15 +1825,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
       const _te=$("#uTransEn"); if(_te) _te.value="";
 
-      // Reset explanation fields (Quick Input)
-      const _explNoQuick = $("#uExplanationNo"); if(_explNoQuick) _explNoQuick.value="";
-      const _explTransLocalQuick = $("#uExplTransLocal"); if(_explTransLocalQuick) _explTransLocalQuick.value="";
-      const _explTransEnQuick = $("#uExplTransEn"); if(_explTransEnQuick) _explTransEnQuick.value="";
+      const _expl = $("#uExplanation"); if(_expl) _expl.value="";
 
-      // Reset explanation fields (Extended Editor)
-      const _explNoExt = $("#uExplanationNoExt"); if(_explNoExt) _explNoExt.value="";
-      const _explTransLocalExt = $("#uExplTransLocalExt"); if(_explTransLocalExt) _explTransLocalExt.value="";
-      const _explTransEnExt = $("#uExplTransEnExt"); if(_explTransEnExt) _explTransEnExt.value="";
+      // Reset dynamic lists
+      examplesData = [];
+      collocationsData = [];
+      renderExamples();
+      renderCollocations();
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = '';
       const _posField = document.getElementById('uPOS'); if(_posField) _posField.value = '';
       const _genderField = document.getElementById('uGender'); if(_genderField) _genderField.value = '';
@@ -1811,21 +1882,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     })();
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
-      const text=$("#uFront").value.trim(), fokus=$("#uFokus").value.trim();
-
-      // Determine which explanation fields to use (Quick Input vs Extended Editor)
-      const explNoEl = $("#uExplanationNo") || $("#uExplanationNoExt");
-      const explTransLocalEl = $("#uExplTransLocal") || $("#uExplTransLocalExt");
-      const explTransEnEl = $("#uExplTransEn") || $("#uExplTransEnExt");
-
-      const explanationNo = explNoEl ? explNoEl.value.trim() : "";
-      const explTransLocal = explTransLocalEl ? explTransLocalEl.value.trim() : "";
-      const explTransEn = explTransEnEl ? explTransEnEl.value.trim() : "";
-
+      const text=$("#uFront").value.trim(), fokus=$("#uFokus").value.trim(), expl=$("#uExplanation").value.trim();
       const trLocalEl=$("#uTransLocal"), trEnEl=$("#uTransEn");
       const trLocal = trLocalEl ? trLocalEl.value.trim() : "";
       const trEn = trEnEl ? trEnEl.value.trim() : "";
-      if(!text && !explanationNo && !trLocal && !trEn && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
+      if(!text && !expl && !trLocal && !trEn && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
         $("#status").textContent="Empty"; setTimeout(()=>$("#status").textContent="",1000); return;
       }
 
@@ -1884,13 +1945,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(userLang2 !== 'en' && trLocal){ translations[userLang2]=trLocal; }
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
-
-      // Explanation translations
-      const explanationTranslations = {};
-      if(userLang2 !== 'en' && explTransLocal){ explanationTranslations[userLang2]=explTransLocal; }
-      if(explTransEn){ explanationTranslations['en']=explTransEn; }
-
-      const payload={id,text,fokus,explanationNo,explanationTranslations,explanation:explanationNo,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
       const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
       if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
@@ -1926,8 +1981,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       function linesToArr(id){ return (document.getElementById(id)?.value||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean); }
       const antonyms=linesToArr('uAntonyms'); if(antonyms.length) payload.antonyms=antonyms;
-      const collocs=linesToArr('uCollocations'); if(collocs.length) payload.collocations=collocs;
-      const examples=linesToArr('uExamples'); if(examples.length) payload.examples=examples;
+
+      // Collocations and Examples from dynamic lists (Extended Editor)
+      if(collocationsData.length > 0) {
+        payload.collocations = collocationsData.filter(item => item.no).map(item => {
+          return item.trans ? `${item.no} | ${item.trans}` : item.no;
+        });
+      } else {
+        // Fallback to Quick Input textarea (Advanced fields)
+        const collocs=linesToArr('uCollocations'); if(collocs.length) payload.collocations=collocs;
+      }
+
+      if(examplesData.length > 0) {
+        payload.examples = examplesData.filter(item => item.no).map(item => {
+          return item.trans ? `${item.no} | ${item.trans}` : item.no;
+        });
+      } else {
+        // Fallback to Quick Input textarea (Advanced fields)
+        const examples=linesToArr('uExamples'); if(examples.length) payload.examples=examples;
+      }
+
       const cognates=linesToArr('uCognates'); if(cognates.length) payload.cognates=cognates;
       const sayings=linesToArr('uSayings'); if(sayings.length) payload.sayings=sayings;
       if(lastImageUrl) payload.image=lastImageUrl; else if(lastImageKey) payload.imageKey=lastImageKey;
@@ -2399,7 +2472,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
     function buildPayloadFromCard(c){
-      const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', explanationNo:c.explanationNo||c.explanation||'', explanationTranslations:c.explanationTranslations||{}, translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
+      const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
       if(c.focusBase) p.focusBase = c.focusBase;
       if(c.image) p.image=c.image;
       if(c.imageKey) p.imageKey=c.imageKey;

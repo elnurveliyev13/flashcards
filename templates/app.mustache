@@ -165,22 +165,8 @@
                 <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
               </div>
               <div class="slot">
-                <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}} (Norwegian)</span>
-                <textarea id="uExplanationNo" class="autogrow" placeholder="Det betyr..."></textarea>
-              </div>
-              <div class="slot" id="slot_explanation_trans_local">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span class="tag" id="tag_expl_trans_local">Explanation Translation (?)</span>
-                  <button type="button" id="btnToggleExplTrans" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">👁 Show/Hide</button>
-                </div>
-                <textarea id="uExplTransLocal" class="autogrow hidden" placeholder="Explanation translation..."></textarea>
-              </div>
-              <div class="slot" id="slot_explanation_trans_en" class="hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span class="tag">Explanation Translation (English)</span>
-                  <button type="button" id="btnToggleExplTransEn" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">👁 Show/Hide</button>
-                </div>
-                <textarea id="uExplTransEn" class="autogrow hidden" placeholder="Explanation translation (English)..."></textarea>
+                <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
+                <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
@@ -392,22 +378,8 @@
           <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
         </div>
         <div class="slot">
-          <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}} (Norwegian)</span>
-          <textarea id="uExplanationNoExt" class="autogrow" placeholder="Det betyr..."></textarea>
-        </div>
-        <div class="slot" id="slot_explanation_trans_local_ext">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="tag" id="tag_expl_trans_local_ext">Explanation Translation (?)</span>
-            <button type="button" id="btnToggleExplTransExt" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">👁 Show/Hide</button>
-          </div>
-          <textarea id="uExplTransLocalExt" class="autogrow hidden" placeholder="Explanation translation..."></textarea>
-        </div>
-        <div class="slot" id="slot_explanation_trans_en_ext" class="hidden">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="tag">Explanation Translation (English)</span>
-            <button type="button" id="btnToggleExplTransEnExt" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">👁 Show/Hide</button>
-          </div>
-          <textarea id="uExplTransEnExt" class="autogrow hidden" placeholder="Explanation translation (English)..."></textarea>
+          <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
+          <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
@@ -483,14 +455,18 @@
             <input id="uAdjSuperlativ" type="text" placeholder="Superlativ">\n          </div>
         </div>
         <div class="slot">
-          <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
-          <div class="row has-action">
-            <textarea id="uCollocations" class="autogrow" placeholder="one per line..."></textarea>\n          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
+            <button type="button" id="btnAddCollocation" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+          </div>
+          <div id="collocationsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
         <div class="slot">
-          <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
-          <div class="row has-action">
-            <textarea id="uExamples" class="autogrow" placeholder="one per line..."></textarea>\n          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
+            <button type="button" id="btnAddExample" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+          </div>
+          <div id="examplesList" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
