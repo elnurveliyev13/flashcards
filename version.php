@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025111201; // YYYYMMDDXX. Added language level achievements (A0-B2)
+$plugin->version   = 2025111202; // YYYYMMDDXX. Improved explanation fields & POS hints
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.11.0-language-levels'; // Language level achievements based on active vocabulary
+$plugin->release   = '0.12.0-explanation-improvements'; // Separated explanation translations, improved POS hints

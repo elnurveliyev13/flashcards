@@ -136,18 +136,59 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     } catch(_e){}
 
+    // Prepare explanation translation fields visibility/labels
+    try {
+      const tagExplLocal = $("#tag_expl_trans_local");
+      const tagExplLocalExt = $("#tag_expl_trans_local_ext");
+      const explLang = languageName(userLang2);
+      if(tagExplLocal){ tagExplLocal.textContent = `Explanation Translation (${explLang})`; }
+      if(tagExplLocalExt){ tagExplLocalExt.textContent = `Explanation Translation (${explLang})`; }
+
+      const slotExplLocal = $("#slot_explanation_trans_local");
+      const slotExplEn = $("#slot_explanation_trans_en");
+      const slotExplLocalExt = $("#slot_explanation_trans_local_ext");
+      const slotExplEnExt = $("#slot_explanation_trans_en_ext");
+
+      if(userLang2 === 'en'){
+        if(slotExplLocal) slotExplLocal.classList.add('hidden');
+        if(slotExplEn) slotExplEn.classList.remove('hidden');
+        if(slotExplLocalExt) slotExplLocalExt.classList.add('hidden');
+        if(slotExplEnExt) slotExplEnExt.classList.remove('hidden');
+      } else {
+        if(slotExplLocal) slotExplLocal.classList.remove('hidden');
+        if(slotExplEn) slotExplEn.classList.add('hidden');
+        if(slotExplLocalExt) slotExplLocalExt.classList.remove('hidden');
+        if(slotExplEnExt) slotExplEnExt.classList.add('hidden');
+      }
+    } catch(_e){}
+
+    // Toggle buttons for explanation translations
+    function setupToggleButton(btnId, textareaId) {
+      const btn = $(btnId);
+      const textarea = $(textareaId);
+      if(!btn || !textarea) return;
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        textarea.classList.toggle('hidden');
+      });
+    }
+    setupToggleButton('#btnToggleExplTrans', '#uExplTransLocal');
+    setupToggleButton('#btnToggleExplTransEn', '#uExplTransEn');
+    setupToggleButton('#btnToggleExplTransExt', '#uExplTransLocalExt');
+    setupToggleButton('#btnToggleExplTransEnExt', '#uExplTransEnExt');
+
     // POS helper: compact option labels + info text
     const POS_INFO = {
-      substantiv: 'Substantiv ? navn pa steder, personer, ting og fenomener',
-      adjektiv: 'Adjektiv ? beskriver substantiv',
-      pronomen: 'Pronomen ? settes i stedet for et substantiv',
-      determinativ: 'Determinativ ? bestemmer substantivet n?rmere',
-      verb: 'Verb ? navn pa en handling',
-      adverb: 'Adverb ? beskriver/modifiserer verb, adjektiv eller andre adverb',
-      preposisjon: 'Preposisjon ? plassering i tid/rom i forhold til annet ord',
-      konjunksjon: 'Konjunksjon ? binder sammen like ordledd eller helsetninger',
-      subjunksjon: 'Subjunksjon ? innleder leddsetninger',
-      interjeksjon: 'Interjeksjon ? lydmalende ord, folelser eller meninger'
+      substantiv: '<i>Substantiv navn pa steder, personer, ting og fenomener</i>',
+      adjektiv: '<i>Adjektiv beskriver substantiv</i>',
+      pronomen: '<i>Pronomen settes i stedet for et substantiv</i>',
+      determinativ: '<i>Determinativ bestemmer substantivet n?rmere</i>',
+      verb: '<i>Verb navn pa en handling</i>',
+      adverb: '<i>Adverb beskriver/modifiserer verb, adjektiv eller andre adverb</i>',
+      preposisjon: '<i>Preposisjon plassering i tid/rom i forhold til annet ord</i>',
+      konjunksjon: '<i>Konjunksjon binder sammen like ordledd eller helsetninger</i>',
+      subjunksjon: '<i>Subjunksjon innleder leddsetninger</i>',
+      interjeksjon: '<i>Interjeksjon lydmalende ord, folelser eller meninger</i>'
     };
     function compactPOSOptions(){
       const sel = document.getElementById('uPOS');
@@ -164,8 +205,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const help = document.getElementById('uPOSHelp');
       if(!sel || !help) return;
       const v = (sel.value||'').toLowerCase();
-      help.textContent = POS_INFO[v] || '';
-      help.style.display = help.textContent ? 'block' : 'none';
+      help.innerHTML = POS_INFO[v] || '';
+      help.style.display = help.innerHTML ? 'block' : 'none';
     }
     compactPOSOptions();
 
@@ -484,6 +525,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         translation: pickTranslationFromPayload(payload),
         translations: (payload.translations && typeof payload.translations === 'object') ? payload.translations : null,
         explanation: payload.explanation || "",
+        explanationNo: payload.explanationNo || payload.explanation || "",
+        explanationTranslations: (payload.explanationTranslations && typeof payload.explanationTranslations === 'object') ? payload.explanationTranslations : null,
         image: payload.image || null,
         imageKey: payload.imageKey || null,
         audio: frontAudio,
@@ -954,8 +997,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
         return el;
       }
-      if(kind==="explanation" && card.explanation){
-        el.innerHTML=`<div class="back">${card.explanation}</div>`;
+      if(kind==="explanation" && (card.explanationNo || card.explanation)){
+        const norwegianExpl = card.explanationNo || card.explanation || "";
+        const explTrans = card.explanationTranslations && (card.explanationTranslations[userLang2] || card.explanationTranslations.en);
+        const transHtml = explTrans ? `<div class="small" style="opacity:.7; margin-top:8px; font-style:italic;">${explTrans}</div>` : "";
+        el.innerHTML=`<div class="back">${norwegianExpl}${transHtml}</div>`;
         return el;
       }
       if(kind==="translation" && card.translation){
@@ -1216,7 +1262,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       $("#uFokus").value=c.fokus||"";
       const focusBaseField=document.getElementById('uFocusBase');
       if(focusBaseField) focusBaseField.value = c.focusBase || '';
-      $("#uExplanation").value=c.explanation||"";
+
+      // Load explanation fields (Quick Input)
+      const explNoQuick = $("#uExplanationNo");
+      if(explNoQuick) explNoQuick.value = c.explanationNo || c.explanation || "";
+      const explTransLocalQuick = $("#uExplTransLocal");
+      if(explTransLocalQuick) explTransLocalQuick.value = (c.explanationTranslations && c.explanationTranslations[userLang2]) || "";
+      const explTransEnQuick = $("#uExplTransEn");
+      if(explTransEnQuick) explTransEnQuick.value = (c.explanationTranslations && c.explanationTranslations.en) || "";
+
+      // Load explanation fields (Extended Editor)
+      const explNoExt = $("#uExplanationNoExt");
+      if(explNoExt) explNoExt.value = c.explanationNo || c.explanation || "";
+      const explTransLocalExt = $("#uExplTransLocalExt");
+      if(explTransLocalExt) explTransLocalExt.value = (c.explanationTranslations && c.explanationTranslations[userLang2]) || "";
+      const explTransEnExt = $("#uExplTransEnExt");
+      if(explTransEnExt) explTransEnExt.value = (c.explanationTranslations && c.explanationTranslations.en) || "";
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = c.transcription||'';
       const _posSel = document.getElementById('uPOS'); if(_posSel) { _posSel.value = c.pos||''; }
       const _genSel = document.getElementById('uGender'); if(_genSel) { _genSel.value = c.gender||''; }
@@ -1690,7 +1751,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(baseField) baseField.value='';
       const _tl=$("#uTransLocal"); if(_tl) _tl.value="";
       const _te=$("#uTransEn"); if(_te) _te.value="";
-      $("#uExplanation").value="";
+
+      // Reset explanation fields (Quick Input)
+      const _explNoQuick = $("#uExplanationNo"); if(_explNoQuick) _explNoQuick.value="";
+      const _explTransLocalQuick = $("#uExplTransLocal"); if(_explTransLocalQuick) _explTransLocalQuick.value="";
+      const _explTransEnQuick = $("#uExplTransEn"); if(_explTransEnQuick) _explTransEnQuick.value="";
+
+      // Reset explanation fields (Extended Editor)
+      const _explNoExt = $("#uExplanationNoExt"); if(_explNoExt) _explNoExt.value="";
+      const _explTransLocalExt = $("#uExplTransLocalExt"); if(_explTransLocalExt) _explTransLocalExt.value="";
+      const _explTransEnExt = $("#uExplTransEnExt"); if(_explTransEnExt) _explTransEnExt.value="";
       const _trscr = document.getElementById('uTranscription'); if(_trscr) _trscr.value = '';
       const _posField = document.getElementById('uPOS'); if(_posField) _posField.value = '';
       const _genderField = document.getElementById('uGender'); if(_genderField) _genderField.value = '';
@@ -1741,11 +1811,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     })();
     // Shared function for both Add and Update buttons
     async function saveCard(isUpdate){
-      const text=$("#uFront").value.trim(), fokus=$("#uFokus").value.trim(), expl=$("#uExplanation").value.trim();
+      const text=$("#uFront").value.trim(), fokus=$("#uFokus").value.trim();
+
+      // Determine which explanation fields to use (Quick Input vs Extended Editor)
+      const explNoEl = $("#uExplanationNo") || $("#uExplanationNoExt");
+      const explTransLocalEl = $("#uExplTransLocal") || $("#uExplTransLocalExt");
+      const explTransEnEl = $("#uExplTransEn") || $("#uExplTransEnExt");
+
+      const explanationNo = explNoEl ? explNoEl.value.trim() : "";
+      const explTransLocal = explTransLocalEl ? explTransLocalEl.value.trim() : "";
+      const explTransEn = explTransEnEl ? explTransEnEl.value.trim() : "";
+
       const trLocalEl=$("#uTransLocal"), trEnEl=$("#uTransEn");
       const trLocal = trLocalEl ? trLocalEl.value.trim() : "";
       const trEn = trEnEl ? trEnEl.value.trim() : "";
-      if(!text && !expl && !trLocal && !trEn && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
+      if(!text && !explanationNo && !trLocal && !trEn && !lastImageKey && !lastAudioKey && $("#imgPrev").classList.contains("hidden") && $("#audPrev").classList.contains("hidden")){
         $("#status").textContent="Empty"; setTimeout(()=>$("#status").textContent="",1000); return;
       }
 
@@ -1804,7 +1884,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(userLang2 !== 'en' && trLocal){ translations[userLang2]=trLocal; }
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
-      const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+
+      // Explanation translations
+      const explanationTranslations = {};
+      if(userLang2 !== 'en' && explTransLocal){ explanationTranslations[userLang2]=explTransLocal; }
+      if(explTransEn){ explanationTranslations['en']=explTransEn; }
+
+      const payload={id,text,fokus,explanationNo,explanationTranslations,explanation:explanationNo,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
       const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
       if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
@@ -2313,7 +2399,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
     function buildPayloadFromCard(c){
-      const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
+      const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', explanationNo:c.explanationNo||c.explanation||'', explanationTranslations:c.explanationTranslations||{}, translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
       if(c.focusBase) p.focusBase = c.focusBase;
       if(c.image) p.image=c.image;
       if(c.imageKey) p.imageKey=c.imageKey;
