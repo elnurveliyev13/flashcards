@@ -62,6 +62,9 @@ class ai_helper {
         if (!empty($focusdata['translation'])) {
             $result['translation'] = $focusdata['translation'];
         }
+        if (!empty($focusdata['correction'])) {
+            $result['correction'] = $focusdata['correction'];
+        }
         if (!empty($focusdata['collocations']) && is_array($focusdata['collocations'])) {
             $result['collocations'] = $focusdata['collocations'];
         }

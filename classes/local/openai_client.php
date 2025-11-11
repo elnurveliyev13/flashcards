@@ -120,6 +120,7 @@ RULES:
 - If the clicked form belongs to a verb + particle/preposition expression (e.g., "gå opp", "se etter", "holde ut"), return the entire fixed expression as the WORD/base form.
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
+- When the learner’s sentence clearly misuses a particle/preposition/article or inflects the expression incorrectly, propose a correction only if you are 90% sure it is wrong.
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
 
@@ -134,6 +135,7 @@ EX1: <NO sentence using a top collocation> | <{$targetlang}>
 EX2: <NO> | <{$targetlang}>
 EX3: <NO> | <{$targetlang}>
 FORMS: <other useful lexical forms (verb/noun/adj variants) with tiny NO gloss + {$targetlang}>
+CORR: <corrected Norwegian sentence + short reason> (omit line if unsure)
 
 NOTES:
 - Focus on everyday, high-frequency uses.
@@ -144,6 +146,7 @@ NOTES:
 - Skip COLL entirely if you are unsure about natural usage; never invent awkward translations.
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 - When the clicked form is part of an idiomatic verb + particle/preposition, keep the whole expression together (e.g., "å gå opp") and explain that idiomatic sense (e.g., "å forstå noe").
+- Only output CORR when you can confidently fix a specific wording error in the learner sentence; format it as "<correct sentence> — <brief reason>".
 PROMPT;
 
         $userprompt = implode("\n", [
@@ -155,6 +158,7 @@ PROMPT;
                 . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
                 . 'If the clicked form belongs to a verb or verb phrase, output it in infinitive with a leading "å" and include any attached particles/prepositions that change the meaning. '
                 . 'Prefer the idiomatic/contextual sense over literal tense explanations. '
+                . 'Suggest a correction (CORR) only when a particle/preposition/article or inflection is clearly wrong and you are highly confident; otherwise omit CORR. '
                 . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
         ]);
 
@@ -196,6 +200,7 @@ PROMPT;
             'collocations' => $parsed['collocations'] ?? [],
             'examples' => $parsed['examples'] ?? [],
             'forms' => $parsed['forms'] ?? '',
+            'correction' => core_text::substr($parsed['correction'] ?? '', 0, 400),
         ];
     }
 
@@ -289,6 +294,7 @@ PROMPT;
             'collocations' => $this->parse_collocations($data['COLL'] ?? ''),
             'examples' => $this->collect_examples($data),
             'forms' => $data['FORMS'] ?? '',
+            'correction' => $data['CORR'] ?? '',
         ];
     }
 

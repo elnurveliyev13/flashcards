@@ -418,7 +418,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function applyAiPayload(data){
-      if(!data) return;
+      if(!data) return '';
+      let correctionMessage = '';
+      if(typeof data.correction === 'string' && data.correction.trim()){
+        correctionMessage = data.correction.trim();
+      }
       if(data.focusWord && fokusInput){
         fokusInput.value = data.focusWord;
         try{
@@ -507,6 +511,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         setTtsStatus('', '');
       }
+      return correctionMessage;
     }
 
     async function triggerFocusHelper(token, idx){
@@ -536,8 +541,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           payload.voiceId = selectedVoice;
         }
         const data = await api('ai_focus_helper', {}, 'POST', payload, {signal: controller.signal});
-        applyAiPayload(data);
-        setFocusStatus('success', aiStrings.success);
+        const correctionMsg = applyAiPayload(data);
+        if(correctionMsg){
+          setFocusStatus('correction', correctionMsg);
+        }else{
+          setFocusStatus('success', aiStrings.success);
+        }
       }catch(err){
         if(controller.signal.aborted){
           return;
