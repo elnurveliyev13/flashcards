@@ -36,20 +36,19 @@ class cleanup_orphans extends scheduled_task {
 
         mtrace('Flashcards: looking for orphaned progress records...');
 
-        do {
-            $ids = $DB->get_fieldset_sql(
-                "SELECT p.id
-                   FROM {flashcards_progress} p
-              LEFT JOIN {flashcards_cards} c
-                     ON c.deckid = p.deckid AND c.cardid = p.cardid
-                  WHERE c.id IS NULL
-                  LIMIT ?",
-                [$batchsize]
-            );
+        $sql = "SELECT p.id
+                  FROM {flashcards_progress} p
+             LEFT JOIN {flashcards_cards} c
+                    ON c.deckid = p.deckid AND c.cardid = p.cardid
+                 WHERE c.id IS NULL";
 
-            if (empty($ids)) {
+        do {
+            $records = $DB->get_records_sql($sql, [], 0, $batchsize);
+            if (empty($records)) {
                 break;
             }
+
+            $ids = array_keys($records);
 
             list($insql, $inparams) = $DB->get_in_or_equal($ids);
             $DB->delete_records_select('flashcards_progress', "id {$insql}", $inparams);
