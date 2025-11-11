@@ -1977,6 +1977,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{ if(typeof stopMicStream==='function') stopMicStream(); }catch(_e){}
     }
     $("#btnFormReset").addEventListener("click", resetForm);
+    const quickResetBtn = $("#btnQuickFormReset");
+    if(quickResetBtn){
+      quickResetBtn.addEventListener("click", e=>{
+        e.preventDefault();
+        resetForm();
+      });
+    }
     // Bind global "+" (Create new card) button at init
     (function(){
       const addBtn = $("#btnAddNew");
