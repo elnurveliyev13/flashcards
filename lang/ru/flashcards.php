@@ -23,7 +23,7 @@ $string['loadpack'] = 'Загрузить колоду';
 $string['due'] = 'К изучению: {$a}';
 $string['list'] = 'Список карточек';
 $string['addown'] = 'Добавить свою карточку';
-$string['front'] = 'Лицевая сторона';
+$string['front'] = 'Лицевая сторона карточки';
 $string['front_translation_toggle_show'] = 'Показать перевод';
 $string['front_translation_toggle_hide'] = 'Скрыть перевод';
 $string['front_translation_mode_label'] = 'Направление перевода';
@@ -48,6 +48,7 @@ $string['focus_audio_badge'] = 'Фокусное аудио';
 $string['front_audio_badge'] = 'Аудио лицевой стороны';
 $string['explanation'] = 'Объяснение';
 $string['back'] = 'Перевод';
+$string['back_en'] = 'Перевод (английский)';
 $string['image'] = 'Изображение';
 $string['audio'] = 'Аудио';
 $string['tts_voice'] = 'Голос';
@@ -246,6 +247,9 @@ $string['achievement_level_b2'] = 'Уровень B2 - Выше среднего
 // Placeholders
 $string['collocations_ph'] = 'По одному на строку...';
 $string['examples_ph'] = 'Примеры предложений...';
+$string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Jeg elsker deg';
+$string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'AI помощник';

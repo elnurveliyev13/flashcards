@@ -23,7 +23,7 @@ $string['loadpack'] = 'Stapel laden';
 $string['due'] = 'Fällig: {$a}';
 $string['list'] = 'Kartenliste';
 $string['addown'] = 'Eigene Karte hinzufügen';
-$string['front'] = 'Vorderseite';
+$string['front'] = 'Vorderseite der Karte';
 $string['front_translation_toggle_show'] = 'Übersetzung anzeigen';
 $string['front_translation_toggle_hide'] = 'Übersetzung ausblenden';
 $string['front_translation_mode_label'] = 'Übersetzungsrichtung';
@@ -48,6 +48,7 @@ $string['focus_audio_badge'] = 'Fokus-Audio';
 $string['front_audio_badge'] = 'Vorderseiten-Audio';
 $string['explanation'] = 'Erklärung';
 $string['back'] = 'Übersetzung';
+$string['back_en'] = 'Übersetzung (Englisch)';
 $string['image'] = 'Bild';
 $string['audio'] = 'Audio';
 $string['tts_voice'] = 'Stimme';
@@ -246,6 +247,9 @@ $string['achievement_level_b2'] = 'Niveau B2 - Obere Mittelstufe';
 // Placeholders
 $string['collocations_ph'] = 'Eine pro Zeile...';
 $string['examples_ph'] = 'Beispielsätze...';
+$string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Jeg elsker deg';
+$string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'KI-Assistent';

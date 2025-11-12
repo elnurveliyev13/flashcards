@@ -23,7 +23,7 @@ $string['loadpack'] = 'Cargar mazo';
 $string['due'] = 'Pendientes: {$a}';
 $string['list'] = 'Lista de tarjetas';
 $string['addown'] = 'Añadir tu tarjeta';
-$string['front'] = 'Anverso';
+$string['front'] = 'Anverso de la tarjeta';
 $string['front_translation_toggle_show'] = 'Mostrar traducción';
 $string['front_translation_toggle_hide'] = 'Ocultar traducción';
 $string['front_translation_mode_label'] = 'Dirección de traducción';
@@ -48,6 +48,7 @@ $string['focus_audio_badge'] = 'Audio focal';
 $string['front_audio_badge'] = 'Audio del anverso';
 $string['explanation'] = 'Explicación';
 $string['back'] = 'Traducción';
+$string['back_en'] = 'Traducción (inglés)';
 $string['image'] = 'Imagen';
 $string['audio'] = 'Audio';
 $string['tts_voice'] = 'Voz';
@@ -246,6 +247,9 @@ $string['achievement_level_b2'] = 'Nivel B2 - Intermedio superior';
 // Placeholders
 $string['collocations_ph'] = 'Una por línea...';
 $string['examples_ph'] = 'Oraciones de ejemplo...';
+$string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Jeg elsker deg';
+$string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'Asistente IA';
