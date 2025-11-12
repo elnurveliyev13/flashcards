@@ -38,6 +38,119 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     initAutogrow();
 
+    const FONT_SCALE_STORAGE_KEY = 'flashcards_font_scale';
+    const FONT_SCALE_STEPS = {
+      '100': 1,
+      '115': 1.15,
+      '130': 1.3
+    };
+    let currentFontScale = 1;
+
+    function shouldSkipFontScale(node){
+      if (!(node instanceof HTMLElement)) {
+        return true;
+      }
+      const tag = node.tagName;
+      return tag === 'SCRIPT' || tag === 'STYLE' || node.dataset.noFontScale === 'true';
+    }
+
+    function forEachFontNode(scope, callback, includeRoot = true){
+      if (!scope) {
+        return;
+      }
+      if (includeRoot && scope instanceof HTMLElement && !shouldSkipFontScale(scope)) {
+        callback(scope);
+      }
+      if (!(scope instanceof HTMLElement)) {
+        return;
+      }
+      scope.querySelectorAll('*').forEach(node => {
+        if (shouldSkipFontScale(node)) {
+          return;
+        }
+        callback(node);
+      });
+    }
+
+    function cacheFontBases(scope){
+      forEachFontNode(scope, node => {
+        if (!node.dataset.fontBase) {
+          const size = parseFloat(window.getComputedStyle(node).fontSize);
+          if (Number.isFinite(size) && size > 0) {
+            node.dataset.fontBase = String(size);
+            if (node.dataset.fontInline === undefined) {
+              node.dataset.fontInline = node.style.fontSize || '';
+            }
+          }
+        } else if (node.dataset.fontInline === undefined) {
+          node.dataset.fontInline = node.style.fontSize || '';
+        }
+      });
+    }
+
+    function applyFontScale(scope, scale){
+      forEachFontNode(scope, node => {
+        const base = parseFloat(node.dataset.fontBase);
+        if (!Number.isFinite(base) || base <= 0) {
+          return;
+        }
+        if (scale === 1) {
+          const original = node.dataset.fontInline ?? '';
+          if (original) {
+            node.style.fontSize = original;
+          } else {
+            node.style.removeProperty('font-size');
+          }
+        } else {
+          node.style.fontSize = (base * scale).toFixed(2) + 'px';
+        }
+      });
+    }
+
+    function initFontScalePreference(select){
+      let savedValue = '100';
+      try {
+        const stored = localStorage.getItem(FONT_SCALE_STORAGE_KEY);
+        if (stored && FONT_SCALE_STEPS[stored]) {
+          savedValue = stored;
+        }
+      } catch (_e) {}
+      select.value = savedValue;
+      currentFontScale = FONT_SCALE_STEPS[savedValue] || 1;
+      if (currentFontScale !== 1) {
+        applyFontScale(root, currentFontScale);
+      }
+      select.addEventListener('change', () => {
+        const value = select.value;
+        const scale = FONT_SCALE_STEPS[value] || 1;
+        currentFontScale = scale;
+        try {
+          localStorage.setItem(FONT_SCALE_STORAGE_KEY, value);
+        } catch (_e) {}
+        applyFontScale(root, currentFontScale);
+      });
+      const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+          mutation.addedNodes.forEach(node => {
+            if (!(node instanceof HTMLElement)) {
+              return;
+            }
+            cacheFontBases(node);
+            if (currentFontScale !== 1) {
+              applyFontScale(node, currentFontScale);
+            }
+          });
+        });
+      });
+      observer.observe(root, { childList: true, subtree: true });
+    }
+
+    const fontScaleSelect = document.getElementById('fontScale');
+    if (fontScaleSelect) {
+      cacheFontBases(root);
+      initFontScalePreference(fontScaleSelect);
+    }
+
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
     const runtimeConfig = window.__flashcardsRuntimeConfig || {};

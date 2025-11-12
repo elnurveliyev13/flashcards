@@ -88,6 +88,11 @@ $string['empty'] = 'Nothing due today';
 $string['resetform'] = 'Reset form';
 $string['addtomycards'] = 'Add to my cards';
 $string['install_app'] = 'Install App';
+$string['interface_language_label'] = 'Interface language';
+$string['font_scale_label'] = 'Font size';
+$string['font_scale_default'] = 'Default (100%)';
+$string['font_scale_plus15'] = 'Large (+15%)';
+$string['font_scale_plus30'] = 'Extra large (+30%)';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Transcription';
@@ -248,6 +253,17 @@ $string['achievement_level_b2'] = 'Level B2 - Upper-Intermediate';
 // Placeholders
 $string['collocations_ph'] = 'One per line...';
 $string['examples_ph'] = 'Example sentences...';
+$string['translation_en_placeholder'] = 'Translation (English)...';
+$string['translation_placeholder'] = 'Translation...';
+$string['explanation_placeholder'] = 'Explanation...';
+$string['focus_placeholder'] = 'Focus word/phrase...';
+$string['collocations_placeholder'] = 'collocations...';
+$string['examples_placeholder'] = 'examples...';
+$string['antonyms_placeholder'] = 'antonyms...';
+$string['cognates_placeholder'] = 'cognates...';
+$string['sayings_placeholder'] = 'sayings...';
+$string['transcription_placeholder'] = '[IPA e.g. /hu:s/]';
+$string['one_per_line_placeholder'] = 'one per line...';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'AI assistant';
