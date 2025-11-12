@@ -181,7 +181,7 @@
                 </div>
                 <div class="translation-preview-body">
                   <div class="translation-preview-output" id="frontTranslationOutput">—</div>
-                  <div class="translation-preview-status" id="frontTranslationStatus">
+                  <div class="translation-preview-status" id="frontTranslationStatus" data-i18n="front_translation_status_idle">
                     {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
                   </div>
                 </div>
@@ -204,7 +204,7 @@
               <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
             </div>
             <div class="focus-translation-pill" id="focusTranslationPreview">
-              <span class="focus-translation-label">{{#str}} focus_translation_label, mod_flashcards {{/str}}</span>
+              <span class="focus-translation-label" data-i18n="focus_translation_label">{{#str}} focus_translation_label, mod_flashcards {{/str}}</span>
               <span class="focus-translation-text" id="focusTranslationText">—</span>
             </div>
             <div class="slot">
@@ -337,8 +337,8 @@
             </div>
 
             <div class="row2">
-              <button id="btnUpdate" class="ok">Update</button>
-              <button id="btnAdd" class="mid">Create new</button>
+              <button id="btnUpdate" class="ok">{{#str}} update, mod_flashcards {{/str}}</button>
+              <button id="btnAdd" class="mid">{{#str}} createnew, mod_flashcards {{/str}}</button>
             </div>
             <div class="mono" id="status"></div>
           </div>
