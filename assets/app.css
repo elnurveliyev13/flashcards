@@ -1573,6 +1573,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size: 32px;
   margin-bottom: 8px;
   color: var(--icon-muted);
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .fc-stat-value {
@@ -1580,12 +1584,22 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-weight: 700;
   color: var(--text);
   margin-bottom: 4px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .fc-stat-label {
   font-size: 13px;
   color: var(--text-dim);
   font-weight: 500;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.4;
 }
 
 .fc-charts-grid {
