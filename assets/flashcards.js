@@ -4204,40 +4204,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         langSelEl.value = currentInterfaceLang || 'en';
         
         // Add change event listener
-        langSelEl.addEventListener('change', function(){
+                langSelEl.addEventListener('change', function(){
           const newLang = this.value;
-          if(newLang && newLang !== currentInterfaceLang){
-            currentInterfaceLang = newLang;
-            saveInterfaceLang(newLang);
-            updateInterfaceTexts();
-            userLang2 = newLang;
-            try{ saveTransLang(newLang); }catch(_e){}
-            if(typeof updateTranslationLangUI === 'function'){
-              updateTranslationLangUI();
-            }
-            if(typeof updateTranslationModeLabels === 'function'){
-              updateTranslationModeLabels();
-            }
-            if(typeof scheduleTranslationRefresh === 'function'){
-              scheduleTranslationRefresh();
-            }
-            }
-            
-            // Show confirmation
-            const langNames = {
-              en: 'English', uk: 'Українська', ru: 'Русский',
-              fr: 'Français', es: 'Español', pl: 'Polski',
-              it: 'Italiano', de: 'Deutsch'
-            };
-            const langName = langNames[newLang] || newLang;
-            const emptyEl = $('#emptyMessage');
-            if(emptyEl){
-              const oldText = emptyEl.textContent;
-              emptyEl.textContent = 'Interface language: ' + langName;
-              setTimeout(function(){ emptyEl.textContent = oldText || t('empty'); }, 2000);
-            }
+          if(!newLang || newLang === currentInterfaceLang){
+            return;
+          }
+          currentInterfaceLang = newLang;
+          saveInterfaceLang(newLang);
+          updateInterfaceTexts();
+          userLang2 = newLang;
+          try{ saveTransLang(newLang); }catch(_e){}
+          if(typeof updateTranslationLangUI === 'function'){
+            updateTranslationLangUI();
+          }
+          if(typeof updateTranslationModeLabels === 'function'){
+            updateTranslationModeLabels();
+          }
+          if(typeof scheduleTranslationRefresh === 'function'){
+            scheduleTranslationRefresh();
+          }
+          const langNames = {
+            en: 'English', uk: 'Українська', ru: 'Українська',
+            fr: 'Français', es: 'Español', pl: 'Polski',
+            it: 'Italiano', de: 'Deutsch'
+          };
+          const langName = langNames[newLang] || newLang;
+          const emptyEl = $('#emptyMessage');
+          if(emptyEl){
+            const oldText = emptyEl.textContent;
+            emptyEl.textContent = 'Interface language: ' + langName;
+            setTimeout(function(){ emptyEl.textContent = oldText || t('empty'); }, 2000);
           }
         });
+
       }
       
       // Apply interface translations on initial load
