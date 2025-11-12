@@ -215,7 +215,7 @@ $string['progress_label'] = 'Review progress';
 $string['title_slow'] = 'Play slowly';
 
 // Tab navigation (v0.7.0)
-$string['tab_quickinput'] = 'Add card';
+$string['tab_quickinput'] = 'Create new card';
 $string['tab_study'] = 'Practice';
 $string['tab_dashboard'] = 'Dashboard';
 

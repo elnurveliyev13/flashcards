@@ -261,7 +261,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const interfaceTranslations = {
       en: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Quick Input',
+        tab_quickinput: 'Create new card',
         tab_study: 'Study',
         tab_dashboard: 'Dashboard',
         quick_audio: 'Record Audio',
@@ -344,7 +344,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       uk: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Швидкий ввід',
+        tab_quickinput: 'Створити нову картку',
         tab_study: 'Навчання',
         tab_dashboard: 'Панель',
         quick_audio: 'Записати аудіо',
@@ -427,7 +427,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       ru: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Быстрый ввод',
+        tab_quickinput: 'Создать новую карточку',
         tab_study: 'Обучение',
         tab_dashboard: 'Панель',
         quick_audio: 'Записать аудио',
@@ -510,7 +510,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       fr: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Saisie rapide',
+        tab_quickinput: 'Créer une nouvelle carte',
         tab_study: 'Étudier',
         tab_dashboard: 'Tableau de bord',
         quick_audio: 'Enregistrer l\'audio',
@@ -593,7 +593,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       es: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Entrada rápida',
+        tab_quickinput: 'Crear nueva tarjeta',
         tab_study: 'Estudiar',
         tab_dashboard: 'Panel',
         quick_audio: 'Grabar audio',
@@ -676,7 +676,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       pl: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Szybkie wprowadzanie',
+        tab_quickinput: 'Utwórz nową fiszkę',
         tab_study: 'Nauka',
         tab_dashboard: 'Panel',
         quick_audio: 'Nagraj audio',
@@ -759,7 +759,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       it: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Inserimento rapido',
+        tab_quickinput: 'Crea nuova scheda',
         tab_study: 'Studiare',
         tab_dashboard: 'Pannello',
         quick_audio: 'Registra audio',
@@ -842,7 +842,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       de: {
         app_title: 'MyMemory',
-        tab_quickinput: 'Schnelleingabe',
+        tab_quickinput: 'Neue Karte erstellen',
         tab_study: 'Studieren',
         tab_dashboard: 'Dashboard',
         quick_audio: 'Audio aufnehmen',

@@ -206,7 +206,7 @@ $string['rating_actions'] = 'Azioni di valutazione';
 $string['progress_label'] = 'Progresso ripasso';
 
 // Tab navigation (v0.7.0)
-$string['tab_quickinput'] = 'Inserimento rapido';
+$string['tab_quickinput'] = 'Crea nuova scheda';
 $string['tab_study'] = 'Studiare';
 $string['tab_dashboard'] = 'Pannello';
 
