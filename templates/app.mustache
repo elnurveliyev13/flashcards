@@ -258,7 +258,7 @@
                 <div id="uPOSHelp" class="small"></div>
               </div>
               <div class="slot" id="slot_gender">
-                <span class="tag">{{#str}} gender, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="gender">{{#str}} gender, mod_flashcards {{/str}}</span>
                 <select id="uGender">
                   <option value="">-</option>
                   <option value="hankjonn">hankjønn</option>
@@ -267,7 +267,7 @@
                 </select>
               </div>
               <div class="slot" id="slot_noun_forms">
-                <span class="tag">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="noun_forms">{{#str}} noun_forms, mod_flashcards {{/str}}</span>
                 <div class="grid-forms">
                   <label>Indef. singular<input id="uNounIndefSg" type="text"></label>
                   <label>Def. singular<input id="uNounDefSg" type="text"></label>
@@ -276,7 +276,7 @@
                 </div>
               </div>
               <div class="slot" id="slot_verb_forms">
-                <span class="tag">{{#str}} verb_forms, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="verb_forms">{{#str}} verb_forms, mod_flashcards {{/str}}</span>
                 <div class="grid-forms">
                   <label>Infinitiv<input id="uVerbInfinitiv" type="text"></label>
                   <label>Presens<input id="uVerbPresens" type="text"></label>
@@ -286,7 +286,7 @@
                 </div>
               </div>
               <div class="slot" id="slot_adj_forms">
-                <span class="tag">{{#str}} adj_forms, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="adj_forms">{{#str}} adj_forms, mod_flashcards {{/str}}</span>
                 <div class="grid-forms">
                   <label>Positiv<input id="uAdjPositiv" type="text"></label>
                   <label>Komparativ<input id="uAdjKomparativ" type="text"></label>
@@ -294,19 +294,19 @@
                 </div>
               </div>
               <div class="slot">
-                <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="collocations">{{#str}} collocations, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                   <textarea id="uCollocations" class="autogrow" placeholder="collocations..."></textarea>
                 </div>
               </div>
               <div class="slot">
-                <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                   <textarea id="uExamples" class="autogrow" placeholder="examples..."></textarea>
                 </div>
               </div>
               <div class="slot">
-                <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="antonyms">{{#str}} antonyms, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                   <textarea id="uAntonyms" class="autogrow" placeholder="antonyms..."></textarea>
                 </div>
@@ -337,8 +337,8 @@
             </div>
 
             <div class="row2">
-              <button id="btnUpdate" class="ok">{{#str}} update, mod_flashcards {{/str}}</button>
-              <button id="btnAdd" class="mid">{{#str}} createnew, mod_flashcards {{/str}}</button>
+              <button id="btnUpdate" class="ok" data-i18n="update">{{#str}} update, mod_flashcards {{/str}}</button>
+              <button id="btnAdd" class="mid" data-i18n="createnew">{{#str}} createnew, mod_flashcards {{/str}}</button>
             </div>
             <div class="mono" id="status"></div>
           </div>
@@ -563,9 +563,9 @@
   
   <!-- Fixed bottom action bar (feature-flagged via data-ux-bottom="1") -->
   <div id="bottomActions" class="bottom-actions hidden" role="toolbar" aria-label="{{#str}} rating_actions, mod_flashcards {{/str}}">
-    <button id="btnEasyBottom" class="ok">{{#str}} easy, mod_flashcards {{/str}}</button>
-    <button id="btnNormalBottom" class="mid">{{#str}} normal, mod_flashcards {{/str}}</button>
-    <button id="btnHardBottom" class="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
+    <button id="btnEasyBottom" class="ok" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</button>
+    <button id="btnNormalBottom" class="mid" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</button>
+    <button id="btnHardBottom" class="hard" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
   </div>
   <div id="listModal" class="modal" role="dialog" aria-modal="true">
     <div class="box">
@@ -612,66 +612,66 @@
         <div class="fc-stat-card">
           <div class="fc-stat-icon icon-plus">&#10133;</div>
           <div class="fc-stat-value" id="statTotalCards">0</div>
-          <div class="fc-stat-label" id="t_stat_total">{{#str}} dashboard_total_cards, mod_flashcards {{/str}}</div>
+          <div class="fc-stat-label" id="t_stat_total" data-i18n="dashboard_total_cards">{{#str}} dashboard_total_cards, mod_flashcards {{/str}}</div>
         </div>
         <div class="fc-stat-card">
           <div class="fc-stat-icon">&#128483;</div>
           <div class="fc-stat-value" id="statActiveVocab">0</div>
-          <div class="fc-stat-label" id="t_stat_active_vocab">{{#str}} dashboard_active_vocab, mod_flashcards {{/str}}</div>
+          <div class="fc-stat-label" id="t_stat_active_vocab" data-i18n="dashboard_active_vocab">{{#str}} dashboard_active_vocab, mod_flashcards {{/str}}</div>
         </div>
         <div class="fc-stat-card fc-stat-streak">
           <div class="fc-stat-icon">&#128293;</div>
           <div class="fc-stat-value" id="statStreak">0</div>
-          <div class="fc-stat-label" id="t_stat_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
+          <div class="fc-stat-label" id="t_stat_streak" data-i18n="dashboard_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
         </div>
       </div>
 
       <!-- Charts -->
       <div class="fc-charts-grid">
         <div class="fc-chart-card">
-          <h3 id="t_chart_stages">{{#str}} dashboard_stage_chart, mod_flashcards {{/str}}</h3>
+          <h3 id="t_chart_stages" data-i18n="dashboard_stage_chart">{{#str}} dashboard_stage_chart, mod_flashcards {{/str}}</h3>
           <canvas id="stageChart" width="300" height="300"></canvas>
         </div>
         <div class="fc-chart-card">
-          <h3 id="t_chart_activity">{{#str}} dashboard_activity_chart, mod_flashcards {{/str}}</h3>
+          <h3 id="t_chart_activity" data-i18n="dashboard_activity_chart">{{#str}} dashboard_activity_chart, mod_flashcards {{/str}}</h3>
           <canvas id="activityChart" width="400" height="300"></canvas>
         </div>
       </div>
 
       <!-- Achievements -->
       <div class="fc-achievements">
-        <h3 id="t_achievements">{{#str}} dashboard_achievements, mod_flashcards {{/str}}</h3>
+        <h3 id="t_achievements" data-i18n="dashboard_achievements">{{#str}} dashboard_achievements, mod_flashcards {{/str}}</h3>
         <div class="fc-achievement-grid">
           <div class="fc-achievement-card" id="achievement2">
             <div class="fc-achievement-icon">&#128293;</div>
-            <div class="fc-achievement-title" id="t_ach2_title">{{#str}} achievement_week_warrior, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach2_title" data-i18n="achievement_week_warrior">{{#str}} achievement_week_warrior, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach2Progress">0/7</div>
           </div>
 
           <!-- Language Level Achievements -->
           <div class="fc-achievement-card" id="achievement5">
             <div class="fc-achievement-icon">🌱</div>
-            <div class="fc-achievement-title" id="t_ach5_title">{{#str}} achievement_level_a0, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach5_title" data-i18n="achievement_level_a0">{{#str}} achievement_level_a0, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach5Progress">0/100</div>
           </div>
           <div class="fc-achievement-card" id="achievement6">
             <div class="fc-achievement-icon">🌿</div>
-            <div class="fc-achievement-title" id="t_ach6_title">{{#str}} achievement_level_a1, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach6_title" data-i18n="achievement_level_a1">{{#str}} achievement_level_a1, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach6Progress">0/600</div>
           </div>
           <div class="fc-achievement-card" id="achievement7">
             <div class="fc-achievement-icon">🍀</div>
-            <div class="fc-achievement-title" id="t_ach7_title">{{#str}} achievement_level_a2, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach7_title" data-i18n="achievement_level_a2">{{#str}} achievement_level_a2, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach7Progress">0/1500</div>
           </div>
           <div class="fc-achievement-card" id="achievement8">
             <div class="fc-achievement-icon">🌳</div>
-            <div class="fc-achievement-title" id="t_ach8_title">{{#str}} achievement_level_b1, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach8_title" data-i18n="achievement_level_b1">{{#str}} achievement_level_b1, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach8Progress">0/2500</div>
           </div>
           <div class="fc-achievement-card" id="achievement9">
             <div class="fc-achievement-icon">🏆</div>
-            <div class="fc-achievement-title" id="t_ach9_title">{{#str}} achievement_level_b2, mod_flashcards {{/str}}</div>
+            <div class="fc-achievement-title" id="t_ach9_title" data-i18n="achievement_level_b2">{{#str}} achievement_level_b2, mod_flashcards {{/str}}</div>
             <div class="fc-achievement-progress" id="ach9Progress">0/4500</div>
           </div>
         </div>
