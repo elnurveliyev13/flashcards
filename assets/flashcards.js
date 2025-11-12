@@ -173,7 +173,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Level A1 - Elementary',
         achievement_level_a2: 'Level A2 - Pre-Intermediate',
         achievement_level_b1: 'Level B1 - Intermediate',
-        achievement_level_b2: 'Level B2 - Upper-Intermediate'
+        achievement_level_b2: 'Level B2 - Upper-Intermediate',
+        save: 'Save',
+        skip: 'Skip',
+        showmore: 'Show more',
+        front_audio_badge: 'Audio',
+        focus_audio_badge: 'Focus audio'
       },
       uk: {
         app_title: 'MyMemory',
@@ -232,7 +237,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Рівень A1 - Елементарний',
         achievement_level_a2: 'Рівень A2 - Базовий',
         achievement_level_b1: 'Рівень B1 - Середній',
-        achievement_level_b2: 'Рівень B2 - Вище середнього'
+        achievement_level_b2: 'Рівень B2 - Вище середнього',
+        save: 'Зберегти',
+        skip: 'Пропустити',
+        showmore: 'Показати більше',
+        front_audio_badge: 'Аудіо лицьової сторони',
+        focus_audio_badge: 'Фокусне аудіо'
       },
       ru: {
         app_title: 'MyMemory',
@@ -291,7 +301,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Уровень A1 - Элементарный',
         achievement_level_a2: 'Уровень A2 - Базовый',
         achievement_level_b1: 'Уровень B1 - Средний',
-        achievement_level_b2: 'Уровень B2 - Выше среднего'
+        achievement_level_b2: 'Уровень B2 - Выше среднего',
+        save: 'Сохранить',
+        skip: 'Пропустить',
+        showmore: 'Показать больше',
+        front_audio_badge: 'Аудио лицевой стороны',
+        focus_audio_badge: 'Фокусное аудио'
       },
       fr: {
         app_title: 'MyMemory',
@@ -350,7 +365,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Niveau A1 - Élémentaire',
         achievement_level_a2: 'Niveau A2 - Pré-intermédiaire',
         achievement_level_b1: 'Niveau B1 - Intermédiaire',
-        achievement_level_b2: 'Niveau B2 - Intermédiaire supérieur'
+        achievement_level_b2: 'Niveau B2 - Intermédiaire supérieur',
+        save: 'Enregistrer',
+        skip: 'Passer',
+        showmore: 'Afficher plus',
+        front_audio_badge: 'Audio du recto',
+        focus_audio_badge: 'Audio focal'
       },
       es: {
         app_title: 'MyMemory',
@@ -409,7 +429,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Nivel A1 - Elemental',
         achievement_level_a2: 'Nivel A2 - Pre-intermedio',
         achievement_level_b1: 'Nivel B1 - Intermedio',
-        achievement_level_b2: 'Nivel B2 - Intermedio superior'
+        achievement_level_b2: 'Nivel B2 - Intermedio superior',
+        save: 'Guardar',
+        skip: 'Omitir',
+        showmore: 'Mostrar más',
+        front_audio_badge: 'Audio del anverso',
+        focus_audio_badge: 'Audio focal'
       },
       pl: {
         app_title: 'MyMemory',
@@ -468,7 +493,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Poziom A1 - Elementarny',
         achievement_level_a2: 'Poziom A2 - Podstawowy',
         achievement_level_b1: 'Poziom B1 - Średniozaawansowany',
-        achievement_level_b2: 'Poziom B2 - Zaawansowany średni'
+        achievement_level_b2: 'Poziom B2 - Zaawansowany średni',
+        save: 'Zapisz',
+        skip: 'Pomiń',
+        showmore: 'Pokaż więcej',
+        front_audio_badge: 'Audio przodu',
+        focus_audio_badge: 'Audio fokusowe'
       },
       it: {
         app_title: 'MyMemory',
@@ -527,7 +557,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Livello A1 - Elementare',
         achievement_level_a2: 'Livello A2 - Pre-intermedio',
         achievement_level_b1: 'Livello B1 - Intermedio',
-        achievement_level_b2: 'Livello B2 - Intermedio superiore'
+        achievement_level_b2: 'Livello B2 - Intermedio superiore',
+        save: 'Salva',
+        skip: 'Salta',
+        showmore: 'Mostra altro',
+        front_audio_badge: 'Audio fronte',
+        focus_audio_badge: 'Audio focale'
       },
       de: {
         app_title: 'MyMemory',
@@ -586,7 +621,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_a1: 'Niveau A1 - Grundstufe',
         achievement_level_a2: 'Niveau A2 - Untere Mittelstufe',
         achievement_level_b1: 'Niveau B1 - Mittelstufe',
-        achievement_level_b2: 'Niveau B2 - Obere Mittelstufe'
+        achievement_level_b2: 'Niveau B2 - Obere Mittelstufe',
+        save: 'Speichern',
+        skip: 'Überspringen',
+        showmore: 'Mehr anzeigen',
+        front_audio_badge: 'Vorderseiten-Audio',
+        focus_audio_badge: 'Fokus-Audio'
       }
     };
 
@@ -648,6 +688,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiStrings.translationIdle = t('front_translation_status_idle');
       aiStrings.frontTransShow = t('front_translation_toggle_show');
       aiStrings.frontTransHide = t('front_translation_toggle_hide');
+      aiStrings.frontAudio = t('front_audio_badge');
+      aiStrings.focusAudio = t('focus_audio_badge');
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
