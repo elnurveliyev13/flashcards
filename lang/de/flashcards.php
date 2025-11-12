@@ -287,6 +287,9 @@ $string['settings_orbokene_section_desc'] = 'Wenn aktiviert, versucht der KI-Ass
 $string['settings_orbokene_enable'] = 'Wörterbuch-Autofill aktivieren';
 $string['settings_orbokene_enable_desc'] = 'Wenn aktiviert, füllen übereinstimmende Einträge im Orbøkene-Cache Definition, Übersetzung und Beispiele.';
 
+// Fill field dialog
+$string['fill_field'] = 'Bitte ausfüllen: {$a}';
+
 // Errors
 $string['ai_http_error'] = 'Der KI-Dienst ist nicht verfügbar. Bitte versuchen Sie es später erneut.';
 $string['ai_invalid_json'] = 'Unerwartete Antwort vom KI-Dienst.';

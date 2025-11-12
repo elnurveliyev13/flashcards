@@ -157,6 +157,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Common collocations',
         examples: 'Example sentences',
         antonyms: 'Antonyms',
+        fill_field: 'Please fill: {$a}',
         update: 'Update',
         createnew: 'Create new',
         easy: 'Easy',
@@ -223,6 +224,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Загальні словосполучення',
         examples: 'Приклади речень',
         antonyms: 'Антоніми',
+        fill_field: 'Будь ласка, заповніть: {$a}',
         update: 'Оновити',
         createnew: 'Створити нову',
         easy: 'Легко',
@@ -289,6 +291,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Общие словосочетания',
         examples: 'Примеры предложений',
         antonyms: 'Антонимы',
+        fill_field: 'Пожалуйста, заполните: {$a}',
         update: 'Обновить',
         createnew: 'Создать новую',
         easy: 'Легко',
@@ -355,6 +358,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Collocations courantes',
         examples: 'Exemples de phrases',
         antonyms: 'Antonymes',
+        fill_field: 'Veuillez remplir : {$a}',
         update: 'Mettre à jour',
         createnew: 'Créer nouveau',
         easy: 'Facile',
@@ -421,6 +425,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Colocaciones comunes',
         examples: 'Oraciones de ejemplo',
         antonyms: 'Antónimos',
+        fill_field: 'Por favor, complete: {$a}',
         update: 'Actualizar',
         createnew: 'Crear nueva',
         easy: 'Fácil',
@@ -487,6 +492,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Typowe kolokacje',
         examples: 'Przykładowe zdania',
         antonyms: 'Antonimy',
+        fill_field: 'Proszę wypełnić: {$a}',
         update: 'Aktualizuj',
         createnew: 'Utwórz nową',
         easy: 'Łatwe',
@@ -553,6 +559,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Collocazioni comuni',
         examples: 'Frasi di esempio',
         antonyms: 'Antonimi',
+        fill_field: 'Si prega di compilare: {$a}',
         update: 'Aggiorna',
         createnew: 'Crea nuova',
         easy: 'Facile',
@@ -619,6 +626,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Häufige Kollokationen',
         examples: 'Beispielsätze',
         antonyms: 'Antonyme',
+        fill_field: 'Bitte ausfüllen: {$a}',
         update: 'Aktualisieren',
         createnew: 'Neue erstellen',
         easy: 'Einfach',
@@ -707,6 +715,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiStrings.frontAudio = t('front_audio_badge');
       aiStrings.focusAudio = t('focus_audio_badge');
       aiStrings.click = t('ai_click_hint');
+
+      // Update focus hint with new language
+      if(typeof updateFocusHint === 'function'){
+        updateFocusHint();
+      }
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
@@ -3358,10 +3371,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#f1f5f9'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
       function textareaEl(){ const t=document.createElement('textarea'); t.style.width='100%'; t.style.minHeight='80px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
       const labelMap = {
-        transcription: 'Transcription', pos: 'Part of speech', gender:'Gender', nounForms:'Noun forms',
-        examples:'Example sentences', collocations:'Common collocations', antonyms:'Antonyms', cognates:'Cognates', sayings:'Common sayings'
+        transcription: t('transcription'),
+        pos: t('pos'),
+        gender: t('gender'),
+        nounForms: t('noun_forms'),
+        examples: t('examples'),
+        collocations: t('collocations'),
+        antonyms: t('antonyms'),
+        cognates: t('cognates') || 'Cognates',
+        sayings: t('sayings') || 'Common sayings'
       };
-      title.textContent = (M?.str?.mod_flashcards?.fill_field || 'Please fill: {$a}').replace('{$a}', labelMap[field] || field);
+      title.textContent = t('fill_field').replace('{$a}', labelMap[field] || field);
       if(field==='transcription'){
         editor = inputEl('text'); editor.value = card.transcription||''; body.appendChild(editor);
       } else if(field==='pos'){

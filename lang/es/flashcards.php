@@ -287,6 +287,9 @@ $string['settings_orbokene_section_desc'] = 'Cuando está habilitado, el asisten
 $string['settings_orbokene_enable'] = 'Habilitar autocompletado de diccionario';
 $string['settings_orbokene_enable_desc'] = 'Si está habilitado, las entradas coincidentes en el caché Orbøkene poblarán definición, traducción y ejemplos.';
 
+// Fill field dialog
+$string['fill_field'] = 'Por favor, complete: {$a}';
+
 // Errors
 $string['ai_http_error'] = 'El servicio IA no está disponible. Por favor, inténtalo más tarde.';
 $string['ai_invalid_json'] = 'Respuesta inesperada del servicio IA.';

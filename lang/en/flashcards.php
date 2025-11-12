@@ -289,6 +289,9 @@ $string['settings_orbokene_section_desc'] = 'When enabled the AI helper will try
 $string['settings_orbokene_enable'] = 'Enable dictionary auto-fill';
 $string['settings_orbokene_enable_desc'] = 'If enabled, matching entries in the Orbøkene cache populate definition, translation and examples.';
 
+// Fill field dialog
+$string['fill_field'] = 'Please fill: {$a}';
+
 // Errors
 $string['ai_http_error'] = 'The AI service is unavailable. Please try again later.';
 $string['ai_invalid_json'] = 'Unexpected response from the AI service.';

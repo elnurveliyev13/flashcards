@@ -287,6 +287,9 @@ $string['settings_orbokene_section_desc'] = 'Gdy włączone, asystent AI będzie
 $string['settings_orbokene_enable'] = 'Włącz autouzupełnianie słownika';
 $string['settings_orbokene_enable_desc'] = 'Jeśli włączone, pasujące wpisy w pamięci podręcznej Orbøkene wypełnią definicję, tłumaczenie i przykłady.';
 
+// Fill field dialog
+$string['fill_field'] = 'Proszę wypełnić: {$a}';
+
 // Errors
 $string['ai_http_error'] = 'Usługa AI jest niedostępna. Proszę spróbować później.';
 $string['ai_invalid_json'] = 'Nieoczekiwana odpowiedź z usługi AI.';
