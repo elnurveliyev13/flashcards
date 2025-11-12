@@ -3414,3 +3414,5 @@ export { flashcardsInit };
     })();
     // ========== END INTERFACE LANGUAGE SELECTOR ==========
 
+  }
+export { flashcardsInit };
