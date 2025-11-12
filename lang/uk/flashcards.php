@@ -23,7 +23,7 @@ $string['loadpack'] = 'Завантажити колоду';
 $string['due'] = 'До вивчення: {$a}';
 $string['list'] = 'Список карток';
 $string['addown'] = 'Додати свою картку';
-$string['front'] = 'Лицьова сторона';
+$string['front'] = 'Лицьова сторона картки';
 $string['front_translation_toggle_show'] = 'Показати переклад';
 $string['front_translation_toggle_hide'] = 'Сховати переклад';
 $string['front_translation_mode_label'] = 'Напрямок перекладу';
@@ -47,7 +47,7 @@ $string['ai_no_text'] = 'Введіть речення, щоб увімкнут�
 $string['focus_audio_badge'] = 'Фокусне аудіо';
 $string['front_audio_badge'] = 'Аудіо лицьової сторони';
 $string['explanation'] = 'Пояснення';
-$string['back'] = 'Переклад';
+$string['back'] = 'Oversettelse';
 $string['image'] = 'Зображення';
 $string['audio'] = 'Аудіо';
 $string['tts_voice'] = 'Голос';
@@ -246,6 +246,18 @@ $string['achievement_level_b2'] = 'Рівень B2 - Вище середньог
 // Placeholders
 $string['collocations_ph'] = 'По одному на рядок...';
 $string['examples_ph'] = 'Приклади речень...';
+$string['translation_en_placeholder'] = 'Переклад (англійська)...';
+$string['translation_placeholder'] = 'Oversettelse...';
+$string['explanation_placeholder'] = 'Пояснення...';
+$string['focus_placeholder'] = 'Фокусне слово/фраза...';
+$string['collocations_placeholder'] = 'словосполучення...';
+$string['examples_placeholder'] = 'приклади...';
+$string['antonyms_placeholder'] = 'антоніми...';
+$string['cognates_placeholder'] = 'споріднені слова...';
+$string['sayings_placeholder'] = 'вислови...';
+$string['transcription_placeholder'] = '[МФА напр. /hu:s/]';
+$string['one_per_line_placeholder'] = 'по одному на рядок...';
+$string['front_placeholder'] = 'Jeg elsker deg';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'AI помічник';
