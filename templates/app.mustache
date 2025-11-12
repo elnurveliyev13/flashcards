@@ -171,7 +171,7 @@
                   {{#str}} front_translation_mode_hint, mod_flashcards {{/str}}
                 </div>
               </div>
-              <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
+              <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
               <div class="translation-preview" id="frontTranslationPreview">
                 <div class="translation-preview-header">
                   <span class="translation-preview-title" data-i18n="front_translation_mode_label">{{#str}} front_translation_mode_label, mod_flashcards {{/str}}</span>
@@ -429,8 +429,8 @@
           <img id="imgPrev" class="media hidden" alt=""/>
         </div>
         <div class="slot">
-          <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
-          <textarea id="uFront" class="autogrow" placeholder="Front..."></textarea>
+          <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
+          <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder"></textarea>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>

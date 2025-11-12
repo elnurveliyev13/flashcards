@@ -178,7 +178,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Skip',
         showmore: 'Show more',
         front_audio_badge: 'Audio',
-        focus_audio_badge: 'Focus audio'
+        focus_audio_badge: 'Focus audio',
+        front_placeholder: 'Front...',
+        ai_click_hint: 'Tap any word above to detect a fixed expression'
       },
       uk: {
         app_title: 'MyMemory',
@@ -242,7 +244,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Пропустити',
         showmore: 'Показати більше',
         front_audio_badge: 'Аудіо лицьової сторони',
-        focus_audio_badge: 'Фокусне аудіо'
+        focus_audio_badge: 'Фокусне аудіо',
+        front_placeholder: 'Лицьова сторона...',
+        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз'
       },
       ru: {
         app_title: 'MyMemory',
@@ -306,7 +310,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Пропустить',
         showmore: 'Показать больше',
         front_audio_badge: 'Аудио лицевой стороны',
-        focus_audio_badge: 'Фокусное аудио'
+        focus_audio_badge: 'Фокусное аудио',
+        front_placeholder: 'Лицевая сторона...',
+        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение'
       },
       fr: {
         app_title: 'MyMemory',
@@ -370,7 +376,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Passer',
         showmore: 'Afficher plus',
         front_audio_badge: 'Audio du recto',
-        focus_audio_badge: 'Audio focal'
+        focus_audio_badge: 'Audio focal',
+        front_placeholder: 'Recto...',
+        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée'
       },
       es: {
         app_title: 'MyMemory',
@@ -434,7 +442,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Omitir',
         showmore: 'Mostrar más',
         front_audio_badge: 'Audio del anverso',
-        focus_audio_badge: 'Audio focal'
+        focus_audio_badge: 'Audio focal',
+        front_placeholder: 'Anverso...',
+        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija'
       },
       pl: {
         app_title: 'MyMemory',
@@ -498,7 +508,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Pomiń',
         showmore: 'Pokaż więcej',
         front_audio_badge: 'Audio przodu',
-        focus_audio_badge: 'Audio fokusowe'
+        focus_audio_badge: 'Audio fokusowe',
+        front_placeholder: 'Przód...',
+        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie'
       },
       it: {
         app_title: 'MyMemory',
@@ -562,7 +574,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Salta',
         showmore: 'Mostra altro',
         front_audio_badge: 'Audio fronte',
-        focus_audio_badge: 'Audio focale'
+        focus_audio_badge: 'Audio focale',
+        front_placeholder: 'Fronte...',
+        ai_click_hint: 'Tocca qualsiasi parola sopra per rilevare un\'espressione fissa'
       },
       de: {
         app_title: 'MyMemory',
@@ -626,7 +640,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         skip: 'Überspringen',
         showmore: 'Mehr anzeigen',
         front_audio_badge: 'Vorderseiten-Audio',
-        focus_audio_badge: 'Fokus-Audio'
+        focus_audio_badge: 'Fokus-Audio',
+        front_placeholder: 'Vorderseite...',
+        ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen'
       }
     };
 
@@ -690,6 +706,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiStrings.frontTransHide = t('front_translation_toggle_hide');
       aiStrings.frontAudio = t('front_audio_badge');
       aiStrings.focusAudio = t('focus_audio_badge');
+      aiStrings.click = t('ai_click_hint');
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
@@ -746,8 +763,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function languageName(code){
       const c = (code||'').toLowerCase();
       const map = {
-        en:'English', no:'Norwegian', nb:'Norwegian', nn:'Norwegian (Nynorsk)',
-        uk:'Ukrainian', ru:'Russian', pl:'Polish', de:'German', fr:'French', es:'Spanish', it:'Italian'
+        en:'English', no:'Norsk', nb:'Norsk', nn:'Nynorsk',
+        uk:'Українська', ru:'Русский', pl:'Polski', de:'Deutsch', fr:'Français', es:'Español', it:'Italiano'
       };
       return map[c] || c.toUpperCase();
     }
@@ -803,14 +820,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // Show language selector dialog
     function showLanguageSelector(){
       const languages = [
-        {code: 'uk', name: 'Ukrainian'},
+        {code: 'uk', name: 'Українська'},
         {code: 'en', name: 'English'},
-        {code: 'ru', name: 'Russian'},
-        {code: 'pl', name: 'Polish'},
-        {code: 'de', name: 'German'},
-        {code: 'fr', name: 'French'},
-        {code: 'es', name: 'Spanish'},
-        {code: 'it', name: 'Italian'}
+        {code: 'ru', name: 'Русский'},
+        {code: 'pl', name: 'Polski'},
+        {code: 'de', name: 'Deutsch'},
+        {code: 'fr', name: 'Français'},
+        {code: 'es', name: 'Español'},
+        {code: 'it', name: 'Italiano'}
       ];
 
       const currentLang = userLang2;
@@ -838,11 +855,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const langLabel = languageName(userLang2);
+      const norwegianLabel = languageName('no');
       if(translationForwardLabel){
-        translationForwardLabel.textContent = `NO > ${langLabel}`;
+        translationForwardLabel.textContent = `${norwegianLabel} → ${langLabel}`;
       }
       if(translationReverseLabel){
-        translationReverseLabel.textContent = `${langLabel} > NO`;
+        translationReverseLabel.textContent = `${langLabel} → ${norwegianLabel}`;
       }
     }
 
