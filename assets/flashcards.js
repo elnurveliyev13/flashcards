@@ -151,6 +151,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       initFontScalePreference(fontScaleSelect);
     }
 
+    const prefsToggle = document.getElementById('prefsToggle');
+    const prefsPanel = document.getElementById('prefsPanel');
+    if (prefsToggle && prefsPanel) {
+      let prefsOpen = false;
+      const updatePrefsState = open => {
+        prefsOpen = open;
+        prefsPanel.classList.toggle('open', open);
+        prefsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
+      prefsToggle.addEventListener('click', e => {
+        e.stopPropagation();
+        updatePrefsState(!prefsOpen);
+      });
+      document.addEventListener('click', event => {
+        if (!prefsOpen) return;
+        const target = event.target;
+        if (prefsPanel.contains(target) || prefsToggle.contains(target)) {
+          return;
+        }
+        updatePrefsState(false);
+      });
+      document.addEventListener('keydown', event => {
+        if (!prefsOpen) return;
+        if (event.key === 'Escape' || event.key === 'Esc') {
+          event.preventDefault();
+          updatePrefsState(false);
+        }
+      });
+    }
+
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
     const runtimeConfig = window.__flashcardsRuntimeConfig || {};

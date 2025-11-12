@@ -93,6 +93,8 @@ $string['font_scale_label'] = 'Font size';
 $string['font_scale_default'] = 'Default (100%)';
 $string['font_scale_plus15'] = 'Large (+15%)';
 $string['font_scale_plus30'] = 'Extra large (+30%)';
+$string['preferences_toggle_label'] = 'Preferences menu';
+$string['header_preferences_label'] = 'Display preferences';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Transcription';

@@ -52,26 +52,40 @@
               <span id="headerStreak">0</span>
             </span>
           </div>
-          <div class="header-preferences">
-            <label for="langSel" class="sr-only">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
-            <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
-              <option value="en">English</option>
-              <option value="uk">Українська</option>
-              <option value="ru">Русский</option>
-              <option value="fr">Francais</option>
-              <option value="es">Espanol</option>
-              <option value="pl">Polski</option>
-              <option value="it">Italiano</option>
-              <option value="de">Deutsch</option>
-            </select>
-            <label for="fontScale" class="sr-only">{{#str}} font_scale_label, mod_flashcards {{/str}}</label>
-            <select id="fontScale"
-                    title="{{#str}} font_scale_label, mod_flashcards {{/str}}"
-                    aria-label="{{#str}} font_scale_label, mod_flashcards {{/str}}">
-              <option value="100">{{#str}} font_scale_default, mod_flashcards {{/str}}</option>
-              <option value="115">{{#str}} font_scale_plus15, mod_flashcards {{/str}}</option>
-              <option value="130">{{#str}} font_scale_plus30, mod_flashcards {{/str}}</option>
-            </select>
+          <div class="header-settings">
+            <button type="button"
+                    id="prefsToggle"
+                    class="header-hexagon"
+                    aria-expanded="false"
+                    aria-controls="prefsPanel"
+                    aria-label="{{#str}} preferences_toggle_label, mod_flashcards {{/str}}">
+              <span aria-hidden="true" class="hexagon-icon">⚙</span>
+            </button>
+            <div id="prefsPanel" class="header-pref-panel" role="region" aria-label="{{#str}} header_preferences_label, mod_flashcards {{/str}}">
+              <div class="pref-field">
+                <label for="langSel" class="pref-label">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
+                <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
+                  <option value="en">English</option>
+                  <option value="uk">Українська</option>
+                  <option value="ru">Русский</option>
+                  <option value="fr">Francais</option>
+                  <option value="es">Espanol</option>
+                  <option value="pl">Polski</option>
+                  <option value="it">Italiano</option>
+                  <option value="de">Deutsch</option>
+                </select>
+              </div>
+              <div class="pref-field">
+                <label for="fontScale" class="pref-label">{{#str}} font_scale_label, mod_flashcards {{/str}}</label>
+                <select id="fontScale"
+                        title="{{#str}} font_scale_label, mod_flashcards {{/str}}"
+                        aria-label="{{#str}} font_scale_label, mod_flashcards {{/str}}">
+                  <option value="100">{{#str}} font_scale_default, mod_flashcards {{/str}}</option>
+                  <option value="115">{{#str}} font_scale_plus15, mod_flashcards {{/str}}</option>
+                  <option value="130">{{#str}} font_scale_plus30, mod_flashcards {{/str}}</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </div>
