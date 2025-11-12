@@ -998,6 +998,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(typeof updateOrderPreview === 'function'){
         updateOrderPreview();
       }
+      // Update focus helper status text with new language
+      if(typeof setFocusStatus === 'function'){
+        const focusStatusEl = document.getElementById('focusHelperStatus');
+        if(focusStatusEl && focusStatusEl.dataset.state === 'idle'){
+          setFocusStatus('idle', aiStrings.notext);
+        }
+      }
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
@@ -4203,6 +4210,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             currentInterfaceLang = newLang;
             saveInterfaceLang(newLang);
             updateInterfaceTexts();
+            userLang2 = newLang;
+            try{ saveTransLang(newLang); }catch(_e){}
+            if(typeof updateTranslationLangUI === 'function'){
+              updateTranslationLangUI();
+            }
+            if(typeof updateTranslationModeLabels === 'function'){
+              updateTranslationModeLabels();
+            }
+            if(typeof scheduleTranslationRefresh === 'function'){
+              scheduleTranslationRefresh();
+            }
+            }
             
             // Show confirmation
             const langNames = {
