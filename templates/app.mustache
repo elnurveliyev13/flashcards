@@ -214,7 +214,7 @@
             </div>
             <div class="slot front-translation-slot collapsed" id="slot_front_translation" aria-hidden="true">
               <span class="tag" id="tag_trans_local">Translation (?)</span>
-              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
+              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
             </div>
             <div class="slot focus-helper-slot">
               <div class="focus-helper-head">
@@ -226,7 +226,7 @@
             </div>
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
-              <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+              <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
             </div>
             <div class="focus-translation-pill" id="focusTranslationPreview">
               <span class="focus-translation-label" data-i18n="focus_translation_label">{{#str}} focus_translation_label, mod_flashcards {{/str}}</span>
@@ -246,17 +246,17 @@
             <div id="editorAdvancedFields" class="fc-quick-advanced hidden">
               <div class="slot" id="slot_translation_en">
                 <span class="tag" data-i18n="back">Translation (English)</span>
-                <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
+                <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..." data-i18n-placeholder="translation_en_placeholder"></textarea>
               </div>
               <div class="slot">
                 <span class="tag" id="t_explanationText" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</span>
-                <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
+                <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
               </div>
               <div class="slot">
                 <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                     <div class="input-wrap">
-                     <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]"></textarea>
+                     <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
                   </div>
                 </div>
               </div>
@@ -321,41 +321,41 @@
               <div class="slot">
                 <span class="tag" data-i18n="collocations">{{#str}} collocations, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
-                  <textarea id="uCollocations" class="autogrow" placeholder="collocations..."></textarea>
+                  <textarea id="uCollocations" class="autogrow" placeholder="collocations..." data-i18n-placeholder="collocations_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
-                  <textarea id="uExamples" class="autogrow" placeholder="examples..."></textarea>
+                  <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag" data-i18n="antonyms">{{#str}} antonyms, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
-                  <textarea id="uAntonyms" class="autogrow" placeholder="antonyms..."></textarea>
+                  <textarea id="uAntonyms" class="autogrow" placeholder="antonyms..." data-i18n-placeholder="antonyms_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
-                  <textarea id="uCognates" class="autogrow" placeholder="cognates..."></textarea>
+                  <textarea id="uCognates" class="autogrow" placeholder="cognates..." data-i18n-placeholder="cognates_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
                 <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
-                  <textarea id="uSayings" class="autogrow" placeholder="sayings..."></textarea>
+                  <textarea id="uSayings" class="autogrow" placeholder="sayings..." data-i18n-placeholder="sayings_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
-                <span class="tag" id="t_order">{{#str}} order, mod_flashcards {{/str}}</span>
+                <span class="tag" id="t_order" data-i18n="order">{{#str}} order, mod_flashcards {{/str}}</span>
                 <div id="orderChips" class="chips">
-                  <button class="chip" data-kind="audio"       id="chip_audio">{{#str}} audio, mod_flashcards {{/str}}</button>
-                  <button class="chip" data-kind="image"       id="chip_image">{{#str}} image, mod_flashcards {{/str}}</button>
-                  <button class="chip" data-kind="text"        id="chip_text">{{#str}} front, mod_flashcards {{/str}}</button>
-                  <button class="chip" data-kind="explanation" id="chip_explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
-                  <button class="chip" data-kind="translation" id="chip_translation">{{#str}} back, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="audio"       id="chip_audio" data-i18n="audio">{{#str}} audio, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="image"       id="chip_image" data-i18n="image">{{#str}} image, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="text"        id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="explanation" id="chip_explanation" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="translation" id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
                 </div>
                 <div class="small" id="orderPreview">audio -> image -> text -> explanation -> translation</div>
               </div>
@@ -459,27 +459,27 @@
         </div>
         <div class="slot">
           <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
-          <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+          <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
         </div>
         <div class="slot">
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
-          <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
+          <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
           <span class="tag" id="tag_trans_local">Translation (?)</span>
-          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..."></textarea>
+          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
           <span class="tag">Translation (English)</span>
-          <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
+          <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..." data-i18n-placeholder="translation_en_placeholder"></textarea>
         </div>
         <!-- Linguistic enrichment fields -->
         <div class="slot">
           <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
           <div class="row has-action">
               <div class="input-wrap">
-               <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]"></textarea>
+               <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
             </div>
           </div>
         </div>
@@ -555,26 +555,26 @@
         <div class="slot">
           <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uAntonyms" class="autogrow" placeholder="one per line..."></textarea>\n          </div>
+            <textarea id="uAntonyms" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} cognates, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uCognates" class="autogrow" placeholder="one per line..."></textarea>\n          </div>
+            <textarea id="uCognates" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} sayings, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uSayings" class="autogrow" placeholder="one per line..."></textarea>\n          </div>
+            <textarea id="uSayings" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
-          <span class="tag" id="t_order">{{#str}} order, mod_flashcards {{/str}}</span>
+          <span class="tag" id="t_order" data-i18n="order">{{#str}} order, mod_flashcards {{/str}}</span>
           <div id="orderChips" class="chips">
-            <button class="chip" data-kind="audio"       id="chip_audio">{{#str}} audio, mod_flashcards {{/str}}</button>
-            <button class="chip" data-kind="image"       id="chip_image">{{#str}} image, mod_flashcards {{/str}}</button>
-            <button class="chip" data-kind="text"        id="chip_text">{{#str}} front, mod_flashcards {{/str}}</button>
-            <button class="chip" data-kind="explanation" id="chip_explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
-            <button class="chip" data-kind="translation" id="chip_translation">{{#str}} back, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="audio"       id="chip_audio" data-i18n="audio">{{#str}} audio, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="image"       id="chip_image" data-i18n="image">{{#str}} image, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="text"        id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="explanation" id="chip_explanation" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="translation" id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
           </div>
           <div class="small" id="orderPreview">audio -> image -> text -> explanation -> translation</div>
         </div>

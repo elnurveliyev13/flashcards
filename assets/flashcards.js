@@ -324,7 +324,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Audio',
         focus_audio_badge: 'Focus audio',
         front_placeholder: 'Front...',
-        ai_click_hint: 'Tap any word above to detect a fixed expression'
+        ai_click_hint: 'Tap any word above to detect a fixed expression',
+        translation_en_placeholder: 'Translation (English)...',
+        translation_placeholder: 'Translation...',
+        explanation_placeholder: 'Explanation...',
+        focus_placeholder: 'Focus word/phrase...',
+        collocations_placeholder: 'collocations...',
+        examples_placeholder: 'examples...',
+        antonyms_placeholder: 'antonyms...',
+        cognates_placeholder: 'cognates...',
+        sayings_placeholder: 'sayings...',
+        transcription_placeholder: '[IPA e.g. /hu:s/]',
+        one_per_line_placeholder: 'one per line...'
       },
       uk: {
         app_title: 'MyMemory',
@@ -391,7 +402,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Аудіо лицьової сторони',
         focus_audio_badge: 'Фокусне аудіо',
         front_placeholder: 'Лицьова сторона...',
-        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз'
+        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
+        translation_en_placeholder: 'Переклад (англійською)...',
+        translation_placeholder: 'Переклад...',
+        explanation_placeholder: 'Пояснення...',
+        focus_placeholder: 'Фокусне слово/фраза...',
+        collocations_placeholder: 'словосполучення...',
+        examples_placeholder: 'приклади...',
+        antonyms_placeholder: 'антоніми...',
+        cognates_placeholder: 'споріднені слова...',
+        sayings_placeholder: 'вислови...',
+        transcription_placeholder: '[МФА напр. /hu:s/]',
+        one_per_line_placeholder: 'по одному на рядок...'
       },
       ru: {
         app_title: 'MyMemory',
@@ -458,7 +480,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Аудио лицевой стороны',
         focus_audio_badge: 'Фокусное аудио',
         front_placeholder: 'Лицевая сторона...',
-        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение'
+        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
+        translation_en_placeholder: 'Перевод (на английском)...',
+        translation_placeholder: 'Перевод...',
+        explanation_placeholder: 'Объяснение...',
+        focus_placeholder: 'Фокусное слово/фраза...',
+        collocations_placeholder: 'словосочетания...',
+        examples_placeholder: 'примеры...',
+        antonyms_placeholder: 'антонимы...',
+        cognates_placeholder: 'родственные слова...',
+        sayings_placeholder: 'выражения...',
+        transcription_placeholder: '[МФА напр. /hu:s/]',
+        one_per_line_placeholder: 'по одному на строку...'
       },
       fr: {
         app_title: 'MyMemory',
@@ -525,7 +558,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Audio du recto',
         focus_audio_badge: 'Audio focal',
         front_placeholder: 'Recto...',
-        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée'
+        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée',
+        translation_en_placeholder: 'Traduction (anglais)...',
+        translation_placeholder: 'Traduction...',
+        explanation_placeholder: 'Explication...',
+        focus_placeholder: 'Mot/phrase focus...',
+        collocations_placeholder: 'collocations...',
+        examples_placeholder: 'exemples...',
+        antonyms_placeholder: 'antonymes...',
+        cognates_placeholder: 'mots apparentés...',
+        sayings_placeholder: 'expressions...',
+        transcription_placeholder: '[API par ex. /hu:s/]',
+        one_per_line_placeholder: 'un par ligne...'
       },
       es: {
         app_title: 'MyMemory',
@@ -592,7 +636,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Audio del anverso',
         focus_audio_badge: 'Audio focal',
         front_placeholder: 'Anverso...',
-        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija'
+        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija',
+        translation_en_placeholder: 'Traducción (inglés)...',
+        translation_placeholder: 'Traducción...',
+        explanation_placeholder: 'Explicación...',
+        focus_placeholder: 'Palabra/frase focal...',
+        collocations_placeholder: 'colocaciones...',
+        examples_placeholder: 'ejemplos...',
+        antonyms_placeholder: 'antónimos...',
+        cognates_placeholder: 'cognados...',
+        sayings_placeholder: 'expresiones...',
+        transcription_placeholder: '[AFI ej. /hu:s/]',
+        one_per_line_placeholder: 'uno por línea...'
       },
       pl: {
         app_title: 'MyMemory',
@@ -659,7 +714,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Audio przodu',
         focus_audio_badge: 'Audio fokusowe',
         front_placeholder: 'Przód...',
-        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie'
+        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie',
+        translation_en_placeholder: 'Tłumaczenie (angielski)...',
+        translation_placeholder: 'Tłumaczenie...',
+        explanation_placeholder: 'Wyjaśnienie...',
+        focus_placeholder: 'Słowo/fraza fokusowa...',
+        collocations_placeholder: 'kolokacje...',
+        examples_placeholder: 'przykłady...',
+        antonyms_placeholder: 'antonimy...',
+        cognates_placeholder: 'wyrazy pokrewne...',
+        sayings_placeholder: 'wyrażenia...',
+        transcription_placeholder: '[IPA np. /hu:s/]',
+        one_per_line_placeholder: 'po jednym w wierszu...'
       },
       it: {
         app_title: 'MyMemory',
@@ -726,7 +792,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Audio fronte',
         focus_audio_badge: 'Audio focale',
         front_placeholder: 'Fronte...',
-        ai_click_hint: 'Tocca qualsiasi parola sopra per rilevare un\'espressione fissa'
+        ai_click_hint: 'Tocca qualsiasi parola sopra per rilevare un\'espressione fissa',
+        translation_en_placeholder: 'Traduzione (inglese)...',
+        translation_placeholder: 'Traduzione...',
+        explanation_placeholder: 'Spiegazione...',
+        focus_placeholder: 'Parola/frase focale...',
+        collocations_placeholder: 'collocazioni...',
+        examples_placeholder: 'esempi...',
+        antonyms_placeholder: 'antonimi...',
+        cognates_placeholder: 'parole affini...',
+        sayings_placeholder: 'espressioni...',
+        transcription_placeholder: '[IPA es. /hu:s/]',
+        one_per_line_placeholder: 'uno per riga...'
       },
       de: {
         app_title: 'MyMemory',
@@ -793,7 +870,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_audio_badge: 'Vorderseiten-Audio',
         focus_audio_badge: 'Fokus-Audio',
         front_placeholder: 'Vorderseite...',
-        ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen'
+        ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen',
+        translation_en_placeholder: 'Übersetzung (Englisch)...',
+        translation_placeholder: 'Übersetzung...',
+        explanation_placeholder: 'Erklärung...',
+        focus_placeholder: 'Fokus Wort/Phrase...',
+        collocations_placeholder: 'Kollokationen...',
+        examples_placeholder: 'Beispiele...',
+        antonyms_placeholder: 'Antonyme...',
+        cognates_placeholder: 'Verwandte Wörter...',
+        sayings_placeholder: 'Redewendungen...',
+        transcription_placeholder: '[IPA z.B. /hu:s/]',
+        one_per_line_placeholder: 'eines pro Zeile...'
       }
     };
 
@@ -862,6 +950,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Update focus hint with new language
       if(typeof updateFocusHint === 'function'){
         updateFocusHint();
+      }
+      if(typeof updateTranslationModeLabels === 'function'){
+        updateTranslationModeLabels();
+      }
+      // Update order preview with translated chip names
+      if(typeof updateOrderPreview === 'function'){
+        updateOrderPreview();
       }
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
@@ -2905,7 +3000,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setHintIdle();
     })();
     let orderChosen=[];
-    function updateOrderPreview(){ const chipsMap={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' -> '); $("#orderPreview").textContent=pretty; }
+    function updateOrderPreview(){ const chipsMap={ audio: t('audio') || 'audio', image: t('image') || 'image', text: t('front') || 'text', explanation: t('explanation') || 'explanation', translation: t('back') || 'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → '); const prevEl = document.getElementById('orderPreview'); if(prevEl) prevEl.textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
@@ -4053,8 +4148,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
       }
     })();
-
-    (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
 
     // ========== INITIALIZE INTERFACE LANGUAGE SELECTOR ==========
     (function initInterfaceLangSelector(){
