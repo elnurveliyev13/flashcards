@@ -61,7 +61,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ttsSuccess: dataset.ttsSuccess || 'Audio ready.',
       ttsError: dataset.ttsError || 'Audio generation failed.',
       frontTransShow: dataset.frontTransShow || 'Show translation',
-      frontTransHide: dataset.frontTransHide || 'Hide translation'
+      frontTransHide: dataset.frontTransHide || 'Hide translation',
+      translationIdle: dataset.translationIdle || 'Translation ready',
+      translationLoading: dataset.translationLoading || 'Translating…',
+      translationError: dataset.translationError || 'Translation failed',
+      translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.'
     };
     let frontTranslationSlot = null;
     let frontTranslationToggle = null;
@@ -192,6 +196,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           langChangeHint.dataset.bound = '1';
           langChangeHint.addEventListener('click', showLanguageSelector);
         }
+        updateTranslationModeLabels();
+        scheduleTranslationRefresh();
       } catch(_e){}
     }
     // Show language selector dialog
@@ -225,6 +231,181 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
     }
+
+    function updateTranslationModeLabels(){
+      if(!translationForwardLabel && !translationReverseLabel){
+        return;
+      }
+      const langLabel = languageName(userLang2);
+      if(translationForwardLabel){
+        translationForwardLabel.textContent = `NO → ${langLabel}`;
+      }
+      if(translationReverseLabel){
+        translationReverseLabel.textContent = `${langLabel} → NO`;
+      }
+    }
+
+    function setTranslationPreview(text, state, custom){
+      if(frontTranslationOutput){
+        const clean = (text || '').trim();
+        frontTranslationOutput.textContent = clean || '—';
+      }
+      if(frontTranslationStatus){
+        const label = custom || (state === 'loading' ? aiStrings.translationLoading :
+          (state === 'error' ? aiStrings.translationError : aiStrings.translationIdle));
+        frontTranslationStatus.dataset.state = state || '';
+        frontTranslationStatus.textContent = label;
+      }
+    }
+
+    function setFocusTranslation(text){
+      if(!focusTranslationText){
+        return;
+      }
+      const clean = (text || '').trim();
+      focusTranslationText.textContent = clean || '—';
+    }
+
+    function applyTranslationDirection(dir){
+      translationDirection = dir === 'user-no' ? 'user-no' : 'no-user';
+      if(translationDirectionEl){
+        translationDirectionEl.querySelectorAll('button').forEach(btn=>{
+          btn.classList.toggle('active', btn.dataset.dir === translationDirection);
+        });
+      }
+      if(translationModeHint){
+        translationModeHint.textContent = (translationDirection === 'user-no')
+          ? aiStrings.translationReverseHint
+          : (translationHintDefault || aiStrings.translationIdle);
+      }
+      if(translationDirection === 'user-no'){
+        setFrontTranslationVisibility(true);
+        if(frontTranslationToggle){
+          frontTranslationToggle.classList.add('hidden');
+        }
+      } else if(frontTranslationToggle){
+        frontTranslationToggle.classList.remove('hidden');
+      }
+      scheduleTranslationRefresh();
+    }
+
+    function scheduleTranslationRefresh(){
+      if(translationDebounce){
+        clearTimeout(translationDebounce);
+      }
+      translationDebounce = setTimeout(runTranslationHelper, 650);
+    }
+
+    async function runTranslationHelper(){
+      const sourceEl = translationDirection === 'user-no' ? translationInputLocal : frontInput;
+      if(!sourceEl){
+        return;
+      }
+      if(!aiEnabled){
+        setTranslationPreview('', 'error', aiStrings.disabled);
+        return;
+      }
+      const sourceText = (sourceEl.value || '').trim();
+      if(sourceText.length < 2){
+        if(translationDirection === 'user-no'){
+          setTranslationPreview('', '', aiStrings.translationReverseHint);
+        }else{
+          setTranslationPreview('', '', aiStrings.translationIdle);
+        }
+        return;
+      }
+      if(translationAbortController){
+        translationAbortController.abort();
+      }
+      const controller = new AbortController();
+      translationAbortController = controller;
+      const seq = ++translationRequestSeq;
+      setTranslationPreview(frontTranslationOutput ? frontTranslationOutput.textContent : '', 'loading');
+      const payload = {
+        text: sourceText,
+        sourceLang: translationDirection === 'user-no' ? userLang2 : 'no',
+        targetLang: translationDirection === 'user-no' ? 'no' : userLang2,
+        direction: translationDirection
+      };
+      try{
+        const data = await api('ai_translate', {}, 'POST', payload, {signal: controller.signal});
+        if(seq !== translationRequestSeq){
+          return;
+        }
+        const translated = (data.translation || '').trim();
+        if(translationDirection === 'no-user'){
+          if(translationInputLocal){
+            translationInputLocal.value = translated;
+          }
+          if(translationInputEn && userLang2 === 'en'){
+            translationInputEn.value = translated;
+          }
+        }else if(frontInput){
+          frontInput.value = translated;
+          try{
+            frontInput.dispatchEvent(new Event('input', {bubbles:true}));
+          }catch(_e){}
+        }
+        setTranslationPreview(translated, 'success');
+      }catch(err){
+        if(controller.signal.aborted){
+          return;
+        }
+        console.error('[Flashcards][AI] translation failed', err);
+        setTranslationPreview('', 'error');
+      }finally{
+        if(translationAbortController === controller){
+          translationAbortController = null;
+        }
+      }
+    }
+
+    if(translationDirectionEl){
+      translationDirectionEl.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          applyTranslationDirection(btn.dataset.dir || 'no-user');
+        });
+      });
+    }
+    if(frontInput){
+      frontInput.addEventListener('input', ()=>{
+        if(translationDirection === 'no-user'){
+          scheduleTranslationRefresh();
+        }
+      });
+    }
+    if(translationInputLocal){
+      translationInputLocal.addEventListener('input', ()=>{
+        if(translationDirection === 'user-no'){
+          scheduleTranslationRefresh();
+        }
+      });
+    }
+    if(copyTranslationBtn && navigator?.clipboard){
+      copyTranslationBtn.addEventListener('click', async ()=>{
+        const text = (frontTranslationOutput && frontTranslationOutput.textContent || '').trim();
+        if(!text || text === '—'){
+          return;
+        }
+        try{
+          await navigator.clipboard.writeText(text);
+          if(frontTranslationStatus){
+            const prev = frontTranslationStatus.textContent;
+            frontTranslationStatus.textContent = 'Copied!';
+            setTimeout(()=>{
+              if(frontTranslationStatus.textContent === 'Copied!'){
+                frontTranslationStatus.textContent = prev;
+              }
+            }, 1200);
+          }
+        }catch(err){
+          console.warn('[Flashcards] Copy failed', err);
+        }
+      });
+    }
+    setTranslationPreview('', '', aiStrings.translationIdle);
+    setFocusTranslation('');
+    applyTranslationDirection('no-user');
 
     // Prepare translation inputs visibility/labels
     // Dynamic Examples and Collocations Lists
@@ -380,8 +561,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusHintEl = document.getElementById('focusHelperHint');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
+    const translationInputLocal = document.getElementById('uTransLocal');
+    const translationInputEn = document.getElementById('uTransEn');
+    const translationDirectionEl = document.getElementById('translationDirection');
+    const translationForwardLabel = document.getElementById('translationModeForward');
+    const translationReverseLabel = document.getElementById('translationModeReverse');
+    const translationModeHint = document.getElementById('translationModeHint');
+    const copyTranslationBtn = document.getElementById('btnCopyFrontTranslation');
+    const frontTranslationOutput = document.getElementById('frontTranslationOutput');
+    const frontTranslationStatus = document.getElementById('frontTranslationStatus');
+    const focusTranslationText = document.getElementById('focusTranslationText');
+    const translationHintDefault = translationModeHint ? translationModeHint.textContent : '';
     frontTranslationSlot = document.getElementById('slot_front_translation');
     frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
+    let translationDirection = 'no-user';
+    let translationDebounce = null;
+    let translationAbortController = null;
+    let translationRequestSeq = 0;
     if(frontTranslationToggle){
       frontTranslationToggle.addEventListener('click', ()=>{
         setFrontTranslationVisibility(!frontTranslationVisible);
@@ -475,12 +671,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           expl.value = data.definition;
         }
       }
-      if(data.translation){
-        const transLocal = document.getElementById('uTransLocal');
-        if(transLocal && !transLocal.value.trim()){
-          transLocal.value = data.translation;
+      if(Object.prototype.hasOwnProperty.call(data, 'translation')){
+        if(translationInputLocal && !translationInputLocal.value.trim()){
+          translationInputLocal.value = data.translation || '';
         }
       }
+      setFocusTranslation(data.translation || '');
       if(data.transcription){
         const trEl = document.getElementById('uTranscription');
         if(trEl && !trEl.value.trim()){
@@ -1479,8 +1675,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const _say=document.getElementById('uSayings'); if(_say) _say.value = Array.isArray(c.sayings)?c.sayings.join('\n'):'';
       try{ togglePOSUI(); }catch(_e){}
       const __tr = c.translations || {};
-      const __tl = $("#uTransLocal"); if(__tl) __tl.value = (userLang2 !== 'en') ? (__tr[userLang2] || c.translation || "") : "";
-      const __te = $("#uTransEn"); if(__te) __te.value = (__tr.en || (userLang2 === 'en' ? (c.translation || "") : ""));
+       const __tl = $("#uTransLocal"); if(__tl) __tl.value = (userLang2 !== 'en') ? (__tr[userLang2] || c.translation || "") : "";
+       const __te = $("#uTransEn"); if(__te) __te.value = (__tr.en || (userLang2 === 'en' ? (c.translation || "") : ""));
+       const previewText = (__tl && __tl.value) || (__te && __te.value) || c.translation || "";
+       if(translationDirection === 'no-user'){
+         setTranslationPreview(previewText, previewText ? 'success' : '', previewText ? null : aiStrings.translationIdle);
+       }
+       setFocusTranslation(previewText);
       const hasAdvanced = Boolean(
         (c.explanation && c.explanation.trim()) ||
         (__te && __te.value && __te.value.trim()) ||
@@ -1971,11 +2172,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Disable Update button when no card is being edited
       const btnUpdate = $("#btnUpdate");
-      if(btnUpdate) btnUpdate.disabled = true;
+       if(btnUpdate) btnUpdate.disabled = true;
 
-      // Safety: ensure no active mic stream remains (clears iOS mic indicator)
-      try{ if(typeof stopMicStream==='function') stopMicStream(); }catch(_e){}
-    }
+       // Safety: ensure no active mic stream remains (clears iOS mic indicator)
+       try{ if(typeof stopMicStream==='function') stopMicStream(); }catch(_e){}
+       setFocusTranslation('');
+       if(translationAbortController){
+         translationAbortController.abort();
+         translationAbortController = null;
+       }
+       if(translationDirection !== 'no-user'){
+         applyTranslationDirection('no-user');
+       }else{
+         setTranslationPreview('', '', aiStrings.translationIdle);
+       }
+     }
     $("#btnFormReset").addEventListener("click", resetForm);
     const quickResetBtn = $("#btnQuickFormReset");
     if(quickResetBtn){

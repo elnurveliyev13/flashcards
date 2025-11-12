@@ -24,7 +24,7 @@ if ($globalmode) {
     $access = \mod_flashcards\access_manager::check_user_access($USER->id);
 
     // Check permissions based on action
-    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'ai_focus_helper') {
+    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'ai_focus_helper' || $action === 'ai_translate') {
         // Allow site administrators and managers regardless of grace period/access
         $createallowed = !empty($access['can_create']);
         if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
@@ -223,6 +223,24 @@ switch ($action) {
             'level' => $level,
             'voice' => $voiceid ?: null,
         ]);
+        echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
+    case 'ai_translate':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $text = trim($payload['text'] ?? '');
+        if ($text === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $source = clean_param($payload['sourceLang'] ?? 'no', PARAM_ALPHANUMEXT);
+        $target = clean_param($payload['targetLang'] ?? 'en', PARAM_ALPHANUMEXT);
+        $direction = ($payload['direction'] ?? '') === 'user-no' ? 'user-no' : 'no-user';
+        $helper = new \mod_flashcards\local\ai_helper();
+        $data = $helper->translate_text($userid, $text, $source, $target, ['direction' => $direction]);
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 

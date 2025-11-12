@@ -91,25 +91,15 @@ class openai_client {
         $level = $this->sanitize_level($options['level'] ?? '');
 
         // Map language codes to full language names for the prompt
-        $langnames = [
-            'uk' => 'Ukrainian',
-            'en' => 'English',
-            'ru' => 'Russian',
-            'pl' => 'Polish',
-            'de' => 'German',
-            'fr' => 'French',
-            'es' => 'Spanish',
-            'no' => 'Norwegian',
-            'nb' => 'Norwegian',
-            'nn' => 'Norwegian',
-        ];
-        $targetlang = $langnames[$uilang] ?? 'English';
+        $targetlang = $this->language_name($uilang);
         $translabel = 'TR-' . strtoupper($uilang);
 
         $systemprompt = <<<PROMPT
 ROLE: Norwegian tutor for {$targetlang}-speaking learners.
 
 RULES:
+- Stay with the exact lexeme the learner tapped. The WORD/base form must keep the clicked lemma inside it (optionally within a longer idiom) and may never jump to a different verb/noun such as the nearest copula.
+- Verbs: output infinitive with leading "�?"; nouns: indefinite singular; particles/pronouns/determiners: keep the clicked lemma itself (no substitutions).
 - No inflections (API provides them).
 - Nouns: mark countability and gender via article:
   - Countable: article w/o parentheses (en/ei/et).
@@ -207,6 +197,65 @@ PROMPT;
         ];
     }
 
+    /**
+     * Translate arbitrary learner text using ChatGPT.
+     *
+     * @param string $text
+     * @param string $source
+     * @param string $target
+     * @param array $options
+     * @return array
+     * @throws moodle_exception
+     */
+    public function translate_text(string $text, string $source, string $target, array $options = []): array {
+        if (!$this->is_enabled()) {
+            throw new coding_exception('openai client is not configured');
+        }
+        $text = trim($text);
+        if ($text === '') {
+            throw new coding_exception('Missing text for translation');
+        }
+        $sourcecode = $this->sanitize_language($source);
+        $targetcode = $this->sanitize_language($target);
+        $sourcename = $this->language_name($sourcecode);
+        $targetname = $this->language_name($targetcode);
+
+        $systemprompt = "You are a precise translator from {$sourcename} to {$targetname}. "
+            . "Return only the {$targetname} translation with natural, learner-friendly phrasing. No explanations.";
+        $userprompt = implode("\n", [
+            "SOURCE ({$sourcename}): " . $this->trim_prompt_text($text, 500),
+            "TARGET LANGUAGE: {$targetname}",
+            'RULES: Preserve numbers, names and formatting. If the input already looks like the target language, return it unchanged. Do not wrap the answer in quotes.'
+        ]);
+
+        $payload = [
+            'model' => $this->model,
+            'temperature' => 0.2,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemprompt,
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $userprompt,
+                ],
+            ],
+        ];
+
+        $response = $this->request($payload);
+        $content = trim($response->choices[0]->message->content ?? '');
+        if ($content === '') {
+            throw new moodle_exception('ai_empty_response', 'mod_flashcards');
+        }
+
+        return [
+            'translation' => core_text::substr($content, 0, 800),
+            'source' => $sourcecode,
+            'target' => $targetcode,
+        ];
+    }
+
     protected function fallback_focus(string $word): array {
         $word = trim($word);
         if ($word === '') {
@@ -223,6 +272,26 @@ PROMPT;
             'examples' => [],
             'forms' => '',
         ];
+    }
+
+    protected function language_name(?string $code): string {
+        $map = [
+            'uk' => 'Ukrainian',
+            'en' => 'English',
+            'ru' => 'Russian',
+            'pl' => 'Polish',
+            'de' => 'German',
+            'fr' => 'French',
+            'es' => 'Spanish',
+            'no' => 'Norwegian',
+            'nb' => 'Norwegian',
+            'nn' => 'Norwegian',
+        ];
+        $key = core_text::strtolower(trim((string)$code));
+        if ($key === '') {
+            return 'English';
+        }
+        return $map[$key] ?? strtoupper($key);
     }
 
     protected function sanitize_language(?string $value): string {

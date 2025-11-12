@@ -3,6 +3,7 @@
 namespace mod_flashcards\local;
 
 use coding_exception;
+use core_text;
 use moodle_exception;
 use Throwable;
 
@@ -45,7 +46,11 @@ class ai_helper {
         ]);
 
         $focusword = trim($focusdata['focus'] ?? '') ?: $clickedword;
+        $focusword = $this->enforce_clicked_focus($focusword, $clickedword);
         $baseform = trim($focusdata['baseform'] ?? '') ?: $focusword;
+        if (!$this->focus_contains_clicked($baseform, $clickedword)) {
+            $baseform = $focusword;
+        }
         $pos = trim($focusdata['pos'] ?? '');
 
         $result = [
@@ -137,5 +142,63 @@ class ai_helper {
         }
 
         return $result;
+    }
+
+    public function translate_text(int $userid, string $text, string $source, string $target, array $options = []): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+        $translation = $this->openai->translate_text($text, $source, $target, $options);
+        return [
+            'translation' => $translation['translation'] ?? '',
+            'sourceLang' => $translation['source'] ?? $source,
+            'targetLang' => $translation['target'] ?? $target,
+        ];
+    }
+
+    protected function enforce_clicked_focus(string $focus, string $clicked): string {
+        $focus = trim($focus);
+        $clicked = trim($clicked);
+        if ($clicked === '') {
+            return $focus;
+        }
+        if ($focus === '') {
+            return $clicked;
+        }
+        if ($this->focus_contains_clicked($focus, $clicked)) {
+            return $focus;
+        }
+        return $clicked;
+    }
+
+    protected function focus_contains_clicked(string $focus, string $clicked): bool {
+        $needle = $this->normalize_token($clicked);
+        if ($needle === '') {
+            return false;
+        }
+        $tokens = preg_split('/\s+/u', trim($focus));
+        if (!$tokens) {
+            $tokens = [$focus];
+        }
+        foreach ($tokens as $token) {
+            $candidate = $this->normalize_token($token);
+            if ($candidate === '') {
+                continue;
+            }
+            if (str_contains($candidate, $needle) || str_contains($needle, $candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function normalize_token(string $value): string {
+        $value = core_text::strtolower(trim($value));
+        if ($value === '') {
+            return '';
+        }
+        $value = core_text::normalize($value, core_text::NFKD);
+        $value = preg_replace('/[^a-z0-9æøå]/u', '', $value);
+        return $value ?: '';
     }
 }

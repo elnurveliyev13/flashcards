@@ -14,6 +14,10 @@
      data-voice-disabled="{{#str}} tts_voice_disabled, mod_flashcards {{/str}}"
      data-tts-success="{{#str}} tts_status_success, mod_flashcards {{/str}}"
      data-tts-error="{{#str}} tts_status_error, mod_flashcards {{/str}}"
+     data-translation-idle="{{#str}} front_translation_status_idle, mod_flashcards {{/str}}"
+     data-translation-loading="{{#str}} front_translation_status_loading, mod_flashcards {{/str}}"
+     data-translation-error="{{#str}} front_translation_status_error, mod_flashcards {{/str}}"
+     data-translation-reverse-hint="{{#str}} front_translation_reverse_hint, mod_flashcards {{/str}}"
      data-front-trans-show="{{#str}} front_translation_toggle_show, mod_flashcards {{/str}}"
      data-front-trans-hide="{{#str}} front_translation_toggle_hide, mod_flashcards {{/str}}">
   <div class="wrap">
@@ -139,16 +143,43 @@
               <div class="small" id="ttsVoiceStatus">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
             </div>
             <div class="slot front-slot">
-              <div class="slot-head">
-                <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
-                <button type="button"
-                        id="btnToggleFrontTranslation"
-                        class="front-translation-toggle"
-                        aria-expanded="false">
-                  {{#str}} front_translation_toggle_show, mod_flashcards {{/str}}
-                </button>
+              <div class="slot-head slot-head-stacked">
+                <div class="slot-head-row">
+                  <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+                  <button type="button"
+                          id="btnToggleFrontTranslation"
+                          class="front-translation-toggle"
+                          aria-expanded="false">
+                    {{#str}} front_translation_toggle_show, mod_flashcards {{/str}}
+                  </button>
+                </div>
+                <div class="translation-mode" id="translationDirection">
+                  <button type="button" class="translation-mode-btn active" data-dir="no-user">
+                    <span class="translation-mode-label" id="translationModeForward">NO → EN</span>
+                  </button>
+                  <button type="button" class="translation-mode-btn" data-dir="user-no">
+                    <span class="translation-mode-label" id="translationModeReverse">EN → NO</span>
+                  </button>
+                </div>
+                <div class="translation-mode-hint" id="translationModeHint">
+                  {{#str}} front_translation_mode_hint, mod_flashcards {{/str}}
+                </div>
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
+              <div class="translation-preview" id="frontTranslationPreview">
+                <div class="translation-preview-header">
+                  <span class="translation-preview-title">{{#str}} front_translation_mode_label, mod_flashcards {{/str}}</span>
+                  <button type="button" class="pill pill-ghost" id="btnCopyFrontTranslation">
+                    {{#str}} front_translation_copy, mod_flashcards {{/str}}
+                  </button>
+                </div>
+                <div class="translation-preview-body">
+                  <div class="translation-preview-output" id="frontTranslationOutput">—</div>
+                  <div class="translation-preview-status" id="frontTranslationStatus">
+                    {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="slot front-translation-slot collapsed" id="slot_front_translation" aria-hidden="true">
               <span class="tag" id="tag_trans_local">Translation (?)</span>
@@ -165,6 +196,10 @@
             <div class="slot">
               <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
+            </div>
+            <div class="focus-translation-pill" id="focusTranslationPreview">
+              <span class="focus-translation-label">{{#str}} focus_translation_label, mod_flashcards {{/str}}</span>
+              <span class="focus-translation-text" id="focusTranslationText">—</span>
             </div>
             <div class="slot">
               <span class="tag">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
