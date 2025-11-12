@@ -180,9 +180,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const updatePrefsState = open => {
         prefsOpen = open;
         prefsPanel.classList.toggle('open', open);
+        prefsPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
         prefsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       };
       prefsToggle.addEventListener('click', e => {
+        e.preventDefault();
         e.stopPropagation();
         updatePrefsState(!prefsOpen);
       });
@@ -201,6 +203,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           updatePrefsState(false);
         }
       });
+      window.addEventListener('resize', () => {
+        if (prefsOpen) {
+          updatePrefsState(false);
+        }
+      });
+      updatePrefsState(false);
     }
 
     // Global mode detection: cmid = 0 OR globalMode = true

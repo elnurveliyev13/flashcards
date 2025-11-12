@@ -244,6 +244,7 @@ h1{
 .header-settings{
   position: relative;
   display: inline-flex;
+  z-index: 50;
 }
 
 .header-hexagon{
@@ -274,14 +275,15 @@ h1{
   right: 0;
   top: calc(100% + var(--space-1));
   min-width: 220px;
+  width: min(260px, 100vw - 16px);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: var(--space-2);
-  box-shadow: 0 12px 24px rgba(11,18,32,0.35);
+  box-shadow: 0 14px 32px rgba(11,18,32,0.45);
   display: none;
   gap: var(--space-2);
-  z-index: 20;
+  z-index: 40;
 }
 
 .pref-field{
@@ -305,6 +307,8 @@ h1{
 .pref-font-buttons{
   display: flex;
   gap: 6px;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
 
 .pref-font-btn{
@@ -312,9 +316,12 @@ h1{
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
-  padding: 6px 10px;
+  padding: 6px 8px;
   cursor: pointer;
   transition: border 0.2s ease, background 0.2s ease;
+  flex: 1;
+  min-width: 42px;
+  text-align: center;
 }
 
 .pref-font-btn.active{
@@ -335,6 +342,20 @@ h1{
 .header-pref-panel.open{
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 720px){
+  .header-pref-panel{
+    position: fixed;
+    top: 60px;
+    right: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    min-width: 0;
+  }
+  .pref-font-buttons{
+    gap: 4px;
+  }
 }
 
 .pref-field{
@@ -1524,6 +1545,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 20px;
   text-align: center;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .fc-stat-card:hover {
