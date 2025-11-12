@@ -575,7 +575,7 @@ textarea, input[type=search]{color:#f1f5f9}
 
 /* Multi-line inputs */
 textarea.input {
-  min-height: 120px;
+  min-height: 44px;
   resize: vertical;
   line-height: var(--line-height-normal);
 }
@@ -644,7 +644,7 @@ input[type=text]::placeholder {
 }
 .small{font-size:12px;color:var(--muted)}
 .transcription-text{font-size:14px;color:var(--text);opacity:1;margin-top:8px}
-textarea{width:100%;min-height:96px;border-radius:10px;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);line-height:var(--line-height-normal);resize:vertical}
+textarea{width:100%;min-height:44px;border-radius:10px;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);line-height:var(--line-height-normal);resize:vertical}
 textarea.autogrow{overflow-y:hidden}
 label{display:inline-flex;align-items:center;gap:var(--space-1)}
 /* Old stage badge styles (deprecated) */

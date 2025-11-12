@@ -31,6 +31,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           el.style.height = `${next}px`;
         };
         el.addEventListener('input', resize);
+        el.addEventListener('change', resize);
         el.dataset.autogrowBound = '1';
         resize();
       });
@@ -3705,7 +3706,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       body.innerHTML = '';
       let editor = null;
       function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#f1f5f9'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
-      function textareaEl(){ const t=document.createElement('textarea'); t.style.width='100%'; t.style.minHeight='80px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
+      function textareaEl(){ const t=document.createElement('textarea'); t.className='autogrow'; t.style.width='100%'; t.style.minHeight='44px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
       const labelMap = {
         transcription: t('transcription'),
         pos: t('pos'),
@@ -3748,6 +3749,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
+      initAutogrow();
       fp.style.display='flex';
       function close(){ fp.style.display='none'; }
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
