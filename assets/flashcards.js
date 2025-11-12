@@ -283,6 +283,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const interfaceTranslations = {
       en: {
         app_title: 'MyMemory',
+        interface_language_label: 'Interface language',
+        font_scale_label: 'Font size',
         tab_quickinput: 'Create new card',
         tab_study: 'Study',
         tab_dashboard: 'Dashboard',
@@ -366,6 +368,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       uk: {
         app_title: 'MyMemory',
+        interface_language_label: 'Мова інтерфейсу',
+        font_scale_label: 'Розмір шрифту',
         tab_quickinput: 'Створити нову картку',
         tab_study: 'Навчання',
         tab_dashboard: 'Панель',
@@ -449,6 +453,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       ru: {
         app_title: 'MyMemory',
+        interface_language_label: 'Язык интерфейса',
+        font_scale_label: 'Размер шрифта',
         tab_quickinput: 'Создать новую карточку',
         tab_study: 'Обучение',
         tab_dashboard: 'Панель',
@@ -532,6 +538,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       fr: {
         app_title: 'MyMemory',
+        interface_language_label: 'Langue de l\'interface',
+        font_scale_label: 'Taille du texte',
         tab_quickinput: 'Créer une nouvelle carte',
         tab_study: 'Étudier',
         tab_dashboard: 'Tableau de bord',
@@ -615,6 +623,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       es: {
         app_title: 'MyMemory',
+        interface_language_label: 'Idioma de la interfaz',
+        font_scale_label: 'Tamaño de fuente',
         tab_quickinput: 'Crear nueva tarjeta',
         tab_study: 'Estudiar',
         tab_dashboard: 'Panel',
@@ -698,6 +708,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       pl: {
         app_title: 'MyMemory',
+        interface_language_label: 'Język interfejsu',
+        font_scale_label: 'Rozmiar czcionki',
         tab_quickinput: 'Utwórz nową fiszkę',
         tab_study: 'Nauka',
         tab_dashboard: 'Panel',
@@ -781,6 +793,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       it: {
         app_title: 'MyMemory',
+        interface_language_label: 'Lingua dell\'interfaccia',
+        font_scale_label: 'Dimensione del testo',
         tab_quickinput: 'Crea nuova scheda',
         tab_study: 'Studiare',
         tab_dashboard: 'Pannello',
@@ -864,6 +878,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       de: {
         app_title: 'MyMemory',
+        interface_language_label: 'Sprache der Oberfläche',
+        font_scale_label: 'Schriftgröße',
         tab_quickinput: 'Neue Karte erstellen',
         tab_study: 'Studieren',
         tab_dashboard: 'Dashboard',

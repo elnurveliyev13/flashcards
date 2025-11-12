@@ -296,22 +296,10 @@ h1{
   color: var(--text-subtle);
 }
 
-.pref-label-row{
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.pref-icon{
-  font-size: 12px;
-  padding: 2px 6px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-}
-
-.pref-font-field .pref-label-row{
-  justify-content: space-between;
+.pref-heading{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-subtle);
 }
 
 .pref-font-buttons{

@@ -1,0 +1,40 @@
+en: { at 284
+  284:       en: {
+  285:         app_title: 'MyMemory',
+  286:         interface_language_label: 'Interface language',
+  287:         font_scale_label: 'Font size',
+uk: { at 369
+  369:       uk: {
+  370:         app_title: 'MyMemory',
+  371:         interface_language_label: 'Мова інтерфейсу',
+  372:         font_scale_label: 'Розмір шрифту',
+ru: { at 454
+  454:       ru: {
+  455:         app_title: 'MyMemory',
+  456:         interface_language_label: 'Язык интерфейса',
+  457:         font_scale_label: 'Размер шрифта',
+pl: { at 709
+  709:       pl: {
+  710:         app_title: 'MyMemory',
+  711:         interface_language_label: 'Język interfejsu',
+  712:         font_scale_label: 'Rozmiar czcionki',
+de: { at 879
+  879:       de: {
+  880:         app_title: 'MyMemory',
+  881:         interface_language_label: 'Sprache der Oberfläche',
+  882:         font_scale_label: 'Schriftgröße',
+fr: { at 539
+  539:       fr: {
+  540:         app_title: 'MyMemory',
+  541:         interface_language_label: 'Langue de l\'interface',
+  542:         font_scale_label: 'Taille du texte',
+es: { at 624
+  624:       es: {
+  625:         app_title: 'MyMemory',
+  626:         interface_language_label: 'Idioma de la interfaz',
+  627:         font_scale_label: 'Tamaño de fuente',
+it: { at 794
+  794:       it: {
+  795:         app_title: 'MyMemory',
+  796:         interface_language_label: 'Lingua dell\'interfaccia',
+  797:         font_scale_label: 'Dimensione del testo',
