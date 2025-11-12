@@ -109,13 +109,13 @@
               <div class="fc-quick-media-grid">
                 <button id="btnRec" class="fc-quick-media-btn fc-media-large micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#127897;&#65039;</span>
-                  <span class="fc-media-label">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+                  <span class="fc-media-label" data-i18n="quick_audio">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
                   <span id="recTimer" class="rec-timer hidden">00:00</span>
                 </button>
-                <label for="uAudio" class="fc-link-btn fc-media-link">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</label>
+                <label for="uAudio" class="fc-link-btn fc-media-link" data-i18n="chooseaudiofile">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</label>
                 <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
                   <span class="fc-media-icon">&#128247;</span>
-                  <span class="fc-media-label">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+                  <span class="fc-media-label" data-i18n="quick_photo">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
                 </button>
               </div>
             </div>
@@ -143,18 +143,19 @@
             </div>
             <img id="imgPrev" class="media hidden" alt=""/>
             <div class="slot hidden" id="slot_ttsVoice">
-              <span class="tag">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
+              <span class="tag" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
               <select id="ttsVoice"></select>
-              <div class="small" id="ttsVoiceStatus">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
+              <div class="small" id="ttsVoiceStatus" data-i18n="tts_voice_hint">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
             </div>
             <div class="slot front-slot">
               <div class="slot-head slot-head-stacked">
                 <div class="slot-head-row">
-                  <span class="tag" id="t_frontText">{{#str}} front, mod_flashcards {{/str}}</span>
+                  <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
                   <button type="button"
                           id="btnToggleFrontTranslation"
                           class="front-translation-toggle"
-                          aria-expanded="false">
+                          aria-expanded="false"
+                          data-i18n="front_translation_toggle_show">
                     {{#str}} front_translation_toggle_show, mod_flashcards {{/str}}
                   </button>
                 </div>
@@ -166,15 +167,15 @@
                     <span class="translation-mode-label" id="translationModeReverse">EN → NO</span>
                   </button>
                 </div>
-                <div class="translation-mode-hint" id="translationModeHint">
+                <div class="translation-mode-hint" id="translationModeHint" data-i18n="front_translation_mode_hint">
                   {{#str}} front_translation_mode_hint, mod_flashcards {{/str}}
                 </div>
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." autofocus></textarea>
               <div class="translation-preview" id="frontTranslationPreview">
                 <div class="translation-preview-header">
-                  <span class="translation-preview-title">{{#str}} front_translation_mode_label, mod_flashcards {{/str}}</span>
-                  <button type="button" class="pill pill-ghost" id="btnCopyFrontTranslation">
+                  <span class="translation-preview-title" data-i18n="front_translation_mode_label">{{#str}} front_translation_mode_label, mod_flashcards {{/str}}</span>
+                  <button type="button" class="pill pill-ghost" id="btnCopyFrontTranslation" data-i18n="front_translation_copy">
                     {{#str}} front_translation_copy, mod_flashcards {{/str}}
                   </button>
                 </div>
@@ -192,14 +193,14 @@
             </div>
             <div class="slot focus-helper-slot">
               <div class="focus-helper-head">
-                <span class="tag">{{#str}} ai_helper_label, mod_flashcards {{/str}}</span>
-                <span class="focus-helper-hint" id="focusHelperHint">{{#str}} ai_click_hint, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="ai_helper_label">{{#str}} ai_helper_label, mod_flashcards {{/str}}</span>
+                <span class="focus-helper-hint" id="focusHelperHint" data-i18n="ai_click_hint">{{#str}} ai_click_hint, mod_flashcards {{/str}}</span>
               </div>
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
             </div>
             <div class="slot">
-              <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
+              <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..."></textarea>
             </div>
             <div class="focus-translation-pill" id="focusTranslationPreview">
@@ -207,27 +208,27 @@
               <span class="focus-translation-text" id="focusTranslationText">—</span>
             </div>
             <div class="slot">
-              <span class="tag">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
-              <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}"></textarea>
+              <span class="tag" data-i18n="focus_baseform">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
+              <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}" data-i18n-placeholder="focus_baseform_ph"></textarea>
             </div>
             <div class="fc-quick-advanced-toggle">
               <button id="btnEditorAdvanced" class="fc-link-btn">
-                <span id="editorAdvancedLabel">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
+                <span id="editorAdvancedLabel" data-i18n="show_advanced">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
                 <span id="editorAdvancedIcon">&#9660;</span>
               </button>
             </div>
 
             <div id="editorAdvancedFields" class="fc-quick-advanced hidden">
               <div class="slot" id="slot_translation_en">
-                <span class="tag">Translation (English)</span>
+                <span class="tag" data-i18n="back">Translation (English)</span>
                 <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..."></textarea>
               </div>
               <div class="slot">
-                <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
+                <span class="tag" id="t_explanationText" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</span>
                 <textarea id="uExplanation" class="autogrow" placeholder="Explanation..."></textarea>
               </div>
               <div class="slot">
-                <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                     <div class="input-wrap">
                      <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]"></textarea>
@@ -235,7 +236,7 @@
                 </div>
               </div>
               <div class="slot">
-                <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="pos">{{#str}} pos, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                   <div class="input-wrap">
                     <select id="uPOS">
@@ -394,7 +395,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel">&times;</button>
+            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel" data-i18n-title="cancel">&times;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -689,8 +690,8 @@
     </div>
     <div id="fpBody" style="margin-top:10px"></div>
     <div class="row" style="gap:8px;margin-top:12px">
-      <button id="fpSave" class="ok">{{#str}} save, mod_flashcards {{/str}}</button>
-      <button id="fpSkip" class="mid">{{#str}} skip, mod_flashcards {{/str}}</button>
+      <button id="fpSave" class="ok" data-i18n="save">{{#str}} save, mod_flashcards {{/str}}</button>
+      <button id="fpSkip" class="mid" data-i18n="skip">{{#str}} skip, mod_flashcards {{/str}}</button>
     </div>
   </div>
 </div>

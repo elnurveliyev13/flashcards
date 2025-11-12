@@ -114,55 +114,311 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }catch(_e){}
     }
 
-    // Interface translations dictionary
+    // Interface translations dictionary (COMPLETE)
     const interfaceTranslations = {
       en: {
         app_title: 'MyMemory',
         tab_quickinput: 'Quick Input',
         tab_study: 'Study',
-        tab_dashboard: 'Dashboard'
+        tab_dashboard: 'Dashboard',
+        quick_audio: 'Record Audio',
+        quick_photo: 'Take Photo',
+        choosefile: 'Choose file',
+        chooseaudiofile: 'Choose audio file',
+        tts_voice: 'Voice',
+        tts_voice_hint: 'Select a voice before asking the AI helper to generate audio.',
+        front: 'Front text',
+        front_translation_toggle_show: 'Show translation',
+        front_translation_toggle_hide: 'Hide translation',
+        front_translation_mode_label: 'Translation direction',
+        front_translation_copy: 'Copy translation',
+        fokus: 'Fokus word/phrase',
+        focus_baseform: 'Base form',
+        focus_baseform_ph: 'Lemma or infinitive (optional)',
+        ai_helper_label: 'AI focus helper',
+        ai_click_hint: 'Tap any word above to detect a fixed expression',
+        explanation: 'Explanation',
+        back: 'Translation',
+        save: 'Save',
+        cancel: 'Cancel',
+        show_advanced: 'Show Advanced ▼',
+        hide_advanced: 'Hide Advanced ▲',
+        empty: 'Nothing due today',
+        transcription: 'Transcription',
+        pos: 'Part of speech',
+        gender: 'Gender',
+        noun_forms: 'Noun forms',
+        verb_forms: 'Verb forms',
+        adj_forms: 'Adjective forms',
+        collocations: 'Common collocations',
+        examples: 'Example sentences',
+        antonyms: 'Antonyms'
       },
       uk: {
         app_title: 'MyMemory',
         tab_quickinput: 'Швидкий ввід',
         tab_study: 'Навчання',
-        tab_dashboard: 'Панель'
+        tab_dashboard: 'Панель',
+        quick_audio: 'Записати аудіо',
+        quick_photo: 'Зробити фото',
+        choosefile: 'Вибрати файл',
+        chooseaudiofile: 'Вибрати аудіофайл',
+        tts_voice: 'Голос',
+        tts_voice_hint: 'Виберіть голос перед тим, як попросити AI помічника згенерувати аудіо.',
+        front: 'Лицьова сторона',
+        front_translation_toggle_show: 'Показати переклад',
+        front_translation_toggle_hide: 'Сховати переклад',
+        front_translation_mode_label: 'Напрямок перекладу',
+        front_translation_copy: 'Копіювати переклад',
+        fokus: 'Фокусне слово/фраза',
+        focus_baseform: 'Базова форма',
+        focus_baseform_ph: 'Лема або інфінітив (необов\'язково)',
+        ai_helper_label: 'AI помічник фокусу',
+        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
+        explanation: 'Пояснення',
+        back: 'Переклад',
+        save: 'Зберегти',
+        cancel: 'Скасувати',
+        show_advanced: 'Показати додаткові ▼',
+        hide_advanced: 'Сховати додаткові ▲',
+        empty: 'Сьогодні нічого не заплановано',
+        transcription: 'Транскрипція',
+        pos: 'Частина мови',
+        gender: 'Рід',
+        noun_forms: 'Форми іменника',
+        verb_forms: 'Форми дієслова',
+        adj_forms: 'Форми прикметника',
+        collocations: 'Загальні словосполучення',
+        examples: 'Приклади речень',
+        antonyms: 'Антоніми'
       },
       ru: {
         app_title: 'MyMemory',
         tab_quickinput: 'Быстрый ввод',
         tab_study: 'Обучение',
-        tab_dashboard: 'Панель'
+        tab_dashboard: 'Панель',
+        quick_audio: 'Записать аудио',
+        quick_photo: 'Сделать фото',
+        choosefile: 'Выбрать файл',
+        chooseaudiofile: 'Выбрать аудиофайл',
+        tts_voice: 'Голос',
+        tts_voice_hint: 'Выберите голос перед тем, как попросить AI помощника сгенерировать аудио.',
+        front: 'Лицевая сторона',
+        front_translation_toggle_show: 'Показать перевод',
+        front_translation_toggle_hide: 'Скрыть перевод',
+        front_translation_mode_label: 'Направление перевода',
+        front_translation_copy: 'Копировать перевод',
+        fokus: 'Фокусное слово/фраза',
+        focus_baseform: 'Базовая форма',
+        focus_baseform_ph: 'Лемма или инфинитив (необязательно)',
+        ai_helper_label: 'AI помощник фокуса',
+        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
+        explanation: 'Объяснение',
+        back: 'Перевод',
+        save: 'Сохранить',
+        cancel: 'Отмена',
+        show_advanced: 'Показать дополнительные ▼',
+        hide_advanced: 'Скрыть дополнительные ▲',
+        empty: 'Сегодня ничего не запланировано',
+        transcription: 'Транскрипция',
+        pos: 'Часть речи',
+        gender: 'Род',
+        noun_forms: 'Формы существительного',
+        verb_forms: 'Формы глагола',
+        adj_forms: 'Формы прилагательного',
+        collocations: 'Общие словосочетания',
+        examples: 'Примеры предложений',
+        antonyms: 'Антонимы'
       },
       fr: {
         app_title: 'MyMemory',
         tab_quickinput: 'Saisie rapide',
         tab_study: 'Étudier',
-        tab_dashboard: 'Tableau de bord'
+        tab_dashboard: 'Tableau de bord',
+        quick_audio: 'Enregistrer l\'audio',
+        quick_photo: 'Prendre une photo',
+        choosefile: 'Choisir un fichier',
+        chooseaudiofile: 'Choisir un fichier audio',
+        tts_voice: 'Voix',
+        tts_voice_hint: 'Sélectionnez une voix avant de demander à l\'assistant IA de générer l\'audio.',
+        front: 'Recto',
+        front_translation_toggle_show: 'Afficher la traduction',
+        front_translation_toggle_hide: 'Masquer la traduction',
+        front_translation_mode_label: 'Direction de traduction',
+        front_translation_copy: 'Copier la traduction',
+        fokus: 'Mot/phrase focal',
+        focus_baseform: 'Forme de base',
+        focus_baseform_ph: 'Lemme ou infinitif (facultatif)',
+        ai_helper_label: 'Assistant IA focal',
+        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée',
+        explanation: 'Explication',
+        back: 'Traduction',
+        save: 'Enregistrer',
+        cancel: 'Annuler',
+        show_advanced: 'Afficher avancé ▼',
+        hide_advanced: 'Masquer avancé ▲',
+        empty: 'Rien prévu aujourd\'hui',
+        transcription: 'Transcription',
+        pos: 'Partie du discours',
+        gender: 'Genre',
+        noun_forms: 'Formes du nom',
+        verb_forms: 'Formes du verbe',
+        adj_forms: 'Formes de l\'adjectif',
+        collocations: 'Collocations courantes',
+        examples: 'Exemples de phrases',
+        antonyms: 'Antonymes'
       },
       es: {
         app_title: 'MyMemory',
         tab_quickinput: 'Entrada rápida',
         tab_study: 'Estudiar',
-        tab_dashboard: 'Panel'
+        tab_dashboard: 'Panel',
+        quick_audio: 'Grabar audio',
+        quick_photo: 'Tomar foto',
+        choosefile: 'Elegir archivo',
+        chooseaudiofile: 'Elegir archivo de audio',
+        tts_voice: 'Voz',
+        tts_voice_hint: 'Selecciona una voz antes de pedir al asistente IA que genere audio.',
+        front: 'Anverso',
+        front_translation_toggle_show: 'Mostrar traducción',
+        front_translation_toggle_hide: 'Ocultar traducción',
+        front_translation_mode_label: 'Dirección de traducción',
+        front_translation_copy: 'Copiar traducción',
+        fokus: 'Palabra/frase focal',
+        focus_baseform: 'Forma base',
+        focus_baseform_ph: 'Lema o infinitivo (opcional)',
+        ai_helper_label: 'Asistente IA focal',
+        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija',
+        explanation: 'Explicación',
+        back: 'Traducción',
+        save: 'Guardar',
+        cancel: 'Cancelar',
+        show_advanced: 'Mostrar avanzado ▼',
+        hide_advanced: 'Ocultar avanzado ▲',
+        empty: 'Nada pendiente hoy',
+        transcription: 'Transcripción',
+        pos: 'Categoría gramatical',
+        gender: 'Género',
+        noun_forms: 'Formas del sustantivo',
+        verb_forms: 'Formas del verbo',
+        adj_forms: 'Formas del adjetivo',
+        collocations: 'Colocaciones comunes',
+        examples: 'Oraciones de ejemplo',
+        antonyms: 'Antónimos'
       },
       pl: {
         app_title: 'MyMemory',
         tab_quickinput: 'Szybkie wprowadzanie',
         tab_study: 'Nauka',
-        tab_dashboard: 'Panel'
+        tab_dashboard: 'Panel',
+        quick_audio: 'Nagraj audio',
+        quick_photo: 'Zrób zdjęcie',
+        choosefile: 'Wybierz plik',
+        chooseaudiofile: 'Wybierz plik audio',
+        tts_voice: 'Głos',
+        tts_voice_hint: 'Wybierz głos przed poproszeniem asystenta AI o wygenerowanie audio.',
+        front: 'Przód',
+        front_translation_toggle_show: 'Pokaż tłumaczenie',
+        front_translation_toggle_hide: 'Ukryj tłumaczenie',
+        front_translation_mode_label: 'Kierunek tłumaczenia',
+        front_translation_copy: 'Kopiuj tłumaczenie',
+        fokus: 'Słowo/fraza fokusowa',
+        focus_baseform: 'Forma podstawowa',
+        focus_baseform_ph: 'Lemat lub bezokolicznik (opcjonalnie)',
+        ai_helper_label: 'Asystent AI fokusa',
+        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie',
+        explanation: 'Wyjaśnienie',
+        back: 'Tłumaczenie',
+        save: 'Zapisz',
+        cancel: 'Anuluj',
+        show_advanced: 'Pokaż zaawansowane ▼',
+        hide_advanced: 'Ukryj zaawansowane ▲',
+        empty: 'Nic do nauki dzisiaj',
+        transcription: 'Transkrypcja',
+        pos: 'Część mowy',
+        gender: 'Rodzaj',
+        noun_forms: 'Formy rzeczownika',
+        verb_forms: 'Formy czasownika',
+        adj_forms: 'Formy przymiotnika',
+        collocations: 'Typowe kolokacje',
+        examples: 'Przykładowe zdania',
+        antonyms: 'Antonimy'
       },
       it: {
         app_title: 'MyMemory',
         tab_quickinput: 'Inserimento rapido',
         tab_study: 'Studiare',
-        tab_dashboard: 'Pannello'
+        tab_dashboard: 'Pannello',
+        quick_audio: 'Registra audio',
+        quick_photo: 'Scatta foto',
+        choosefile: 'Scegli file',
+        chooseaudiofile: 'Scegli file audio',
+        tts_voice: 'Voce',
+        tts_voice_hint: 'Seleziona una voce prima di chiedere all\'assistente IA di generare l\'audio.',
+        front: 'Fronte',
+        front_translation_toggle_show: 'Mostra traduzione',
+        front_translation_toggle_hide: 'Nascondi traduzione',
+        front_translation_mode_label: 'Direzione di traduzione',
+        front_translation_copy: 'Copia traduzione',
+        fokus: 'Parola/frase focale',
+        focus_baseform: 'Forma base',
+        focus_baseform_ph: 'Lemma o infinito (opzionale)',
+        ai_helper_label: 'Assistente IA focale',
+        ai_click_hint: 'Tocca qualsiasi parola sopra per rilevare un\'espressione fissa',
+        explanation: 'Spiegazione',
+        back: 'Traduzione',
+        save: 'Salva',
+        cancel: 'Annulla',
+        show_advanced: 'Mostra avanzate ▼',
+        hide_advanced: 'Nascondi avanzate ▲',
+        empty: 'Niente da fare oggi',
+        transcription: 'Trascrizione',
+        pos: 'Parte del discorso',
+        gender: 'Genere',
+        noun_forms: 'Forme del nome',
+        verb_forms: 'Forme del verbo',
+        adj_forms: 'Forme dell\'aggettivo',
+        collocations: 'Collocazioni comuni',
+        examples: 'Frasi di esempio',
+        antonyms: 'Antonimi'
       },
       de: {
         app_title: 'MyMemory',
         tab_quickinput: 'Schnelleingabe',
         tab_study: 'Studieren',
-        tab_dashboard: 'Dashboard'
+        tab_dashboard: 'Dashboard',
+        quick_audio: 'Audio aufnehmen',
+        quick_photo: 'Foto aufnehmen',
+        choosefile: 'Datei auswählen',
+        chooseaudiofile: 'Audiodatei auswählen',
+        tts_voice: 'Stimme',
+        tts_voice_hint: 'Wählen Sie eine Stimme aus, bevor Sie den KI-Assistenten bitten, Audio zu generieren.',
+        front: 'Vorderseite',
+        front_translation_toggle_show: 'Übersetzung anzeigen',
+        front_translation_toggle_hide: 'Übersetzung ausblenden',
+        front_translation_mode_label: 'Übersetzungsrichtung',
+        front_translation_copy: 'Übersetzung kopieren',
+        fokus: 'Fokuswort/-phrase',
+        focus_baseform: 'Grundform',
+        focus_baseform_ph: 'Lemma oder Infinitiv (optional)',
+        ai_helper_label: 'KI-Fokus-Assistent',
+        ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen',
+        explanation: 'Erklärung',
+        back: 'Übersetzung',
+        save: 'Speichern',
+        cancel: 'Abbrechen',
+        show_advanced: 'Erweitert anzeigen ▼',
+        hide_advanced: 'Erweitert ausblenden ▲',
+        empty: 'Heute nichts fällig',
+        transcription: 'Transkription',
+        pos: 'Wortart',
+        gender: 'Geschlecht',
+        noun_forms: 'Substantivformen',
+        verb_forms: 'Verbformen',
+        adj_forms: 'Adjektivformen',
+        collocations: 'Häufige Kollokationen',
+        examples: 'Beispielsätze',
+        antonyms: 'Antonyme'
       }
     };
 
@@ -176,6 +432,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // Update interface elements with translations
     function updateInterfaceTexts(){
+      // Update elements by ID (legacy method)
       const els = {
         't_appTitle': 'app_title',
         't_tab_quickinput': 'tab_quickinput',
@@ -188,6 +445,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const el = document.getElementById(id);
         if(el){
           el.textContent = t(key);
+        }
+      });
+
+      // Update ALL elements with data-i18n attribute
+      const i18nElements = document.querySelectorAll('[data-i18n]');
+      i18nElements.forEach(function(el){
+        const key = el.getAttribute('data-i18n');
+        if(key && interfaceTranslations[currentInterfaceLang || 'en'][key]){
+          el.textContent = t(key);
+        }
+      });
+
+      // Update placeholder attributes
+      const i18nPlaceholders = document.querySelectorAll('[data-i18n-placeholder]');
+      i18nPlaceholders.forEach(function(el){
+        const key = el.getAttribute('data-i18n-placeholder');
+        if(key && interfaceTranslations[currentInterfaceLang || 'en'][key]){
+          el.placeholder = t(key);
+        }
+      });
+
+      // Update title attributes
+      const i18nTitles = document.querySelectorAll('[data-i18n-title]');
+      i18nTitles.forEach(function(el){
+        const key = el.getAttribute('data-i18n-title');
+        if(key && interfaceTranslations[currentInterfaceLang || 'en'][key]){
+          el.title = t(key);
         }
       });
     }
@@ -266,7 +550,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const langLabel = languageName(userLang2);
-      const base = frontTranslationVisible ? aiStrings.frontTransHide : aiStrings.frontTransShow;
+      const base = frontTranslationVisible ? t('front_translation_toggle_hide') : t('front_translation_toggle_show');
       frontTranslationToggle.textContent = `${base} (${langLabel})`;
       frontTranslationToggle.setAttribute('aria-expanded', frontTranslationVisible ? 'true' : 'false');
     }
@@ -1317,7 +1601,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const label = $("#editorAdvancedLabel");
       if(label){
-        label.textContent = advancedVisible ? 'Hide advanced' : 'Show Advanced';
+        label.textContent = advancedVisible ? t('hide_advanced') : t('show_advanced');
       }
       const icon = $("#editorAdvancedIcon");
       if(icon){
