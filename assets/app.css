@@ -310,14 +310,39 @@ h1{
   background: var(--surface-2);
 }
 
-.pref-font-field select{
-  font-size: 14px;
+.pref-font-field .pref-label-row{
+  justify-content: space-between;
 }
 
-.pref-hint{
-  font-size: 12px;
-  color: var(--text-subtle);
+.pref-font-buttons{
+  display: flex;
+  gap: 6px;
 }
+
+.pref-font-btn{
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border 0.2s ease, background 0.2s ease;
+}
+
+.pref-font-btn.active{
+  border-color: var(--primary);
+  background: var(--surface-3);
+  color: var(--text-strong);
+}
+
+.pref-font-btn span{
+  display: block;
+  line-height: 1;
+}
+
+.pref-font-btn .font-small{ font-size: 13px; }
+.pref-font-btn .font-medium{ font-size: 15px; }
+.pref-font-btn .font-large{ font-size: 17px; }
 
 .header-pref-panel.open{
   display: flex;
@@ -477,7 +502,6 @@ select:focus-visible{
   outline-offset:0;
 }
 #langSel{padding:6px 10px;font-size:13px;min-width:60px}
-#fontScale{padding:6px 10px;font-size:13px;min-width:80px}
 
 @media (max-width: 620px){
   .header-settings{

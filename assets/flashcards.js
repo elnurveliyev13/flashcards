@@ -45,6 +45,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       '130': 1.3
     };
     let currentFontScale = 1;
+    let currentFontScaleKey = '100';
 
     function shouldSkipFontScale(node){
       if (!(node instanceof HTMLElement)) {
@@ -107,7 +108,32 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
-    function initFontScalePreference(select){
+    function initFontScalePreference(container){
+      if (!container) {
+        return;
+      }
+      const buttons = Array.from(container.querySelectorAll('[data-scale]'));
+      if (!buttons.length) {
+        return;
+      }
+      function markActive(key){
+        buttons.forEach(btn => {
+          const active = btn.dataset.scale === key;
+          btn.classList.toggle('active', active);
+          btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+      }
+      function applyScaleKey(key){
+        const normalizedKey = FONT_SCALE_STEPS[key] ? key : '100';
+        currentFontScaleKey = normalizedKey;
+        currentFontScale = FONT_SCALE_STEPS[normalizedKey] || 1;
+        markActive(currentFontScaleKey);
+        if (currentFontScale !== 1) {
+          applyFontScale(root, currentFontScale);
+        } else {
+          applyFontScale(root, 1);
+        }
+      }
       let savedValue = '100';
       try {
         const stored = localStorage.getItem(FONT_SCALE_STORAGE_KEY);
@@ -115,19 +141,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           savedValue = stored;
         }
       } catch (_e) {}
-      select.value = savedValue;
-      currentFontScale = FONT_SCALE_STEPS[savedValue] || 1;
-      if (currentFontScale !== 1) {
-        applyFontScale(root, currentFontScale);
-      }
-      select.addEventListener('change', () => {
-        const value = select.value;
-        const scale = FONT_SCALE_STEPS[value] || 1;
-        currentFontScale = scale;
-        try {
-          localStorage.setItem(FONT_SCALE_STORAGE_KEY, value);
-        } catch (_e) {}
-        applyFontScale(root, currentFontScale);
+      applyScaleKey(savedValue);
+      buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const key = btn.dataset.scale;
+          applyScaleKey(key);
+          try {
+            localStorage.setItem(FONT_SCALE_STORAGE_KEY, key);
+          } catch (_e) {}
+        });
       });
       const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
@@ -145,10 +167,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       observer.observe(root, { childList: true, subtree: true });
     }
 
-    const fontScaleSelect = document.getElementById('fontScale');
-    if (fontScaleSelect) {
+    const fontScaleControls = document.querySelector('.pref-font-buttons');
+    if (fontScaleControls) {
       cacheFontBases(root);
-      initFontScalePreference(fontScaleSelect);
+      initFontScalePreference(fontScaleControls);
     }
 
     const prefsToggle = document.getElementById('prefsToggle');

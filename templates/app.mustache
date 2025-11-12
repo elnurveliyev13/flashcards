@@ -77,18 +77,19 @@
               </div>
               <div class="pref-field pref-font-field">
                 <div class="pref-label-row">
-                  <label for="fontScale" class="pref-label">{{#str}} font_scale_label, mod_flashcards {{/str}}</label>
+                  <label class="pref-label sr-only">{{#str}} font_scale_label, mod_flashcards {{/str}}</label>
                   <span class="pref-icon" aria-hidden="true">Aʌ</span>
                 </div>
-                <select id="fontScale"
-                        title="{{#str}} font_scale_label, mod_flashcards {{/str}}"
-                        aria-label="{{#str}} font_scale_label, mod_flashcards {{/str}}">
-                  <option value="100">{{#str}} font_scale_default, mod_flashcards {{/str}}</option>
-                  <option value="115">{{#str}} font_scale_plus15, mod_flashcards {{/str}}</option>
-                  <option value="130">{{#str}} font_scale_plus30, mod_flashcards {{/str}}</option>
-                </select>
-                <div class="pref-hint">
-                  <span aria-hidden="true">Aa</span> / <span aria-hidden="true">A</span>
+                <div class="pref-font-buttons" role="group" aria-label="{{#str}} font_scale_label, mod_flashcards {{/str}}">
+                  <button type="button" class="pref-font-btn" data-scale="100" aria-pressed="true">
+                    <span class="font-icon font-small">Aa</span>
+                  </button>
+                  <button type="button" class="pref-font-btn" data-scale="115" aria-pressed="false">
+                    <span class="font-icon font-medium">Aa</span>
+                  </button>
+                  <button type="button" class="pref-font-btn" data-scale="130" aria-pressed="false">
+                    <span class="font-icon font-large">Aa</span>
+                  </button>
                 </div>
               </div>
             </div>
