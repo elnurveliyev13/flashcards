@@ -1043,6 +1043,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           setFocusStatus('idle', aiStrings.notext);
         }
       }
+      // Also update the empty state span if it exists
+      const emptySpan = document.querySelector('.focus-helper-empty');
+      if(emptySpan){
+        emptySpan.textContent = aiStrings.notext;
+      }
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
