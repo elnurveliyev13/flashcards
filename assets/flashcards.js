@@ -1,4 +1,4 @@
-﻿/* global M */
+/* global M */
 import { log as baseDebugLog } from './modules/debug.js';
 import { idbPut, idbGet, urlFor } from './modules/storage.js';
 import { createIOSRecorder } from './modules/recorder.js';
@@ -49,7 +49,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
-      detecting: dataset.aiDetecting || 'Detecting expressionвЂ¦',
+      detecting: dataset.aiDetecting || 'Detecting expression…',
       success: dataset.aiSuccess || 'Focus phrase updated',
       error: dataset.aiError || 'Unable to detect an expression',
       notext: dataset.aiNoText || 'Type a sentence first',
@@ -63,7 +63,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontTransShow: dataset.frontTransShow || 'Show translation',
       frontTransHide: dataset.frontTransHide || 'Hide translation',
       translationIdle: dataset.translationIdle || 'Translation ready',
-      translationLoading: dataset.translationLoading || 'Translating…',
+      translationLoading: dataset.translationLoading || 'Translating�',
       translationError: dataset.translationError || 'Translation failed',
       translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.'
     };
@@ -177,7 +177,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const slotLocal = $("#slot_translation_local");
         const slotEn = $("#slot_translation_en");
         const tagLocal = $("#tag_trans_local");
-        if(tagLocal){ tagLocal.innerHTML = `Translation (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">🌐</span>`; }
+        if(tagLocal){ tagLocal.innerHTML = `Translation (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">??</span>`; }
         if(userLang2 === 'en'){
           if(slotLocal) slotLocal.classList.add('hidden');
           if(slotEn) slotEn.classList.remove('hidden');
@@ -238,17 +238,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const langLabel = languageName(userLang2);
       if(translationForwardLabel){
-        translationForwardLabel.textContent = `NO → ${langLabel}`;
+        translationForwardLabel.textContent = `NO > ${langLabel}`;
       }
       if(translationReverseLabel){
-        translationReverseLabel.textContent = `${langLabel} → NO`;
+        translationReverseLabel.textContent = `${langLabel} > NO`;
       }
     }
 
     function setTranslationPreview(text, state, custom){
       if(frontTranslationOutput){
         const clean = (text || '').trim();
-        frontTranslationOutput.textContent = clean || '—';
+        frontTranslationOutput.textContent = clean || '�';
       }
       if(frontTranslationStatus){
         const label = custom || (state === 'loading' ? aiStrings.translationLoading :
@@ -263,7 +263,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const clean = (text || '').trim();
-      focusTranslationText.textContent = clean || '—';
+      focusTranslationText.textContent = clean || '�';
     }
 
     function applyTranslationDirection(dir){
@@ -360,53 +360,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
-    if(translationDirectionEl){
-      translationDirectionEl.querySelectorAll('button').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          applyTranslationDirection(btn.dataset.dir || 'no-user');
-        });
-      });
-    }
-    if(frontInput){
-      frontInput.addEventListener('input', ()=>{
-        if(translationDirection === 'no-user'){
-          scheduleTranslationRefresh();
-        }
-      });
-    }
-    if(translationInputLocal){
-      translationInputLocal.addEventListener('input', ()=>{
-        if(translationDirection === 'user-no'){
-          scheduleTranslationRefresh();
-        }
-      });
-    }
-    if(copyTranslationBtn && navigator?.clipboard){
-      copyTranslationBtn.addEventListener('click', async ()=>{
-        const text = (frontTranslationOutput && frontTranslationOutput.textContent || '').trim();
-        if(!text || text === '—'){
-          return;
-        }
-        try{
-          await navigator.clipboard.writeText(text);
-          if(frontTranslationStatus){
-            const prev = frontTranslationStatus.textContent;
-            frontTranslationStatus.textContent = 'Copied!';
-            setTimeout(()=>{
-              if(frontTranslationStatus.textContent === 'Copied!'){
-                frontTranslationStatus.textContent = prev;
-              }
-            }, 1200);
-          }
-        }catch(err){
-          console.warn('[Flashcards] Copy failed', err);
-        }
-      });
-    }
-    setTranslationPreview('', '', aiStrings.translationIdle);
-    setFocusTranslation('');
-    applyTranslationDirection('no-user');
-
     // Prepare translation inputs visibility/labels
     // Dynamic Examples and Collocations Lists
     let examplesData = []; // Array of {no: "Norwegian text", trans: "Translation"}
@@ -428,7 +381,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       btnRemove.type = 'button';
       btnRemove.className = 'fc-link-btn';
       btnRemove.style.cssText = 'font-size: 0.85em; padding: 2px 6px; color: #ef4444;';
-      btnRemove.textContent = 'Г— Remove';
+      btnRemove.textContent = '× Remove';
       btnRemove.addEventListener('click', () => {
         if(type === 'Example') {
           examplesData.splice(index, 1);
@@ -472,7 +425,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       btnToggle.type = 'button';
       btnToggle.className = 'fc-link-btn';
       btnToggle.style.cssText = 'font-size: 0.85em; padding: 4px 8px;';
-      btnToggle.textContent = 'рџ‘Ѓ Show/Hide';
+      btnToggle.textContent = '👁 Show/Hide';
       btnToggle.addEventListener('click', (e) => {
         e.preventDefault();
         inputTrans.classList.toggle('hidden');
@@ -561,6 +514,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusHintEl = document.getElementById('focusHelperHint');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
+    frontTranslationSlot = document.getElementById('slot_front_translation');
+    frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
     const translationInputLocal = document.getElementById('uTransLocal');
     const translationInputEn = document.getElementById('uTransEn');
     const translationDirectionEl = document.getElementById('translationDirection');
@@ -572,8 +527,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const frontTranslationStatus = document.getElementById('frontTranslationStatus');
     const focusTranslationText = document.getElementById('focusTranslationText');
     const translationHintDefault = translationModeHint ? translationModeHint.textContent : '';
-    frontTranslationSlot = document.getElementById('slot_front_translation');
-    frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
     let translationDirection = 'no-user';
     let translationDebounce = null;
     let translationAbortController = null;
@@ -585,7 +538,53 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     setFrontTranslationVisibility(false);
     updateTranslationLangUI();
-    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'вЂ™\-]+/gu; } catch(_e){ return /[A-Za-z0-9'вЂ™\-]+/g; } })();
+    if(translationDirectionEl){
+      translationDirectionEl.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          applyTranslationDirection(btn.dataset.dir || 'no-user');
+        });
+      });
+    }
+    if(frontInput){
+      frontInput.addEventListener('input', ()=>{
+        if(translationDirection === 'no-user'){
+          scheduleTranslationRefresh();
+        }
+      });
+    }
+    if(translationInputLocal){
+      translationInputLocal.addEventListener('input', ()=>{
+        if(translationDirection === 'user-no'){
+          scheduleTranslationRefresh();
+        }
+      });
+    }
+    if(copyTranslationBtn && navigator?.clipboard){
+      copyTranslationBtn.addEventListener('click', async ()=>{
+        const text = (frontTranslationOutput && frontTranslationOutput.textContent || '').trim();
+        if(!text || text === '-'){
+          return;
+        }
+        try{
+          await navigator.clipboard.writeText(text);
+          if(frontTranslationStatus){
+            const prev = frontTranslationStatus.textContent;
+            frontTranslationStatus.textContent = 'Copied!';
+            setTimeout(()=>{
+              if(frontTranslationStatus.textContent === 'Copied!'){
+                frontTranslationStatus.textContent = prev;
+              }
+            }, 1200);
+          }
+        }catch(err){
+          console.warn('[Flashcards] Copy failed', err);
+        }
+      });
+    }
+    setTranslationPreview('', '', aiStrings.translationIdle);
+    setFocusTranslation('');
+    applyTranslationDirection('no-user');
+    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'’\-]+/gu; } catch(_e){ return /[A-Za-z0-9'’\-]+/g; } })();
 
     function setFocusStatus(state, text){
       if(!focusStatusEl) return;
@@ -1221,7 +1220,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const icon = $("#editorAdvancedIcon");
       if(icon){
-        icon.textContent = advancedVisible ? '▲' : '▼';
+        icon.textContent = advancedVisible ? '^' : '�';
       }
     }
     function showAudioBadge(label){
@@ -2894,13 +2893,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         statusClass = 'access-active';
         statusTitle = M?.str?.mod_flashcards?.access_status_active || 'Active Access';
         statusDesc = M?.str?.mod_flashcards?.access_status_active_desc || 'You have full access to create and review flashcards.';
-        statusIcon = 'вњ…';
+        statusIcon = '✅';
       } else if (access.status === 'grace') {
         statusClass = 'access-grace';
         const daysLeft = access.days_remaining || 0;
         statusTitle = (M?.str?.mod_flashcards?.access_status_grace || 'Grace Period ({$a} days remaining)').replace('{$a}', daysLeft);
         statusDesc = M?.str?.mod_flashcards?.access_status_grace_desc || 'You can review your existing cards but cannot create new ones. Enrol in a course to restore full access.';
-        statusIcon = 'вЏ°';
+        statusIcon = '⏰';
 
         // Add enrol button for grace period
         const enrolBtn = document.createElement('button');
@@ -2915,7 +2914,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         statusClass = 'access-expired';
         statusTitle = M?.str?.mod_flashcards?.access_status_expired || 'Access Expired';
         statusDesc = M?.str?.mod_flashcards?.access_status_expired_desc || 'Your access has expired. Enrol in a course to regain access to flashcards.';
-        statusIcon = 'вќЊ';
+        statusIcon = '❌';
 
         // Add enrol button for expired access
         const enrolBtn = document.createElement('button');
@@ -3148,7 +3147,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         const labels = stageData.map(d => `Stage ${d.stage}`);
         const data = stageData.map(d => d.count);
-        const stageEmojis = ['рџЊ°', 'рџЊ±', 'рџЊї', 'впёЏ', 'рџЌЂ', 'рџЊ·', 'рџЊј', 'рџЊі', 'рџЊґ', 'вњ…', 'рџЏ†', 'рџ‘‘'];
+        const stageEmojis = ['🌰', '🌱', '🌿', '☘️', '🍀', '🌷', '🌼', '🌳', '🌴', '✅', '🏆', '👑'];
 
         new Chart(canvas, {
           type: 'doughnut',
@@ -3216,14 +3215,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const activeVocab = Math.round(stats.activeVocab || 0);
 
         const achievements = [
-          { id: 2, threshold: 7, current: stats.currentStreak, icon: 'рџ”Ґ' },
+          { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
 
           // Language Level Achievements (based on Active Vocabulary)
-          { id: 5, threshold: 100, current: activeVocab, icon: 'рџЊ±' },  // A0
-          { id: 6, threshold: 600, current: activeVocab, icon: 'рџЊї' },  // A1
-          { id: 7, threshold: 1500, current: activeVocab, icon: 'рџЌЂ' }, // A2
-          { id: 8, threshold: 2500, current: activeVocab, icon: 'рџЊі' }, // B1
-          { id: 9, threshold: 4500, current: activeVocab, icon: 'рџЏ†' }  // B2
+          { id: 5, threshold: 100, current: activeVocab, icon: '🌱' },  // A0
+          { id: 6, threshold: 600, current: activeVocab, icon: '🌿' },  // A1
+          { id: 7, threshold: 1500, current: activeVocab, icon: '🍀' }, // A2
+          { id: 8, threshold: 2500, current: activeVocab, icon: '🌳' }, // B1
+          { id: 9, threshold: 4500, current: activeVocab, icon: '🏆' }  // B2
         ];
 
         achievements.forEach(ach => {
@@ -3234,7 +3233,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const completed = ach.current >= ach.threshold;
           if (completed) {
             card.classList.add('fc-achievement-completed');
-            progress.textContent = 'вњ… Completed';
+            progress.textContent = '✅ Completed';
           } else {
             progress.textContent = `${ach.current}/${ach.threshold}`;
           }
@@ -3276,3 +3275,4 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }
 export { flashcardsInit };
+
