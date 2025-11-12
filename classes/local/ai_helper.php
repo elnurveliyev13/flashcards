@@ -197,7 +197,6 @@ class ai_helper {
         if ($value === '') {
             return '';
         }
-        $value = core_text::normalize($value, core_text::NFKD);
         $value = preg_replace('/[^a-z0-9æøå]/u', '', $value);
         return $value ?: '';
     }
