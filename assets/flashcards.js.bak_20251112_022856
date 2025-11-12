@@ -98,110 +98,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }catch(_e){}
     }
 
-    // ========== INTERFACE LANGUAGE SYSTEM ==========
-    // Load saved interface language preference (separate from translation language)
-    function getSavedInterfaceLang(){
-      try{
-        return localStorage.getItem('flashcards_interface_lang') || null;
-      }catch(_e){
-        return null;
-      }
-    }
-
-    function saveInterfaceLang(lang){
-      try{
-        localStorage.setItem('flashcards_interface_lang', lang);
-      }catch(_e){}
-    }
-
-    // Interface translations dictionary
-    const interfaceTranslations = {
-      en: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Quick Input',
-        tab_study: 'Study',
-        tab_dashboard: 'Dashboard'
-      },
-      uk: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Швидкий ввід',
-        tab_study: 'Навчання',
-        tab_dashboard: 'Панель'
-      },
-      ru: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Быстрый ввод',
-        tab_study: 'Обучение',
-        tab_dashboard: 'Панель'
-      },
-      fr: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Saisie rapide',
-        tab_study: 'Étudier',
-        tab_dashboard: 'Tableau de bord'
-      },
-      es: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Entrada rápida',
-        tab_study: 'Estudiar',
-        tab_dashboard: 'Panel'
-      },
-      pl: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Szybkie wprowadzanie',
-        tab_study: 'Nauka',
-        tab_dashboard: 'Panel'
-      },
-      it: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Inserimento rapido',
-        tab_study: 'Studiare',
-        tab_dashboard: 'Pannello'
-      },
-      de: {
-        app_title: 'MyMemory',
-        tab_quickinput: 'Schnelleingabe',
-        tab_study: 'Studieren',
-        tab_dashboard: 'Dashboard'
-      }
-    };
-
-    // Get interface string in current interface language
-    
-    function t(key){
-      const lang = currentInterfaceLang || 'en';
-      const translations = interfaceTranslations[lang] || interfaceTranslations.en;
-      return translations[key] || interfaceTranslations.en[key] || key;
-    }
-
-    // Update interface elements with translations
-    function updateInterfaceTexts(){
-      const els = {
-        't_appTitle': 'app_title',
-        't_tab_quickinput': 'tab_quickinput',
-        't_tab_study': 'tab_study',
-        't_tab_dashboard': 'tab_dashboard'
-      };
-      Object.entries(els).forEach(function(pair){
-        const id = pair[0];
-        const key = pair[1];
-        const el = document.getElementById(id);
-        if(el){
-          el.textContent = t(key);
-        }
-      });
-    }
-    // ========== END INTERFACE LANGUAGE SYSTEM ==========
-
-    const savedInterfaceLang = getSavedInterfaceLang();
     const savedTransLang = getSavedTransLang();
-    // Priority: saved translation lang > saved interface lang > page/Moodle lang > browser
-    const rawLang = savedTransLang || savedInterfaceLang || pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
+    const rawLang = savedTransLang || pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
     const userLang = (rawLang || 'en').toLowerCase();
     let userLang2 = userLang.split(/[\-_]/)[0] || 'en';
-    
-    // Initialize interface language (use saved interface lang or fallback to translation lang)
-    let currentInterfaceLang = savedInterfaceLang || userLang2;
 
     const voiceSelectEl = document.getElementById('ttsVoice');
     const voiceSlotEl = document.getElementById('slot_ttsVoice');
@@ -247,7 +147,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const c = (code||'').toLowerCase();
       const map = {
         en:'English', no:'Norwegian', nb:'Norwegian', nn:'Norwegian (Nynorsk)',
-        uk:'Ukrainian', ru:'Russian', pl:'Polish', de:'German', fr:'French', es:'Spanish', it:'Italian'
+        uk:'Ukrainian', ru:'Russian', pl:'Polish', de:'German', fr:'French', es:'Spanish'
       };
       return map[c] || c.toUpperCase();
     }
@@ -309,8 +209,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         {code: 'pl', name: 'Polish'},
         {code: 'de', name: 'German'},
         {code: 'fr', name: 'French'},
-        {code: 'es', name: 'Spanish'},
-        {code: 'it', name: 'Italian'}
+        {code: 'es', name: 'Spanish'}
       ];
 
       const currentLang = userLang2;
@@ -3376,41 +3275,4 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     (function(){ const m={ audio: $("#chip_audio")? $("#chip_audio").textContent:'audio', image: $("#chip_image")? $("#chip_image").textContent:'image', text: $("#chip_text")? $("#chip_text").textContent:'text', explanation: $("#chip_explanation")? $("#chip_explanation").textContent:'explanation', translation: $("#chip_translation")? $("#chip_translation").textContent:'translation' }; $("#orderPreview").textContent=DEFAULT_ORDER.map(k=>m[k]).join(' -> '); })();
   }
 export { flashcardsInit };
-
-    // ========== INITIALIZE INTERFACE LANGUAGE SELECTOR ==========
-    (function initInterfaceLangSelector(){
-      const langSelEl = document.getElementById('langSel');
-      if(langSelEl){
-        // Set current value to saved interface language
-        langSelEl.value = currentInterfaceLang || 'en';
-        
-        // Add change event listener
-        langSelEl.addEventListener('change', function(){
-          const newLang = this.value;
-          if(newLang && newLang !== currentInterfaceLang){
-            currentInterfaceLang = newLang;
-            saveInterfaceLang(newLang);
-            updateInterfaceTexts();
-            
-            // Show confirmation
-            const langNames = {
-              en: 'English', uk: 'Українська', ru: 'Русский',
-              fr: 'Français', es: 'Español', pl: 'Polski',
-              it: 'Italiano', de: 'Deutsch'
-            };
-            const langName = langNames[newLang] || newLang;
-            const emptyEl = $('#emptyMessage');
-            if(emptyEl){
-              const oldText = emptyEl.textContent;
-              emptyEl.textContent = 'Interface language: ' + langName;
-              setTimeout(function(){ emptyEl.textContent = oldText || t('empty'); }, 2000);
-            }
-          }
-        });
-      }
-      
-      // Apply interface translations on initial load
-      updateInterfaceTexts();
-    })();
-    // ========== END INTERFACE LANGUAGE SELECTOR ==========
 
