@@ -180,13 +180,6 @@
               <div class="slot-head slot-head-stacked">
                 <div class="slot-head-row">
                   <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
-                  <button type="button"
-                          id="btnToggleFrontTranslation"
-                          class="front-translation-toggle"
-                          aria-expanded="false"
-                          data-i18n="front_translation_toggle_show">
-                    {{#str}} front_translation_toggle_show, mod_flashcards {{/str}}
-                  </button>
                 </div>
                 <div class="translation-mode" id="translationDirection">
                   <button type="button" class="translation-mode-btn active" data-dir="no-user">
@@ -216,8 +209,8 @@
                 </div>
               </div>
             </div>
-            <div class="slot front-translation-slot collapsed" id="slot_front_translation" aria-hidden="true">
-              <span class="tag" id="tag_trans_local">Translation (?)</span>
+            <div class="slot front-translation-slot" id="slot_front_translation">
+              <span class="tag" id="tag_trans_local" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
             </div>
             <div class="slot focus-helper-slot">

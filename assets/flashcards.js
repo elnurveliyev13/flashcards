@@ -242,8 +242,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.'
     };
     let frontTranslationSlot = null;
-    let frontTranslationToggle = null;
-    let frontTranslationVisible = false;
+    // frontTranslationToggle and frontTranslationVisible removed - translation is always visible
 
     // Language detection (prefer saved preference, then Moodle, fallback to browser)
     // Prefer Moodle page lang and URL param over browser
@@ -1127,24 +1126,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return map[c] || c.toUpperCase();
     }
 
-    function setFrontTranslationVisibility(visible){
-      frontTranslationVisible = !!visible;
-      if(frontTranslationSlot){
-        frontTranslationSlot.classList.toggle('collapsed', !frontTranslationVisible);
-        frontTranslationSlot.setAttribute('aria-hidden', frontTranslationVisible ? 'false' : 'true');
-      }
-      updateFrontTranslationToggleState();
-    }
-
-    function updateFrontTranslationToggleState(){
-      if(!frontTranslationToggle){
-        return;
-      }
-      const langLabel = languageName(userLang2);
-      const base = frontTranslationVisible ? t('front_translation_toggle_hide') : t('front_translation_toggle_show');
-      frontTranslationToggle.textContent = `${base} (${langLabel})`;
-      frontTranslationToggle.setAttribute('aria-expanded', frontTranslationVisible ? 'true' : 'false');
-    }
+    // Translation visibility functions removed - translation is always visible
 
     // Function to update translation language UI
     function updateTranslationLangUI(){
@@ -1152,20 +1134,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const slotLocal = $("#slot_translation_local");
         const slotEn = $("#slot_translation_en");
         const tagLocal = $("#tag_trans_local");
-        if(tagLocal){ tagLocal.innerHTML = `${t('back')} (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">??</span>`; }
+        if(tagLocal){ tagLocal.textContent = t('back'); }
         if(userLang2 === 'en'){
           if(slotLocal) slotLocal.classList.add('hidden');
           if(slotEn) slotEn.classList.remove('hidden');
-          if(frontTranslationToggle){ frontTranslationToggle.classList.add('hidden'); }
-          setFrontTranslationVisibility(false);
         } else {
           if(slotLocal) slotLocal.classList.remove('hidden');
           if(slotEn) slotEn.classList.remove('hidden');
-          if(frontTranslationToggle){ frontTranslationToggle.classList.remove('hidden'); }
-          updateFrontTranslationToggleState();
         }
 
-        // Add click handler for language change hint
+        // Language change hint removed
         const langChangeHint = document.getElementById('langChangeHint');
         if(langChangeHint && !langChangeHint.dataset.bound){
           langChangeHint.dataset.bound = '1';
@@ -1255,14 +1233,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           ? aiStrings.translationReverseHint
           : (translationHintDefault || aiStrings.translationIdle);
       }
-      if(translationDirection === 'user-no'){
-        setFrontTranslationVisibility(true);
-        if(frontTranslationToggle){
-          frontTranslationToggle.classList.add('hidden');
-        }
-      } else if(frontTranslationToggle){
-        frontTranslationToggle.classList.remove('hidden');
-      }
+      // Translation is always visible - no toggle needed
       scheduleTranslationRefresh();
     }
 
@@ -1492,7 +1463,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusHintEl = document.getElementById('focusHelperHint');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
     frontTranslationSlot = document.getElementById('slot_front_translation');
-    frontTranslationToggle = document.getElementById('btnToggleFrontTranslation');
+    // frontTranslationToggle removed - button no longer exists
     const translationInputLocal = document.getElementById('uTransLocal');
     const translationInputEn = document.getElementById('uTransEn');
     const translationDirectionEl = document.getElementById('translationDirection');
@@ -1508,12 +1479,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let translationDebounce = null;
     let translationAbortController = null;
     let translationRequestSeq = 0;
-    if(frontTranslationToggle){
-      frontTranslationToggle.addEventListener('click', ()=>{
-        setFrontTranslationVisibility(!frontTranslationVisible);
-      });
-    }
-    setFrontTranslationVisibility(false);
+    // Translation toggle removed - translation is always visible
     updateTranslationLangUI();
     if(translationDirectionEl){
       translationDirectionEl.querySelectorAll('button').forEach(btn=>{
