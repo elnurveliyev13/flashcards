@@ -45,9 +45,28 @@
     var btnAdd = document.getElementById('btnAdd');
     if(!btnUpdate || !btnAdd) return;
 
+    // Helper encoders for safe innerHTML injection
+    var escapeAttr = function(value){
+      return (value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    };
+    var escapeHtml = function(value){
+      return (value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+
     // Check if bar already exists
     this.editBar = document.getElementById('editActionsBar');
     if(!this.editBar){
+      var updateLabel = escapeHtml(btnUpdate.textContent || 'Update');
+      var updateDisabledLabel = btnUpdate.getAttribute('data-disabled-label') || '';
+      var updateTitle = btnUpdate.getAttribute('title') || '';
+      var addLabel = escapeHtml(btnAdd.textContent || 'Create new');
+      var updateAttrs = ' data-role="update"';
+      if(updateDisabledLabel){
+        updateAttrs += ' data-disabled-label="' + escapeAttr(updateDisabledLabel) + '"';
+      }
+      if(updateTitle){
+        updateAttrs += ' title="' + escapeAttr(updateTitle) + '"';
+      }
       this.editBar = document.createElement('div');
       this.editBar.id = 'editActionsBar';
       this.editBar.className = 'bottom-actions hidden';
@@ -56,8 +75,8 @@
       this.editBar.setAttribute('role','toolbar');
       this.editBar.setAttribute('aria-label','Edit actions');
       this.editBar.innerHTML = ''+
-        '<button id="saveBarUpdate" class="ok">'+(btnUpdate.textContent||'Update')+'</button>'+
-        '<button id="saveBarAdd" class="mid">'+(btnAdd.textContent||'Create new')+'</button>';
+        '<button id="saveBarUpdate" class="ok"' + updateAttrs + '>' + updateLabel + '</button>'+
+        '<button id="saveBarAdd" class="mid">' + addLabel + '</button>';
       this.root.appendChild(this.editBar);
     }
 

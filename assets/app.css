@@ -759,6 +759,42 @@ button:disabled:hover {
   background: var(--surface-1);
   transform: none;
 }
+button[data-role="update"] {
+  position: relative;
+  overflow: hidden;
+}
+button[data-role="update"]:disabled {
+  opacity: 1;
+  background: rgba(15,23,42,0.85);
+  border: 2px dashed rgba(148,163,184,0.55);
+  color: rgba(226,232,240,0.85);
+  padding-bottom: 30px;
+  box-shadow: none;
+}
+button[data-role="update"]:disabled::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(148,163,184,0.15) 0 12px,
+    transparent 12px 24px
+  );
+  pointer-events: none;
+  opacity: 0.85;
+}
+button[data-role="update"]:disabled::after {
+  content: attr(data-disabled-label);
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(148,163,184,0.9);
+  pointer-events: none;
+}
 .iconbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-lg);font-size:20px;padding:0;transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease}
 .iconbtn.ghost{background:var(--surface-2);border:1px solid var(--border)}
 .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}
