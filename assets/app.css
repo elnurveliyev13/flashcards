@@ -277,13 +277,13 @@ h1{
 }
 
 .language-btn-mobile {
-  width: 40px;
-  height: 36px;
+  width: 38px;
+  height: 32px;
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -556,22 +556,24 @@ h1{
 }
 
 @media (max-width: 720px){
+  header {
+    padding: var(--space-1);
+  }
   .header-top{
     flex-direction: row;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: nowrap;
-    padding: 8px 12px;
   }
   .header-controls{
     display: flex;
-    gap: 6px;
+    gap: 5px;
     align-items: center;
     flex-shrink: 0;
   }
   .header-metrics{
     display: flex;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: nowrap;
     flex-shrink: 1;
     min-width: 0;
@@ -601,9 +603,9 @@ h1{
     flex-shrink: 0;
   }
   .header-hexagon {
-    width: 34px;
-    height: 34px;
-    font-size: 16px;
+    width: 32px;
+    height: 32px;
+    font-size: 15px;
   }
 }
   .pref-font-buttons{
