@@ -347,13 +347,31 @@ class api {
             if ($candidate === '') {
                 continue;
             }
-            $transcription = pronunciation_manager::lookup_transcription($candidate, $pos);
+            // Strip articles (en, ei, et) and infinitive marker (å) before lookup
+            $clean = self::strip_articles_and_markers($candidate);
+            $transcription = pronunciation_manager::lookup_transcription($clean, $pos);
             if ($transcription) {
                 $payload['transcription'] = $transcription;
                 break;
             }
         }
         return $payload;
+    }
+
+    /**
+     * Remove Norwegian articles (en, ei, et) and infinitive marker (å) from the beginning of a word/phrase.
+     * This ensures transcription lookup uses only the base word form.
+     *
+     * @param string $text The text to clean
+     * @return string The cleaned text with articles and markers removed
+     */
+    protected static function strip_articles_and_markers(string $text): string {
+        $text = trim($text);
+        // Remove infinitive marker å at the beginning
+        $text = preg_replace('/^å\s+/iu', '', $text);
+        // Remove articles en, ei, et at the beginning
+        $text = preg_replace('/^(en|ei|et)\s+/iu', '', $text);
+        return trim($text);
     }
     
     public static function normalize_card_id($text) {
