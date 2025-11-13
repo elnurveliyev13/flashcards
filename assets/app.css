@@ -1,15 +1,15 @@
 /* Base font size for accessibility - allows user scaling while maintaining iOS zoom prevention */
 html {
-  font-size: 16px; /* Base size for rem calculations */
+  font-size: 18px; /* Base size for rem calculations */
 }
 
 /* Support for user preferences - can be controlled via JavaScript */
 html[data-font-size="large"] {
-  font-size: 18px;
+  font-size: 20px;
 }
 
 html[data-font-size="extra-large"] {
-  font-size: 20px;
+  font-size: 22px;
 }
 
 :root{
@@ -78,15 +78,15 @@ html[data-font-size="extra-large"] {
 
   /* Typography scale - now in rem for accessibility */
 
-  --font-size-xs: 0.75rem;    /* 12px at 16px base */
+  --font-size-xs: 0.75rem;    /* ~13.5px at 18px base */
 
-  --font-size-sm: 0.875rem;   /* 14px at 16px base */
+  --font-size-sm: 0.875rem;   /* ~15.8px at 18px base */
 
-  --font-size-base: 1rem;     /* 16px at 16px base */
+  --font-size-base: 1rem;     /* 18px at 18px base */
 
-  --font-size-lg: 1.25rem;    /* 20px at 16px base */
+  --font-size-lg: 1.25rem;    /* 22.5px at 18px base */
 
-  --font-size-xl: 1.5rem;     /* 24px at 16px base */
+  --font-size-xl: 1.5rem;     /* 27px at 18px base */
 
   --line-height-tight: 1.45;
 
@@ -186,7 +186,8 @@ body {
   min-height: 100vh;
 }
 /* Prevent zoom on input focus (iOS Safari) while supporting accessibility scaling */
-input, textarea, select{font-size: max(1rem, 16px) !important}
+/* Using 1rem (16px base) ensures iOS doesn't zoom, but allows user font scaling */
+input, textarea, select{font-size: 1rem}
 /* Prevent double-tap zoom */
 *{touch-action:manipulation}
 button:focus-visible,
