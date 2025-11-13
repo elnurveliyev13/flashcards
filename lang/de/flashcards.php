@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
@@ -81,7 +81,6 @@ $string['easy'] = 'Einfach';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Schwer';
 $string['update'] = 'Aktualisieren';
-$string['update_disabled_label'] = 'Nur bestehende Karte';
 $string['update_disabled_hint'] = 'Öffnen Sie zuerst eine bestehende Karte, um Aktualisieren zu aktivieren.';
 $string['createnew'] = 'Neue erstellen';
 $string['order'] = 'Reihenfolge (in Reihenfolge klicken)';
@@ -299,7 +298,7 @@ $string['ai_http_error'] = 'Der KI-Dienst ist nicht verfügbar. Bitte versuchen 
 $string['ai_invalid_json'] = 'Unerwartete Antwort vom KI-Dienst.';
 $string['ai_disabled'] = 'Der KI-Assistent ist noch nicht konfiguriert.';
 $string['tts_http_error'] = 'Text-zu-Sprache ist vorübergehend nicht verfügbar.';
-\n// Whisper STT
+n// Whisper STT
 $string[''private_audio_label''] = 'Private audio';
 $string[''keep_private_audio_label''] = 'Keep Private audio locally';
 $string[''keep_private_audio_desc''] = 'When enabled, your recording stays on this device after transcription.';
@@ -335,3 +334,4 @@ $string[''error_whisper_quota''] = 'You reached your monthly speech limit ({$a})
 $string[''error_whisper_upload''] = 'Could not process the uploaded audio file.';
 $string[''error_whisper_api''] = 'Speech-to-text service failed: {$a}';
 $string[''error_whisper_filesize''] = 'Audio file is too large (max {$a}).';
+

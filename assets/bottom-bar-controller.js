@@ -57,13 +57,9 @@
     this.editBar = document.getElementById('editActionsBar');
     if(!this.editBar){
       var updateLabel = escapeHtml(btnUpdate.textContent || 'Update');
-      var updateDisabledLabel = btnUpdate.getAttribute('data-disabled-label') || '';
       var updateTitle = btnUpdate.getAttribute('title') || '';
       var addLabel = escapeHtml(btnAdd.textContent || 'Create new');
       var updateAttrs = ' data-role="update"';
-      if(updateDisabledLabel){
-        updateAttrs += ' data-disabled-label="' + escapeAttr(updateDisabledLabel) + '"';
-      }
       if(updateTitle){
         updateAttrs += ' title="' + escapeAttr(updateTitle) + '"';
       }

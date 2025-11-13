@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
@@ -94,7 +94,6 @@ $string['easy'] = 'Easy';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Hard';
 $string['update'] = 'Update';
-$string['update_disabled_label'] = 'Existing card only';
 $string['update_disabled_hint'] = 'Open an existing card first to enable Update.';
 $string['createnew'] = 'Create new';
 $string['order'] = 'Order (click in sequence)';
@@ -354,6 +353,7 @@ $string['error_whisper_quota'] = 'You reached your monthly speech limit ({$a}).'
 $string['error_whisper_upload'] = 'Could not process the uploaded audio file.';
 $string['error_whisper_api'] = 'Speech-to-text service failed: {$a}';
 $string['error_whisper_filesize'] = 'Audio file is too large (max {$a}).';
+
 
 
 

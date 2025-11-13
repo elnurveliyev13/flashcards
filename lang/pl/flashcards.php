@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
@@ -81,7 +81,6 @@ $string['easy'] = 'Łatwe';
 $string['normal'] = 'Normalne';
 $string['hard'] = 'Trudne';
 $string['update'] = 'Aktualizuj';
-$string['update_disabled_label'] = 'Tylko istniejąca fiszka';
 $string['update_disabled_hint'] = 'Najpierw otwórz istniejącą fiszkę, aby włączyć aktualizację.';
 $string['createnew'] = 'Utwórz nową';
 $string['order'] = 'Kolejność (klikaj po kolei)';
@@ -299,7 +298,7 @@ $string['ai_http_error'] = 'Usługa AI jest niedostępna. Proszę spróbować p�
 $string['ai_invalid_json'] = 'Nieoczekiwana odpowiedź z usługi AI.';
 $string['ai_disabled'] = 'Asystent AI nie jest jeszcze skonfigurowany.';
 $string['tts_http_error'] = 'Synteza mowy jest tymczasowo niedostępna.';
-\n// Whisper STT
+n// Whisper STT
 $string[''private_audio_label''] = 'Private audio';
 $string[''keep_private_audio_label''] = 'Keep Private audio locally';
 $string[''keep_private_audio_desc''] = 'When enabled, your recording stays on this device after transcription.';
@@ -335,3 +334,4 @@ $string[''error_whisper_quota''] = 'You reached your monthly speech limit ({$a})
 $string[''error_whisper_upload''] = 'Could not process the uploaded audio file.';
 $string[''error_whisper_api''] = 'Speech-to-text service failed: {$a}';
 $string[''error_whisper_filesize''] = 'Audio file is too large (max {$a}).';
+
