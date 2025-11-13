@@ -1142,7 +1142,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(slotEn) slotEn.classList.remove('hidden');
         } else {
           if(slotLocal) slotLocal.classList.remove('hidden');
-          if(slotEn) slotEn.classList.add('hidden');
+          if(slotEn) slotEn.classList.remove('hidden');
         }
 
         // Language change hint removed
