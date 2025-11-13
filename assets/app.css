@@ -227,9 +227,13 @@ button:focus-visible,
   #mod_flashcards_container{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);}
 }
 header{
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: var(--space-2) var(--space-2) var(--space-1) var(--space-2);
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
+  overflow-x: hidden;
 }
 
 .header-top{
@@ -237,6 +241,9 @@ header{
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 h1{
@@ -524,57 +531,26 @@ h1{
 }
 
 @media (max-width: 720px){
-  .header-actions{
-    flex-wrap: nowrap;
-    justify-content: space-between;
-  }
-  .header-actions .header-stats{
-    flex-wrap: wrap;
-    overflow-x: auto;
-  }
-  .header-pref-panel{
-    position: fixed;
-    top: 60px;
-    right: var(--space-2);
-    left: var(--space-2);
-    width: auto;
-    min-width: 0;
-  }
-.pref-font-buttons{
-  gap: 4px;
-}
-}
-
-@media (max-width: 720px){
-.header-pref-panel{
-  position: fixed;
-  top: 60px;
-  right: var(--space-2);
-  left: var(--space-2);
-  width: auto;
-  min-width: 0;
-}
-
-@media (max-width: 720px){
+  /* Header adjustments for mobile */
   header {
     padding: 8px;
-    overflow-x: hidden;
   }
+
   .header-top{
-    display: flex;
     flex-direction: row;
     align-items: center;
     gap: 6px;
     flex-wrap: nowrap;
-    width: 100%;
     margin-bottom: 0;
   }
+
   .header-controls{
     display: flex;
     gap: 6px;
     align-items: center;
     flex-shrink: 0;
   }
+
   .header-metrics{
     display: flex;
     gap: 8px;
@@ -582,6 +558,7 @@ h1{
     flex: 1 1 auto;
     min-width: 0;
   }
+
   .header-stat {
     display: flex;
     align-items: center;
@@ -590,25 +567,31 @@ h1{
     gap: 4px;
     white-space: nowrap;
   }
+
   .header-stat-icon {
     font-size: 14px;
     flex-shrink: 0;
   }
+
   .header-stat span:not(.header-stat-icon) {
     font-size: 13px;
   }
+
   /* Hide desktop language select on mobile */
   .language-select {
     display: none !important;
   }
+
   /* Show mobile language button */
   .language-select-mobile {
     display: block;
     flex-shrink: 0;
   }
+
   .header-settings{
     flex-shrink: 0;
   }
+
   .header-hexagon {
     width: 36px;
     height: 36px;
@@ -616,7 +599,28 @@ h1{
     border-radius: 10px;
     clip-path: none;
   }
-}
+
+  /* Header actions and stats */
+  .header-actions{
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .header-actions .header-stats{
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+
+  /* Preferences panel */
+  .header-pref-panel{
+    position: fixed;
+    top: 60px;
+    right: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    min-width: 0;
+  }
+
   .pref-font-buttons{
     gap: 4px;
     flex-wrap: nowrap;
