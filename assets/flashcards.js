@@ -1297,8 +1297,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(translationInputLocal){
             translationInputLocal.value = translated;
           }
-          if(translationInputEn){
-            translationInputEn.value = translated;
+          // Request English translation separately if user language is not English
+          if(translationInputEn && userLang2 !== 'en'){
+            try{
+              const enPayload = {
+                text: sourceText,
+                sourceLang: 'no',
+                targetLang: 'en',
+                direction: 'no-en'
+              };
+              const enData = await api('ai_translate', {}, 'POST', enPayload);
+              const enTranslated = (enData.translation || '').trim();
+              translationInputEn.value = enTranslated;
+            }catch(enErr){
+              console.error('[Flashcards][AI] English translation failed', enErr);
+            }
           }
         }else if(frontInput){
           frontInput.value = translated;
