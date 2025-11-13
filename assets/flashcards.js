@@ -243,6 +243,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
     let frontTranslationSlot = null;
     // frontTranslationToggle and frontTranslationVisible removed - translation is always visible
+    let translationInputLocal = null;
+    let translationInputEn = null;
 
     // Language detection (prefer saved preference, then Moodle, fallback to browser)
     // Prefer Moodle page lang and URL param over browser
@@ -1464,8 +1466,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
-    const translationInputLocal = document.getElementById('uTransLocal');
-    const translationInputEn = document.getElementById('uTransEn');
+    translationInputLocal = document.getElementById('uTransLocal');
+    translationInputEn = document.getElementById('uTransEn');
     const translationDirectionEl = document.getElementById('translationDirection');
     const translationForwardLabel = document.getElementById('translationModeForward');
     const translationReverseLabel = document.getElementById('translationModeReverse');
