@@ -1066,6 +1066,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(emptySpan){
         emptySpan.textContent = aiStrings.notext;
       }
+
+      // Update floating edit bar buttons (Update/Create new)
+      const saveBarUpdate = document.getElementById('saveBarUpdate');
+      const saveBarAdd = document.getElementById('saveBarAdd');
+      if(saveBarUpdate){
+        saveBarUpdate.textContent = t('update');
+      }
+      if(saveBarAdd){
+        saveBarAdd.textContent = t('createnew');
+      }
     }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
