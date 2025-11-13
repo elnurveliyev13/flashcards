@@ -2095,6 +2095,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const MY_DECK_ID="my-deck";
     const DEFAULT_ORDER=["audio","image","text","explanation","translation"];
     let state,registry,queue=[],current=-1,visibleSlots=1,currentItem=null;
+    let activeTab='quickInput';
+    let pendingStudyRender=false;
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
     function saveState(){localStorage.setItem(storageKey(STORAGE_STATE),JSON.stringify(state));}
     function saveRegistry(){localStorage.setItem(storageKey(STORAGE_REG),JSON.stringify(registry));}
@@ -2580,6 +2582,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         btnPlaySlowBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,0.67); };
       }
     }
+    function stopStudyPlayback(){
+      try{ player.pause(); }catch(_e){}
+      try{ player.currentTime = 0; }catch(_e){}
+    }
     function openEditor(){
       const front = $("#uFront");
       if(front){
@@ -2733,7 +2739,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       showCurrent();
     }
     function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
-    async function showCurrent(){ if(!currentItem){ updateRevealButton(); setIconVisibility(false); hidePlayIcons(); return; } setStage(currentItem.rec.step||0); await renderCard(currentItem.card, visibleSlots); setIconVisibility(true); updateRevealButton(); try{ maybePromptForStage(); }catch(_e){} }
+    async function showCurrent(forceRender=false){
+      if(!currentItem){
+        pendingStudyRender=false;
+        updateRevealButton();
+        setIconVisibility(false);
+        hidePlayIcons();
+        return;
+      }
+      if(!forceRender && activeTab!=='study'){
+        pendingStudyRender=true;
+        return;
+      }
+      pendingStudyRender=false;
+      setStage(currentItem.rec.step||0);
+      await renderCard(currentItem.card, visibleSlots);
+      setIconVisibility(true);
+      updateRevealButton();
+      try{ maybePromptForStage(); }catch(_e){}
+    }
 
     async function syncProgressToServer(deckId, cardId, rec){
       try{
@@ -4004,6 +4028,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return null;
     }
+    function closeFieldPrompt(){
+      const modal=document.getElementById('fieldPrompt');
+      if(modal) modal.style.display='none';
+    }
     function openFieldPrompt(field, card){
       const fp = document.getElementById('fieldPrompt');
       const body = document.getElementById('fpBody');
@@ -4057,7 +4085,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       initAutogrow();
       fp.style.display='flex';
-      function close(){ fp.style.display='none'; }
+      const close=()=>closeFieldPrompt();
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
       const btnSkip = document.getElementById('fpSkip'); if(btnSkip){ btnSkip.onclick = close; }
       const btnSave = document.getElementById('fpSave');
@@ -4085,7 +4113,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         close();
       }; }
     }
-    function maybePromptForStage(){ if(!currentItem) return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
+    function maybePromptForStage(){ if(!currentItem) return; if(activeTab!=='study') return; if(currentItem.card && currentItem.card.scope !== 'private') return; const step=currentItem.rec?.step||0; const pkey=promptKey(currentItem.deckId,currentItem.card.id,step); if(shownPrompts.has(pkey)) return; const field=firstMissingForStep(currentItem.card); if(!field) return; shownPrompts.add(pkey); openFieldPrompt(field,currentItem.card); }
     function buildPayloadFromCard(c){
       const p={ id:c.id, text:c.text||'', fokus:c.fokus||'', explanation:c.explanation||'', translation:c.translation||'', translations:c.translations||{}, order:Array.isArray(c.order)?c.order:[...DEFAULT_ORDER] };
       if(c.focusBase) p.focusBase = c.focusBase;
@@ -4330,6 +4358,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             bottomActions.classList.add('hidden');
             if (root) root.removeAttribute('data-bottom-visible');
           }
+        }
+
+        activeTab = tabName;
+        if (tabName === 'study') {
+          if (currentItem) {
+            showCurrent(true);
+          } else {
+            pendingStudyRender = false;
+          }
+        } else {
+          stopStudyPlayback();
+          closeFieldPrompt();
         }
 
         debugLog(`[Tabs] Switched to ${tabName}`);

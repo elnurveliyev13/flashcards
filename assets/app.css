@@ -277,13 +277,13 @@ h1{
 }
 
 .language-btn-mobile {
-  width: 36px;
-  height: 30px;
-  border-radius: 8px;
+  width: 42px;
+  height: 32px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -557,43 +557,49 @@ h1{
 
 @media (max-width: 720px){
   header {
-    padding: 8px 6px;
+    padding: 8px;
+    overflow-x: hidden;
   }
   .header-top{
+    display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: nowrap;
     width: 100%;
+    margin-bottom: 0;
   }
   .header-controls{
     display: flex;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
     flex-shrink: 0;
   }
   .header-metrics{
     display: flex;
-    gap: 4px;
+    gap: 8px;
     flex-wrap: nowrap;
-    flex: 1;
+    flex: 1 1 auto;
     min-width: 0;
   }
   .header-stat {
+    display: flex;
+    align-items: center;
     min-width: 0;
     flex: 0 1 auto;
-    gap: 2px;
+    gap: 4px;
     white-space: nowrap;
   }
   .header-stat-icon {
-    font-size: 12px;
+    font-size: 14px;
+    flex-shrink: 0;
   }
   .header-stat span:not(.header-stat-icon) {
-    font-size: 12px;
+    font-size: 13px;
   }
   /* Hide desktop language select on mobile */
   .language-select {
-    display: none;
+    display: none !important;
   }
   /* Show mobile language button */
   .language-select-mobile {
@@ -604,9 +610,11 @@ h1{
     flex-shrink: 0;
   }
   .header-hexagon {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 10px;
+    clip-path: none;
   }
 }
   .pref-font-buttons{
