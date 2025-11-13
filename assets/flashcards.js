@@ -54,15 +54,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const next = Math.max(targetFromLines, scrollBased, baseMinHeight);
           el.style.height = `${next}px`;
         };
-        ['input','change','paste','autogrow:refresh'].forEach(evt=>{
+        ['input','change','paste','autogrow:refresh','focus','blur'].forEach(evt=>{
           el.addEventListener(evt, resize);
         });
         el.dataset.autogrowBound = '1';
-        resize();
+        // Force resize on next frame to ensure layout is ready
+        requestAnimationFrame(() => {
+          resize();
+          // Second resize after a small delay for mobile devices
+          setTimeout(resize, 100);
+        });
       });
     }
 
     initAutogrow();
+
+    // Re-run autogrow on window resize and orientation change (for mobile devices)
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        $$('.autogrow').forEach(el => {
+          if(el && el.dataset.autogrowBound) {
+            el.dispatchEvent(new Event('autogrow:refresh'));
+          }
+        });
+      }, 150);
+    });
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        $$('.autogrow').forEach(el => {
+          if(el && el.dataset.autogrowBound) {
+            el.dispatchEvent(new Event('autogrow:refresh'));
+          }
+        });
+      }, 300);
+    });
 
     const FONT_SCALE_STORAGE_KEY = 'flashcards_font_scale';
     const FONT_SCALE_STEPS = {
@@ -3011,6 +3038,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       orderChosen=[...(c.order||[])];
       updateOrderPreview();
       openEditor();
+      // Re-initialize autogrow for textareas after populating form
+      setTimeout(() => initAutogrow(), 50);
     const _btnAddNew = $("#btnAddNew");
     if(_btnAddNew && !_btnAddNew.dataset.bound){
       _btnAddNew.dataset.bound = "1";
@@ -3478,6 +3507,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
        }else{
          setTranslationPreview('', '', aiStrings.translationIdle);
        }
+       // Re-initialize autogrow for textareas after reset
+       setTimeout(() => initAutogrow(), 50);
      }
     $("#btnFormReset").addEventListener("click", resetForm);
     const quickResetBtn = $("#btnQuickFormReset");
@@ -4331,12 +4362,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           // Auto-focus text input
           const frontInput = $('#uFront');
           if (frontInput) setTimeout(() => frontInput.focus(), 100);
+          // Re-initialize autogrow for textareas
+          setTimeout(() => initAutogrow(), 50);
         } else if (tabName === 'study' && studySection) {
           studySection.classList.add('fc-tab-active');
           tabStudy.classList.add('fc-tab-active');
           tabStudy.setAttribute('aria-selected', 'true');
           console.log('[Tabs] Activated Study');
           // Study view will auto-refresh from existing queue
+          // Re-initialize autogrow for textareas
+          setTimeout(() => initAutogrow(), 50);
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
           tabDashboard.classList.add('fc-tab-active');
