@@ -95,12 +95,11 @@ class ai_helper {
             }
         }
 
-        $lookupWord = trim($result['focusBaseform'] ?? '') ?: $focusword;
+        $lookupWord = trim($result['focusBaseform'] ?? '');
         if ($lookupWord !== '') {
-            $transcription = pronunciation_manager::lookup_transcription($lookupWord, $pos);
-            if (!$transcription && $lookupWord !== $clickedword) {
-                $transcription = pronunciation_manager::lookup_transcription($clickedword, $pos);
-            }
+            // Strip articles (en, ei, et) and infinitive marker (å) before lookup
+            $cleanWord = self::strip_articles_and_markers($lookupWord);
+            $transcription = pronunciation_manager::lookup_transcription($cleanWord, $pos);
             if ($transcription) {
                 $result['transcription'] = $transcription;
             }
@@ -199,5 +198,21 @@ class ai_helper {
         }
         $value = preg_replace('/[^a-z0-9æøå]/u', '', $value);
         return $value ?: '';
+    }
+
+    /**
+     * Remove Norwegian articles (en, ei, et) and infinitive marker (å) from the beginning of a word/phrase.
+     * This ensures transcription lookup uses only the base word form.
+     *
+     * @param string $text The text to clean
+     * @return string The cleaned text with articles and markers removed
+     */
+    protected static function strip_articles_and_markers(string $text): string {
+        $text = trim($text);
+        // Remove infinitive marker å at the beginning
+        $text = preg_replace('/^å\s+/iu', '', $text);
+        // Remove articles en, ei, et at the beginning
+        $text = preg_replace('/^(en|ei|et)\s+/iu', '', $text);
+        return trim($text);
     }
 }
