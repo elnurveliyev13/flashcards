@@ -345,9 +345,7 @@ class api {
         }
 
         $pos = $payload['pos'] ?? null;
-        // Strip articles (en, ei, et) and infinitive marker (å) before lookup
-        $clean = self::strip_articles_and_markers($baseform);
-        $transcription = pronunciation_manager::lookup_transcription($clean, $pos);
+        $transcription = self::lookup_phrase_transcription($baseform, $pos);
 
         if ($transcription) {
             $payload['transcription'] = $transcription;
@@ -371,7 +369,53 @@ class api {
         $text = preg_replace('/^(en|ei|et)\s+/iu', '', $text);
         return trim($text);
     }
-    
+
+    /**
+     * Lookup transcription for single words or phrases (multiple words).
+     * For phrases, looks up each word separately and combines results.
+     * Missing words are marked with [?].
+     *
+     * @param string $phrase The word or phrase to lookup
+     * @param string|null $pos Part of speech
+     * @return string|null Combined transcription or null if all words not found
+     */
+    protected static function lookup_phrase_transcription(string $phrase, ?string $pos): ?string {
+        $phrase = trim($phrase);
+        if ($phrase === '') {
+            return null;
+        }
+
+        // Split into words
+        $words = preg_split('/\s+/u', $phrase);
+        if (!$words) {
+            return null;
+        }
+
+        $transcriptions = [];
+        $foundAny = false;
+
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') {
+                continue;
+            }
+
+            // Strip articles/å from each word
+            $cleanWord = self::strip_articles_and_markers($word);
+            $trans = pronunciation_manager::lookup_transcription($cleanWord, $pos);
+
+            if ($trans) {
+                $transcriptions[] = $trans;
+                $foundAny = true;
+            } else {
+                $transcriptions[] = '[?]';
+            }
+        }
+
+        // Return combined transcription only if at least one word was found
+        return $foundAny ? implode(' ', $transcriptions) : null;
+    }
+
     public static function normalize_card_id($text) {
         $text = trim((string)$text);
         if ($text === '') { $text = uniqid('c', false); }

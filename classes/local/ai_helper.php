@@ -97,9 +97,7 @@ class ai_helper {
 
         $lookupWord = trim($result['focusBaseform'] ?? '');
         if ($lookupWord !== '') {
-            // Strip articles (en, ei, et) and infinitive marker (å) before lookup
-            $cleanWord = self::strip_articles_and_markers($lookupWord);
-            $transcription = pronunciation_manager::lookup_transcription($cleanWord, $pos);
+            $transcription = self::lookup_phrase_transcription($lookupWord, $pos);
             if ($transcription) {
                 $result['transcription'] = $transcription;
             }
@@ -214,5 +212,51 @@ class ai_helper {
         // Remove articles en, ei, et at the beginning
         $text = preg_replace('/^(en|ei|et)\s+/iu', '', $text);
         return trim($text);
+    }
+
+    /**
+     * Lookup transcription for single words or phrases (multiple words).
+     * For phrases, looks up each word separately and combines results.
+     * Missing words are marked with [?].
+     *
+     * @param string $phrase The word or phrase to lookup
+     * @param string|null $pos Part of speech
+     * @return string|null Combined transcription or null if all words not found
+     */
+    protected static function lookup_phrase_transcription(string $phrase, ?string $pos): ?string {
+        $phrase = trim($phrase);
+        if ($phrase === '') {
+            return null;
+        }
+
+        // Split into words
+        $words = preg_split('/\s+/u', $phrase);
+        if (!$words) {
+            return null;
+        }
+
+        $transcriptions = [];
+        $foundAny = false;
+
+        foreach ($words as $word) {
+            $word = trim($word);
+            if ($word === '') {
+                continue;
+            }
+
+            // Strip articles/å from each word
+            $cleanWord = self::strip_articles_and_markers($word);
+            $trans = pronunciation_manager::lookup_transcription($cleanWord, $pos);
+
+            if ($trans) {
+                $transcriptions[] = $trans;
+                $foundAny = true;
+            } else {
+                $transcriptions[] = '[?]';
+            }
+        }
+
+        // Return combined transcription only if at least one word was found
+        return $foundAny ? implode(' ', $transcriptions) : null;
     }
 }

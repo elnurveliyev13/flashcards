@@ -109,6 +109,12 @@ RULES:
 - When the expression contains 2+ lexical words (after removing leading "å" or articles), mark POS as "phrase".
 - If the clicked form belongs to a verb + particle/preposition expression (e.g., "gå opp", "se etter", "holde ut"), return the entire fixed expression as the WORD/base form.
 - If the clicked verb needs an adjective/noun complement to form the meaning (e.g., "å ha rett", "å ta feil", "å gjøre ferdig"), include that complement so the WORD captures the full idiom and mark POS as "phrase".
+- Recognize Norwegian correlative patterns with variable slots:
+  * "jo ..., jo ..." (the more..., the more...) - use ellipsis notation (three dots)
+  * "både ... og ..." (both ... and ...)
+  * "enten ... eller ..." (either ... or ...)
+  * "verken ... eller ..." / "hverken ... eller ..." (neither ... nor ...)
+- IMPORTANT: Only identify the pattern if the clicked word is part of the pattern keywords themselves (e.g., clicking "jo" → "jo ..., jo ..."). If the user clicked a word within the pattern (e.g., "bedre" in "jo bedre"), return just that word, NOT the pattern.
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
 - IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction.
