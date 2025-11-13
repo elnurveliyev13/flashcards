@@ -19,7 +19,18 @@
      data-translation-error="{{#str}} front_translation_status_error, mod_flashcards {{/str}}"
      data-translation-reverse-hint="{{#str}} front_translation_reverse_hint, mod_flashcards {{/str}}"
      data-front-trans-show="{{#str}} front_translation_toggle_show, mod_flashcards {{/str}}"
-     data-front-trans-hide="{{#str}} front_translation_toggle_hide, mod_flashcards {{/str}}">
+     data-front-trans-hide="{{#str}} front_translation_toggle_hide, mod_flashcards {{/str}}"
+     data-private-audio-label="{{#str}} private_audio_label, mod_flashcards {{/str}}"
+     data-stt-idle="{{#str}} whisper_status_idle, mod_flashcards {{/str}}"
+     data-stt-uploading="{{#str}} whisper_status_uploading, mod_flashcards {{/str}}"
+     data-stt-transcribing="{{#str}} whisper_status_transcribing, mod_flashcards {{/str}}"
+     data-stt-success="{{#str}} whisper_status_success, mod_flashcards {{/str}}"
+     data-stt-error="{{#str}} whisper_status_error, mod_flashcards {{/str}}"
+     data-stt-limit="{{#str}} whisper_status_limit, mod_flashcards {{/str}}"
+     data-stt-quota="{{#str}} whisper_status_quota, mod_flashcards {{/str}}"
+     data-stt-disabled="{{#str}} whisper_status_disabled, mod_flashcards {{/str}}"
+     data-stt-retry="{{#str}} whisper_status_retry, mod_flashcards {{/str}}"
+     data-stt-undo="{{#str}} whisper_status_undo, mod_flashcards {{/str}}">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     <!-- Access Status Banner -->
@@ -147,6 +158,20 @@
                   <span class="fc-media-label" data-i18n="quick_photo">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
                 </button>
               </div>
+              <div class="stt-status-wrap" aria-live="polite">
+                <div id="sttStatus" class="stt-status-chip">{{#str}} whisper_status_idle, mod_flashcards {{/str}}</div>
+                <div class="stt-status-actions">
+                  <button id="sttRetry" type="button" class="stt-link hidden">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="sttUndo" type="button" class="stt-link hidden">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                </div>
+              </div>
+              <label class="keep-private-audio" for="keepPrivateAudio">
+                <input type="checkbox" id="keepPrivateAudio">
+                <span class="keep-private-audio-text">
+                  <span class="label">{{#str}} keep_private_audio_label, mod_flashcards {{/str}}</span>
+                  <span class="desc">{{#str}} keep_private_audio_desc, mod_flashcards {{/str}}</span>
+                </span>
+              </label>
             </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">

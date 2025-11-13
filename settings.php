@@ -126,11 +126,72 @@ if ($hassiteconfig) {
     ));
 
         $settings->add(new admin_setting_configcheckbox(
-            'mod_flashcards/orbokene_enabled',
-            get_string('settings_orbokene_enable', 'mod_flashcards'),
-            get_string('settings_orbokene_enable_desc', 'mod_flashcards'),
-            0
-        ));
+        'mod_flashcards/orbokene_enabled',
+        get_string('settings_orbokene_enable', 'mod_flashcards'),
+        get_string('settings_orbokene_enable_desc', 'mod_flashcards'),
+        0
+    ));
+
+    // Whisper STT (OpenAI)
+    $settings->add(new admin_setting_heading(
+        'mod_flashcards/whisper_heading',
+        get_string('settings_whisper_section', 'mod_flashcards'),
+        get_string('settings_whisper_section_desc', 'mod_flashcards')
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_flashcards/whisper_enabled',
+        get_string('settings_whisper_enable', 'mod_flashcards'),
+        get_string('settings_whisper_enable_desc', 'mod_flashcards'),
+        1
+    ));
+
+    $settings->add(new admin_setting_configpasswordunmask(
+        'mod_flashcards/whisper_apikey',
+        get_string('settings_whisper_key', 'mod_flashcards'),
+        get_string('settings_whisper_key_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/whisper_model',
+        get_string('settings_whisper_model', 'mod_flashcards'),
+        get_string('settings_whisper_model_desc', 'mod_flashcards'),
+        'whisper-1',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/whisper_language',
+        get_string('settings_whisper_language', 'mod_flashcards'),
+        get_string('settings_whisper_language_desc', 'mod_flashcards'),
+        'nb',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/whisper_clip_limit',
+        get_string('settings_whisper_clip_limit', 'mod_flashcards'),
+        get_string('settings_whisper_clip_limit_desc', 'mod_flashcards'),
+        15,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/whisper_monthly_limit',
+        get_string('settings_whisper_monthly_limit', 'mod_flashcards'),
+        get_string('settings_whisper_monthly_limit_desc', 'mod_flashcards'),
+        36000,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/whisper_timeout',
+        get_string('settings_whisper_timeout', 'mod_flashcards'),
+        get_string('settings_whisper_timeout_desc', 'mod_flashcards'),
+        45,
+        PARAM_INT
+    ));
 
         $ADMIN->add('modsettings', new admin_externalpage(
             'mod_flashcards_mediareport',

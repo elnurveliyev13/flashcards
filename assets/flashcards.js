@@ -216,10 +216,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const isGlobalMode = globalMode === true || cmid === 0;
     const runtimeConfig = window.__flashcardsRuntimeConfig || {};
     const aiConfig = runtimeConfig.ai || {};
+    const sttConfig = runtimeConfig.stt || {};
     const aiEnabled = !!aiConfig.enabled;
     const voiceOptionsRaw = Array.isArray(aiConfig.voices) ? aiConfig.voices : [];
     let selectedVoice = aiConfig.defaultVoice || (voiceOptionsRaw[0]?.voice || '');
     const dataset = root?.dataset || {};
+    const privateAudioLabel = dataset.privateAudioLabel || 'Private audio';
+    const sttStrings = {
+      idle: dataset.sttIdle || 'Speech-to-text ready',
+      uploading: dataset.sttUploading || 'Uploading Private audio…',
+      transcribing: dataset.sttTranscribing || 'Transcribing…',
+      success: dataset.sttSuccess || 'Transcription inserted',
+      error: dataset.sttError || 'Transcription failed',
+      limit: dataset.sttLimit || 'Clip is longer than allowed',
+      quota: dataset.sttQuota || 'Monthly speech limit reached',
+      retry: dataset.sttRetry || 'Retry',
+      undo: dataset.sttUndo || 'Undo',
+      disabled: dataset.sttDisabled || 'Speech-to-text unavailable'
+    };
+    const sttEnabled = !!sttConfig.enabled;
+    const sttClipLimit = Number(sttConfig.clipLimit || 15);
+    const sttLanguage = sttConfig.language || 'nb';
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
@@ -2102,6 +2119,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     let audioURL=null; const player=new Audio();
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[];
+    let lastAudioDurationSec=0;
+    let privateAudioOnly=false;
+    let sttAbortController=null;
+    let sttUndoValue=null;
+    let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const DEBUG_REC = (function(){
@@ -2117,6 +2139,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!DEBUG_REC) return;
       try{ debugLog('[Recorder] ' + message); }catch(_e){}
     };
+    const sttStatusEl = $("#sttStatus");
+    const sttRetryBtn = $("#sttRetry");
+    const sttUndoBtn = $("#sttUndo");
+    const keepPrivateAudioInput = $("#keepPrivateAudio");
 
     const storageFallback = new Map();
     async function idbPutSafe(key, blob){
@@ -2175,6 +2201,75 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         hideAudioBadge();
       }catch(_e){}
     }
+    function setSttUndoVisible(show){
+      if(!sttUndoBtn) return;
+      sttUndoBtn.classList.toggle('hidden', !show);
+    }
+    function setSttRetryVisible(show){
+      if(!sttRetryBtn) return;
+      sttRetryBtn.classList.toggle('hidden', !show);
+    }
+    function setSttStatus(state, customText){
+      if(!sttStatusEl){
+        return;
+      }
+      const message = customText || sttStrings[state] || sttStrings.idle;
+      sttStatusEl.textContent = message;
+      sttStatusEl.classList.remove('error','success');
+      const isError = state === 'error' || state === 'limit' || state === 'quota';
+      const isSuccess = state === 'success';
+      if(isError){
+        sttStatusEl.classList.add('error');
+      } else if(isSuccess){
+        sttStatusEl.classList.add('success');
+      }
+      if(state === 'disabled'){
+        sttStatusEl.classList.add('error');
+      }
+      setSttRetryVisible(isError);
+      if(state === 'idle' || state === 'disabled'){
+        setSttUndoVisible(false);
+      }
+    }
+    if(sttStatusEl){
+      setSttStatus(sttEnabled ? 'idle' : 'disabled');
+    }
+    if(keepPrivateAudioInput){
+      keepPrivateAudioInput.checked = false;
+      keepPrivateAudio = false;
+      keepPrivateAudioInput.addEventListener('change', ()=>{
+        keepPrivateAudio = keepPrivateAudioInput.checked;
+      });
+    }
+    if(sttUndoBtn){
+      sttUndoBtn.addEventListener('click', e=>{
+        e.preventDefault();
+        if(!sttUndoValue) return;
+        const front = $("#uFront");
+        if(front){
+          front.value = sttUndoValue;
+          try{ front.focus(); }catch(_e){}
+          front.dispatchEvent(new Event('input', {bubbles:true}));
+          front.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+        sttUndoValue = null;
+        setSttUndoVisible(false);
+        setSttStatus(sttEnabled ? 'idle' : 'disabled');
+      });
+    }
+    if(sttRetryBtn){
+      sttRetryBtn.addEventListener('click', async e=>{
+        e.preventDefault();
+        try{
+          const blob = await getCurrentAudioBlob();
+          if(blob){
+            triggerTranscription(blob).catch(err=>recorderLog('Retry failed: '+(err?.message||err)));
+          }
+        }catch(_e){
+          setSttStatus('error', sttStrings.error);
+        }
+      });
+    }
     let advancedVisible=false;
     function setAdvancedVisibility(show){
       advancedVisible = !!show;
@@ -2202,6 +2297,157 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(badge) badge.classList.add('hidden');
       const nameEl=document.getElementById('audName');
       if(nameEl) nameEl.textContent = '';
+    }
+    async function getCurrentAudioBlob(){
+      if(lastAudioBlob){
+        return lastAudioBlob;
+      }
+      if(lastAudioKey){
+        try{
+          return await idbGetSafe(lastAudioKey);
+        }catch(_e){}
+      }
+      return null;
+    }
+    async function measureBlobDuration(blob){
+      if(!blob){
+        return 0;
+      }
+      return await new Promise(resolve=>{
+        try{
+          const audio = document.createElement('audio');
+          audio.preload = 'metadata';
+          audio.src = URL.createObjectURL(blob);
+          audio.addEventListener('loadedmetadata', ()=>{
+            try{ URL.revokeObjectURL(audio.src); }catch(_e){}
+            if(Number.isFinite(audio.duration)){
+              resolve(Math.max(0, Math.round(audio.duration)));
+            }else{
+              resolve(0);
+            }
+          });
+          audio.addEventListener('error', ()=>{
+            try{ URL.revokeObjectURL(audio.src); }catch(_e){}
+            resolve(0);
+          });
+        }catch(_e){
+          resolve(0);
+        }
+      });
+    }
+    async function ensureAudioDuration(blob){
+      if(lastAudioDurationSec > 0){
+        return lastAudioDurationSec;
+      }
+      const measured = await measureBlobDuration(blob);
+      if(measured > 0){
+        lastAudioDurationSec = measured;
+      }
+      return lastAudioDurationSec;
+    }
+    function applyTranscriptionResult(text){
+      const trimmed = (text || '').trim();
+      if(trimmed === ''){
+        return;
+      }
+      const front = $("#uFront");
+      if(!front){
+        return;
+      }
+      const previous = front.value;
+      if(previous && previous !== trimmed){
+        sttUndoValue = previous;
+        setSttUndoVisible(true);
+      }else{
+        sttUndoValue = null;
+        setSttUndoVisible(false);
+      }
+      front.value = trimmed;
+      try{ front.focus(); }catch(_e){}
+      front.dispatchEvent(new Event('input', {bubbles:true}));
+      front.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+    async function triggerTranscription(blob){
+      if(!sttEnabled || !blob){
+        return;
+      }
+      const duration = Math.max(1, await ensureAudioDuration(blob));
+      if(sttClipLimit && duration > sttClipLimit){
+        setSttStatus('limit');
+        return;
+      }
+      const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+      url.searchParams.set('cmid', cmid);
+      url.searchParams.set('action', 'transcribe_audio');
+      url.searchParams.set('sesskey', sesskey);
+      const fd = new FormData();
+      fd.append('file', blob, 'private-audio.webm');
+      fd.append('duration', String(duration));
+      if(sttLanguage){
+        fd.append('language', sttLanguage);
+      }
+      if(sttAbortController){
+        try{ sttAbortController.abort(); }catch(_e){}
+      }
+      const controller = new AbortController();
+      sttAbortController = controller;
+      setSttStatus('uploading');
+      const stageTimer = window.setTimeout(()=>{
+        if(sttAbortController === controller){
+          setSttStatus('transcribing');
+        }
+      }, 800);
+      try{
+        const response = await fetch(url.toString(), {method:'POST', body:fd, signal:controller.signal});
+        let payload=null;
+        try{
+          payload = await response.json();
+        }catch(_e){
+          if(!response.ok){
+            throw new Error('HTTP '+response.status);
+          }
+          throw _e;
+        }
+        if(!payload || payload.ok !== true){
+          const code = payload?.errorcode || '';
+          const message = payload?.error || sttStrings.error;
+          if(code === 'error_whisper_clip'){
+            setSttStatus('limit', message);
+            return;
+          }
+          if(code === 'error_whisper_quota'){
+            setSttStatus('quota', message);
+            return;
+          }
+          throw new Error(message);
+        }
+        const text = (payload.data && payload.data.text ? (payload.data.text + '') : '').trim();
+        if(!text){
+          throw new Error('Empty transcription');
+        }
+        lastAudioDurationSec = Math.min(duration, sttClipLimit || duration);
+        applyTranscriptionResult(text);
+        setSttStatus('success');
+        if(!keepPrivateAudio){
+          clearAudioSelection();
+        }
+        window.setTimeout(()=>{
+          if(!sttAbortController){
+            setSttStatus('idle');
+          }
+        }, 3500);
+      }catch(err){
+        if(err && err.name === 'AbortError'){
+          setSttStatus('idle');
+        }else{
+          setSttStatus('error', err?.message || sttStrings.error);
+        }
+      }finally{
+        clearTimeout(stageTimer);
+        if(sttAbortController === controller){
+          sttAbortController = null;
+        }
+      }
     }
     function showFocusAudioBadge(label){
       const badge=document.getElementById('focusAudBadge');
@@ -2257,9 +2503,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       lastAudioKey=null;
       lastAudioUrl=null;
       lastAudioBlob=null;
+      lastAudioDurationSec=0;
+      privateAudioOnly=false;
       const audioInput=$("#uAudio");
       if(audioInput) audioInput.value="";
       resetAudioPreview();
+      if(!sttAbortController){
+        setSttStatus(sttEnabled ? 'idle' : 'disabled');
+      }
+      sttUndoValue=null;
+      setSttUndoVisible(false);
     }
     function clearImageSelection(){
       lastImageKey=null;
@@ -2811,6 +3064,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
       if(!f) return;
+      privateAudioOnly=false;
+      lastAudioDurationSec=0;
       resetAudioPreview();
       $("#audName").textContent=f.name;
       showAudioBadge(f.name);
@@ -2920,6 +3175,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           lastAudioKey = null;
           lastAudioBlob = blob;
         }
+        privateAudioOnly = true;
         const a = $("#audPrev");
         resetAudioPreview();
         const objectURL = URL.createObjectURL(blob);
@@ -2929,12 +3185,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           a.classList.remove("hidden");
           try{ a.load(); }catch(_e){}
         }
-        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = 'Recorded audio';
-        showAudioBadge('Recorded audio');
+        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = privateAudioLabel;
+        showAudioBadge(privateAudioLabel);
+        const approxDuration = Math.max(1, Math.round((Date.now() - (t0 || Date.now())) / 1000));
+        if(Number.isFinite(approxDuration)){
+          lastAudioDurationSec = approxDuration;
+        }
         if(stored){
           recorderLog('handleRecordedBlob stored via IDB');
         } else {
           recorderLog('handleRecordedBlob using in-memory blob fallback (size '+blob.size+')');
+        }
+        if(sttEnabled){
+          triggerTranscription(blob);
         }
       }
       let iosStartPromise = null;
@@ -3126,6 +3389,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       clearImageSelection();
       clearAudioSelection();
       clearFocusAudio();
+      privateAudioOnly = false;
+      lastAudioDurationSec = 0;
+      if(keepPrivateAudioInput){
+        keepPrivateAudioInput.checked = false;
+        keepPrivateAudio = false;
+      }
+      if(sttAbortController){
+        try{ sttAbortController.abort(); }catch(_e){}
+        sttAbortController = null;
+      }
+      sttUndoValue = null;
+      setSttUndoVisible(false);
+      setSttStatus(sttEnabled ? 'idle' : 'disabled');
       if(useIOSRecorderGlobal && iosRecorderGlobal){ try{ iosRecorderGlobal.releaseMic(); }catch(_e){} }
       editingCardId=null; // Clear editing card ID when resetting form
       orderChosen=[];
@@ -3203,42 +3479,46 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }catch(e){ console.error('Image upload failed:', e); }
       }
 
-      if(lastAudioKey && !lastAudioUrl){
-        try{
-          const blob = await idbGetSafe(lastAudioKey);
-          if(blob){
-            lastAudioUrl = await uploadMedia((function(){
-              var mt = (blob && blob.type) ? (blob.type+'') : '';
-              var ext = 'webm';
-              if(mt){
-                var low = mt.toLowerCase();
-                if(low.indexOf('audio/wav') === 0) ext = 'wav';
-                else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
-                else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
-                else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
-                else if(low.indexOf('audio/webm') === 0) ext = 'webm';
-              }
-              return new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)});
-            })(), 'audio', id);
+      if(!privateAudioOnly){
+        if(lastAudioKey && !lastAudioUrl){
+          try{
+            const blob = await idbGetSafe(lastAudioKey);
+            if(blob){
+              lastAudioUrl = await uploadMedia((function(){
+                var mt = (blob && blob.type) ? (blob.type+'') : '';
+                var ext = 'webm';
+                if(mt){
+                  var low = mt.toLowerCase();
+                  if(low.indexOf('audio/wav') === 0) ext = 'wav';
+                  else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
+                  else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
+                  else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
+                  else if(low.indexOf('audio/webm') === 0) ext = 'webm';
+                }
+                return new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)});
+              })(), 'audio', id);
+              lastAudioBlob = null;
+            }
+          }catch(e){ console.error('Audio upload failed:', e); }
+        } else if(lastAudioBlob && !lastAudioUrl){
+          try{
+            const blob = lastAudioBlob;
+            const mt = (blob && blob.type) ? (blob.type+'') : '';
+            let ext = 'webm';
+            if(mt){
+              const low = mt.toLowerCase();
+              if(low.indexOf('audio/wav') === 0) ext = 'wav';
+              else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
+              else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
+              else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
+              else if(low.indexOf('audio/webm') === 0) ext = 'webm';
+            }
+            lastAudioUrl = await uploadMedia(new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)}), 'audio', id);
             lastAudioBlob = null;
-          }
-        }catch(e){ console.error('Audio upload failed:', e); }
-      } else if(lastAudioBlob && !lastAudioUrl){
-        try{
-          const blob = lastAudioBlob;
-          const mt = (blob && blob.type) ? (blob.type+'') : '';
-          let ext = 'webm';
-          if(mt){
-            const low = mt.toLowerCase();
-            if(low.indexOf('audio/wav') === 0) ext = 'wav';
-            else if(low.indexOf('audio/mp4') === 0 || low.indexOf('audio/m4a') === 0 || low.indexOf('video/mp4') === 0) ext = 'mp4';
-            else if(low.indexOf('audio/mpeg') === 0 || low.indexOf('audio/mp3') === 0) ext = 'mp3';
-            else if(low.indexOf('audio/ogg') === 0) ext = 'ogg';
-            else if(low.indexOf('audio/webm') === 0) ext = 'webm';
-          }
-          lastAudioUrl = await uploadMedia(new File([blob], 'audio.'+ext, {type: blob.type || ('audio/'+ext)}), 'audio', id);
-          lastAudioBlob = null;
-        }catch(e){ console.error('Audio upload failed (memory fallback):', e); }
+          }catch(e){ console.error('Audio upload failed (memory fallback):', e); }
+        }
+      } else {
+        lastAudioUrl = null;
       }
 
       const translations={};
@@ -3304,11 +3584,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const cognates=linesToArr('uCognates'); if(cognates.length) payload.cognates=cognates;
       const sayings=linesToArr('uSayings'); if(sayings.length) payload.sayings=sayings;
       if(lastImageUrl) payload.image=lastImageUrl; else if(lastImageKey) payload.imageKey=lastImageKey;
-      if(lastAudioUrl){
-        payload.audio=lastAudioUrl;
-        payload.audioFront=lastAudioUrl;
-      } else if(lastAudioKey){
-        payload.audioKey=lastAudioKey;
+      if(!privateAudioOnly){
+        if(lastAudioUrl){
+          payload.audio=lastAudioUrl;
+          payload.audioFront=lastAudioUrl;
+        } else if(lastAudioKey){
+          payload.audioKey=lastAudioKey;
+        }
       }
       if(focusAudioUrl){
         payload.focusAudio = focusAudioUrl;

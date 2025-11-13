@@ -147,6 +147,12 @@ function mod_flashcards_get_runtime_config(): array {
     $pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: '';
     $pollysecret = trim($config->amazonpolly_secret_key ?? '') ?: getenv('FLASHCARDS_POLLY_SECRET') ?: '';
     $pollyenabled = ($pollyaccess !== '' && $pollysecret !== '');
+    $whisperkey = trim($config->whisper_apikey ?? '') ?: getenv('FLASHCARDS_WHISPER_KEY') ?: '';
+    $whisperenabled = !empty($config->whisper_enabled) && $whisperkey !== '';
+    $whisperclip = max(1, (int)($config->whisper_clip_limit ?? 15));
+    $whispermonthly = max($whisperclip, (int)($config->whisper_monthly_limit ?? 36000));
+    $whisperlang = trim($config->whisper_language ?? '') ?: 'nb';
+    $whispertimeout = max(5, (int)($config->whisper_timeout ?? 45));
     $voices = [];
     $rawvoicemap = $config->elevenlabs_voice_map ?? '';
     if ($rawvoicemap !== '') {
@@ -177,6 +183,13 @@ function mod_flashcards_get_runtime_config(): array {
             'defaultVoice' => $config->elevenlabs_default_voice ?? '',
             'voices' => $voices,
             'dictionaryEnabled' => !empty($config->orbokene_enabled),
+        ],
+        'stt' => [
+            'enabled' => $whisperenabled,
+            'language' => $whisperlang,
+            'clipLimit' => $whisperclip,
+            'monthlyLimit' => $whispermonthly,
+            'timeout' => $whispertimeout,
         ],
     ];
 }
