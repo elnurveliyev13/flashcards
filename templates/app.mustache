@@ -36,21 +36,33 @@
 
     <header>
       <div class="header-top">
-        <h1 id="t_appTitle">{{#str}} app_title, mod_flashcards {{/str}}</h1>
-        <div class="header-actions">
-          <div class="header-stats">
-            <span class="header-stat" title="Total Cards Created">
-              <span class="header-stat-icon icon-plus">&#10133;</span>
-              <span id="headerTotalCards">0</span>
-            </span>
-            <span class="header-stat" title="{{#str}} dashboard_active_vocab, mod_flashcards {{/str}}">
-              <span class="header-stat-icon">&#128483;</span>
-              <span id="headerActiveVocab">0</span>
-            </span>
-            <span class="header-stat" title="Current Streak">
-              <span class="header-stat-icon">&#128293;</span>
-              <span id="headerStreak">0</span>
-            </span>
+        <div class="header-metrics">
+          <span class="header-stat" title="Total Cards Created">
+            <span class="header-stat-icon icon-plus">&#10133;</span>
+            <span id="headerTotalCards">0</span>
+          </span>
+          <span class="header-stat" title="{{#str}} dashboard_active_vocab, mod_flashcards {{/str}}">
+            <span class="header-stat-icon">&#128483;</span>
+            <span id="headerActiveVocab">0</span>
+          </span>
+          <span class="header-stat" title="Current Streak">
+            <span class="header-stat-icon">&#128293;</span>
+            <span id="headerStreak">0</span>
+          </span>
+        </div>
+        <div class="header-controls">
+          <div class="language-select">
+            <label for="langSel" class="sr-only">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
+            <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
+              <option value="en">English</option>
+              <option value="uk">Українська</option>
+              <option value="ru">Русский</option>
+              <option value="fr">Francais</option>
+              <option value="es">Espanol</option>
+              <option value="pl">Polski</option>
+              <option value="it">Italiano</option>
+              <option value="de">Deutsch</option>
+            </select>
           </div>
           <div class="header-settings">
             <button type="button"
@@ -62,20 +74,6 @@
               <span aria-hidden="true" class="hexagon-icon">⚙</span>
             </button>
             <div id="prefsPanel" class="header-pref-panel" role="region" aria-label="{{#str}} header_preferences_label, mod_flashcards {{/str}}">
-              <div class="pref-field">
-                <div class="pref-heading" data-i18n="interface_language_label">{{#str}} interface_language_label, mod_flashcards {{/str}}</div>
-                <label for="langSel" class="pref-label sr-only">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
-                <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
-                  <option value="en">English</option>
-                  <option value="uk">Українська</option>
-                  <option value="ru">Русский</option>
-                  <option value="fr">Francais</option>
-                  <option value="es">Espanol</option>
-                  <option value="pl">Polski</option>
-                  <option value="it">Italiano</option>
-                  <option value="de">Deutsch</option>
-                </select>
-              </div>
               <div class="pref-field pref-font-field">
                 <div class="pref-heading" data-i18n="font_scale_label">{{#str}} font_scale_label, mod_flashcards {{/str}}</div>
                 <label class="pref-label sr-only">{{#str}} font_scale_label, mod_flashcards {{/str}}</label>
