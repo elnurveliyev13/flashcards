@@ -4597,11 +4597,82 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
 
       }
-      
+
       // Apply interface translations on initial load
       updateInterfaceTexts();
     })();
     // ========== END INTERFACE LANGUAGE SELECTOR ==========
+
+    // ========== MOBILE LANGUAGE SELECTOR MODAL ==========
+    (function initMobileLangModal(){
+      const langBtnMobile = document.getElementById('langBtnMobile');
+      const languageModal = document.getElementById('languageModal');
+      const langSelEl = document.getElementById('langSel');
+
+      if(!langBtnMobile || !languageModal) return;
+
+      // Update mobile button text to match current language
+      function updateMobileButtonText(){
+        if(langBtnMobile && langSelEl){
+          langBtnMobile.textContent = (langSelEl.value || 'EN').toUpperCase();
+        }
+      }
+
+      // Open modal on button click
+      langBtnMobile.addEventListener('click', function(e){
+        e.stopPropagation();
+        languageModal.classList.add('active');
+        // Update selected state
+        const currentLang = langSelEl ? langSelEl.value : 'en';
+        document.querySelectorAll('.language-modal-option').forEach(function(opt){
+          if(opt.getAttribute('data-lang') === currentLang){
+            opt.classList.add('selected');
+          } else {
+            opt.classList.remove('selected');
+          }
+        });
+      });
+
+      // Close modal on background click
+      languageModal.addEventListener('click', function(e){
+        if(e.target === languageModal){
+          languageModal.classList.remove('active');
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', function(e){
+        if(e.key === 'Escape' && languageModal.classList.contains('active')){
+          languageModal.classList.remove('active');
+        }
+      });
+
+      // Handle language selection
+      document.querySelectorAll('.language-modal-option').forEach(function(opt){
+        opt.addEventListener('click', function(){
+          const selectedLang = this.getAttribute('data-lang');
+          if(langSelEl && selectedLang){
+            langSelEl.value = selectedLang;
+            // Trigger change event to update everything
+            const event = new Event('change', { bubbles: true });
+            langSelEl.dispatchEvent(event);
+            // Update mobile button
+            updateMobileButtonText();
+            // Close modal
+            languageModal.classList.remove('active');
+          }
+        });
+      });
+
+      // Initial update
+      updateMobileButtonText();
+
+      // Listen to desktop select changes to sync mobile button
+      if(langSelEl){
+        langSelEl.addEventListener('change', updateMobileButtonText);
+      }
+    })();
+    // ========== END MOBILE LANGUAGE SELECTOR MODAL ==========
 
   }
 export { flashcardsInit };

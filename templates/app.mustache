@@ -75,6 +75,11 @@
               <option value="de">DE</option>
             </select>
           </div>
+          <div class="language-select-mobile">
+            <button type="button" id="langBtnMobile" class="language-btn-mobile" aria-label="{{#str}} interface_language_label, mod_flashcards {{/str}}">
+              EN
+            </button>
+          </div>
           <div class="header-settings">
             <button type="button"
                     id="prefsToggle"
@@ -722,6 +727,48 @@
   <!-- End Dashboard Section -->
 
   </div>
+
+<!-- Language selection modal (mobile) -->
+<div id="languageModal" class="language-modal" role="dialog" aria-modal="true">
+  <div class="language-modal-content">
+    <div class="language-modal-title" data-i18n="interface_language_label">{{#str}} interface_language_label, mod_flashcards {{/str}}</div>
+    <div class="language-modal-grid" id="languageModalGrid">
+      <button type="button" class="language-modal-option" data-lang="en">
+        <span class="language-modal-code">EN</span>
+        <span class="language-modal-name">English</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="uk">
+        <span class="language-modal-code">UK</span>
+        <span class="language-modal-name">Українська</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="ru">
+        <span class="language-modal-code">RU</span>
+        <span class="language-modal-name">Русский</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="fr">
+        <span class="language-modal-code">FR</span>
+        <span class="language-modal-name">Français</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="es">
+        <span class="language-modal-code">ES</span>
+        <span class="language-modal-name">Español</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="pl">
+        <span class="language-modal-code">PL</span>
+        <span class="language-modal-name">Polski</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="it">
+        <span class="language-modal-code">IT</span>
+        <span class="language-modal-name">Italiano</span>
+      </button>
+      <button type="button" class="language-modal-option" data-lang="de">
+        <span class="language-modal-code">DE</span>
+        <span class="language-modal-name">Deutsch</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Field prompt modal for staged tasks -->
 <div id="fieldPrompt" class="modal" role="dialog" aria-modal="true">
   <div class="box" style="max-width:560px">
