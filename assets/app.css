@@ -1167,8 +1167,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 /* Size for dashboard stat icon */
 .fc-stat-icon.icon-plus {
   width: 32px;
-  min-height: 32px;
-  height: 32px;
+  height: 40px;
 }
 
 .fc-tab-active .icon-plus {
@@ -1537,7 +1536,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 32px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .fc-stat-card {
@@ -1575,7 +1574,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size: 32px;
   margin-bottom: 12px;
   color: var(--icon-muted);
-  min-height: 32px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1587,7 +1586,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-weight: 700;
   color: var(--text);
   margin-bottom: 8px;
-  min-height: 44px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1599,9 +1598,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size: 13px;
   color: var(--text-dim);
   font-weight: 500;
-  min-height: 18px;
+  min-height: 36px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   line-height: 1.4;
   text-align: center;
