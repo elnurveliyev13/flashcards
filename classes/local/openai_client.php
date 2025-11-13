@@ -117,12 +117,13 @@ RULES:
 - IMPORTANT: Only identify the pattern if the clicked word is part of the pattern keywords themselves (e.g., clicking "jo" → "jo ..., jo ..."). If the user clicked a word within the pattern (e.g., "bedre" in "jo bedre"), return just that word, NOT the pattern.
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
-- IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction.
+- IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction IN {$targetlang} LANGUAGE.
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
 
 FORMAT:
 WORD: <base form with article or "å">
+BASE-FORM: <lemma without any articles or "å" prefix - just the bare word>
 POS: <one of substantiv|adjektiv|pronomen|determinativ|verb|adverb|preposisjon|konjunksjon|subjunksjon|interjeksjon|phrase|other>
 GENDER: <hankjønn|hunkjønn|intetkjønn|-> (nouns only)
 EXPL-NO: <simple Norwegian explanation>
@@ -132,7 +133,7 @@ EX1: <NO sentence using a top collocation> | <{$targetlang}>
 EX2: <NO> | <{$targetlang}>
 EX3: <NO> | <{$targetlang}>
 FORMS: <other useful lexical forms (verb/noun/adj variants) with tiny NO gloss + {$targetlang}>
-CORR: <fully corrected sentence> — <list each error: "bruk"→"bruke" (infinitive after å); "tit"→"tid" (spelling); etc.> (include this line whenever you spot ANY error in the sentence, not just when 90% sure)
+CORR: <fully corrected sentence> — <list each error in {$targetlang}: "bruk"→"bruke" (explanation in {$targetlang}); "tit"→"tid" (explanation in {$targetlang}); etc.> (include this line whenever you spot ANY error in the sentence, not just when 90% sure)
 
 NOTES:
 - Focus on everyday, high-frequency uses.
@@ -144,7 +145,8 @@ NOTES:
 - Treat multi-word expressions (after removing leading "å" or indefinite articles) as POS "phrase".
 - When the clicked form is part of an idiomatic verb + particle/preposition, keep the whole expression together (e.g., "å gå opp") and explain that idiomatic sense (e.g., "å forstå noe").
 - Include the required adjective/noun complement when an expression depends on it (e.g., output "å ha rett" instead of "å ha").
-- ALWAYS output CORR line whenever the learner sentence contains ANY error (spelling, grammar, verb forms, prepositions, articles, word order, word choice). List ALL errors found, not just the first one. Format: "<fully corrected sentence> — <error1: wrong→correct (reason); error2: wrong→correct (reason); etc.>".
+- ALWAYS output CORR line whenever the learner sentence contains ANY error (spelling, grammar, verb forms, prepositions, articles, word order, word choice). List ALL errors found, not just the first one. Format: "<fully corrected sentence> — <error1: wrong→correct (reason in {$targetlang}); error2: wrong→correct (reason in {$targetlang}); etc.>".
+- BASE-FORM field must contain ONLY the lemma without articles (en/ei/et) and without "å" prefix. For example: if WORD is "en helg", BASE-FORM should be "helg"; if WORD is "å gjøre", BASE-FORM should be "gjøre".
 PROMPT;
 
         $userprompt = implode("\n", [
@@ -156,8 +158,9 @@ PROMPT;
                 . 'When POS is substantiv, choose the gender that matches the specific meaning in context and output hankjønn/hunkjønn/intetkjønn. '
                 . 'If the clicked form belongs to a verb or verb phrase, output it in infinitive with a leading "å" and include any attached particles/prepositions or required complements (adjectives/nouns) that change the meaning. '
                 . 'Prefer the idiomatic/contextual sense over literal tense explanations. '
+                . 'IMPORTANT: Output BASE-FORM field with ONLY the bare lemma (without articles en/ei/et and without "å" prefix). For example: if WORD is "en helg", BASE-FORM should be "helg". '
                 . 'IMPORTANT: Carefully analyze the ENTIRE sentence for ALL errors (spelling mistakes, wrong verb forms, incorrect prepositions/articles, word order issues, word choice errors). '
-                . 'ALWAYS include CORR line if you find ANY error. List ALL mistakes you found with brief explanations (e.g., "bruk"→"bruke" (infinitive after å); "tit"→"tid" (spelling)). '
+                . 'ALWAYS include CORR line if you find ANY error. List ALL mistakes you found with brief explanations IN ' . $targetlang . ' LANGUAGE (e.g., "bruk"→"bruke" (explanation in ' . $targetlang . '); "tit"→"tid" (explanation in ' . $targetlang . ')). '
                 . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
         ]);
 
@@ -190,7 +193,7 @@ PROMPT;
 
         return [
             'focus' => core_text::substr($focus, 0, 200),
-            'baseform' => core_text::substr($focus, 0, 200),
+            'baseform' => core_text::substr($parsed['baseform'] ?: $focus, 0, 200),
             'pos' => $this->normalize_pos($parsed['pos'] ?? '', $focus),
             'definition' => core_text::substr($parsed['definition'] ?? '', 0, 600),
             'translation' => core_text::substr($parsed['translation'] ?? '', 0, 400),
@@ -365,6 +368,7 @@ PROMPT;
 
         return [
             'word' => $data['WORD'] ?? '',
+            'baseform' => $data['BASE-FORM'] ?? '',
             'pos' => $data['POS'] ?? '',
             'definition' => $data['EXPL-NO'] ?? '',
             'translation' => $data[$translationlabel] ?? ($data['TR-UK'] ?? ''),
