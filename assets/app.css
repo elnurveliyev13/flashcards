@@ -245,6 +245,7 @@ h1{
   position: relative;
   display: inline-flex;
   z-index: 50;
+  margin-left: auto;
 }
 
 .header-hexagon{
@@ -304,6 +305,12 @@ h1{
   color: var(--text-subtle);
 }
 
+.pref-heading{
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
 .pref-font-buttons{
   display: flex;
   gap: 6px;
@@ -339,9 +346,46 @@ h1{
 .pref-font-btn .font-medium{ font-size: 15px; }
 .pref-font-btn .font-large{ font-size: 17px; }
 
+.pref-font-field{
+  min-width: 0;
+}
+
+.header-pref-panel select{
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 10px 12px;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
 .header-pref-panel.open{
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 720px){
+  .header-actions{
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+  .header-actions .header-stats{
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+  .header-pref-panel{
+    position: fixed;
+    top: 60px;
+    right: var(--space-2);
+    left: var(--space-2);
+    width: auto;
+    min-width: 0;
+  }
+  .pref-font-buttons{
+    gap: 4px;
+  }
 }
 
 @media (max-width: 720px){
@@ -355,6 +399,8 @@ h1{
   }
   .pref-font-buttons{
     gap: 4px;
+    flex-wrap: nowrap;
+    justify-content: space-between;
   }
 }
 
