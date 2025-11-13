@@ -320,6 +320,24 @@ $string['settings_orbokene_section_desc'] = 'When enabled the AI helper will try
 $string['settings_orbokene_enable'] = 'Enable dictionary auto-fill';
 $string['settings_orbokene_enable_desc'] = 'If enabled, matching entries in the Orbøkene cache populate definition, translation and examples.';
 
+
+$string['settings_whisper_section'] = 'Whisper speech-to-text';
+$string['settings_whisper_section_desc'] = 'Configure OpenAI Whisper to turn learner recordings into Front text automatically.';
+$string['settings_whisper_enable'] = 'Enable Whisper transcription';
+$string['settings_whisper_enable_desc'] = 'Allow the Record Audio button to call Whisper via the Moodle server.';
+$string['settings_whisper_key'] = 'OpenAI API key for Whisper';
+$string['settings_whisper_key_desc'] = 'Stored securely on the server. Never exposed to learners.';
+$string['settings_whisper_model'] = 'Whisper model';
+$string['settings_whisper_model_desc'] = 'Default whisper-1. Update if OpenAI releases a newer STT model.';
+$string['settings_whisper_language'] = 'Recognition language';
+$string['settings_whisper_language_desc'] = 'Two-letter code passed to Whisper (default nb for Norsk bokmal).';
+$string['settings_whisper_clip_limit'] = 'Clip length limit (seconds)';
+$string['settings_whisper_clip_limit_desc'] = 'Clips longer than this value are rejected before calling Whisper.';
+$string['settings_whisper_monthly_limit'] = 'Monthly quota per user (seconds)';
+$string['settings_whisper_monthly_limit_desc'] = 'Protects your API budget. 10 hours ~ 36000 seconds.';
+$string['settings_whisper_timeout'] = 'API timeout (seconds)';
+$string['settings_whisper_timeout_desc'] = 'Abort stalled Whisper requests after this many seconds.';
+
 // Fill field dialog
 $string['fill_field'] = 'Please fill: {$a}';
 
@@ -334,6 +352,7 @@ $string['error_whisper_quota'] = 'You reached your monthly speech limit ({$a}).'
 $string['error_whisper_upload'] = 'Could not process the uploaded audio file.';
 $string['error_whisper_api'] = 'Speech-to-text service failed: {$a}';
 $string['error_whisper_filesize'] = 'Audio file is too large (max {$a}).';
+
 
 
 
