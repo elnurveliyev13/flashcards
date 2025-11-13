@@ -266,6 +266,9 @@ h1{
   color: var(--text);
   padding: 8px 10px;
   font-size: 0.9375rem; /* 15px */
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
 }
 
 .header-settings{
@@ -426,28 +429,49 @@ h1{
 
 @media (max-width: 720px){
   .header-top{
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-1);
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
   }
   .header-controls{
-    width: 100%;
-    justify-content: space-between;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
   }
   .header-metrics{
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: flex-start;
-    gap: 10px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  .header-stat {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .header-stat-icon {
+    font-size: 14px;
+  }
+  .header-stat span:not(.header-stat-icon) {
+    font-size: 14px;
   }
   .language-select{
-    width: 100%;
+    flex-shrink: 0;
   }
   .language-select select{
-    width: 100%;
+    padding: 6px 8px;
+    font-size: 14px;
+    min-width: 70px;
+    max-width: 90px;
   }
   .header-settings{
-    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+  .header-hexagon {
+    width: 36px;
+    height: 36px;
   }
 }
   .pref-font-buttons{
@@ -493,11 +517,13 @@ h1{
 .header-stat-icon{
   font-size: var(--font-size-base);
   color: var(--text-subtle);
+  flex-shrink: 0;
 }
 
 @media (max-width: 620px){
   .header-stat{
     font-size: var(--font-size-xs);
+    gap: 4px;
   }
   .header-stat-icon{
     font-size: var(--font-size-sm);
