@@ -248,7 +248,7 @@ $string['achievement_level_b2'] = 'Niveau B2 - Obere Mittelstufe';
 $string['collocations_ph'] = 'Eine pro Zeile...';
 $string['examples_ph'] = 'Beispielsätze...';
 $string['front_placeholder'] = 'Jeg elsker deg';
-$string['translation_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Ich liebe dich';
 $string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS

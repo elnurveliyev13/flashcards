@@ -23,7 +23,7 @@ $string['loadpack'] = 'Carica mazzo';
 $string['due'] = 'Da ripassare: {$a}';
 $string['list'] = 'Elenco schede';
 $string['addown'] = 'Aggiungi la tua scheda';
-$string['front'] = 'Fronte';
+$string['front'] = 'Fronte della scheda';
 $string['front_translation_toggle_show'] = 'Mostra traduzione';
 $string['front_translation_toggle_hide'] = 'Nascondi traduzione';
 $string['front_translation_mode_label'] = 'Direzione di traduzione';
@@ -48,6 +48,7 @@ $string['focus_audio_badge'] = 'Audio focale';
 $string['front_audio_badge'] = 'Audio fronte';
 $string['explanation'] = 'Spiegazione';
 $string['back'] = 'Traduzione';
+$string['back_en'] = 'Traduzione (inglese)';
 $string['image'] = 'Immagine';
 $string['audio'] = 'Audio';
 $string['tts_voice'] = 'Voce';
@@ -246,6 +247,9 @@ $string['achievement_level_b2'] = 'Livello B2 - Intermedio superiore';
 // Placeholders
 $string['collocations_ph'] = 'Una per riga...';
 $string['examples_ph'] = 'Frasi di esempio...';
+$string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Ti amo';
+$string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'Assistente AI';

@@ -23,7 +23,7 @@ $string['loadpack'] = 'Załaduj talię';
 $string['due'] = 'Do nauki: {$a}';
 $string['list'] = 'Lista fiszek';
 $string['addown'] = 'Dodaj swoją fiszkę';
-$string['front'] = 'Przód';
+$string['front'] = 'Przód karty';
 $string['front_translation_toggle_show'] = 'Pokaż tłumaczenie';
 $string['front_translation_toggle_hide'] = 'Ukryj tłumaczenie';
 $string['front_translation_mode_label'] = 'Kierunek tłumaczenia';
@@ -48,6 +48,7 @@ $string['focus_audio_badge'] = 'Audio fokusowe';
 $string['front_audio_badge'] = 'Audio przodu';
 $string['explanation'] = 'Wyjaśnienie';
 $string['back'] = 'Tłumaczenie';
+$string['back_en'] = 'Tłumaczenie (angielski)';
 $string['image'] = 'Obraz';
 $string['audio'] = 'Audio';
 $string['tts_voice'] = 'Głos';
@@ -246,6 +247,9 @@ $string['achievement_level_b2'] = 'Poziom B2 - Zaawansowany średni';
 // Placeholders
 $string['collocations_ph'] = 'Jeden na linię...';
 $string['examples_ph'] = 'Przykładowe zdania...';
+$string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'Kocham cię';
+$string['translation_en_placeholder'] = 'I love you';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'Asystent AI';
