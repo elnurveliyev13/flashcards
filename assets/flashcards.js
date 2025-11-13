@@ -44,26 +44,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const lineHeight = parsePx(style.lineHeight) || parsePx(style.fontSize) || 16;
           const verticalPad = parsePx(style.paddingTop) + parsePx(style.paddingBottom);
           const verticalBorder = parsePx(style.borderTopWidth) + parsePx(style.borderBottomWidth);
+          const baseMinHeight = parsePx(style.minHeight);
+          const singleLineHeight = baseMinHeight > 0 ? baseMinHeight : (lineHeight + verticalPad + verticalBorder);
           const visibleLines = Math.max(1, getLineCount(el.value || ''));
-          const targetFromLines = (lineHeight * visibleLines) + verticalPad + verticalBorder;
+          const extraLines = Math.max(0, visibleLines - 1);
+          const targetFromLines = singleLineHeight + (extraLines * lineHeight);
           el.style.height = 'auto';
           const scrollBased = el.scrollHeight || 0;
-          const next = Math.max(targetFromLines, scrollBased);
+          const next = Math.max(targetFromLines, scrollBased, baseMinHeight);
           el.style.height = `${next}px`;
         };
-        if (typeof MutationObserver === 'function') {
-          const mutationObserver = new MutationObserver(()=>resize());
-          mutationObserver.observe(el, { characterData: true, childList: true, subtree: true });
-          el._autogrowMutationObserver = mutationObserver;
-        }
-        if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
-          const ro = new ResizeObserver(()=>resize());
-          ro.observe(el);
-          el._autogrowResizeObserver = ro;
-        }
-        el.addEventListener('input', resize);
-        el.addEventListener('change', resize);
-        el.style.minHeight = '0px';
+        ['input','change','paste','autogrow:refresh'].forEach(evt=>{
+          el.addEventListener(evt, resize);
+        });
         el.dataset.autogrowBound = '1';
         resize();
       });
