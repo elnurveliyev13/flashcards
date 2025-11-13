@@ -335,26 +335,24 @@ class api {
         if ($current !== '') {
             return $payload;
         }
-        $pos = $payload['pos'] ?? null;
-        $candidates = [
-            $payload['focusBase'] ?? '',
-            $payload['focus_baseform'] ?? '',
-            $payload['fokus'] ?? '',
-            $payload['text'] ?? '',
-        ];
-        foreach ($candidates as $candidate) {
-            $candidate = trim((string)$candidate);
-            if ($candidate === '') {
-                continue;
-            }
-            // Strip articles (en, ei, et) and infinitive marker (å) before lookup
-            $clean = self::strip_articles_and_markers($candidate);
-            $transcription = pronunciation_manager::lookup_transcription($clean, $pos);
-            if ($transcription) {
-                $payload['transcription'] = $transcription;
-                break;
-            }
+
+        // Only search transcription for Base form field (no fallback to fokus or text)
+        $baseform = $payload['focusBase'] ?? $payload['focus_baseform'] ?? '';
+        $baseform = trim((string)$baseform);
+
+        if ($baseform === '') {
+            return $payload; // No base form provided - leave transcription empty
         }
+
+        $pos = $payload['pos'] ?? null;
+        // Strip articles (en, ei, et) and infinitive marker (å) before lookup
+        $clean = self::strip_articles_and_markers($baseform);
+        $transcription = pronunciation_manager::lookup_transcription($clean, $pos);
+
+        if ($transcription) {
+            $payload['transcription'] = $transcription;
+        }
+
         return $payload;
     }
 
