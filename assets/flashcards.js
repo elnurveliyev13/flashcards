@@ -4611,6 +4611,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       if(!langBtnMobile || !languageModal) return;
 
+      let modalOpening = false;
+
       // Update mobile button text to match current language
       function updateMobileButtonText(){
         if(langBtnMobile && langSelEl){
@@ -4618,9 +4620,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
 
-      // Open modal on button click
-      langBtnMobile.addEventListener('click', function(e){
+      // Open modal on button click (with touchstart for iOS)
+      function openLanguageModal(e){
+        if(modalOpening) return;
+        modalOpening = true;
+
+        e.preventDefault();
         e.stopPropagation();
+
         languageModal.classList.add('active');
         // Update selected state
         const currentLang = langSelEl ? langSelEl.value : 'en';
@@ -4631,6 +4638,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             opt.classList.remove('selected');
           }
         });
+
+        setTimeout(function(){ modalOpening = false; }, 300);
+      }
+
+      langBtnMobile.addEventListener('touchstart', openLanguageModal, { passive: false });
+      langBtnMobile.addEventListener('click', function(e){
+        if(!modalOpening){
+          openLanguageModal(e);
+        }
       });
 
       // Close modal on background click
@@ -4648,9 +4664,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
 
       // Handle language selection
+      let languageSelecting = false;
+
       document.querySelectorAll('.language-modal-option').forEach(function(opt){
-        opt.addEventListener('click', function(){
-          const selectedLang = this.getAttribute('data-lang');
+        function selectLanguage(e){
+          if(languageSelecting) return;
+          languageSelecting = true;
+
+          e.preventDefault();
+          e.stopPropagation();
+
+          const selectedLang = opt.getAttribute('data-lang');
           if(langSelEl && selectedLang){
             langSelEl.value = selectedLang;
             // Trigger change event to update everything
@@ -4659,7 +4683,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             // Update mobile button
             updateMobileButtonText();
             // Close modal
-            languageModal.classList.remove('active');
+            setTimeout(function(){
+              languageModal.classList.remove('active');
+              languageSelecting = false;
+            }, 100);
+          } else {
+            languageSelecting = false;
+          }
+        }
+
+        opt.addEventListener('touchstart', selectLanguage, { passive: false });
+        opt.addEventListener('click', function(e){
+          if(!languageSelecting){
+            selectLanguage(e);
           }
         });
       });
