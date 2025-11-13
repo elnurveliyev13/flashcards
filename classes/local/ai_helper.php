@@ -47,10 +47,10 @@ class ai_helper {
 
         $focusword = trim($focusdata['focus'] ?? '') ?: $clickedword;
         $focusword = $this->enforce_clicked_focus($focusword, $clickedword);
-        $baseform = trim($focusdata['baseform'] ?? '') ?: $focusword;
-        if (!$this->focus_contains_clicked($baseform, $clickedword)) {
-            $baseform = $focusword;
-        }
+
+        // Base form: ALWAYS extract single word from clicked word (no articles, no å)
+        $baseform = $this->extract_base_form($clickedword, $focusword);
+
         $pos = trim($focusdata['pos'] ?? '');
 
         $result = [
@@ -258,5 +258,46 @@ class ai_helper {
 
         // Return combined transcription only if at least one word was found
         return $foundAny ? implode(' ', $transcriptions) : null;
+    }
+
+    /**
+     * Extract single base word from clicked word (remove articles and å).
+     * This is used to populate the "Base form" field.
+     *
+     * @param string $clickedword The word the user clicked
+     * @param string $focusword The focus phrase/word returned by AI
+     * @return string Single base word without articles/å
+     */
+    protected function extract_base_form(string $clickedword, string $focusword): string {
+        // Try to find the clicked word within the focus phrase
+        $focusTokens = preg_split('/\s+/u', trim($focusword));
+        if (!$focusTokens) {
+            $focusTokens = [$focusword];
+        }
+
+        $clickedNormalized = $this->normalize_token($clickedword);
+        $bestMatch = null;
+
+        // Find which token in focus phrase contains the clicked word
+        foreach ($focusTokens as $token) {
+            $tokenNormalized = $this->normalize_token($token);
+            if ($tokenNormalized === '' || $clickedNormalized === '') {
+                continue;
+            }
+            // Check if this token contains or matches the clicked word
+            if (str_contains($tokenNormalized, $clickedNormalized) ||
+                str_contains($clickedNormalized, $tokenNormalized)) {
+                $bestMatch = $token;
+                break;
+            }
+        }
+
+        // If found a match in focus, use it; otherwise use clicked word
+        $baseWord = $bestMatch ?: $clickedword;
+
+        // Remove articles and å marker
+        $baseWord = self::strip_articles_and_markers($baseWord);
+
+        return trim($baseWord);
     }
 }
