@@ -364,7 +364,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_placeholder: 'Jeg elsker deg',
         ai_click_hint: 'Tap any word above to detect a fixed expression',
         translation_en_placeholder: 'I love you',
-        translation_placeholder: 'Jeg elsker deg',
+        translation_placeholder: 'I love you',
         explanation_placeholder: 'Explanation...',
         focus_placeholder: 'Focus word/phrase...',
         collocations_placeholder: 'collocations...',
@@ -450,7 +450,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_placeholder: 'Jeg elsker deg',
         ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
         translation_en_placeholder: 'I love you',
-        translation_placeholder: 'Jeg elsker deg',
+        translation_placeholder: 'Я тебе кохаю',
         explanation_placeholder: 'Пояснення...',
         focus_placeholder: 'Фокусне слово/фраза...',
         collocations_placeholder: 'словосполучення...',
@@ -1140,7 +1140,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(slotEn) slotEn.classList.remove('hidden');
         } else {
           if(slotLocal) slotLocal.classList.remove('hidden');
-          if(slotEn) slotEn.classList.remove('hidden');
+          if(slotEn) slotEn.classList.add('hidden');
         }
 
         // Language change hint removed
