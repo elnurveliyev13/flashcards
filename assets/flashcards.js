@@ -1152,7 +1152,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const slotLocal = $("#slot_translation_local");
         const slotEn = $("#slot_translation_en");
         const tagLocal = $("#tag_trans_local");
-        if(tagLocal){ tagLocal.innerHTML = `Translation (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">??</span>`; }
+        if(tagLocal){ tagLocal.innerHTML = `${t('back')} (${languageName(userLang2)}) <span id="langChangeHint" style="font-size:0.8em;opacity:0.6;cursor:pointer;" title="Click to change translation language">??</span>`; }
         if(userLang2 === 'en'){
           if(slotLocal) slotLocal.classList.add('hidden');
           if(slotEn) slotEn.classList.remove('hidden');
@@ -1389,7 +1389,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const inputTrans = document.createElement('input');
       inputTrans.type = 'text';
-      inputTrans.placeholder = `Translation (${languageName(userLang2)})...`;
+      inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
       inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #f1f5f9; border: 1px solid #374151; border-radius: 6px;';
       inputTrans.value = data.trans || '';
       inputTrans.classList.add('hidden');
