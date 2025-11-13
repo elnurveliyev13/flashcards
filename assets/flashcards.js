@@ -1148,8 +1148,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const tagLocal = $("#tag_trans_local");
         if(tagLocal){ tagLocal.textContent = t('back'); }
         if(userLang2 === 'en'){
-          if(slotLocal) slotLocal.classList.add('hidden');
-          if(slotEn) slotEn.classList.remove('hidden');
+          if(slotLocal) slotLocal.classList.remove('hidden');
+          if(slotEn) slotEn.classList.add('hidden');
         } else {
           if(slotLocal) slotLocal.classList.remove('hidden');
           if(slotEn) slotEn.classList.remove('hidden');
@@ -1297,7 +1297,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(translationInputLocal){
             translationInputLocal.value = translated;
           }
-          if(translationInputEn && userLang2 === 'en'){
+          if(translationInputEn){
             translationInputEn.value = translated;
           }
         }else if(frontInput){
