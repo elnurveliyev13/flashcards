@@ -22,16 +22,48 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
 
     function initAutogrow(){
+      const parsePx = value => Number.parseFloat(value) || 0;
+      const getLineCount = value => {
+        if (!value) {
+          return 0;
+        }
+        const normalized = value.replace(/\r/g, '').replace(/\n+$/,'');
+        if (!normalized) {
+          return 1;
+        }
+        const segments = normalized.split('\n');
+        const filled = segments.filter(segment => segment.trim().length > 0).length;
+        const lineCount = Math.max(filled, segments.length);
+        return lineCount || 1;
+      };
       $$('.autogrow').forEach(el=>{
         if(!el || el.dataset.autogrowBound) return;
         const resize = ()=>{
+          if(!el) return;
+          const style = window.getComputedStyle(el);
+          const lineHeight = parsePx(style.lineHeight) || parsePx(style.fontSize) || 16;
+          const verticalPad = parsePx(style.paddingTop) + parsePx(style.paddingBottom);
+          const verticalBorder = parsePx(style.borderTopWidth) + parsePx(style.borderBottomWidth);
+          const visibleLines = Math.max(1, getLineCount(el.value || ''));
+          const targetFromLines = (lineHeight * visibleLines) + verticalPad + verticalBorder;
           el.style.height = 'auto';
-          const min = parseFloat(window.getComputedStyle(el).minHeight) || 0;
-          const next = Math.max(el.scrollHeight, min);
+          const scrollBased = el.scrollHeight || 0;
+          const next = Math.max(targetFromLines, scrollBased);
           el.style.height = `${next}px`;
         };
+        if (typeof MutationObserver === 'function') {
+          const mutationObserver = new MutationObserver(()=>resize());
+          mutationObserver.observe(el, { characterData: true, childList: true, subtree: true });
+          el._autogrowMutationObserver = mutationObserver;
+        }
+        if (typeof window !== 'undefined' && 'ResizeObserver' in window) {
+          const ro = new ResizeObserver(()=>resize());
+          ro.observe(el);
+          el._autogrowResizeObserver = ro;
+        }
         el.addEventListener('input', resize);
         el.addEventListener('change', resize);
+        el.style.minHeight = '0px';
         el.dataset.autogrowBound = '1';
         resize();
       });
