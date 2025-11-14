@@ -2473,7 +2473,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
       ctx.restore();
       refreshCropRectOverlay();
     }
