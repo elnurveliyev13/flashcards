@@ -4156,18 +4156,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(studyRecorder.mimeType) mime = studyRecorder.mimeType;
 
           studyRecorder.ondataavailable = e => {
-            if(e.data && e.data.size>0) studyRecorderChunks.push(e.data);
+            debugLog('[PronunciationPractice] ondataavailable: '+(e.data?.size||0)+' bytes');
+            if(e.data && e.data.size>0){
+              studyRecorderChunks.push(e.data);
+              debugLog('[PronunciationPractice] Total chunks now: '+studyRecorderChunks.length);
+            }
           };
 
           studyRecorder.onstop = async () => {
+            debugLog('[PronunciationPractice] onstop triggered, chunks: '+studyRecorderChunks.length);
             try{
+              if(studyRecorderChunks.length === 0){
+                debugLog('[PronunciationPractice] ERROR: No chunks recorded!');
+                stopStudyMicStream();
+                studyRecorder = null;
+                isRecording = false;
+                return;
+              }
               const detectedType = (studyRecorderChunks[0]?.type) || mime || '';
               const finalType = normalizeAudioMime(detectedType);
               const blob = new Blob(studyRecorderChunks, {type: finalType || undefined});
-              debugLog('[PronunciationPractice] MediaRecorder stop: '+studyRecorderChunks.length+' chunks, '+blob.size+' bytes');
+              debugLog('[PronunciationPractice] Created blob: '+blob.size+' bytes, type: '+blob.type);
+
+              if(blob.size === 0){
+                debugLog('[PronunciationPractice] ERROR: Blob is empty!');
+                stopStudyMicStream();
+                studyRecorder = null;
+                isRecording = false;
+                return;
+              }
+
               await handleStudentRecording(blob);
             }catch(err){
-              debugLog('[PronunciationPractice] Stop failed: '+(err?.message||err));
+              debugLog('[PronunciationPractice] onstop error: '+(err?.message||err));
             }
             stopStudyMicStream();
             studyRecorder = null;
@@ -4222,7 +4243,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
 
         // Standard MediaRecorder path
-        try{ if(studyRecorder){ studyRecorder.stop(); } }catch(_e){}
+        try{
+          if(studyRecorder && studyRecorder.state !== 'inactive'){
+            // Request any remaining data before stopping
+            debugLog('[PronunciationPractice] Requesting final data, current chunks: '+studyRecorderChunks.length);
+            try{ studyRecorder.requestData(); }catch(_e){}
+            // Small delay to allow requestData to complete
+            await new Promise(resolve => setTimeout(resolve, 100));
+            studyRecorder.stop();
+          }
+        }catch(_e){
+          debugLog('[PronunciationPractice] Stop error: '+(_e?.message||_e));
+        }
         isRecording = false;
         btnRecordStudy.classList.remove("recording");
         stopTimer();
