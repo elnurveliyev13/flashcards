@@ -2439,6 +2439,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropModal.classList.add('hidden');
         cropModal.style.display = 'none';
       }
+      document.body.classList.remove('cropper-open');
       pendingImageFile = null;
       cropImage = null;
       cropRect = null;
@@ -2474,6 +2475,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropModal.classList.remove('hidden');
         cropModal.style.display = 'flex';
       }
+      document.body.classList.add('cropper-open');
       try{
         cropImage = await loadCropImage(file);
         const maxWidth = 640;
@@ -2542,6 +2544,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     if(cropCanvas){
       cropCanvas.addEventListener('pointerdown', e=>{
+        e.preventDefault();
         if(!cropImage) return;
         const point = getPointerImageCoords(e);
         isSelectingCrop = true;
@@ -2551,12 +2554,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{ cropCanvas.setPointerCapture(e.pointerId); }catch(_e){}
       });
       cropCanvas.addEventListener('pointermove', e=>{
+        e.preventDefault();
         if(!isSelectingCrop || !selectionStart) return;
         const point = getPointerImageCoords(e);
         cropRect = clampCropRect(normalizeRect(selectionStart, point));
         drawCropPreview();
       });
       cropCanvas.addEventListener('pointerup', e=>{
+        e.preventDefault();
         if(!isSelectingCrop) return;
         isSelectingCrop = false;
         try{ cropCanvas.releasePointerCapture(e.pointerId); }catch(_e){}
