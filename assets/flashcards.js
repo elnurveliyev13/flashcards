@@ -2224,13 +2224,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let pendingImageFile=null;
     let cropImage=null;
     let cropImageUrl=null;
-    let cropScale=1;
     let cropRect=null;
     let cropCtx=null;
     let cropDragMode=null;
     let cropActiveHandle=null;
     let cropDragStart=null;
     let cropDragStartRect=null;
+    let viewZoom=1;
+    let baseZoom=1;
+    let viewX=0;
+    let viewY=0;
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -2381,13 +2384,59 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return cropCtx;
     }
-    function displayRect(rect){
-      const scale = cropScale;
+    const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+    function updateViewToFitImage(){
+      if(!cropImage || !cropCanvas){
+        return;
+      }
+      const fitZoomX = cropCanvas.width / cropImage.width;
+      const fitZoomY = cropCanvas.height / cropImage.height;
+      baseZoom = Math.min(fitZoomX, fitZoomY);
+      viewZoom = baseZoom;
+      const viewWidth = cropCanvas.width / viewZoom;
+      const viewHeight = cropCanvas.height / viewZoom;
+      viewX = Math.max(0, (cropImage.width - viewWidth) / 2);
+      viewY = Math.max(0, (cropImage.height - viewHeight) / 2);
+    }
+    function focusOnCropRect(force = false){
+      if(!cropImage || !cropRect){
+        return;
+      }
+      if(cropDragMode && !force){
+        return;
+      }
+      const padding = Math.max(24, Math.min(48, cropCanvas.width * 0.05));
+      const zoomX = (cropCanvas.width - padding) / cropRect.width;
+      const zoomY = (cropCanvas.height - padding) / cropRect.height;
+      const targetZoom = Math.min(8, Math.max(baseZoom, Math.min(zoomX, zoomY)));
+      viewZoom = targetZoom;
+      const viewWidth = cropCanvas.width / viewZoom;
+      const viewHeight = cropCanvas.height / viewZoom;
+      const centerX = cropRect.x + cropRect.width / 2;
+      const centerY = cropRect.y + cropRect.height / 2;
+      viewX = clamp(centerX - viewWidth / 2, 0, Math.max(0, cropImage.width - viewWidth));
+      viewY = clamp(centerY - viewHeight / 2, 0, Math.max(0, cropImage.height - viewHeight));
+    }
+    function imageToCanvasPoint(point){
       return {
-        x: rect.x * scale,
-        y: rect.y * scale,
-        width: rect.width * scale,
-        height: rect.height * scale,
+        x: (point.x - viewX) * viewZoom,
+        y: (point.y - viewY) * viewZoom,
+      };
+    }
+    function canvasToImagePoint(point){
+      return {
+        x: point.x / viewZoom + viewX,
+        y: point.y / viewZoom + viewY,
+      };
+    }
+    function displayRect(rect){
+      const topLeft = imageToCanvasPoint({x:rect.x, y:rect.y});
+      const bottomRight = imageToCanvasPoint({x:rect.x + rect.width, y:rect.y + rect.height});
+      return {
+        x: topLeft.x,
+        y: topLeft.y,
+        width: bottomRight.x - topLeft.x,
+        height: bottomRight.y - topLeft.y,
       };
     }
     function clampCropRect(rect){
@@ -2412,17 +2461,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!ctx || !cropImage || !cropRect){
         return;
       }
+      const viewWidth = cropCanvas.width / viewZoom;
+      const viewHeight = cropCanvas.height / viewZoom;
       ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.drawImage(cropImage, 0, 0, cropImage.width, cropImage.height, 0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.drawImage(
+        cropImage,
+        viewX, viewY, viewWidth, viewHeight,
+        0, 0, cropCanvas.width, cropCanvas.height
+      );
       const rect = displayRect(cropRect);
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.drawImage(
-        cropImage,
-        cropRect.x, cropRect.y, cropRect.width, cropRect.height,
-        rect.x, rect.y, rect.width, rect.height
-      );
+      ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
       ctx.restore();
       refreshCropRectOverlay();
     }
@@ -2441,11 +2492,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return {x:0,y:0};
       }
       const rect = cropCanvas.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / cropScale);
-      const y = ((event.clientY - rect.top) / cropScale);
+      const canvasX = ((event.clientX - rect.left) / rect.width) * cropCanvas.width;
+      const canvasY = ((event.clientY - rect.top) / rect.height) * cropCanvas.height;
+      const imagePoint = canvasToImagePoint({x:canvasX, y:canvasY});
       return {
-        x: Math.max(0, Math.min(cropImage.width, x)),
-        y: Math.max(0, Math.min(cropImage.height, y)),
+        x: clamp(imagePoint.x, 0, cropImage.width),
+        y: clamp(imagePoint.y, 0, cropImage.height),
       };
     }
     function handleCropPointerDown(e){
@@ -2502,6 +2554,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       cropActiveHandle = null;
       cropDragStart = null;
       cropDragStartRect = null;
+      focusOnCropRect();
+      drawCropPreview();
     }
     function resizeCropRect(baseRect, handle, point){
       if(!cropImage){
@@ -2547,6 +2601,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       cropActiveHandle=null;
       cropDragStart=null;
       cropDragStartRect=null;
+      viewZoom=1;
+      baseZoom=1;
+      viewX=0;
+      viewY=0;
       if(cropImageUrl){
         try{ URL.revokeObjectURL(cropImageUrl); }catch(_e){}
         cropImageUrl = null;
@@ -2600,7 +2658,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const displayHeight = Math.round(cropImage.height * scale);
         cropCanvas.width = displayWidth;
         cropCanvas.height = displayHeight;
-        cropScale = displayWidth / cropImage.width;
         cropCanvas.style.width = `${displayWidth}px`;
         cropCanvas.style.height = `${displayHeight}px`;
         if(cropStage){
@@ -2608,6 +2665,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           cropStage.style.height = `${displayHeight}px`;
         }
         cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
+        updateViewToFitImage();
+        focusOnCropRect(true);
         drawCropPreview();
       }catch(err){
         setOcrStatus('error', err?.message || ocrStrings.error);
