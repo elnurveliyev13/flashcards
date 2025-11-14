@@ -1,6 +1,6 @@
 
 /* Slightly raise buttons from the very bottom (both rating + edit bars) */
 #mod_flashcards_container .bottom-actions{
-  padding-bottom: calc(30px + env(safe-area-inset-bottom)) !important; /* +2px */
-  padding-bottom: calc(30px + constant(safe-area-inset-bottom)) !important; /* legacy iOS */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom)) !important; /* +2px */
+  padding-bottom: calc(10px + constant(safe-area-inset-bottom)) !important; /* legacy iOS */
 }
