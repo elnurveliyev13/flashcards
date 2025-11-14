@@ -95,7 +95,7 @@ $string['normal'] = 'Normal';
 $string['hard'] = 'Hard';
 $string['update'] = 'Update';
 $string['update_disabled_hint'] = 'Open an existing card first to enable Update.';
-$string['createnew'] = 'Create new';
+$string['createnew'] = 'Create';
 $string['order'] = 'Order (click in sequence)';
 $string['empty'] = 'Nothing due today';
 $string['resetform'] = 'Reset form';
@@ -228,7 +228,7 @@ $string['progress_label'] = 'Review progress';
 $string['title_slow'] = 'Play slowly';
 
 // Tab navigation (v0.7.0)
-$string['tab_quickinput'] = 'Create new card';
+$string['tab_quickinput'] = 'Create';
 $string['tab_study'] = 'Practice';
 $string['tab_dashboard'] = 'Dashboard';
 
@@ -353,8 +353,3 @@ $string['error_whisper_quota'] = 'You reached your monthly speech limit ({$a}).'
 $string['error_whisper_upload'] = 'Could not process the uploaded audio file.';
 $string['error_whisper_api'] = 'Speech-to-text service failed: {$a}';
 $string['error_whisper_filesize'] = 'Audio file is too large (max {$a}).';
-
-
-
-
-

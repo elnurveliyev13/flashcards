@@ -82,7 +82,7 @@ $string['normal'] = 'Нормально';
 $string['hard'] = 'Сложно';
 $string['update'] = 'Обновить';
 $string['update_disabled_hint'] = 'Откройте существующую карточку, чтобы активировать кнопку обновления.';
-$string['createnew'] = 'Создать новую';
+$string['createnew'] = 'Создать';
 $string['order'] = 'Порядок (нажимайте последовательно)';
 $string['empty'] = 'Сегодня ничего не запланировано';
 $string['resetform'] = 'Сбросить форму';
@@ -206,7 +206,7 @@ $string['rating_actions'] = 'Действия оценивания';
 $string['progress_label'] = 'Прогресс просмотра';
 
 // Tab navigation (v0.7.0)
-$string['tab_quickinput'] = 'Создать новую карточку';
+$string['tab_quickinput'] = 'Создать';
 $string['tab_study'] = 'Обучение';
 $string['tab_dashboard'] = 'Панель';
 
@@ -333,4 +333,3 @@ $string[''error_whisper_quota''] = 'You reached your monthly speech limit ({$a})
 $string[''error_whisper_upload''] = 'Could not process the uploaded audio file.';
 $string[''error_whisper_api''] = 'Speech-to-text service failed: {$a}';
 $string[''error_whisper_filesize''] = 'Audio file is too large (max {$a}).';
-
