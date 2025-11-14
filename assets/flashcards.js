@@ -186,6 +186,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         } else {
           applyFontScale(root, 1);
         }
+        // Re-calculate textarea heights after font scale change
+        setTimeout(() => {
+          $$('.autogrow').forEach(el => {
+            if(el && el.dataset.autogrowBound) {
+              el.dispatchEvent(new Event('autogrow:refresh'));
+            }
+          });
+        }, 50);
       }
       let savedValue = '100';
       try {
@@ -4071,7 +4079,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       body.innerHTML = '';
       let editor = null;
       function inputEl(type='text'){ const i=document.createElement('input'); i.type=type; i.style.width='100%'; i.style.padding='10px'; i.style.background='#0b1220'; i.style.color='#f1f5f9'; i.style.border='1px solid #374151'; i.style.borderRadius='10px'; return i; }
-      function textareaEl(){ const t=document.createElement('textarea'); t.className='autogrow'; t.style.width='100%'; t.style.minHeight='44px'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; return t; }
+      function textareaEl(){ const t=document.createElement('textarea'); t.className='autogrow'; t.style.width='100%'; t.style.padding='10px'; t.style.background='#0b1220'; t.style.color='#f1f5f9'; t.style.border='1px solid #374151'; t.style.borderRadius='10px'; t.style.lineHeight='1.5'; return t; }
       const labelMap = {
         transcription: t('transcription'),
         pos: t('pos'),
