@@ -554,10 +554,14 @@ h1{
 
   .header-top{
     flex-direction: row;
+    justify-content: space-between;
     align-items: center;
     gap: 6px;
     flex-wrap: nowrap;
     margin-bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    contain: none;
   }
 
   .header-controls{
