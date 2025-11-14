@@ -169,10 +169,6 @@
                   <span class="fc-media-icon">&#128247;</span>
                   <span class="fc-media-label" data-i18n="quick_photo">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
                 </button>
-                <button id="btnScanText" class="fc-quick-media-btn fc-media-large" title="{{#str}} scan_text_hint, mod_flashcards {{/str}}" aria-label="{{#str}} scan_text_hint, mod_flashcards {{/str}}">
-                  <span class="fc-media-icon">&#128269;</span>
-                  <span class="fc-media-label" data-i18n="scan_text">{{#str}} scan_text, mod_flashcards {{/str}}</span>
-                </button>
               </div>
               <div class="stt-status-wrap" aria-live="polite">
                 <div id="sttStatus" class="stt-status-chip">{{#str}} whisper_status_idle, mod_flashcards {{/str}}</div>
@@ -201,7 +197,6 @@
             <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
             <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
             <input id="uImage" type="file" accept="image/*" class="hidden">
-            <input id="uOcrImage" type="file" accept="image/*" capture="environment" class="hidden">
             <div class="fc-media-badges">
               <span id="audBadge" class="media-pill hidden">
                 <span class="icon">&#127897;&#65039;</span>
@@ -635,6 +630,23 @@
     <button id="btnEasyBottom" class="ok" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</button>
     <button id="btnNormalBottom" class="mid" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</button>
     <button id="btnHardBottom" class="hard" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
+  </div>
+  <div id="ocrCropModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ocrCropTitle">
+    <div class="box ocr-crop-box">
+      <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
+        <strong id="ocrCropTitle">{{#str}} ocr_crop_title, mod_flashcards {{/str}}</strong>
+        <button id="ocrCropClose" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
+      </div>
+      <div class="ocr-crop-body">
+        <canvas id="ocrCropCanvas" class="ocr-crop-canvas" aria-label="{{#str}} ocr_crop_hint, mod_flashcards {{/str}}"></canvas>
+        <div class="ocr-crop-hint" data-i18n="ocr_crop_hint">{{#str}} ocr_crop_hint, mod_flashcards {{/str}}</div>
+      </div>
+      <div class="row ocr-crop-actions">
+        <button id="ocrCropCancel" class="mid">{{#str}} cancel, mod_flashcards {{/str}}</button>
+        <button id="ocrCropAttach" class="ghost">{{#str}} attach_image, mod_flashcards {{/str}}</button>
+        <button id="ocrCropApply" class="ok">{{#str}} use_for_ocr, mod_flashcards {{/str}}</button>
+      </div>
+    </div>
   </div>
   <div id="listModal" class="modal" role="dialog" aria-modal="true">
     <div class="box">

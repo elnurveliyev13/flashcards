@@ -323,6 +323,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       retry: dataset.ocrRetry || 'Retry',
       undo: dataset.ocrUndo || 'Undo replace'
     };
+    const cropModal = $("#ocrCropModal");
+    const cropCanvas = $("#ocrCropCanvas");
+    const cropApplyBtn = $("#ocrCropApply");
+    const cropAttachBtn = $("#ocrCropAttach");
+    const cropCancelBtn = $("#ocrCropCancel");
+    const cropCloseBtn = $("#ocrCropClose");
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
@@ -2214,6 +2220,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let ocrAbortController=null;
     let ocrLastFile=null;
     let ocrUndoValue=null;
+    let pendingImageFile=null;
+    let cropImage=null;
+    let cropImageUrl=null;
+    let cropScale=1;
+    let cropRect=null;
+    let cropCtx=null;
+    let isSelectingCrop=false;
+    let selectionStart=null;
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -2355,12 +2369,219 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setOcrUndoVisible(false);
       }
     }
+    function getCropContext(){
+      if(!cropCanvas){
+        return null;
+      }
+      if(!cropCtx){
+        cropCtx = cropCanvas.getContext('2d');
+      }
+      return cropCtx;
+    }
+    function displayRect(rect){
+      const scale = cropScale;
+      return {
+        x: rect.x * scale,
+        y: rect.y * scale,
+        width: rect.width * scale,
+        height: rect.height * scale,
+      };
+    }
+    function clampCropRect(rect){
+      if(!cropImage){
+        return rect;
+      }
+      const x = Math.max(0, Math.min(cropImage.width, rect.x));
+      const y = Math.max(0, Math.min(cropImage.height, rect.y));
+      const width = Math.max(1, Math.min(cropImage.width - x, rect.width));
+      const height = Math.max(1, Math.min(cropImage.height - y, rect.height));
+      return {x, y, width, height};
+    }
+    function normalizeRect(from, to){
+      const x = Math.min(from.x, to.x);
+      const y = Math.min(from.y, to.y);
+      const width = Math.max(1, Math.abs(to.x - from.x));
+      const height = Math.max(1, Math.abs(to.y - from.y));
+      return {x, y, width, height};
+    }
+    function drawCropPreview(){
+      const ctx = getCropContext();
+      if(!ctx || !cropImage || !cropRect){
+        return;
+      }
+      ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.drawImage(cropImage, 0, 0, cropImage.width, cropImage.height, 0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.globalCompositeOperation = 'destination-out';
+      const rect = displayRect(cropRect);
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+    }
+    function getPointerImageCoords(event){
+      if(!cropCanvas || !cropImage){
+        return {x:0,y:0};
+      }
+      const rect = cropCanvas.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / cropScale);
+      const y = ((event.clientY - rect.top) / cropScale);
+      return {
+        x: Math.max(0, Math.min(cropImage.width, x)),
+        y: Math.max(0, Math.min(cropImage.height, y)),
+      };
+    }
+    function closeCropper(){
+      if(cropModal){
+        cropModal.classList.add('hidden');
+        cropModal.style.display = 'none';
+      }
+      pendingImageFile = null;
+      cropImage = null;
+      cropRect = null;
+      isSelectingCrop = false;
+      selectionStart = null;
+      if(cropImageUrl){
+        try{ URL.revokeObjectURL(cropImageUrl); }catch(_e){}
+        cropImageUrl = null;
+      }
+      const ctx = getCropContext();
+      if(ctx && cropCanvas){
+        ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      }
+    }
+    async function loadCropImage(file){
+      return new Promise((resolve,reject)=>{
+        const img = new Image();
+        img.onload = ()=>resolve(img);
+        img.onerror = reject;
+        if(cropImageUrl){
+          try{ URL.revokeObjectURL(cropImageUrl); }catch(_e){}
+        }
+        cropImageUrl = URL.createObjectURL(file);
+        img.src = cropImageUrl;
+      });
+    }
+    async function openCropper(file){
+      if(!file || !cropModal){
+        return;
+      }
+      pendingImageFile = file;
+      if(cropModal){
+        cropModal.classList.remove('hidden');
+        cropModal.style.display = 'flex';
+      }
+      try{
+        cropImage = await loadCropImage(file);
+        const maxWidth = 640;
+        const maxHeight = 640;
+        const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
+        const displayWidth = Math.max(240, Math.round(cropImage.width * scale));
+        const displayHeight = Math.max(160, Math.round(cropImage.height * scale));
+        cropCanvas.width = displayWidth;
+        cropCanvas.height = displayHeight;
+        cropScale = displayWidth / cropImage.width;
+        cropCanvas.style.width = `${displayWidth}px`;
+        cropCanvas.style.height = `${displayHeight}px`;
+        cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
+        drawCropPreview();
+      }catch(err){
+        setOcrStatus('error', err?.message || ocrStrings.error);
+        closeCropper();
+      }
+    }
+    async function attachImageToCard(file){
+      if(!file){
+        return;
+      }
+      $("#imgName").textContent = file.name || '';
+      showImageBadge(file.name || '');
+      lastImageKey="my-"+Date.now().toString(36)+"-img";
+      const stored = await idbPutSafe(lastImageKey,file);
+      if(!stored){
+        recorderLog('Manual image storage fallback (IndexedDB unavailable)');
+        lastImageKey=null;
+        lastImageUrl=file;
+      } else {
+        lastImageUrl=null;
+      }
+      const objectURL = URL.createObjectURL(file);
+      const imgPrev=$("#imgPrev");
+      if(imgPrev){
+        imgPrev.src=objectURL;
+        imgPrev.classList.remove("hidden");
+      }
+    }
+    async function applyCropForOcr(){
+      if(!cropImage || !cropRect || !pendingImageFile){
+        return;
+      }
+      const width = Math.max(1, Math.round(cropRect.width));
+      const height = Math.max(1, Math.round(cropRect.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(cropImage, cropRect.x, cropRect.y, cropRect.width, cropRect.height, 0, 0, width, height);
+      const blob = await new Promise((resolve,reject)=>{
+        canvas.toBlob(b=> b ? resolve(b) : reject(new Error('Crop failed')), 'image/jpeg', 0.92);
+      });
+      const croppedFile = new File([blob], pendingImageFile.name || 'ocr.jpg', {type: blob.type || 'image/jpeg'});
+      ocrLastFile = croppedFile;
+      closeCropper();
+      triggerOcrRecognition(croppedFile);
+    }
     if(sttStatusEl){
       setSttStatus(sttEnabled ? 'idle' : 'disabled');
     }
     if(ocrStatusEl){
       setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
     }
+    if(cropCanvas){
+      cropCanvas.addEventListener('pointerdown', e=>{
+        if(!cropImage) return;
+        const point = getPointerImageCoords(e);
+        isSelectingCrop = true;
+        selectionStart = point;
+        cropRect = clampCropRect(normalizeRect(point, point));
+        drawCropPreview();
+        try{ cropCanvas.setPointerCapture(e.pointerId); }catch(_e){}
+      });
+      cropCanvas.addEventListener('pointermove', e=>{
+        if(!isSelectingCrop || !selectionStart) return;
+        const point = getPointerImageCoords(e);
+        cropRect = clampCropRect(normalizeRect(selectionStart, point));
+        drawCropPreview();
+      });
+      cropCanvas.addEventListener('pointerup', e=>{
+        if(!isSelectingCrop) return;
+        isSelectingCrop = false;
+        try{ cropCanvas.releasePointerCapture(e.pointerId); }catch(_e){}
+      });
+    }
+    if(cropApplyBtn){
+      cropApplyBtn.addEventListener('click', ()=>{
+        if(!pendingImageFile || !ocrEnabled){
+          setOcrStatus('disabled');
+          return;
+        }
+        applyCropForOcr().catch(err=> setOcrStatus('error', err?.message || ocrStrings.error));
+      });
+    }
+    if(cropAttachBtn){
+      cropAttachBtn.addEventListener('click', ()=>{
+        if(pendingImageFile){
+          attachImageToCard(pendingImageFile).catch(()=>{});
+        }
+        closeCropper();
+      });
+    }
+    const closeCrop = ()=>{ closeCropper(); };
+    if(cropCancelBtn) cropCancelBtn.addEventListener('click', closeCrop);
+    if(cropCloseBtn) cropCloseBtn.addEventListener('click', closeCrop);
     if(keepPrivateAudioInput){
       keepPrivateAudioInput.checked = false;
       keepPrivateAudio = false;
@@ -3248,25 +3469,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       imagePickerBtn.dataset.bound = '1';
       imagePickerBtn.addEventListener("click", e=>{ e.preventDefault(); const input=document.getElementById('uImage'); if(input) input.click(); });
     }
-    const scanTextBtn = document.getElementById('btnScanText');
-    if(scanTextBtn && !scanTextBtn.dataset.bound){
-      scanTextBtn.dataset.bound = '1';
-      scanTextBtn.addEventListener("click", e=>{
-        e.preventDefault();
-        if(!ocrEnabled){
-          setOcrStatus('disabled');
-          return;
-        }
-        const input=document.getElementById('uOcrImage');
-        if(input){
-          input.value = '';
-          input.click();
-        }
-      });
-    }
-    if(scanTextBtn){
-      scanTextBtn.disabled = !ocrEnabled;
-    }
     const audioUploadBtn = document.getElementById('btnAudioUpload');
     if(audioUploadBtn && !audioUploadBtn.dataset.bound){
       audioUploadBtn.dataset.bound = '1';
@@ -3330,18 +3532,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
     $("#uImage").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
-      if(!f)return;
-      $("#imgName").textContent=f.name;
-      showImageBadge(f.name);
-      lastImageKey="my-"+Date.now().toString(36)+"-img";
-      await idbPutSafe(lastImageKey,f);
-      lastImageUrl=null;
-      const objectURL = URL.createObjectURL(f);
-      const imgPrev=$("#imgPrev");
-      if(imgPrev){
-        imgPrev.src=objectURL;
-        imgPrev.classList.remove("hidden");
-      }
+      if(!f) return;
+      openCropper(f);
+      e.target.value = '';
     });
     $("#uOcrImage").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
