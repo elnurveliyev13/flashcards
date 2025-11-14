@@ -3530,20 +3530,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       togglePOSUI();
     }
     async function uploadMedia(file,type,cardId){ const fd=new FormData(); fd.append('file',file,file.name||('blob.'+(type==='audio'?'webm':'jpg'))); fd.append('type',type); const url=new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php'); url.searchParams.set('cmid',cmid); url.searchParams.set('action','upload_media'); url.searchParams.set('sesskey',sesskey); if(cardId) url.searchParams.set('cardid',cardId); const r= await fetch(url.toString(),{method:'POST',body:fd}); const j=await r.json(); if(j && j.ok && j.data && j.data.url) return j.data.url; throw new Error('upload failed'); }
-    $("#uImage").addEventListener("change", async e=>{
-      const f=e.target.files?.[0];
-      if(!f) return;
-      openCropper(f);
-      e.target.value = '';
-    });
-    $("#uOcrImage").addEventListener("change", async e=>{
-      const f=e.target.files?.[0];
-      if(!f) return;
-      ocrLastFile = f;
-      triggerOcrRecognition(f).catch(err=>{
-        setOcrStatus('error', err?.message || ocrStrings.error);
+    const imageInput = $("#uImage");
+    if(imageInput){
+      imageInput.addEventListener("change", async e=>{
+        const f=e.target.files?.[0];
+        if(!f) return;
+        openCropper(f);
+        e.target.value = '';
       });
-    });
+    }
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];
       if(!f) return;
