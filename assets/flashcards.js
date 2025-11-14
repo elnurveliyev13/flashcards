@@ -326,7 +326,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const cropModal = $("#ocrCropModal");
     const cropCanvas = $("#ocrCropCanvas");
     const cropApplyBtn = $("#ocrCropApply");
-    const cropAttachBtn = $("#ocrCropAttach");
     const cropCancelBtn = $("#ocrCropCancel");
     const cropCloseBtn = $("#ocrCropClose");
     const aiStrings = {
@@ -2498,28 +2497,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         closeCropper();
       }
     }
-    async function attachImageToCard(file){
-      if(!file){
-        return;
-      }
-      $("#imgName").textContent = file.name || '';
-      showImageBadge(file.name || '');
-      lastImageKey="my-"+Date.now().toString(36)+"-img";
-      const stored = await idbPutSafe(lastImageKey,file);
-      if(!stored){
-        recorderLog('Manual image storage fallback (IndexedDB unavailable)');
-        lastImageKey=null;
-        lastImageUrl=file;
-      } else {
-        lastImageUrl=null;
-      }
-      const objectURL = URL.createObjectURL(file);
-      const imgPrev=$("#imgPrev");
-      if(imgPrev){
-        imgPrev.src=objectURL;
-        imgPrev.classList.remove("hidden");
-      }
-    }
     async function applyCropForOcr(){
       if(!cropImage || !cropRect || !pendingImageFile){
         return;
@@ -2577,14 +2554,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           return;
         }
         applyCropForOcr().catch(err=> setOcrStatus('error', err?.message || ocrStrings.error));
-      });
-    }
-    if(cropAttachBtn){
-      cropAttachBtn.addEventListener('click', ()=>{
-        if(pendingImageFile){
-          attachImageToCard(pendingImageFile).catch(()=>{});
-        }
-        closeCropper();
       });
     }
     const closeCrop = ()=>{ closeCropper(); };
