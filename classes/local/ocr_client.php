@@ -23,6 +23,8 @@ class ocr_client {
     private $language = 'en';
     /** @var int */
     private $timeout = 30;
+    /** @var int */
+    private $monthlylimit = 120;
 
     public function __construct() {
         $config = get_config('mod_flashcards');
@@ -30,6 +32,7 @@ class ocr_client {
         $this->language = trim($config->googlevision_language ?? '') ?: 'en';
         $this->endpoint = trim($config->googlevision_endpoint ?? '') ?: (getenv('FLASHCARDS_GOOGLEVISION_ENDPOINT') ?: self::DEFAULT_ENDPOINT);
         $this->timeout = max(5, (int)($config->googlevision_timeout ?? 30));
+        $this->monthlylimit = max(1, (int)($config->googlevision_monthly_limit ?? 120));
         $this->enabled = !empty($config->googlevision_enabled) && !empty($this->apikey);
     }
 
@@ -42,7 +45,7 @@ class ocr_client {
      *
      * @throws moodle_exception
      */
-    public function recognize(string $filepath, string $filename, ?string $mimetype, ?string $language = null): string {
+    public function recognize(string $filepath, string $filename, ?string $mimetype, int $userid, ?string $language = null): string {
         if (!$this->is_enabled()) {
             throw new moodle_exception('error_ocr_disabled', 'mod_flashcards');
         }
@@ -50,6 +53,7 @@ class ocr_client {
             throw new coding_exception('Missing image file for OCR');
         }
 
+        $this->ensure_monthly_quota($userid);
         $content = file_get_contents($filepath);
         if ($content === false) {
             throw new moodle_exception('error_ocr_upload', 'mod_flashcards');
@@ -124,6 +128,7 @@ class ocr_client {
             throw new moodle_exception('error_ocr_nodata', 'mod_flashcards');
         }
 
+        $this->record_usage($userid);
         return $text;
     }
 
@@ -143,5 +148,30 @@ class ocr_client {
             return trim($data);
         }
         return $fallback !== '' ? mb_substr($fallback, 0, 400) : 'Unknown error';
+    }
+
+    private function ensure_monthly_quota(int $userid): void {
+        if ($this->monthlylimit <= 0) {
+            return;
+        }
+        $prefname = $this->preference_name();
+        $used = (int)get_user_preferences($prefname, 0, $userid);
+        if ($used >= $this->monthlylimit) {
+            throw new moodle_exception('error_vision_quota', 'mod_flashcards', '', $this->monthlylimit);
+        }
+    }
+
+    private function record_usage(int $userid): void {
+        if ($this->monthlylimit <= 0) {
+            return;
+        }
+        $prefname = $this->preference_name();
+        $used = (int)get_user_preferences($prefname, 0, $userid);
+        $newvalue = min($this->monthlylimit, $used + 1);
+        set_user_preference($prefname, $newvalue, $userid);
+    }
+
+    private function preference_name(): string {
+        return 'mod_flashcards_googlevision_' . date('Ym');
     }
 }

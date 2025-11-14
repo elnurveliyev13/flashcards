@@ -357,11 +357,14 @@ $string['settings_googlevision_language'] = 'OCR language hint';
 $string['settings_googlevision_language_desc'] = 'Two-letter code or locale (e.g. en, nb, es) that hints the Vision API about the script.';
 $string['settings_googlevision_timeout'] = 'API timeout (seconds)';
 $string['settings_googlevision_timeout_desc'] = 'Abort stalled Vision requests after this many seconds.';
+$string['settings_googlevision_monthly_limit'] = 'Monthly OCR requests per user';
+$string['settings_googlevision_monthly_limit_desc'] = 'Limit how many image scans a learner can submit each month.';
 $string['error_ocr_disabled'] = 'Image-to-text recognition is disabled.';
 $string['error_ocr_upload'] = 'Could not upload the image for OCR.';
 $string['error_ocr_api'] = 'OCR service error: {$a}';
 $string['error_ocr_nodata'] = 'OCR service did not return any text.';
 $string['error_ocr_filesize'] = 'Image exceeds the allowed size of {$a}.';
+$string['error_vision_quota'] = 'You reached the monthly OCR limit ({$a}).';
 
 // Fill field dialog
 $string['fill_field'] = 'Please fill: {$a}';

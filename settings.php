@@ -229,6 +229,14 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/googlevision_monthly_limit',
+        get_string('settings_googlevision_monthly_limit', 'mod_flashcards'),
+        get_string('settings_googlevision_monthly_limit_desc', 'mod_flashcards'),
+        120,
+        PARAM_INT
+    ));
+
     $ADMIN->add('modsettings', new admin_externalpage(
             'mod_flashcards_mediareport',
             get_string('mediareport_title', 'mod_flashcards'),

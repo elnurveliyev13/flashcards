@@ -229,7 +229,7 @@ switch ($action) {
             }
 
             $client = new \mod_flashcards\local\ocr_client();
-            $text = $client->recognize($tempfile, $originalname, $mimetype);
+            $text = $client->recognize($tempfile, $originalname, $mimetype, $userid);
             $response = ['ok' => true, 'data' => ['text' => $text]];
             http_response_code(200);
         } catch (\moodle_exception $ex) {

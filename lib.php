@@ -158,6 +158,8 @@ function mod_flashcards_get_runtime_config(): array {
     $googlevisionkey = trim($config->googlevision_api_key ?? '') ?: getenv('FLASHCARDS_GOOGLEVISION_KEY') ?: '';
     $googlevisionEnabled = !empty($config->googlevision_enabled) && !empty($googlevisionkey);
     $googlevisionLanguage = trim($config->googlevision_language ?? '') ?: 'en';
+    $googlevisionMonthly = max(1, (int)($config->googlevision_monthly_limit ?? 120));
+    $googlevisionTimeout = max(5, (int)($config->googlevision_timeout ?? 45));
     $voices = [];
     $rawvoicemap = $config->elevenlabs_voice_map ?? '';
     if ($rawvoicemap !== '') {
@@ -201,6 +203,7 @@ function mod_flashcards_get_runtime_config(): array {
             'language' => $googlevisionLanguage,
             'maxFileSize' => FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES,
             'timeout' => $googlevisionTimeout,
+            'monthlyLimit' => $googlevisionMonthly,
         ],
     ];
 }
