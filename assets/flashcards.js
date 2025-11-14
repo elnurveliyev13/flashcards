@@ -2414,14 +2414,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       ctx.drawImage(cropImage, 0, 0, cropImage.width, cropImage.height, 0, 0, cropCanvas.width, cropCanvas.height);
-      const rect = displayRect(cropRect);
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-      ctx.restore();
       refreshCropRectOverlay();
     }
     function refreshCropRectOverlay(){
