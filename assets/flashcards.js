@@ -5284,9 +5284,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           setTimeout(() => initAutogrow(), 50);
           // Initialize pronunciation practice recorder
           setTimeout(() => {
-            if(typeof initStudyPronunciationPractice === 'function'){
-              initStudyPronunciationPractice();
-            }
+            initStudyPronunciationPractice();
           }, 100);
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
