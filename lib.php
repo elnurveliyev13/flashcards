@@ -141,6 +141,8 @@ function mod_flashcards_pluginfile($course, $cm, $context, $filearea, $args, $fo
 /**
  * Provide non-sensitive runtime configuration for the JS app.
  */
+defined('FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES') || define('FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES', 6 * 1024 * 1024);
+
 function mod_flashcards_get_runtime_config(): array {
     $config = get_config('mod_flashcards');
     $elevenenabled = !empty($config->elevenlabs_apikey);
@@ -153,6 +155,9 @@ function mod_flashcards_get_runtime_config(): array {
     $whispermonthly = max($whisperclip, (int)($config->whisper_monthly_limit ?? 36000));
     $whisperlang = trim($config->whisper_language ?? '') ?: 'nb';
     $whispertimeout = max(5, (int)($config->whisper_timeout ?? 45));
+    $ocrapikey = trim($config->ocr_apikey ?? '') ?: getenv('FLASHCARDS_OCR_KEY') ?: '';
+    $ocrEnabled = !empty($config->ocr_enabled) && $ocrapikey !== '';
+    $ocrLanguage = trim($config->ocr_language ?? '') ?: 'eng';
     $voices = [];
     $rawvoicemap = $config->elevenlabs_voice_map ?? '';
     if ($rawvoicemap !== '') {
@@ -190,6 +195,11 @@ function mod_flashcards_get_runtime_config(): array {
             'clipLimit' => $whisperclip,
             'monthlyLimit' => $whispermonthly,
             'timeout' => $whispertimeout,
+        ],
+        'ocr' => [
+            'enabled' => $ocrEnabled,
+            'language' => $ocrLanguage,
+            'maxFileSize' => FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES,
         ],
     ];
 }

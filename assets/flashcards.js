@@ -20,6 +20,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         maximumFractionDigits: decimals
       });
     };
+    function formatFileSize(bytes){
+      if(!Number.isFinite(bytes) || bytes <= 0){
+        return '';
+      }
+      const units = ['B','kB','MB','GB','TB'];
+      let index = 0;
+      let value = bytes;
+      while(value >= 1024 && index < units.length - 1){
+        value /= 1024;
+        index++;
+      }
+      const display = index > 0 ? value.toFixed(1) : value.toFixed(0);
+      return `${display} ${units[index]}`;
+    }
 
     function initAutogrow(){
       const parsePx = value => Number.parseFloat(value) || 0;
@@ -297,6 +311,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const sttEnabled = !!sttConfig.enabled;
     const sttClipLimit = Number(sttConfig.clipLimit || 15);
     const sttLanguage = sttConfig.language || 'nb';
+    const ocrConfig = runtimeConfig.ocr || {};
+    const ocrEnabled = !!ocrConfig.enabled;
+    const ocrMaxFileSize = Number(ocrConfig.maxFileSize || 0);
+    const ocrStrings = {
+      idle: dataset.ocrIdle || 'Text scanner ready',
+      processing: dataset.ocrProcessing || 'Scanning photo...',
+      success: dataset.ocrSuccess || 'Text inserted',
+      error: dataset.ocrError || 'Could not read the text',
+      disabled: dataset.ocrDisabled || 'Image OCR unavailable',
+      retry: dataset.ocrRetry || 'Retry',
+      undo: dataset.ocrUndo || 'Undo replace'
+    };
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
@@ -2185,6 +2211,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let privateAudioOnly=false;
     let sttAbortController=null;
     let sttUndoValue=null;
+    let ocrAbortController=null;
+    let ocrLastFile=null;
+    let ocrUndoValue=null;
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -2204,6 +2233,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const sttStatusEl = $("#sttStatus");
     const sttRetryBtn = $("#sttRetry");
     const sttUndoBtn = $("#sttUndo");
+    const ocrStatusEl = $("#ocrStatus");
+    const ocrRetryBtn = $("#ocrRetry");
+    const ocrUndoBtn = $("#ocrUndo");
     const keepPrivateAudioInput = $("#keepPrivateAudio");
 
     const storageFallback = new Map();
@@ -2293,8 +2325,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setSttUndoVisible(false);
       }
     }
+    function setOcrRetryVisible(show){
+      if(!ocrRetryBtn) return;
+      ocrRetryBtn.classList.toggle('hidden', !show);
+    }
+    function setOcrUndoVisible(show){
+      if(!ocrUndoBtn) return;
+      ocrUndoBtn.classList.toggle('hidden', !show);
+    }
+    function setOcrStatus(state, customText){
+      if(!ocrStatusEl){
+        return;
+      }
+      const message = customText || ocrStrings[state] || ocrStrings.idle;
+      ocrStatusEl.textContent = message;
+      ocrStatusEl.classList.remove('error','success');
+      const isError = state === 'error';
+      const isSuccess = state === 'success';
+      if(isError){
+        ocrStatusEl.classList.add('error');
+      } else if(isSuccess){
+        ocrStatusEl.classList.add('success');
+      }
+      if(state === 'disabled'){
+        ocrStatusEl.classList.add('error');
+      }
+      setOcrRetryVisible(isError);
+      if(state === 'idle' || state === 'disabled'){
+        setOcrUndoVisible(false);
+      }
+    }
     if(sttStatusEl){
       setSttStatus(sttEnabled ? 'idle' : 'disabled');
+    }
+    if(ocrStatusEl){
+      setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
     }
     if(keepPrivateAudioInput){
       keepPrivateAudioInput.checked = false;
@@ -2319,6 +2384,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setSttStatus(sttEnabled ? 'idle' : 'disabled');
       });
     }
+    if(ocrUndoBtn){
+      ocrUndoBtn.addEventListener('click', e=>{
+        e.preventDefault();
+        if(!ocrUndoValue) return;
+        const front = $("#uFront");
+        if(front){
+          front.value = ocrUndoValue;
+          try{ front.focus(); }catch(_e){}
+          front.dispatchEvent(new Event('input', {bubbles:true}));
+          front.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+        ocrUndoValue = null;
+        setOcrUndoVisible(false);
+        setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
+      });
+    }
     if(sttRetryBtn){
       sttRetryBtn.addEventListener('click', async e=>{
         e.preventDefault();
@@ -2329,6 +2410,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }catch(_e){
           setSttStatus('error', sttStrings.error);
+        }
+      });
+    }
+    if(ocrRetryBtn){
+      ocrRetryBtn.addEventListener('click', async e=>{
+        e.preventDefault();
+        if(!ocrLastFile){
+          setOcrStatus('error', ocrStrings.error);
+          return;
+        }
+        try{
+          await triggerOcrRecognition(ocrLastFile);
+        }catch(err){
+          setOcrStatus('error', err?.message || ocrStrings.error);
         }
       });
     }
@@ -2407,27 +2502,47 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return lastAudioDurationSec;
     }
-    function applyTranscriptionResult(text){
+    function insertFrontText(text){
       const trimmed = (text || '').trim();
       if(trimmed === ''){
-        return;
+        return null;
       }
       const front = $("#uFront");
       if(!front){
-        return;
+        return null;
       }
       const previous = front.value;
-      if(previous && previous !== trimmed){
-        sttUndoValue = previous;
-        setSttUndoVisible(true);
-      }else{
-        sttUndoValue = null;
-        setSttUndoVisible(false);
-      }
       front.value = trimmed;
       try{ front.focus(); }catch(_e){}
       front.dispatchEvent(new Event('input', {bubbles:true}));
       front.dispatchEvent(new Event('change', {bubbles:true}));
+      return { trimmed, previous };
+    }
+    function applyTranscriptionResult(text){
+      const result = insertFrontText(text);
+      if(!result){
+        return;
+      }
+      if(result.previous && result.previous !== result.trimmed){
+        sttUndoValue = result.previous;
+        setSttUndoVisible(true);
+      } else {
+        sttUndoValue = null;
+        setSttUndoVisible(false);
+      }
+    }
+    function applyOcrResult(text){
+      const result = insertFrontText(text);
+      if(!result){
+        return;
+      }
+      if(result.previous && result.previous !== result.trimmed){
+        ocrUndoValue = result.previous;
+        setOcrUndoVisible(true);
+      } else {
+        ocrUndoValue = null;
+        setOcrUndoVisible(false);
+      }
     }
     async function triggerTranscription(blob){
       if(!sttEnabled || !blob){
@@ -2506,8 +2621,70 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }finally{
         clearTimeout(stageTimer);
-        if(sttAbortController === controller){
+      if(sttAbortController === controller){
           sttAbortController = null;
+        }
+      }
+    }
+    async function triggerOcrRecognition(file){
+      if(!ocrEnabled || !file){
+        setOcrStatus('disabled');
+        return;
+      }
+      if(ocrMaxFileSize && file.size > ocrMaxFileSize){
+        const pretty = formatFileSize(ocrMaxFileSize);
+        const limitMessage = pretty ? `Image must be ${pretty} or smaller.` : ocrStrings.error;
+        setOcrStatus('error', limitMessage);
+        return;
+      }
+      const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+      url.searchParams.set('cmid', cmid);
+      url.searchParams.set('action', 'recognize_image');
+      url.searchParams.set('sesskey', sesskey);
+      const fd = new FormData();
+      fd.append('file', file, file.name || 'ocr-image.jpg');
+      if(ocrAbortController){
+        try{ ocrAbortController.abort(); }catch(_e){}
+      }
+      const controller = new AbortController();
+      ocrAbortController = controller;
+      setOcrStatus('processing');
+      try{
+        const response = await fetch(url.toString(), {method:'POST', body:fd, signal:controller.signal});
+        let payload = null;
+        try{
+          payload = await response.json();
+        }catch(_e){
+          if(!response.ok){
+            throw new Error('HTTP '+response.status);
+          }
+          throw _e;
+        }
+        if(!payload || payload.ok !== true){
+          const message = payload?.error || ocrStrings.error;
+          throw new Error(message);
+        }
+        const text = (payload.data && payload.data.text ? (payload.data.text + '') : '').trim();
+        if(!text){
+          throw new Error('Empty OCR result');
+        }
+        applyOcrResult(text);
+        setOcrStatus('success');
+        ocrLastFile = file;
+        window.setTimeout(()=>{
+          if(!ocrAbortController){
+            setOcrStatus('idle');
+          }
+        }, 3500);
+      }catch(err){
+        if(err && err.name === 'AbortError'){
+          setOcrStatus('idle');
+        }else{
+          setOcrStatus('error', err?.message || ocrStrings.error);
+        }
+      }finally{
+        if(ocrAbortController === controller){
+          ocrAbortController = null;
         }
       }
     }
@@ -3071,6 +3248,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       imagePickerBtn.dataset.bound = '1';
       imagePickerBtn.addEventListener("click", e=>{ e.preventDefault(); const input=document.getElementById('uImage'); if(input) input.click(); });
     }
+    const scanTextBtn = document.getElementById('btnScanText');
+    if(scanTextBtn && !scanTextBtn.dataset.bound){
+      scanTextBtn.dataset.bound = '1';
+      scanTextBtn.addEventListener("click", e=>{
+        e.preventDefault();
+        if(!ocrEnabled){
+          setOcrStatus('disabled');
+          return;
+        }
+        const input=document.getElementById('uOcrImage');
+        if(input){
+          input.value = '';
+          input.click();
+        }
+      });
+    }
+    if(scanTextBtn){
+      scanTextBtn.disabled = !ocrEnabled;
+    }
     const audioUploadBtn = document.getElementById('btnAudioUpload');
     if(audioUploadBtn && !audioUploadBtn.dataset.bound){
       audioUploadBtn.dataset.bound = '1';
@@ -3146,6 +3342,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         imgPrev.src=objectURL;
         imgPrev.classList.remove("hidden");
       }
+    });
+    $("#uOcrImage").addEventListener("change", async e=>{
+      const f=e.target.files?.[0];
+      if(!f) return;
+      ocrLastFile = f;
+      triggerOcrRecognition(f).catch(err=>{
+        setOcrStatus('error', err?.message || ocrStrings.error);
+      });
     });
     $("#uAudio").addEventListener("change", async e=>{
       const f=e.target.files?.[0];

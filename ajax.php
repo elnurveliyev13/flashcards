@@ -3,6 +3,7 @@ define('AJAX_SCRIPT', true);
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
+require_once(__DIR__ . '/lib.php');
 
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
@@ -25,7 +26,7 @@ if ($globalmode) {
     $access = \mod_flashcards\access_manager::check_user_access($USER->id);
 
     // Check permissions based on action
-    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'ai_focus_helper' || $action === 'ai_translate') {
+    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'recognize_image' || $action === 'ai_focus_helper' || $action === 'ai_translate') {
         // Allow site administrators and managers regardless of grace period/access
         $createallowed = !empty($access['can_create']);
         if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
@@ -188,6 +189,62 @@ switch ($action) {
             $response = [
                 'ok' => false,
                 'error' => get_string('error_whisper_api', 'mod_flashcards', $ex->getMessage()),
+                'errorcode' => 'unknown',
+            ];
+        } finally {
+            if ($tempfile && file_exists($tempfile)) {
+                @unlink($tempfile);
+            }
+        }
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        break;
+
+    case 'recognize_image':
+        $response = ['ok' => false];
+        $tempfile = null;
+        try {
+            if (empty($_FILES['file']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+                throw new invalid_parameter_exception('No file');
+            }
+            $maxsize = FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES;
+            $filesize = (int)($_FILES['file']['size'] ?? 0);
+            if ($filesize <= 0) {
+                throw new invalid_parameter_exception('Invalid file size');
+            }
+            if ($filesize > $maxsize) {
+                throw new moodle_exception('error_ocr_filesize', 'mod_flashcards', '', display_size($maxsize));
+            }
+
+            $originalname = clean_param($_FILES['file']['name'] ?? 'ocr.png', PARAM_FILE);
+            $mimetype = clean_param($_FILES['file']['type'] ?? '', PARAM_RAW_TRIMMED);
+
+            $basedir = make_temp_directory('mod_flashcards');
+            $tempfile = tempnam($basedir, 'ocr');
+            if ($tempfile === false) {
+                throw new moodle_exception('error_ocr_upload', 'mod_flashcards');
+            }
+            if (!move_uploaded_file($_FILES['file']['tmp_name'], $tempfile)) {
+                throw new moodle_exception('error_ocr_upload', 'mod_flashcards');
+            }
+
+            $client = new \mod_flashcards\local\ocr_client();
+            $text = $client->recognize($tempfile, $originalname, $mimetype);
+            $response = ['ok' => true, 'data' => ['text' => $text]];
+            http_response_code(200);
+        } catch (\moodle_exception $ex) {
+            http_response_code(400);
+            $response = [
+                'ok' => false,
+                'error' => $ex->getMessage(),
+                'errorcode' => $ex->errorcode,
+            ];
+        } catch (\Throwable $ex) {
+            http_response_code(400);
+            debugging('OCR recognition failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
+            $response = [
+                'ok' => false,
+                'error' => get_string('error_ocr_api', 'mod_flashcards', $ex->getMessage()),
                 'errorcode' => 'unknown',
             ];
         } finally {
