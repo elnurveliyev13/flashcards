@@ -2576,10 +2576,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       document.body.classList.add('cropper-open');
       try{
         cropImage = await loadCropImage(file);
-        const viewportWidth = Math.min(window.innerWidth, 420);
-        const viewportHeight = Math.min(window.innerHeight, 620);
-        const maxWidth = Math.max(260, viewportWidth - 32);
-        const maxHeight = Math.max(260, viewportHeight - 180);
+        const isMobile = window.innerWidth <= 640;
+        const viewportWidth = Math.min(window.innerWidth, isMobile ? 460 : 1100);
+        const viewportHeight = Math.min(window.innerHeight, isMobile ? 720 : 980);
+        const maxWidth = Math.max(isMobile ? 280 : 640, viewportWidth - (isMobile ? 32 : 160));
+        const maxHeight = Math.max(isMobile ? 300 : 720, viewportHeight - (isMobile ? 200 : 260));
         const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
         const displayWidth = Math.round(cropImage.width * scale);
         const displayHeight = Math.round(cropImage.height * scale);
