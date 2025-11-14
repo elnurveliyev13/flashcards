@@ -2476,13 +2476,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropModal.style.display = 'flex';
       }
       document.body.classList.add('cropper-open');
+      document.body.classList.add('cropper-open');
       try{
         cropImage = await loadCropImage(file);
-        const maxWidth = 640;
-        const maxHeight = 640;
-        const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
-        const displayWidth = Math.max(240, Math.round(cropImage.width * scale));
-        const displayHeight = Math.max(160, Math.round(cropImage.height * scale));
+      const viewportWidth = Math.min(window.innerWidth, 360);
+      const viewportHeight = Math.min(window.innerHeight, 520);
+      const maxWidth = Math.max(240, viewportWidth - 40);
+      const maxHeight = Math.max(240, viewportHeight - 120);
+      const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
+      const displayWidth = Math.max(220, Math.round(cropImage.width * scale));
+      const displayHeight = Math.max(220, Math.round(cropImage.height * scale));
         cropCanvas.width = displayWidth;
         cropCanvas.height = displayHeight;
         cropScale = displayWidth / cropImage.width;
