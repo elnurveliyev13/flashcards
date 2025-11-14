@@ -1112,7 +1112,7 @@ audio{max-width:260px}
 .ocr-crop-stage{position:relative;display:flex;justify-content:center;align-items:center;margin:0 auto;padding:0;overflow:visible;max-width:100%}
 .ocr-crop-surface{position:relative;overflow:hidden;border-radius:14px;background:#030711;touch-action:none;max-width:100%}
 .ocr-crop-canvas{width:100%;height:100%;display:block}
-#ocrCropRect{position:absolute;border:2px solid rgba(255,255,255,.95);border-radius:6px;pointer-events:auto;background:transparent;box-shadow:0 0 0 2000px rgba(0,0,0,.55)}
+#ocrCropRect{position:absolute;border:2px solid rgba(255,255,255,.95);border-radius:6px;pointer-events:auto;background:transparent}
 .ocr-crop-handle{position:absolute;width:24px;height:24px;border-radius:50%;border:2px solid #0f172a;background:rgba(255,255,255,.95);box-shadow:0 3px 10px rgba(0,0,0,.4);touch-action:none}
 .ocr-crop-handle::after{content:'';position:absolute;inset:6px;border-radius:50%;border:2px solid rgba(15,23,42,.45)}
 .handle-nw{top:-12px;left:-12px;cursor:nwse-resize}
