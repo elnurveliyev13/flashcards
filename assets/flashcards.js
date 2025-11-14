@@ -2414,6 +2414,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       ctx.drawImage(cropImage, 0, 0, cropImage.width, cropImage.height, 0, 0, cropCanvas.width, cropCanvas.height);
+      const rect = displayRect(cropRect);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      ctx.restore();
       refreshCropRectOverlay();
     }
     function refreshCropRectOverlay(){
@@ -2578,10 +2586,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropImage = await loadCropImage(file);
         const isMobile = window.innerWidth <= 640;
         const handleMargin = isMobile ? 48 : 72;
-        const viewportWidth = Math.min(window.innerWidth, isMobile ? 480 : 1100);
-        const viewportHeight = Math.min(window.innerHeight, isMobile ? 740 : 980);
-        const maxWidth = Math.max(isMobile ? 280 : 720, viewportWidth - handleMargin * 2);
-        const maxHeight = Math.max(isMobile ? 320 : 760, viewportHeight - (handleMargin + 160));
+        const viewportWidth = Math.min(window.innerWidth, isMobile ? 520 : 1200);
+        const viewportHeight = Math.min(window.innerHeight, isMobile ? 780 : 980);
+        const bodyEl = cropModal.querySelector('.ocr-crop-body');
+        const bodyWidth = Math.max(260, (bodyEl?.clientWidth || viewportWidth) - 24);
+        const bodyHeight = Math.max(260, (bodyEl?.clientHeight || viewportHeight) - 180);
+        const maxWidth = Math.max(isMobile ? 260 : 720, Math.min(bodyWidth, viewportWidth - handleMargin));
+        const maxHeight = Math.max(isMobile ? 320 : 760, Math.min(bodyHeight, viewportHeight - (handleMargin)));
         const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
         const displayWidth = Math.round(cropImage.width * scale);
         const displayHeight = Math.round(cropImage.height * scale);
