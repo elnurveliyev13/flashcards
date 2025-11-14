@@ -2577,10 +2577,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{
         cropImage = await loadCropImage(file);
         const isMobile = window.innerWidth <= 640;
-        const viewportWidth = Math.min(window.innerWidth, isMobile ? 460 : 1100);
-        const viewportHeight = Math.min(window.innerHeight, isMobile ? 720 : 980);
-        const maxWidth = Math.max(isMobile ? 280 : 640, viewportWidth - (isMobile ? 32 : 160));
-        const maxHeight = Math.max(isMobile ? 300 : 720, viewportHeight - (isMobile ? 200 : 260));
+        const handleMargin = isMobile ? 48 : 72;
+        const viewportWidth = Math.min(window.innerWidth, isMobile ? 480 : 1100);
+        const viewportHeight = Math.min(window.innerHeight, isMobile ? 740 : 980);
+        const maxWidth = Math.max(isMobile ? 280 : 720, viewportWidth - handleMargin * 2);
+        const maxHeight = Math.max(isMobile ? 320 : 760, viewportHeight - (handleMargin + 160));
         const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
         const displayWidth = Math.round(cropImage.width * scale);
         const displayHeight = Math.round(cropImage.height * scale);
