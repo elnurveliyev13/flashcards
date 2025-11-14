@@ -635,9 +635,8 @@
   </div>
   <div id="ocrCropModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ocrCropTitle">
     <div class="box ocr-crop-box">
-      <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
+      <div class="row" style="justify-content:flex-start;align-items:center;padding-left:12px">
         <strong id="ocrCropTitle">{{#str}} ocr_crop_title, mod_flashcards {{/str}}</strong>
-        <button id="ocrCropClose" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
       <div class="ocr-crop-body">
         <div class="ocr-crop-stage" aria-label="{{#str}} ocr_crop_hint, mod_flashcards {{/str}}">
@@ -655,10 +654,10 @@
           </div>
           </div>
         </div>
-        <div class="ocr-crop-hint" data-i18n="ocr_crop_hint">{{#str}} ocr_crop_hint, mod_flashcards {{/str}}</div>
       </div>
-        <div class="row ocr-crop-actions ocr-crop-actions-two">
+        <div class="row ocr-crop-actions">
           <button id="ocrCropCancel" class="ghost">{{#str}} cancel, mod_flashcards {{/str}}</button>
+          <button id="ocrCropUndo" class="mid" disabled>{{#str}} undo, mod_flashcards {{/str}}</button>
           <button id="ocrCropApply" class="ok">{{#str}} use_for_ocr, mod_flashcards {{/str}}</button>
         </div>
     </div>

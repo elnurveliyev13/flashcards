@@ -52,6 +52,7 @@ $string['back'] = 'Translation';
 $string['back_en'] = 'Translation';
 $string['image'] = 'Image';
 $string['audio'] = 'Audio';
+$string['undo'] = 'Undo';
 $string['tts_voice'] = 'Voice';
 $string['tts_voice_hint'] = 'Select a voice before asking the AI helper to generate audio.';
 $string['tts_voice_placeholder'] = 'Default voice';

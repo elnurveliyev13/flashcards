@@ -329,7 +329,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
     const cropCancelBtn = $("#ocrCropCancel");
-    const cropCloseBtn = $("#ocrCropClose");
+    const cropUndoBtn = $("#ocrCropUndo");
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
@@ -2230,6 +2230,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let cropActiveHandle=null;
     let cropDragStart=null;
     let cropDragStartRect=null;
+    let cropHistory=[];
     let viewZoom=1;
     let baseZoom=1;
     let viewX=0;
@@ -2385,6 +2386,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return cropCtx;
     }
     const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+    function resetCropHistory(){
+      cropHistory = [];
+      updateUndoState();
+    }
+    function pushCropHistory(){
+      if(!cropRect) return;
+      cropHistory.push({
+        rect: {...cropRect},
+        viewZoom,
+        viewX,
+        viewY,
+      });
+      if(cropHistory.length > 30){
+        cropHistory.shift();
+      }
+      updateUndoState();
+    }
+    function updateUndoState(){
+      if(cropUndoBtn){
+        cropUndoBtn.disabled = cropHistory.length === 0;
+      }
+    }
     function updateViewToFitImage(){
       if(!cropImage || !cropCanvas){
         return;
@@ -2405,7 +2428,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(cropDragMode && !force){
         return;
       }
-      const padding = Math.max(24, Math.min(48, cropCanvas.width * 0.05));
+      const padding = Math.max(8, Math.min(24, cropCanvas.width * 0.02));
       const zoomX = (cropCanvas.width - padding) / cropRect.width;
       const zoomY = (cropCanvas.height - padding) / cropRect.height;
       const targetZoom = Math.min(8, Math.max(baseZoom, Math.min(zoomX, zoomY)));
@@ -2520,6 +2543,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!cropRect){
         cropRect = {x:0,y:0,width:cropImage.width,height:cropImage.height};
       }
+      pushCropHistory();
       cropDragStartRect = {...cropRect};
       if(handleEl){
         cropDragMode = 'resize';
@@ -2616,6 +2640,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       baseZoom=1;
       viewX=0;
       viewY=0;
+      resetCropHistory();
       if(cropImageUrl){
         try{ URL.revokeObjectURL(cropImageUrl); }catch(_e){}
         cropImageUrl = null;
@@ -2656,14 +2681,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{
         cropImage = await loadCropImage(file);
         const isMobile = window.innerWidth <= 640;
-        const handleMargin = isMobile ? 48 : 72;
-        const viewportWidth = Math.min(window.innerWidth, isMobile ? 520 : 1200);
-        const viewportHeight = Math.min(window.innerHeight, isMobile ? 780 : 980);
-        const bodyEl = cropModal.querySelector('.ocr-crop-body');
-        const bodyWidth = Math.max(260, (bodyEl?.clientWidth || viewportWidth) - 24);
-        const bodyHeight = Math.max(260, (bodyEl?.clientHeight || viewportHeight) - 180);
-        const maxWidth = Math.max(isMobile ? 260 : 720, Math.min(bodyWidth, viewportWidth - handleMargin));
-        const maxHeight = Math.max(isMobile ? 320 : 760, Math.min(bodyHeight, viewportHeight - (handleMargin)));
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const bodyRect = cropModal.querySelector('.ocr-crop-body')?.getBoundingClientRect();
+        const containerWidth = Math.max(260, bodyRect?.width || viewportWidth * 0.92);
+        const containerHeight = Math.max(260, bodyRect?.height || viewportHeight * 0.7);
+        const maxWidth = Math.max(240, Math.min(containerWidth - (isMobile ? 12 : 40), viewportWidth - (isMobile ? 24 : 160)));
+        const maxHeight = Math.max(260, Math.min(containerHeight - (isMobile ? 40 : 80), viewportHeight - (isMobile ? 140 : 220)));
         const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
         const displayWidth = Math.round(cropImage.width * scale);
         const displayHeight = Math.round(cropImage.height * scale);
@@ -2679,6 +2703,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         updateViewToFitImage();
         focusOnCropRect(true);
         drawCropPreview();
+        resetCropHistory();
       }catch(err){
         setOcrStatus('error', err?.message || ocrStrings.error);
         closeCropper();
@@ -2728,9 +2753,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         applyCropForOcr().catch(err=> setOcrStatus('error', err?.message || ocrStrings.error));
       });
     }
+    if(cropUndoBtn){
+      cropUndoBtn.addEventListener('click', e=>{
+        e.preventDefault();
+        if(!cropHistory.length) return;
+        const snapshot = cropHistory.pop();
+        cropRect = snapshot.rect;
+        viewZoom = snapshot.viewZoom;
+        viewX = snapshot.viewX;
+        viewY = snapshot.viewY;
+        updateUndoState();
+        drawCropPreview();
+      });
+    }
     const closeCrop = ()=>{ closeCropper(); };
     if(cropCancelBtn) cropCancelBtn.addEventListener('click', closeCrop);
-    if(cropCloseBtn) cropCloseBtn.addEventListener('click', closeCrop);
+    updateUndoState();
     if(keepPrivateAudioInput){
       keepPrivateAudioInput.checked = false;
       keepPrivateAudio = false;
@@ -3164,10 +3202,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function attachAudio(url){
       audioURL=url;
+      console.log('[DEBUG] attachAudio called with:', url);
 
       // Set current audio URL for pronunciation practice
       if(window.setStudyRecorderAudio){
+        console.log('[DEBUG] Calling setStudyRecorderAudio');
         window.setStudyRecorderAudio(url);
+      }else{
+        console.log('[DEBUG] window.setStudyRecorderAudio not available');
       }
 
       if(btnPlayBtn) btnPlayBtn.classList.remove("hidden");
@@ -4035,6 +4077,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let studyTimerInterval = null;
       let studyTimerStart = 0;
       let currentCardAudioUrl = null;
+      let capturedCardAudioUrl = null; // Snapshot of audio URL at recording start (prevents race condition)
       let studentRecordingBlob = null;
       let autoStopTimer = null;
       let holdActive = false;
@@ -4114,7 +4157,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Playback chain: student → original → student (loop)
       async function playbackChain(){
-        if(!currentCardAudioUrl || !studentRecordingBlob) return;
+        console.log('[PronunciationPractice] playbackChain called');
+        console.log('[PronunciationPractice] capturedCardAudioUrl:', capturedCardAudioUrl);
+        console.log('[PronunciationPractice] studentRecordingBlob:', studentRecordingBlob);
+
+        if(!capturedCardAudioUrl || !studentRecordingBlob){
+          console.log('[PronunciationPractice] ERROR: Missing data! Cannot start playback');
+          console.log('[PronunciationPractice] capturedCardAudioUrl:', capturedCardAudioUrl);
+          console.log('[PronunciationPractice] studentRecordingBlob:', studentRecordingBlob);
+          return;
+        }
 
         // Stop any current playback FIRST
         stopPlaybackLoop();
@@ -4148,7 +4200,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
 
           console.log('[PronunciationPractice] Student finished, playing original audio');
-          player.src = currentCardAudioUrl;
+          player.src = capturedCardAudioUrl;
           player.playbackRate = 1;
           player.currentTime = 0;
 
@@ -4195,6 +4247,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         // Stop any active playback loop
         stopPlaybackLoop();
+
+        // CRITICAL: Capture current audio URL BEFORE recording starts
+        // This prevents race condition if renderCard() clears it during recording
+        if(!currentCardAudioUrl){
+          console.log('[PronunciationPractice] ERROR: No audio URL available, cannot record');
+          return;
+        }
+        capturedCardAudioUrl = currentCardAudioUrl;
+        console.log('[PronunciationPractice] Captured audio URL for playback:', capturedCardAudioUrl);
 
         // iOS recorder path
         if(useIOSRecorder){
@@ -4412,7 +4473,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Public function to set current audio URL
       window.setStudyRecorderAudio = function(url){
+        console.log('[PronunciationPractice] setStudyRecorderAudio called with:', url);
         currentCardAudioUrl = url;
+        capturedCardAudioUrl = null; // Clear captured URL when card changes
         studentRecordingBlob = null; // Reset student recording when card changes
         stopPlaybackLoop(); // Stop any active playback
       };
