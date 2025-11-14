@@ -169,6 +169,7 @@ $string['title_edit'] = 'Edit';
 $string['title_del'] = 'Delete';
 $string['title_record'] = 'Record';
 $string['title_stop'] = 'Stop';
+$string['title_record_practice'] = 'Record pronunciation';
 $string['press_hold_to_record'] = 'Press and hold to record';
 $string['release_when_finished'] = 'Release when you finish';
 

@@ -3071,7 +3071,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnEdit){ btnEdit.classList.remove('hidden'); btnEdit.disabled = !hasCard; }
       if(btnDel){ btnDel.classList.remove('hidden'); btnDel.disabled = !hasCard; }
     }
-    function hidePlayIcons(){ if(btnPlayBtn) btnPlayBtn.classList.add('hidden'); if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden'); }
+    function hidePlayIcons(){
+      if(btnPlayBtn) btnPlayBtn.classList.add('hidden');
+      if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden');
+      const btnRecordStudy = $("#btnRecordStudy");
+      if(btnRecordStudy) btnRecordStudy.classList.add('hidden');
+      // Clear pronunciation practice audio
+      if(window.setStudyRecorderAudio){
+        window.setStudyRecorderAudio(null);
+      }
+    }
     function playAudioFromUrl(url, rate){
       if(!url) return;
       try{
@@ -3083,8 +3092,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function attachAudio(url){
       audioURL=url;
+
+      // Set current audio URL for pronunciation practice
+      if(window.setStudyRecorderAudio){
+        window.setStudyRecorderAudio(url);
+      }
+
       if(btnPlayBtn) btnPlayBtn.classList.remove("hidden");
       if(btnPlaySlowBtn) btnPlaySlowBtn.classList.remove("hidden");
+
+      // Show pronunciation practice button
+      const btnRecordStudy = $("#btnRecordStudy");
+      if(btnRecordStudy) btnRecordStudy.classList.remove("hidden");
+
       if(btnPlayBtn){
         btnPlayBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,1); };
       }
@@ -3915,6 +3935,373 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
       setHintIdle();
     })();
+
+    // ========== STUDY TAB PRONUNCIATION PRACTICE ==========
+    (function initStudyPronunciationPractice(){
+      const btnRecordStudy = $("#btnRecordStudy");
+      const timerEl = $("#recTimerStudy");
+      if(!btnRecordStudy || !timerEl) return;
+
+      let isRecording = false;
+      let studyRecorder = null;
+      let studyRecorderChunks = [];
+      let studyMicStream = null;
+      let studyTimerInterval = null;
+      let studyTimerStart = 0;
+      let currentCardAudioUrl = null;
+      let studentRecordingBlob = null;
+      let autoStopTimer = null;
+      let holdActive = false;
+      let holdTimeout = null;
+      let activePointerToken = null;
+      let studentAudioPlayer = null;
+      let playbackLoopActive = false;
+
+      // Reuse iOS recorder if available
+      const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
+      const iosRecorderInstance = useIOSRecorder ? iosRecorderGlobal : null;
+
+      // Timer functions
+      function formatTime(ms){
+        const t = Math.max(0, Math.floor(ms/1000));
+        const m = ('0'+Math.floor(t/60)).slice(-2);
+        const s = ('0'+(t%60)).slice(-2);
+        return m+':'+s;
+      }
+
+      function startTimer(){
+        timerEl.classList.remove('hidden');
+        studyTimerStart = Date.now();
+        timerEl.textContent = '00:00';
+        if(studyTimerInterval) clearInterval(studyTimerInterval);
+        studyTimerInterval = setInterval(()=>{
+          try{ timerEl.textContent = formatTime(Date.now() - studyTimerStart); }catch(_e){}
+        }, 250);
+      }
+
+      function stopTimer(){
+        if(studyTimerInterval) clearInterval(studyTimerInterval);
+        studyTimerInterval = null;
+        timerEl.classList.add('hidden');
+      }
+
+      // Mic stream management
+      function stopStudyMicStream(){
+        try{
+          if(studyMicStream){
+            studyMicStream.getTracks().forEach(t=>{ try{t.stop();}catch(_e){} });
+            studyMicStream = null;
+          }
+        }catch(_e){}
+      }
+
+      // Best MIME type selection (same as Quick Input)
+      function bestMime(){
+        try{
+          if(!(window.MediaRecorder && MediaRecorder.isTypeSupported)) return '';
+          const cand = ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/ogg','audio/mp4;codecs=mp4a.40.2','audio/mp4'];
+          for(let i=0; i<cand.length; i++){
+            if(MediaRecorder.isTypeSupported(cand[i])) return cand[i];
+          }
+        }catch(_e){}
+        return '';
+      }
+
+      // Normalize audio MIME type
+      function normalizeAudioMime(mt){
+        mt = (mt||'').toLowerCase();
+        if(!mt) return '';
+        if(mt.includes('mp4') || mt.includes('m4a') || mt.includes('aac')) return 'audio/mp4';
+        if(mt.includes('3gpp')) return 'audio/3gpp';
+        if(mt.includes('webm')) return 'audio/webm';
+        if(mt.includes('ogg')) return 'audio/ogg';
+        if(mt.includes('wav')) return 'audio/wav';
+        return mt.startsWith('video/mp4') ? 'audio/mp4' : mt;
+      }
+
+      // Stop playback loop
+      function stopPlaybackLoop(){
+        playbackLoopActive = false;
+        try{ player.pause(); player.currentTime = 0; }catch(_e){}
+        try{ if(studentAudioPlayer){ studentAudioPlayer.pause(); studentAudioPlayer.currentTime = 0; } }catch(_e){}
+      }
+
+      // Playback chain: original → student → original (loop)
+      async function playbackChain(){
+        if(!currentCardAudioUrl || !studentRecordingBlob) return;
+
+        playbackLoopActive = true;
+
+        // Stop any current playback
+        stopPlaybackLoop();
+
+        debugLog('[PronunciationPractice] Starting playback loop');
+
+        // 1. Play original card audio
+        debugLog('[PronunciationPractice] Playing original audio');
+        player.src = currentCardAudioUrl;
+        player.playbackRate = 1;
+        player.currentTime = 0;
+
+        // When original finishes, play student recording
+        player.onended = async () => {
+          if(!playbackLoopActive) return; // Loop was stopped
+
+          debugLog('[PronunciationPractice] Original finished, playing student recording');
+          const studentUrl = URL.createObjectURL(studentRecordingBlob);
+
+          // Clean up previous player
+          if(studentAudioPlayer){
+            try{
+              studentAudioPlayer.pause();
+              if(studentAudioPlayer.src && studentAudioPlayer.src.startsWith('blob:')){
+                URL.revokeObjectURL(studentAudioPlayer.src);
+              }
+            }catch(_e){}
+          }
+
+          studentAudioPlayer = new Audio(studentUrl);
+
+          // When student recording finishes, play original again
+          studentAudioPlayer.onended = () => {
+            if(!playbackLoopActive){
+              URL.revokeObjectURL(studentUrl);
+              return; // Loop was stopped
+            }
+
+            debugLog('[PronunciationPractice] Student recording finished, looping to original');
+            URL.revokeObjectURL(studentUrl);
+            playbackChain(); // Loop!
+          };
+
+          studentAudioPlayer.play().catch(err=>{
+            debugLog('[PronunciationPractice] Student playback failed: '+(err?.message||err));
+            URL.revokeObjectURL(studentUrl);
+            playbackLoopActive = false;
+          });
+        };
+
+        player.play().catch(err=>{
+          debugLog('[PronunciationPractice] Original playback failed: '+(err?.message||err));
+          playbackLoopActive = false;
+        });
+      }
+
+      // Handle recorded blob
+      async function handleStudentRecording(blob){
+        if(!blob || blob.size <= 0){
+          debugLog('[PronunciationPractice] Empty blob received');
+          return;
+        }
+
+        debugLog('[PronunciationPractice] Recording complete: ' + blob.size + ' bytes');
+        studentRecordingBlob = blob;
+
+        // Automatically start playback chain
+        await playbackChain();
+      }
+
+      // Start recording
+      async function startStudyRecording(){
+        if(isRecording) return;
+
+        if(autoStopTimer){ clearTimeout(autoStopTimer); autoStopTimer=null; }
+
+        // Stop any active playback loop
+        stopPlaybackLoop();
+
+        // iOS recorder path
+        if(useIOSRecorder){
+          try{
+            debugLog('[PronunciationPractice] Starting iOS recorder');
+            await iosRecorderInstance.start();
+            isRecording = true;
+            btnRecordStudy.classList.add("recording");
+            startTimer();
+            autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
+          }catch(err){
+            debugLog('[PronunciationPractice] iOS start failed: '+(err?.message||err));
+            isRecording = false;
+            try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
+          }
+          return;
+        }
+
+        // Standard MediaRecorder path
+        try{
+          if(!window.MediaRecorder){
+            debugLog('[PronunciationPractice] MediaRecorder not supported');
+            return;
+          }
+
+          stopStudyMicStream();
+          const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+          studyMicStream = stream;
+          studyRecorderChunks = [];
+
+          let mime = bestMime();
+          try{
+            studyRecorder = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream);
+          }catch(_er){
+            try{
+              studyRecorder = new MediaRecorder(stream);
+              mime = studyRecorder.mimeType || mime || '';
+            }catch(_er2){
+              stopStudyMicStream();
+              debugLog('[PronunciationPractice] MediaRecorder creation failed');
+              return;
+            }
+          }
+
+          if(studyRecorder.mimeType) mime = studyRecorder.mimeType;
+
+          studyRecorder.ondataavailable = e => {
+            if(e.data && e.data.size>0) studyRecorderChunks.push(e.data);
+          };
+
+          studyRecorder.onstop = async () => {
+            try{
+              const detectedType = (studyRecorderChunks[0]?.type) || mime || '';
+              const finalType = normalizeAudioMime(detectedType);
+              const blob = new Blob(studyRecorderChunks, {type: finalType || undefined});
+              debugLog('[PronunciationPractice] MediaRecorder stop: '+studyRecorderChunks.length+' chunks, '+blob.size+' bytes');
+              await handleStudentRecording(blob);
+            }catch(err){
+              debugLog('[PronunciationPractice] Stop failed: '+(err?.message||err));
+            }
+            stopStudyMicStream();
+            studyRecorder = null;
+            isRecording = false;
+          };
+
+          try{ studyRecorder.start(1000); }catch(_e){ studyRecorder.start(); }
+
+          isRecording = true;
+          btnRecordStudy.classList.add("recording");
+          startTimer();
+          autoStopTimer = setTimeout(()=>{
+            if(studyRecorder && isRecording){
+              try{ studyRecorder.stop(); }catch(_e){}
+            }
+          }, 30000); // 30s max
+
+        }catch(err){
+          debugLog('[PronunciationPractice] Start failed: '+(err?.message||err));
+          isRecording = false;
+          studyRecorder = null;
+          stopStudyMicStream();
+        }
+      }
+
+      // Stop recording
+      async function stopStudyRecording(){
+        if(autoStopTimer){ clearTimeout(autoStopTimer); autoStopTimer=null; }
+
+        // iOS recorder path
+        if(useIOSRecorder){
+          if(!isRecording){
+            try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
+            btnRecordStudy.classList.remove("recording");
+            stopTimer();
+            return;
+          }
+
+          try{
+            const blob = await iosRecorderInstance.exportWav();
+            await handleStudentRecording(blob);
+            debugLog('[PronunciationPractice] iOS export: '+(blob?.size||0)+' bytes');
+          }catch(err){
+            debugLog('[PronunciationPractice] iOS stop failed: '+(err?.message||err));
+          }finally{
+            try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
+            isRecording = false;
+            btnRecordStudy.classList.remove("recording");
+            stopTimer();
+          }
+          return;
+        }
+
+        // Standard MediaRecorder path
+        try{ if(studyRecorder){ studyRecorder.stop(); } }catch(_e){}
+        isRecording = false;
+        btnRecordStudy.classList.remove("recording");
+        stopTimer();
+      }
+
+      // Hold-to-record interaction (same as Quick Input)
+      function onDown(e){
+        if(e.type === 'mousedown' && e.button !== 0) return;
+        if(e.pointerType === 'mouse' && e.button !== 0) return;
+        if(holdActive) return;
+
+        holdActive = true;
+        activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
+        try{ e.preventDefault(); }catch(_e){}
+
+        // 0.5s delay before recording starts
+        holdTimeout = setTimeout(() => {
+          const startPromise = startStudyRecording();
+          if(startPromise && typeof startPromise.then === 'function'){
+            startPromise.catch(err=>{ debugLog('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
+          }
+        }, 500);
+
+        function onceUp(ev){
+          if(activePointerToken !== null){
+            if(typeof activePointerToken === 'number'){
+              if(ev && ev.pointerId !== undefined && ev.pointerId !== activePointerToken) return;
+            }
+          }
+
+          window.removeEventListener("pointerup", onceUp);
+          window.removeEventListener("pointercancel", onceUp);
+          window.removeEventListener("mouseup", onceUp);
+          window.removeEventListener("touchend", onceUp);
+          window.removeEventListener("touchcancel", onceUp);
+
+          holdActive = false;
+          activePointerToken = null;
+
+          if(holdTimeout){
+            clearTimeout(holdTimeout);
+            holdTimeout = null;
+          }
+
+          const stopPromise = stopStudyRecording();
+          if(stopPromise && typeof stopPromise.then === 'function'){
+            stopPromise.catch(err=>{ debugLog('[PronunciationPractice] Stop promise rejected: '+(err?.message||err)); });
+          }
+        }
+
+        window.addEventListener("pointerup", onceUp);
+        window.addEventListener("pointercancel", onceUp);
+        window.addEventListener("mouseup", onceUp);
+        window.addEventListener("touchend", onceUp);
+        window.addEventListener("touchcancel", onceUp);
+      }
+
+      // Attach event listeners
+      btnRecordStudy.addEventListener("pointerdown", onDown);
+      btnRecordStudy.addEventListener("mousedown", onDown);
+      btnRecordStudy.addEventListener("touchstart", onDown, {passive:false});
+
+      // Prevent click propagation
+      try{
+        btnRecordStudy.addEventListener("click", function(e){
+          try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){}
+        }, true);
+      }catch(_e){}
+
+      // Public function to set current audio URL
+      window.setStudyRecorderAudio = function(url){
+        currentCardAudioUrl = url;
+        studentRecordingBlob = null; // Reset student recording when card changes
+        stopPlaybackLoop(); // Stop any active playback
+      };
+
+      debugLog('[PronunciationPractice] Initialized');
+    })();
+
     let orderChosen=[];
     function updateOrderPreview(){ const chipsMap={ audio: t('audio') || 'audio', image: t('image') || 'image', text: t('front') || 'text', explanation: t('explanation') || 'explanation', translation: t('back') || 'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → '); const prevEl = document.getElementById('orderPreview'); if(prevEl) prevEl.textContent=pretty; }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});

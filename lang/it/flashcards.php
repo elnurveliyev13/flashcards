@@ -140,6 +140,7 @@ $string['title_edit'] = 'Modifica';
 $string['title_del'] = 'Elimina';
 $string['title_record'] = 'Registra';
 $string['title_stop'] = 'Ferma';
+$string['title_record_practice'] = 'Registra pronuncia';
 $string['press_hold_to_record'] = 'Premi e tieni premuto per registrare';
 $string['release_when_finished'] = 'Rilascia quando hai finito';
 

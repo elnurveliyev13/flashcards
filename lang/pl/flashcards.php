@@ -140,6 +140,7 @@ $string['title_edit'] = 'Edytuj';
 $string['title_del'] = 'Usuń';
 $string['title_record'] = 'Nagraj';
 $string['title_stop'] = 'Zatrzymaj';
+$string['title_record_practice'] = 'Nagraj wymowę';
 $string['press_hold_to_record'] = 'Naciśnij i przytrzymaj, aby nagrać';
 $string['release_when_finished'] = 'Puść, gdy skończysz';
 

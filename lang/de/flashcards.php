@@ -140,6 +140,7 @@ $string['title_edit'] = 'Bearbeiten';
 $string['title_del'] = 'Löschen';
 $string['title_record'] = 'Aufnehmen';
 $string['title_stop'] = 'Stoppen';
+$string['title_record_practice'] = 'Aussprache aufnehmen';
 $string['press_hold_to_record'] = 'Drücken und halten zum Aufnehmen';
 $string['release_when_finished'] = 'Loslassen, wenn fertig';
 

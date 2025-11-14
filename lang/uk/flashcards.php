@@ -140,6 +140,7 @@ $string['title_edit'] = 'Редагувати';
 $string['title_del'] = 'Видалити';
 $string['title_record'] = 'Записати';
 $string['title_stop'] = 'Зупинити';
+$string['title_record_practice'] = 'Записати вимову';
 $string['press_hold_to_record'] = 'Натисніть і утримуйте для запису';
 $string['release_when_finished'] = 'Відпустіть, коли закінчите';
 

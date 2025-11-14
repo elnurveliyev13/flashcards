@@ -140,6 +140,7 @@ $string['title_edit'] = 'Editar';
 $string['title_del'] = 'Eliminar';
 $string['title_record'] = 'Grabar';
 $string['title_stop'] = 'Detener';
+$string['title_record_practice'] = 'Grabar pronunciación';
 $string['press_hold_to_record'] = 'Presiona y mantén para grabar';
 $string['release_when_finished'] = 'Suelta cuando termines';
 
