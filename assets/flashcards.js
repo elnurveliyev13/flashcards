@@ -3937,7 +3937,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     })();
 
     // ========== STUDY TAB PRONUNCIATION PRACTICE ==========
-    (function initStudyPronunciationPractice(){
+    let pronunciationPracticeInitialized = false;
+    function initStudyPronunciationPractice(){
+      if(pronunciationPracticeInitialized){
+        debugLog('[PronunciationPractice] Already initialized, skipping');
+        return;
+      }
+
       debugLog('[PronunciationPractice] Starting initialization...');
       const btnRecordStudy = $("#btnRecordStudy");
       const timerEl = $("#recTimerStudy");
@@ -3947,6 +3953,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         debugLog('[PronunciationPractice] ERROR: Required elements not found! btnRecordStudy='+(!!btnRecordStudy)+', timerEl='+(!!timerEl));
         return;
       }
+
+      pronunciationPracticeInitialized = true;
 
       let isRecording = false;
       let studyRecorder = null;
@@ -4337,8 +4345,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         stopPlaybackLoop(); // Stop any active playback
       };
 
-      debugLog('[PronunciationPractice] Initialized');
-    })();
+      debugLog('[PronunciationPractice] Initialized successfully');
+    }
 
     let orderChosen=[];
     function updateOrderPreview(){ const chipsMap={ audio: t('audio') || 'audio', image: t('image') || 'image', text: t('front') || 'text', explanation: t('explanation') || 'explanation', translation: t('back') || 'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → '); const prevEl = document.getElementById('orderPreview'); if(prevEl) prevEl.textContent=pretty; }
@@ -5274,6 +5282,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           // Study view will auto-refresh from existing queue
           // Re-initialize autogrow for textareas
           setTimeout(() => initAutogrow(), 50);
+          // Initialize pronunciation practice recorder
+          setTimeout(() => {
+            if(typeof initStudyPronunciationPractice === 'function'){
+              initStudyPronunciationPractice();
+            }
+          }, 100);
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
           tabDashboard.classList.add('fc-tab-active');
