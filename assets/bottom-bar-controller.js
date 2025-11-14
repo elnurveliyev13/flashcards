@@ -25,7 +25,7 @@
       console.warn('bottomActions not found - rating bar unavailable');
     }
 
-    // Find or create edit bar (Update/Create new)
+    // Find or create edit bar (Update/Create)
     this._createEditBar();
 
     // Bind events
@@ -58,7 +58,7 @@
     if(!this.editBar){
       var updateLabel = escapeHtml(btnUpdate.textContent || 'Update');
       var updateTitle = btnUpdate.getAttribute('title') || '';
-      var addLabel = escapeHtml(btnAdd.textContent || 'Create new');
+      var addLabel = escapeHtml(btnAdd.textContent || 'Create');
       var updateAttrs = ' data-role="update"';
       if(updateTitle){
         updateAttrs += ' title="' + escapeAttr(updateTitle) + '"';
