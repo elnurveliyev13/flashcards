@@ -4103,63 +4103,63 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{ if(studentAudioPlayer){ studentAudioPlayer.pause(); studentAudioPlayer.currentTime = 0; } }catch(_e){}
       }
 
-      // Playback chain: original → student → original (loop)
+      // Playback chain: student → original → student (loop)
       async function playbackChain(){
         if(!currentCardAudioUrl || !studentRecordingBlob) return;
 
-        playbackLoopActive = true;
-
-        // Stop any current playback
+        // Stop any current playback FIRST
         stopPlaybackLoop();
+
+        // THEN activate new loop
+        playbackLoopActive = true;
 
         console.log('[PronunciationPractice] Starting playback loop');
 
-        // 1. Play original card audio
-        console.log('[PronunciationPractice] Playing original audio');
-        player.src = currentCardAudioUrl;
-        player.playbackRate = 1;
-        player.currentTime = 0;
+        // 1. Play STUDENT recording FIRST
+        console.log('[PronunciationPractice] Playing student recording');
+        const studentUrl = URL.createObjectURL(studentRecordingBlob);
 
-        // When original finishes, play student recording
-        player.onended = async () => {
-          if(!playbackLoopActive) return; // Loop was stopped
+        // Clean up previous player
+        if(studentAudioPlayer){
+          try{
+            studentAudioPlayer.pause();
+            if(studentAudioPlayer.src && studentAudioPlayer.src.startsWith('blob:')){
+              URL.revokeObjectURL(studentAudioPlayer.src);
+            }
+          }catch(_e){}
+        }
 
-          console.log('[PronunciationPractice] Original finished, playing student recording');
-          const studentUrl = URL.createObjectURL(studentRecordingBlob);
+        studentAudioPlayer = new Audio(studentUrl);
 
-          // Clean up previous player
-          if(studentAudioPlayer){
-            try{
-              studentAudioPlayer.pause();
-              if(studentAudioPlayer.src && studentAudioPlayer.src.startsWith('blob:')){
-                URL.revokeObjectURL(studentAudioPlayer.src);
-              }
-            }catch(_e){}
+        // When student recording finishes, play original
+        studentAudioPlayer.onended = () => {
+          if(!playbackLoopActive){
+            URL.revokeObjectURL(studentUrl);
+            return; // Loop was stopped
           }
 
-          studentAudioPlayer = new Audio(studentUrl);
+          console.log('[PronunciationPractice] Student finished, playing original audio');
+          player.src = currentCardAudioUrl;
+          player.playbackRate = 1;
+          player.currentTime = 0;
 
-          // When student recording finishes, play original again
-          studentAudioPlayer.onended = () => {
-            if(!playbackLoopActive){
-              URL.revokeObjectURL(studentUrl);
-              return; // Loop was stopped
-            }
+          // When original finishes, loop back to student
+          player.onended = () => {
+            if(!playbackLoopActive) return; // Loop was stopped
 
-            console.log('[PronunciationPractice] Student recording finished, looping to original');
-            URL.revokeObjectURL(studentUrl);
+            console.log('[PronunciationPractice] Original finished, looping to student');
             playbackChain(); // Loop!
           };
 
-          studentAudioPlayer.play().catch(err=>{
-            console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
-            URL.revokeObjectURL(studentUrl);
+          player.play().catch(err=>{
+            console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
             playbackLoopActive = false;
           });
         };
 
-        player.play().catch(err=>{
-          console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
+        studentAudioPlayer.play().catch(err=>{
+          console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
+          URL.revokeObjectURL(studentUrl);
           playbackLoopActive = false;
         });
       }
