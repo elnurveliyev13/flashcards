@@ -638,7 +638,19 @@
         <button id="ocrCropClose" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
       <div class="ocr-crop-body">
-        <canvas id="ocrCropCanvas" class="ocr-crop-canvas" aria-label="{{#str}} ocr_crop_hint, mod_flashcards {{/str}}"></canvas>
+        <div class="ocr-crop-stage" id="ocrCropStage" aria-label="{{#str}} ocr_crop_hint, mod_flashcards {{/str}}">
+          <canvas id="ocrCropCanvas" class="ocr-crop-canvas"></canvas>
+          <div id="ocrCropRect" class="ocr-crop-rect">
+            <div class="ocr-crop-handle handle-nw" data-handle="nw"></div>
+            <div class="ocr-crop-handle handle-n" data-handle="n"></div>
+            <div class="ocr-crop-handle handle-ne" data-handle="ne"></div>
+            <div class="ocr-crop-handle handle-e" data-handle="e"></div>
+            <div class="ocr-crop-handle handle-se" data-handle="se"></div>
+            <div class="ocr-crop-handle handle-s" data-handle="s"></div>
+            <div class="ocr-crop-handle handle-sw" data-handle="sw"></div>
+            <div class="ocr-crop-handle handle-w" data-handle="w"></div>
+          </div>
+        </div>
         <div class="ocr-crop-hint" data-i18n="ocr_crop_hint">{{#str}} ocr_crop_hint, mod_flashcards {{/str}}</div>
       </div>
         <div class="row ocr-crop-actions ocr-crop-actions-two">

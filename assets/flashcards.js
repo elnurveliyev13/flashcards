@@ -324,7 +324,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       undo: dataset.ocrUndo || 'Undo replace'
     };
     const cropModal = $("#ocrCropModal");
+    const cropStage = $("#ocrCropStage");
     const cropCanvas = $("#ocrCropCanvas");
+    const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
     const cropCancelBtn = $("#ocrCropCancel");
     const cropCloseBtn = $("#ocrCropClose");
@@ -2225,8 +2227,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let cropScale=1;
     let cropRect=null;
     let cropCtx=null;
-    let isSelectingCrop=false;
-    let selectionStart=null;
+    let cropDragMode=null;
+    let cropActiveHandle=null;
+    let cropDragStart=null;
+    let cropDragStartRect=null;
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -2410,16 +2414,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       ctx.drawImage(cropImage, 0, 0, cropImage.width, cropImage.height, 0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.save();
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
-      ctx.globalCompositeOperation = 'destination-out';
+      refreshCropRectOverlay();
+    }
+    function refreshCropRectOverlay(){
+      if(!cropRectEl || !cropImage || !cropRect){
+        return;
+      }
       const rect = displayRect(cropRect);
-      ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+      cropRectEl.style.left = `${rect.x}px`;
+      cropRectEl.style.top = `${rect.y}px`;
+      cropRectEl.style.width = `${rect.width}px`;
+      cropRectEl.style.height = `${rect.height}px`;
     }
     function getPointerImageCoords(event){
       if(!cropCanvas || !cropImage){
@@ -2433,6 +2438,92 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         y: Math.max(0, Math.min(cropImage.height, y)),
       };
     }
+    function handleCropPointerDown(e){
+      if(!cropImage || !cropStage) return;
+      if(e.button !== undefined && e.button !== 0) return;
+      const handleEl = e.target.closest('.ocr-crop-handle');
+      const rectEl = cropRectEl;
+      cropDragStart = getPointerImageCoords(e);
+      if(!cropRect){
+        cropRect = {x:0,y:0,width:cropImage.width,height:cropImage.height};
+      }
+      cropDragStartRect = {...cropRect};
+      if(handleEl){
+        cropDragMode = 'resize';
+        cropActiveHandle = handleEl.dataset.handle || '';
+      } else if(rectEl && rectEl.contains(e.target)){
+        cropDragMode = 'move';
+        cropActiveHandle = null;
+      } else {
+        cropDragMode = 'draw';
+        cropActiveHandle = null;
+        cropRect = clampCropRect(normalizeRect(cropDragStart, cropDragStart));
+        drawCropPreview();
+      }
+      e.preventDefault();
+      try{ cropStage.setPointerCapture(e.pointerId); }catch(_e){}
+    }
+    function handleCropPointerMove(e){
+      if(!cropImage || !cropDragMode || !cropDragStart){
+        return;
+      }
+      const point = getPointerImageCoords(e);
+      e.preventDefault();
+      if(cropDragMode === 'move' && cropDragStartRect){
+        const dx = point.x - cropDragStart.x;
+        const dy = point.y - cropDragStart.y;
+        const maxX = cropImage.width - cropDragStartRect.width;
+        const maxY = cropImage.height - cropDragStartRect.height;
+        const newX = Math.min(Math.max(0, cropDragStartRect.x + dx), Math.max(0, maxX));
+        const newY = Math.min(Math.max(0, cropDragStartRect.y + dy), Math.max(0, maxY));
+        cropRect = {x:newX, y:newY, width:cropDragStartRect.width, height:cropDragStartRect.height};
+      } else if(cropDragMode === 'resize' && cropDragStartRect){
+        cropRect = resizeCropRect(cropDragStartRect, cropActiveHandle, point);
+      } else if(cropDragMode === 'draw'){
+        cropRect = clampCropRect(normalizeRect(cropDragStart, point));
+      }
+      drawCropPreview();
+    }
+    function handleCropPointerUp(e){
+      if(cropStage){
+        try{ cropStage.releasePointerCapture(e.pointerId); }catch(_e){}
+      }
+      cropDragMode = null;
+      cropActiveHandle = null;
+      cropDragStart = null;
+      cropDragStartRect = null;
+    }
+    function resizeCropRect(baseRect, handle, point){
+      if(!cropImage){
+        return baseRect;
+      }
+      let left = baseRect.x;
+      let top = baseRect.y;
+      let right = baseRect.x + baseRect.width;
+      let bottom = baseRect.y + baseRect.height;
+      const minSize = 16;
+      const clampX = val => Math.min(Math.max(0, val), cropImage.width);
+      const clampY = val => Math.min(Math.max(0, val), cropImage.height);
+      if(handle && handle.includes('w')){
+        left = clampX(point.x);
+        left = Math.min(left, right - minSize);
+      }
+      if(handle && handle.includes('e')){
+        right = clampX(point.x);
+        right = Math.max(right, left + minSize);
+      }
+      if(handle && handle.includes('n')){
+        top = clampY(point.y);
+        top = Math.min(top, bottom - minSize);
+      }
+      if(handle && handle.includes('s')){
+        bottom = clampY(point.y);
+        bottom = Math.max(bottom, top + minSize);
+      }
+      const width = Math.max(minSize, right - left);
+      const height = Math.max(minSize, bottom - top);
+      return clampCropRect({x:left, y:top, width, height});
+    }
     function closeCropper(){
       if(cropModal){
         cropModal.classList.add('hidden');
@@ -2442,8 +2533,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       pendingImageFile = null;
       cropImage = null;
       cropRect = null;
-      isSelectingCrop = false;
-      selectionStart = null;
+      cropDragMode=null;
+      cropActiveHandle=null;
+      cropDragStart=null;
+      cropDragStartRect=null;
       if(cropImageUrl){
         try{ URL.revokeObjectURL(cropImageUrl); }catch(_e){}
         cropImageUrl = null;
@@ -2451,6 +2544,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const ctx = getCropContext();
       if(ctx && cropCanvas){
         ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+      }
+      if(cropRectEl){
+        cropRectEl.style.left = '0px';
+        cropRectEl.style.top = '0px';
+        cropRectEl.style.width = '0px';
+        cropRectEl.style.height = '0px';
       }
     }
     async function loadCropImage(file){
@@ -2475,21 +2574,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropModal.style.display = 'flex';
       }
       document.body.classList.add('cropper-open');
-      document.body.classList.add('cropper-open');
       try{
         cropImage = await loadCropImage(file);
-      const viewportWidth = Math.min(window.innerWidth, 360);
-      const viewportHeight = Math.min(window.innerHeight, 520);
-      const maxWidth = Math.max(240, viewportWidth - 40);
-      const maxHeight = Math.max(240, viewportHeight - 120);
-      const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
-      const displayWidth = Math.max(220, Math.round(cropImage.width * scale));
-      const displayHeight = Math.max(220, Math.round(cropImage.height * scale));
+        const viewportWidth = Math.min(window.innerWidth, 420);
+        const viewportHeight = Math.min(window.innerHeight, 620);
+        const maxWidth = Math.max(260, viewportWidth - 32);
+        const maxHeight = Math.max(260, viewportHeight - 180);
+        const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
+        const displayWidth = Math.round(cropImage.width * scale);
+        const displayHeight = Math.round(cropImage.height * scale);
         cropCanvas.width = displayWidth;
         cropCanvas.height = displayHeight;
         cropScale = displayWidth / cropImage.width;
         cropCanvas.style.width = `${displayWidth}px`;
         cropCanvas.style.height = `${displayHeight}px`;
+        if(cropStage){
+          cropStage.style.width = `${displayWidth}px`;
+          cropStage.style.height = `${displayHeight}px`;
+        }
         cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
         drawCropPreview();
       }catch(err){
@@ -2498,8 +2600,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
     async function applyCropForOcr(){
-      if(!cropImage || !cropRect || !pendingImageFile){
+      if(!cropImage || !pendingImageFile){
         return;
+      }
+      if(!cropRect){
+        cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
       }
       const width = Math.max(1, Math.round(cropRect.width));
       const height = Math.max(1, Math.round(cropRect.height));
@@ -2522,30 +2627,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     if(ocrStatusEl){
       setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
     }
-    if(cropCanvas){
-      cropCanvas.addEventListener('pointerdown', e=>{
-        e.preventDefault();
-        if(!cropImage) return;
-        const point = getPointerImageCoords(e);
-        isSelectingCrop = true;
-        selectionStart = point;
-        cropRect = clampCropRect(normalizeRect(point, point));
-        drawCropPreview();
-        try{ cropCanvas.setPointerCapture(e.pointerId); }catch(_e){}
-      });
-      cropCanvas.addEventListener('pointermove', e=>{
-        e.preventDefault();
-        if(!isSelectingCrop || !selectionStart) return;
-        const point = getPointerImageCoords(e);
-        cropRect = clampCropRect(normalizeRect(selectionStart, point));
-        drawCropPreview();
-      });
-      cropCanvas.addEventListener('pointerup', e=>{
-        e.preventDefault();
-        if(!isSelectingCrop) return;
-        isSelectingCrop = false;
-        try{ cropCanvas.releasePointerCapture(e.pointerId); }catch(_e){}
-      });
+    if(cropStage && !cropStage.dataset.bound){
+      cropStage.dataset.bound = '1';
+      cropStage.addEventListener('pointerdown', handleCropPointerDown);
+      window.addEventListener('pointermove', handleCropPointerMove, {passive:false});
+      window.addEventListener('pointerup', handleCropPointerUp);
+      window.addEventListener('pointercancel', handleCropPointerUp);
     }
     if(cropApplyBtn){
       cropApplyBtn.addEventListener('click', ()=>{
