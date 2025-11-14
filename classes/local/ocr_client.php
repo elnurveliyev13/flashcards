@@ -8,29 +8,29 @@ use moodle_exception;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Minimal wrapper around OCR.space so we can send image snapshots to the plugin.
+ * Google Cloud Vision OCR client used for quick photo uploads.
  */
 class ocr_client {
-    private const DEFAULT_ENDPOINT = 'https://api.ocr.space/parse/image';
+    private const DEFAULT_ENDPOINT = 'https://vision.googleapis.com/v1/images:annotate';
 
     /** @var bool */
     private $enabled = false;
     /** @var string */
     private $endpoint;
-    /** @var string */
-    private $language = 'eng';
     /** @var string|null */
     private $apikey;
+    /** @var string */
+    private $language = 'en';
     /** @var int */
     private $timeout = 30;
 
     public function __construct() {
         $config = get_config('mod_flashcards');
-        $this->apikey = trim($config->ocr_apikey ?? '') ?: (getenv('FLASHCARDS_OCR_KEY') ?: null);
-        $this->language = trim($config->ocr_language ?? '') ?: 'eng';
-        $this->endpoint = trim($config->ocr_endpoint ?? '') ?: self::DEFAULT_ENDPOINT;
-        $this->timeout = max(5, (int)($config->ocr_timeout ?? 30));
-        $this->enabled = !empty($config->ocr_enabled) && !empty($this->apikey);
+        $this->apikey = trim($config->googlevision_api_key ?? '') ?: (getenv('FLASHCARDS_GOOGLEVISION_KEY') ?: null);
+        $this->language = trim($config->googlevision_language ?? '') ?: 'en';
+        $this->endpoint = trim($config->googlevision_endpoint ?? '') ?: (getenv('FLASHCARDS_GOOGLEVISION_ENDPOINT') ?: self::DEFAULT_ENDPOINT);
+        $this->timeout = max(5, (int)($config->googlevision_timeout ?? 30));
+        $this->enabled = !empty($config->googlevision_enabled) && !empty($this->apikey);
     }
 
     public function is_enabled(): bool {
@@ -38,7 +38,7 @@ class ocr_client {
     }
 
     /**
-     * Recognize text inside a snapshot that was already uploaded to temporary storage.
+     * Perform OCR by calling Google Cloud Vision REST API.
      *
      * @throws moodle_exception
      */
@@ -50,23 +50,43 @@ class ocr_client {
             throw new coding_exception('Missing image file for OCR');
         }
 
-        $payload = [
-            'apikey' => $this->apikey,
-            'language' => $language ?: ($this->language ?: 'eng'),
-            'isOverlayRequired' => 'false',
-            'detectOrientation' => 'true',
-            'OCREngine' => 2,
-        ];
-        $payload['file'] = curl_file_create(
-            $filepath,
-            $mimetype ?: mime_content_type($filepath) ?: 'image/jpeg',
-            $filename ?: 'ocr.png'
-        );
+        $content = file_get_contents($filepath);
+        if ($content === false) {
+            throw new moodle_exception('error_ocr_upload', 'mod_flashcards');
+        }
 
-        $curl = curl_init($this->endpoint);
+        $requestbody = [
+            'requests' => [
+                [
+                    'image' => [
+                        'content' => base64_encode($content),
+                    ],
+                    'features' => [
+                        [
+                            'type' => 'TEXT_DETECTION',
+                            'maxResults' => 1,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $hint = $language ?: $this->language;
+        if ($hint !== '') {
+            $requestbody['requests'][0]['imageContext'] = [
+                'languageHints' => [$hint],
+            ];
+        }
+
+        $url = $this->endpoint . '?key=' . urlencode($this->apikey);
+        $headers = [
+            'Content-Type: application/json',
+        ];
+
+        $curl = curl_init($url);
         curl_setopt_array($curl, [
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => $payload,
+            CURLOPT_POSTFIELDS => json_encode($requestbody),
+            CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => $this->timeout,
         ]);
@@ -77,6 +97,7 @@ class ocr_client {
             curl_close($curl);
             throw new moodle_exception('error_ocr_api', 'mod_flashcards', '', $error ?: 'cURL failure');
         }
+
         $status = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
 
@@ -85,32 +106,37 @@ class ocr_client {
             $message = $this->extract_error_message($data, $response);
             throw new moodle_exception('error_ocr_api', 'mod_flashcards', '', $message);
         }
-        if (!empty($data['IsErroredOnProcessing'])) {
-            $message = $this->extract_error_message($data, $response);
+
+        $firstresponse = $data['responses'][0] ?? [];
+        if (!empty($firstresponse['error'])) {
+            $message = $this->extract_error_message($firstresponse['error'], $response);
             throw new moodle_exception('error_ocr_api', 'mod_flashcards', '', $message);
         }
 
-        $parts = [];
-        foreach ($data['ParsedResults'] ?? [] as $result) {
-            $parsed = trim($result['ParsedText'] ?? '');
-            if ($parsed !== '') {
-                $parts[] = $parsed;
+        $text = trim((string)($firstresponse['fullTextAnnotation']['text'] ?? ''));
+        if ($text === '') {
+            if (!empty($firstresponse['textAnnotations'][0]['description'])) {
+                $text = trim((string)$firstresponse['textAnnotations'][0]['description']);
             }
         }
-        if (empty($parts)) {
+
+        if ($text === '') {
             throw new moodle_exception('error_ocr_nodata', 'mod_flashcards');
         }
 
-        return implode("\n", $parts);
+        return $text;
     }
 
     private function extract_error_message($data, string $fallback): string {
         if (is_array($data)) {
-            if (!empty($data['ErrorMessage'])) {
-                return (string)$data['ErrorMessage'];
+            if (!empty($data['message'])) {
+                return (string)$data['message'];
             }
-            if (!empty($data['ErrorDetails'])) {
-                return (string)$data['ErrorDetails'];
+            if (!empty($data['description'])) {
+                return (string)$data['description'];
+            }
+            if (!empty($data['error']['message'])) {
+                return (string)$data['error']['message'];
             }
         }
         if (is_string($data) && trim($data) !== '') {

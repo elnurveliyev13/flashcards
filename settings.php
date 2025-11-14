@@ -194,45 +194,37 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_heading(
-        'mod_flashcards/ocr_heading',
-        get_string('settings_ocr_section', 'mod_flashcards'),
-        get_string('settings_ocr_section_desc', 'mod_flashcards')
+        'mod_flashcards/googlevision_heading',
+        get_string('settings_googlevision_section', 'mod_flashcards'),
+        get_string('settings_googlevision_section_desc', 'mod_flashcards')
     ));
 
     $settings->add(new admin_setting_configcheckbox(
-        'mod_flashcards/ocr_enabled',
-        get_string('settings_ocr_enable', 'mod_flashcards'),
-        get_string('settings_ocr_enable_desc', 'mod_flashcards'),
+        'mod_flashcards/googlevision_enabled',
+        get_string('settings_googlevision_enable', 'mod_flashcards'),
+        get_string('settings_googlevision_enable_desc', 'mod_flashcards'),
         0
     ));
 
     $settings->add(new admin_setting_configpasswordunmask(
-        'mod_flashcards/ocr_apikey',
-        get_string('settings_ocr_key', 'mod_flashcards'),
-        get_string('settings_ocr_key_desc', 'mod_flashcards'),
+        'mod_flashcards/googlevision_api_key',
+        get_string('settings_googlevision_key', 'mod_flashcards'),
+        get_string('settings_googlevision_key_desc', 'mod_flashcards'),
         ''
     ));
 
     $settings->add(new admin_setting_configtext(
-        'mod_flashcards/ocr_language',
-        get_string('settings_ocr_language', 'mod_flashcards'),
-        get_string('settings_ocr_language_desc', 'mod_flashcards'),
-        'eng',
+        'mod_flashcards/googlevision_language',
+        get_string('settings_googlevision_language', 'mod_flashcards'),
+        get_string('settings_googlevision_language_desc', 'mod_flashcards'),
+        'en',
         PARAM_ALPHANUMEXT
     ));
 
     $settings->add(new admin_setting_configtext(
-        'mod_flashcards/ocr_endpoint',
-        get_string('settings_ocr_endpoint', 'mod_flashcards'),
-        get_string('settings_ocr_endpoint_desc', 'mod_flashcards'),
-        'https://api.ocr.space/parse/image',
-        PARAM_URL
-    ));
-
-    $settings->add(new admin_setting_configtext(
-        'mod_flashcards/ocr_timeout',
-        get_string('settings_ocr_timeout', 'mod_flashcards'),
-        get_string('settings_ocr_timeout_desc', 'mod_flashcards'),
+        'mod_flashcards/googlevision_timeout',
+        get_string('settings_googlevision_timeout', 'mod_flashcards'),
+        get_string('settings_googlevision_timeout_desc', 'mod_flashcards'),
         45,
         PARAM_INT
     ));
