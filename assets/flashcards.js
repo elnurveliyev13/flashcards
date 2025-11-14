@@ -2476,6 +2476,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fillStyle = 'rgba(0,0,0,1)';
       ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.beginPath();
+      ctx.rect(rect.x, rect.y, rect.width, rect.height);
+      ctx.clip();
+      ctx.drawImage(
+        cropImage,
+        viewX, viewY, viewWidth, viewHeight,
+        0, 0, cropCanvas.width, cropCanvas.height
+      );
       ctx.restore();
       refreshCropRectOverlay();
     }
