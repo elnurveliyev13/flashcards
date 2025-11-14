@@ -3938,9 +3938,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // ========== STUDY TAB PRONUNCIATION PRACTICE ==========
     (function initStudyPronunciationPractice(){
+      debugLog('[PronunciationPractice] Starting initialization...');
       const btnRecordStudy = $("#btnRecordStudy");
       const timerEl = $("#recTimerStudy");
-      if(!btnRecordStudy || !timerEl) return;
+      debugLog('[PronunciationPractice] btnRecordStudy:', btnRecordStudy);
+      debugLog('[PronunciationPractice] timerEl:', timerEl);
+      if(!btnRecordStudy || !timerEl){
+        debugLog('[PronunciationPractice] ERROR: Required elements not found! btnRecordStudy='+(!!btnRecordStudy)+', timerEl='+(!!timerEl));
+        return;
+      }
 
       let isRecording = false;
       let studyRecorder = null;
