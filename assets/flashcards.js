@@ -3932,17 +3932,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let pronunciationPracticeInitialized = false;
     function initStudyPronunciationPractice(){
       if(pronunciationPracticeInitialized){
-        debugLog('[PronunciationPractice] Already initialized, skipping');
+        console.log('[PronunciationPractice] Already initialized, skipping');
         return;
       }
 
-      debugLog('[PronunciationPractice] Starting initialization...');
+      console.log('[PronunciationPractice] Starting initialization...');
       const btnRecordStudy = $("#btnRecordStudy");
       const timerEl = $("#recTimerStudy");
-      debugLog('[PronunciationPractice] btnRecordStudy:', btnRecordStudy);
-      debugLog('[PronunciationPractice] timerEl:', timerEl);
+      console.log('[PronunciationPractice] btnRecordStudy:', btnRecordStudy);
+      console.log('[PronunciationPractice] timerEl:', timerEl);
       if(!btnRecordStudy || !timerEl){
-        debugLog('[PronunciationPractice] ERROR: Required elements not found! btnRecordStudy='+(!!btnRecordStudy)+', timerEl='+(!!timerEl));
+        console.log('[PronunciationPractice] ERROR: Required elements not found! btnRecordStudy='+(!!btnRecordStudy)+', timerEl='+(!!timerEl));
         return;
       }
 
@@ -4041,10 +4041,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // Stop any current playback
         stopPlaybackLoop();
 
-        debugLog('[PronunciationPractice] Starting playback loop');
+        console.log('[PronunciationPractice] Starting playback loop');
 
         // 1. Play original card audio
-        debugLog('[PronunciationPractice] Playing original audio');
+        console.log('[PronunciationPractice] Playing original audio');
         player.src = currentCardAudioUrl;
         player.playbackRate = 1;
         player.currentTime = 0;
@@ -4053,7 +4053,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         player.onended = async () => {
           if(!playbackLoopActive) return; // Loop was stopped
 
-          debugLog('[PronunciationPractice] Original finished, playing student recording');
+          console.log('[PronunciationPractice] Original finished, playing student recording');
           const studentUrl = URL.createObjectURL(studentRecordingBlob);
 
           // Clean up previous player
@@ -4075,20 +4075,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               return; // Loop was stopped
             }
 
-            debugLog('[PronunciationPractice] Student recording finished, looping to original');
+            console.log('[PronunciationPractice] Student recording finished, looping to original');
             URL.revokeObjectURL(studentUrl);
             playbackChain(); // Loop!
           };
 
           studentAudioPlayer.play().catch(err=>{
-            debugLog('[PronunciationPractice] Student playback failed: '+(err?.message||err));
+            console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
             URL.revokeObjectURL(studentUrl);
             playbackLoopActive = false;
           });
         };
 
         player.play().catch(err=>{
-          debugLog('[PronunciationPractice] Original playback failed: '+(err?.message||err));
+          console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
           playbackLoopActive = false;
         });
       }
@@ -4096,11 +4096,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Handle recorded blob
       async function handleStudentRecording(blob){
         if(!blob || blob.size <= 0){
-          debugLog('[PronunciationPractice] Empty blob received');
+          console.log('[PronunciationPractice] Empty blob received');
           return;
         }
 
-        debugLog('[PronunciationPractice] Recording complete: ' + blob.size + ' bytes');
+        console.log('[PronunciationPractice] Recording complete: ' + blob.size + ' bytes');
         studentRecordingBlob = blob;
 
         // Automatically start playback chain
@@ -4119,14 +4119,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // iOS recorder path
         if(useIOSRecorder){
           try{
-            debugLog('[PronunciationPractice] Starting iOS recorder');
+            console.log('[PronunciationPractice] Starting iOS recorder');
             await iosRecorderInstance.start();
             isRecording = true;
             btnRecordStudy.classList.add("recording");
             startTimer();
             autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
           }catch(err){
-            debugLog('[PronunciationPractice] iOS start failed: '+(err?.message||err));
+            console.log('[PronunciationPractice] iOS start failed: '+(err?.message||err));
             isRecording = false;
             try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
           }
@@ -4136,7 +4136,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // Standard MediaRecorder path
         try{
           if(!window.MediaRecorder){
-            debugLog('[PronunciationPractice] MediaRecorder not supported');
+            console.log('[PronunciationPractice] MediaRecorder not supported');
             return;
           }
 
@@ -4154,7 +4154,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               mime = studyRecorder.mimeType || mime || '';
             }catch(_er2){
               stopStudyMicStream();
-              debugLog('[PronunciationPractice] MediaRecorder creation failed');
+              console.log('[PronunciationPractice] MediaRecorder creation failed');
               return;
             }
           }
@@ -4162,18 +4162,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(studyRecorder.mimeType) mime = studyRecorder.mimeType;
 
           studyRecorder.ondataavailable = e => {
-            debugLog('[PronunciationPractice] ondataavailable: '+(e.data?.size||0)+' bytes');
+            console.log('[PronunciationPractice] ondataavailable: '+(e.data?.size||0)+' bytes');
             if(e.data && e.data.size>0){
               studyRecorderChunks.push(e.data);
-              debugLog('[PronunciationPractice] Total chunks now: '+studyRecorderChunks.length);
+              console.log('[PronunciationPractice] Total chunks now: '+studyRecorderChunks.length);
             }
           };
 
           studyRecorder.onstop = async () => {
-            debugLog('[PronunciationPractice] onstop triggered, chunks: '+studyRecorderChunks.length);
+            console.log('[PronunciationPractice] onstop triggered, chunks: '+studyRecorderChunks.length);
             try{
               if(studyRecorderChunks.length === 0){
-                debugLog('[PronunciationPractice] ERROR: No chunks recorded!');
+                console.log('[PronunciationPractice] ERROR: No chunks recorded!');
                 stopStudyMicStream();
                 studyRecorder = null;
                 isRecording = false;
@@ -4182,10 +4182,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               const detectedType = (studyRecorderChunks[0]?.type) || mime || '';
               const finalType = normalizeAudioMime(detectedType);
               const blob = new Blob(studyRecorderChunks, {type: finalType || undefined});
-              debugLog('[PronunciationPractice] Created blob: '+blob.size+' bytes, type: '+blob.type);
+              console.log('[PronunciationPractice] Created blob: '+blob.size+' bytes, type: '+blob.type);
 
               if(blob.size === 0){
-                debugLog('[PronunciationPractice] ERROR: Blob is empty!');
+                console.log('[PronunciationPractice] ERROR: Blob is empty!');
                 stopStudyMicStream();
                 studyRecorder = null;
                 isRecording = false;
@@ -4194,7 +4194,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
               await handleStudentRecording(blob);
             }catch(err){
-              debugLog('[PronunciationPractice] onstop error: '+(err?.message||err));
+              console.log('[PronunciationPractice] onstop error: '+(err?.message||err));
             }
             stopStudyMicStream();
             studyRecorder = null;
@@ -4213,7 +4213,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }, 30000); // 30s max
 
         }catch(err){
-          debugLog('[PronunciationPractice] Start failed: '+(err?.message||err));
+          console.log('[PronunciationPractice] Start failed: '+(err?.message||err));
           isRecording = false;
           studyRecorder = null;
           stopStudyMicStream();
@@ -4236,9 +4236,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{
             const blob = await iosRecorderInstance.exportWav();
             await handleStudentRecording(blob);
-            debugLog('[PronunciationPractice] iOS export: '+(blob?.size||0)+' bytes');
+            console.log('[PronunciationPractice] iOS export: '+(blob?.size||0)+' bytes');
           }catch(err){
-            debugLog('[PronunciationPractice] iOS stop failed: '+(err?.message||err));
+            console.log('[PronunciationPractice] iOS stop failed: '+(err?.message||err));
           }finally{
             try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
             isRecording = false;
@@ -4252,14 +4252,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{
           if(studyRecorder && studyRecorder.state !== 'inactive'){
             // Request any remaining data before stopping
-            debugLog('[PronunciationPractice] Requesting final data, current chunks: '+studyRecorderChunks.length);
+            console.log('[PronunciationPractice] Requesting final data, current chunks: '+studyRecorderChunks.length);
             try{ studyRecorder.requestData(); }catch(_e){}
             // Small delay to allow requestData to complete
             await new Promise(resolve => setTimeout(resolve, 100));
             studyRecorder.stop();
           }
         }catch(_e){
-          debugLog('[PronunciationPractice] Stop error: '+(_e?.message||_e));
+          console.log('[PronunciationPractice] Stop error: '+(_e?.message||_e));
         }
         isRecording = false;
         btnRecordStudy.classList.remove("recording");
@@ -4280,7 +4280,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         holdTimeout = setTimeout(() => {
           const startPromise = startStudyRecording();
           if(startPromise && typeof startPromise.then === 'function'){
-            startPromise.catch(err=>{ debugLog('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
+            startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
           }
         }, 500);
 
@@ -4307,7 +4307,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
           const stopPromise = stopStudyRecording();
           if(stopPromise && typeof stopPromise.then === 'function'){
-            stopPromise.catch(err=>{ debugLog('[PronunciationPractice] Stop promise rejected: '+(err?.message||err)); });
+            stopPromise.catch(err=>{ console.log('[PronunciationPractice] Stop promise rejected: '+(err?.message||err)); });
           }
         }
 
@@ -4337,7 +4337,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         stopPlaybackLoop(); // Stop any active playback
       };
 
-      debugLog('[PronunciationPractice] Initialized successfully');
+      console.log('[PronunciationPractice] Initialized successfully');
     }
 
     let orderChosen=[];
