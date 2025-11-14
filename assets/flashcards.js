@@ -5282,17 +5282,38 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           // Study view will auto-refresh from existing queue
           // Re-initialize autogrow for textareas
           setTimeout(() => initAutogrow(), 50);
-          // Initialize pronunciation practice recorder
-          setTimeout(() => {
+          // Initialize pronunciation practice recorder with retry
+          let retryCount = 0;
+          const maxRetries = 5;
+          const retryDelay = 200;
+
+          function tryInitPronunciationPractice(){
             try{
-              console.log('[DEBUG] About to call initStudyPronunciationPractice');
+              console.log('[DEBUG] Attempt', retryCount + 1, '- About to call initStudyPronunciationPractice');
+              const btnExists = !!$("#btnRecordStudy");
+              const timerExists = !!$("#recTimerStudy");
+              console.log('[DEBUG] Elements check: btnRecordStudy=', btnExists, ', recTimerStudy=', timerExists);
+
+              if(!btnExists || !timerExists){
+                retryCount++;
+                if(retryCount < maxRetries){
+                  console.log('[DEBUG] Elements not ready, retry in', retryDelay, 'ms');
+                  setTimeout(tryInitPronunciationPractice, retryDelay);
+                }else{
+                  console.error('[ERROR] Max retries reached, elements still not found');
+                }
+                return;
+              }
+
               initStudyPronunciationPractice();
               console.log('[DEBUG] initStudyPronunciationPractice called successfully');
             }catch(err){
               console.error('[ERROR] Failed to initialize pronunciation practice:', err);
               console.error('[ERROR] Stack:', err.stack);
             }
-          }, 100);
+          }
+
+          setTimeout(tryInitPronunciationPractice, 100);
         } else if (tabName === 'dashboard' && dashboardSection) {
           dashboardSection.classList.add('fc-tab-active');
           tabDashboard.classList.add('fc-tab-active');
