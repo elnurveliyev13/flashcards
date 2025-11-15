@@ -2439,6 +2439,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : 0;
     }
+    function getCanvasCssScale(){
+      if(!cropCanvas){
+        return {scaleX:1, scaleY:1};
+      }
+      const style = window.getComputedStyle(cropCanvas);
+      const cssWidth = cropCanvas.clientWidth || parsePxValue(style.width) || cropCanvas.width || 1;
+      const cssHeight = cropCanvas.clientHeight || parsePxValue(style.height) || cropCanvas.height || 1;
+      const scaleX = cssWidth && cropCanvas.width ? cssWidth / cropCanvas.width : 1;
+      const scaleY = cssHeight && cropCanvas.height ? cssHeight / cropCanvas.height : 1;
+      return {scaleX, scaleY};
+    }
     function getViewportSize(){
       const vv = window.visualViewport;
       if(vv){
@@ -2587,11 +2598,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function displayRect(rect){
       const topLeft = imageToCanvasPoint({x:rect.x, y:rect.y});
       const bottomRight = imageToCanvasPoint({x:rect.x + rect.width, y:rect.y + rect.height});
+      const {scaleX, scaleY} = getCanvasCssScale();
       return {
-        x: topLeft.x,
-        y: topLeft.y,
-        width: bottomRight.x - topLeft.x,
-        height: bottomRight.y - topLeft.y,
+        x: topLeft.x * scaleX,
+        y: topLeft.y * scaleY,
+        width: (bottomRight.x - topLeft.x) * scaleX,
+        height: (bottomRight.y - topLeft.y) * scaleY,
       };
     }
     function clampCropRect(rect){
