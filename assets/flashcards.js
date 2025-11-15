@@ -3405,7 +3405,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const el=document.createElement("div");
       el.className="slot";
       if(kind==="text" && card.text){
-        const tr = card.transcription ? `<div class="transcription-text">[${card.transcription}]</div>` : "";
+        const tr = card.transcription ? `<div class="transcription-text">${card.transcription}</div>` : "";
         el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
         return el;
       }
