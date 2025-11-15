@@ -325,7 +325,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
-    const cropStageFrame = root.querySelector('.ocr-crop-stage');
+    const cropStageFrameEl = root.querySelector('.ocr-crop-stage');
     const cropCanvas = $("#ocrCropCanvas");
     const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
@@ -2232,6 +2232,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let cropDragStart=null;
     let cropDragStartRect=null;
     let cropHistory=[];
+    let cropResizeHandler=null;
     let viewZoom=1;
     let baseZoom=1;
     let viewX=0;
@@ -2431,6 +2432,60 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const viewHeight = cropCanvas.height / viewZoom;
       viewX = clamp(viewX, 0, Math.max(0, cropImage.width - viewWidth));
       viewY = clamp(viewY, 0, Math.max(0, cropImage.height - viewHeight));
+    }
+    function layoutCropStage(resetView = false){
+      if(!cropStage || !cropCanvas || !cropImage){
+        return;
+      }
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      const frameRect = cropStageFrameEl?.getBoundingClientRect();
+      const availableWidth = Math.max(220, frameRect?.width || viewportWidth);
+      const availableHeight = Math.max(260, frameRect?.height || viewportHeight);
+      const aspect = cropImage.height ? (cropImage.width / cropImage.height) : 1;
+      let displayWidth = availableWidth;
+      let displayHeight = displayWidth / aspect;
+      if(displayHeight > availableHeight){
+        displayHeight = availableHeight;
+        displayWidth = displayHeight * aspect;
+      }
+      displayWidth = Math.max(180, Math.min(displayWidth, viewportWidth));
+      displayHeight = Math.max(180, Math.min(displayHeight, viewportHeight));
+      const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
+      const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
+      cropStage.style.width = `${displayWidth}px`;
+      cropStage.style.height = `${displayHeight}px`;
+      cropStage.style.maxWidth = '100%';
+      cropStage.style.maxHeight = '100%';
+      cropCanvas.width = physicalWidth;
+      cropCanvas.height = physicalHeight;
+      cropCanvas.style.width = `${displayWidth}px`;
+      cropCanvas.style.height = `${displayHeight}px`;
+      if(resetView){
+        updateViewToFitImage();
+        focusOnCropRect(true);
+      } else {
+        ensureViewBounds();
+      }
+      drawCropPreview();
+    }
+    function bindCropResize(){
+      if(cropResizeHandler){
+        return;
+      }
+      cropResizeHandler = ()=>{
+        layoutCropStage(false);
+      };
+      window.addEventListener('resize', cropResizeHandler);
+      window.addEventListener('orientationchange', cropResizeHandler);
+    }
+    function unbindCropResize(){
+      if(!cropResizeHandler){
+        return;
+      }
+      window.removeEventListener('resize', cropResizeHandler);
+      window.removeEventListener('orientationchange', cropResizeHandler);
+      cropResizeHandler = null;
     }
 
     function focusOnCropRect(force = false){
@@ -2642,6 +2697,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropModal.style.display = 'none';
       }
       document.body.classList.remove('cropper-open');
+      unbindCropResize();
       pendingImageFile = null;
       cropImage = null;
       cropRect = null;
@@ -2694,38 +2750,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{
         await new Promise(resolve => requestAnimationFrame(resolve));
         cropImage = await loadCropImage(file);
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        const stageRect = cropStageFrame?.getBoundingClientRect();
-        const isMobile = window.innerWidth <= 640;
-        const handlePadding = isMobile ? 48 : 56;
-        let availableWidth = Math.max(180, (stageRect?.width || viewportWidth) - handlePadding);
-        let availableHeight = Math.max(220, (stageRect?.height || viewportHeight) - handlePadding);
-        const aspect = cropImage.width / cropImage.height || 1;
-        let displayWidth = availableWidth;
-        let displayHeight = displayWidth / aspect;
-        if(displayHeight > availableHeight){
-          displayHeight = availableHeight;
-          displayWidth = displayHeight * aspect;
-        }
-        displayWidth = Math.max(160, displayWidth);
-        displayHeight = Math.max(160, displayHeight);
-        cropStage.style.width = `${displayWidth}px`;
-        cropStage.style.height = `${displayHeight}px`;
-        cropStage.style.maxWidth = '100%';
-        cropStage.style.maxHeight = '100%';
-        const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
-        const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
-        cropCanvas.width = physicalWidth;
-        cropCanvas.height = physicalHeight;
-        cropCanvas.style.width = `${displayWidth}px`;
-        cropCanvas.style.height = `${displayHeight}px`;
         cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
-        updateViewToFitImage();
-        focusOnCropRect(true);
-        drawCropPreview();
+        layoutCropStage(true);
         resetCropHistory();
         pushCropHistory();
+        bindCropResize();
       }catch(err){
         setOcrStatus('error', err?.message || ocrStrings.error);
         closeCropper();

@@ -640,22 +640,20 @@
           <div class="ocr-crop-surface" id="ocrCropStage">
             <canvas id="ocrCropCanvas" class="ocr-crop-canvas"></canvas>
             <div id="ocrCropRect" class="ocr-crop-rect">
-              <div class="ocr-crop-handle handle-nw" data-handle="nw"></div>
-              <div class="ocr-crop-handle handle-n" data-handle="n"></div>
-              <div class="ocr-crop-handle handle-ne" data-handle="ne"></div>
-              <div class="ocr-crop-handle handle-e" data-handle="e"></div>
-              <div class="ocr-crop-handle handle-se" data-handle="se"></div>
-              <div class="ocr-crop-handle handle-s" data-handle="s"></div>
-              <div class="ocr-crop-handle handle-sw" data-handle="sw"></div>
-              <div class="ocr-crop-handle handle-w" data-handle="w"></div>
+              <div class="ocr-crop-handle handle-nw corner" data-handle="nw"></div>
+              <div class="ocr-crop-handle handle-ne corner" data-handle="ne"></div>
+              <div class="ocr-crop-handle handle-sw corner" data-handle="sw"></div>
+              <div class="ocr-crop-handle handle-se corner" data-handle="se"></div>
+              <div class="ocr-crop-handle handle-w edge" data-handle="w"></div>
+              <div class="ocr-crop-handle handle-e edge" data-handle="e"></div>
             </div>
           </div>
         </div>
       </div>
       <div class="ocr-crop-toolbar">
-        <button id="ocrCropUndo" class="ghost" disabled>{{#str}} undo, mod_flashcards {{/str}}</button>
-        <button id="ocrCropCancel" class="ghost">{{#str}} cancel, mod_flashcards {{/str}}</button>
-        <button id="ocrCropApply" class="ok">{{#str}} use_for_ocr, mod_flashcards {{/str}}</button>
+        <button id="ocrCropUndo" class="ghost icon-only" aria-label="{{#str}} undo, mod_flashcards {{/str}}"><span aria-hidden="true">&#8634;</span></button>
+        <button id="ocrCropCancel" class="ghost icon-only" aria-label="{{#str}} cancel, mod_flashcards {{/str}}"><span aria-hidden="true">&times;</span></button>
+        <button id="ocrCropApply" class="ok">{{#str}} use, mod_flashcards {{/str}}</button>
       </div>
     </div>
   </div>
