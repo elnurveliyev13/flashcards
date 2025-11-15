@@ -2234,6 +2234,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let cropDragStartRect=null;
     let cropHistory=[];
     let cropResizeHandler=null;
+    let cropViewportHandler=null;
     let viewZoom=1;
     let baseZoom=1;
     let viewX=0;
@@ -2438,12 +2439,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const parsed = Number.parseFloat(value);
       return Number.isFinite(parsed) ? parsed : 0;
     }
-    function getCropContainerSize(){
-      if(!cropStageContainer){
+    function getViewportSize(){
+      const vv = window.visualViewport;
+      if(vv){
         return {
-          width: window.innerWidth || document.documentElement.clientWidth || 0,
-          height: window.innerHeight || document.documentElement.clientHeight || 0,
+          width: Math.max(1, Math.floor(vv.width)),
+          height: Math.max(1, Math.floor(vv.height)),
         };
+      }
+      return {
+        width: Math.max(1, window.innerWidth || document.documentElement.clientWidth || 0),
+        height: Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0),
+      };
+    }
+    function getCropContainerSize(viewportWidth, viewportHeight){
+      if(!cropStageContainer){
+        return {width: viewportWidth, height: viewportHeight};
       }
       const styles = window.getComputedStyle(cropStageContainer);
       const width = Math.max(
@@ -2459,29 +2470,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           - parsePxValue(styles.paddingBottom)
       );
       if(width <= 0 || height <= 0){
-        return {
-          width: window.innerWidth || document.documentElement.clientWidth || 0,
-          height: window.innerHeight || document.documentElement.clientHeight || 0,
-        };
+        return {width: viewportWidth, height: viewportHeight};
       }
-      return {width, height};
+      return {
+        width: Math.min(width, viewportWidth),
+        height: Math.min(height, viewportHeight),
+      };
     }
     function layoutCropStage(resetView = false){
       if(!cropStage || !cropCanvas || !cropImage){
         return;
       }
-      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-      const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-      const containerSize = getCropContainerSize();
+      const viewportSize = getViewportSize();
+      const viewportWidth = viewportSize.width;
+      const viewportHeight = viewportSize.height;
+      const containerSize = getCropContainerSize(viewportWidth, viewportHeight);
       const toolbarRect = cropToolbar?.getBoundingClientRect();
       const toolbarReserve = (toolbarRect ? toolbarRect.height : 56) + 32;
       const minStageWidth = 220;
       const minStageHeight = 220;
       const usableWidth = Math.max(minStageWidth, Math.min(containerSize.width, viewportWidth));
-      const usableHeight = Math.max(
-        minStageHeight,
-        Math.min(containerSize.height, viewportHeight - toolbarReserve)
-      );
+      const viewportSafeHeight = Math.max(minStageHeight, viewportHeight - toolbarReserve);
+      const usableHeight = Math.max(minStageHeight, Math.min(containerSize.height, viewportSafeHeight));
       const aspect = cropImage.height ? (cropImage.width / cropImage.height) : 1;
       let displayWidth = usableWidth;
       let displayHeight = displayWidth / aspect;
@@ -2518,6 +2528,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       };
       window.addEventListener('resize', cropResizeHandler);
       window.addEventListener('orientationchange', cropResizeHandler);
+      const vv = window.visualViewport;
+      if(vv && !cropViewportHandler){
+        cropViewportHandler = ()=> layoutCropStage(false);
+        vv.addEventListener('resize', cropViewportHandler);
+        vv.addEventListener('scroll', cropViewportHandler);
+      }
     }
     function unbindCropResize(){
       if(!cropResizeHandler){
@@ -2526,6 +2542,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       window.removeEventListener('resize', cropResizeHandler);
       window.removeEventListener('orientationchange', cropResizeHandler);
       cropResizeHandler = null;
+      if(cropViewportHandler){
+        const vv = window.visualViewport;
+        if(vv){
+          vv.removeEventListener('resize', cropViewportHandler);
+          vv.removeEventListener('scroll', cropViewportHandler);
+        }
+        cropViewportHandler = null;
+      }
     }
 
     function focusOnCropRect(force = false){
