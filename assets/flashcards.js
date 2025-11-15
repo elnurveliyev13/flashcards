@@ -2680,28 +2680,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       document.body.classList.add('cropper-open');
       try{
+        await new Promise(resolve => requestAnimationFrame(resolve));
         cropImage = await loadCropImage(file);
-        const isMobile = window.innerWidth <= 640;
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const bodyRect = cropModal.querySelector('.ocr-crop-body')?.getBoundingClientRect();
-        const containerWidth = Math.max(260, bodyRect?.width || viewportWidth * 0.94);
-        const containerHeight = Math.max(260, bodyRect?.height || viewportHeight * 0.8);
-        const maxWidth = Math.max(260, Math.min(containerWidth - (isMobile ? 12 : 48), viewportWidth - (isMobile ? 32 : 120)));
-        const maxHeight = Math.max(320, Math.min(containerHeight - (isMobile ? 24 : 80), viewportHeight - (isMobile ? 120 : 200)));
-        const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
-        const displayWidth = Math.round(cropImage.width * scale);
-        const displayHeight = Math.round(cropImage.height * scale);
+        const stageRect = cropStage?.getBoundingClientRect();
+        const displayWidth = Math.round(stageRect?.width || viewportWidth);
+        const displayHeight = Math.round(stageRect?.height || viewportHeight);
         const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
         const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
         cropCanvas.width = physicalWidth;
         cropCanvas.height = physicalHeight;
         cropCanvas.style.width = `${displayWidth}px`;
         cropCanvas.style.height = `${displayHeight}px`;
-        if(cropStage){
-          cropStage.style.width = `${displayWidth}px`;
-          cropStage.style.height = `${displayHeight}px`;
-        }
         cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
         updateViewToFitImage();
         focusOnCropRect(true);
