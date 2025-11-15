@@ -301,8 +301,6 @@ $string['ai_disabled'] = 'L\'assistente AI non è ancora configurato.';
 $string['tts_http_error'] = 'La sintesi vocale è temporaneamente non disponibile.';
 n// Whisper STT
 $string[''private_audio_label''] = 'Private audio';
-$string[''keep_private_audio_label''] = 'Keep Private audio locally';
-$string[''keep_private_audio_desc''] = 'When enabled, your recording stays on this device after transcription.';
 $string[''whisper_status_idle''] = 'Speech-to-text ready';
 $string[''whisper_status_uploading''] = 'Uploading Private audio...';
 $string[''whisper_status_transcribing''] = 'Transcribing...';

@@ -271,24 +271,8 @@ h1{
   align-items: center;
 }
 
-.language-select select{
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  padding: 8px 10px;
-  font-size: 0.9375rem; /* 15px */
-  font-weight: 600;
-  text-align: center;
-  cursor: pointer;
-}
-
-/* Mobile language button */
-.language-select-mobile {
-  display: none;
-}
-
 .language-btn-mobile {
+  display: none;
   width: 42px;
   height: 32px;
   border-radius: 10px;
@@ -298,7 +282,6 @@ h1{
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.2s;
@@ -597,18 +580,12 @@ h1{
     font-size: 13px;
   }
 
-  /* Hide desktop language select on mobile */
-  .language-select {
-    display: none !important;
-  }
-
-  /* Show mobile language button */
-  .language-select-mobile {
-    display: block;
+  .header-settings{
     flex-shrink: 0;
   }
 
-  .header-settings{
+  .language-btn-mobile {
+    display: flex;
     flex-shrink: 0;
   }
 

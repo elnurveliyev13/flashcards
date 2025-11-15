@@ -69,24 +69,6 @@
           </span>
         </div>
         <div class="header-controls">
-          <div class="language-select">
-            <label for="langSel" class="sr-only">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
-            <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
-              <option value="en">EN</option>
-              <option value="uk">UK</option>
-              <option value="ru">RU</option>
-              <option value="fr">FR</option>
-              <option value="es">ES</option>
-              <option value="pl">PL</option>
-              <option value="it">IT</option>
-              <option value="de">DE</option>
-            </select>
-          </div>
-          <div class="language-select-mobile">
-            <button type="button" id="langBtnMobile" class="language-btn-mobile" aria-label="{{#str}} interface_language_label, mod_flashcards {{/str}}">
-              EN
-            </button>
-          </div>
           <div class="header-settings">
             <button type="button"
                     id="prefsToggle"
@@ -110,6 +92,30 @@
                   <button type="button" class="pref-font-btn" data-scale="130" aria-pressed="false">
                     <span class="font-icon font-large">Aa</span>
                   </button>
+                </div>
+              </div>
+              <div class="pref-field pref-language-field">
+                <div class="pref-heading" data-i18n="interface_language_label">{{#str}} interface_language_label, mod_flashcards {{/str}}</div>
+                <label class="pref-label sr-only" for="langSel">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
+                <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
+                  <option value="en">EN</option>
+                  <option value="uk">UK</option>
+                  <option value="ru">RU</option>
+                  <option value="fr">FR</option>
+                  <option value="es">ES</option>
+                  <option value="pl">PL</option>
+                  <option value="it">IT</option>
+                  <option value="de">DE</option>
+                </select>
+                <button type="button" id="langBtnMobile" class="language-btn-mobile" aria-label="{{#str}} interface_language_label, mod_flashcards {{/str}}">
+                  EN
+                </button>
+              </div>
+              <div class="pref-field pref-voice-field">
+                <div class="slot hidden" id="slot_ttsVoice">
+                  <span class="tag" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
+                  <select id="ttsVoice"></select>
+                  <div class="small" id="ttsVoiceStatus" data-i18n="tts_voice_hint">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
                 </div>
               </div>
             </div>
@@ -184,13 +190,7 @@
                   <button id="ocrUndo" type="button" class="stt-link hidden">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
                 </div>
               </div>
-              <label class="keep-private-audio" for="keepPrivateAudio">
-                <input type="checkbox" id="keepPrivateAudio">
-                <span class="keep-private-audio-text">
-                  <span class="label">{{#str}} keep_private_audio_label, mod_flashcards {{/str}}</span>
-                  <span class="desc">{{#str}} keep_private_audio_desc, mod_flashcards {{/str}}</span>
-                </span>
-              </label>
+              
             </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
@@ -215,11 +215,6 @@
               </span>
             </div>
             <img id="imgPrev" class="media hidden" alt=""/>
-            <div class="slot hidden" id="slot_ttsVoice">
-              <span class="tag" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
-              <select id="ttsVoice"></select>
-              <div class="small" id="ttsVoiceStatus" data-i18n="tts_voice_hint">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
-            </div>
             <div class="slot front-slot">
               <div class="slot-head slot-head-stacked">
                 <div class="slot-head-row">

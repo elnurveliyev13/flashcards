@@ -2240,7 +2240,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let viewX=0;
     let viewY=0;
     const CANVAS_DPR = 1;
-    let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
     const DEBUG_REC = (function(){
@@ -2262,8 +2261,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const ocrStatusEl = $("#ocrStatus");
     const ocrRetryBtn = $("#ocrRetry");
     const ocrUndoBtn = $("#ocrUndo");
-    const keepPrivateAudioInput = $("#keepPrivateAudio");
-
     const storageFallback = new Map();
     async function idbPutSafe(key, blob){
       try{
@@ -2905,13 +2902,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const closeCrop = ()=>{ closeCropper(); };
     if(cropCancelBtn) cropCancelBtn.addEventListener('click', closeCrop);
     updateUndoState();
-    if(keepPrivateAudioInput){
-      keepPrivateAudioInput.checked = false;
-      keepPrivateAudio = false;
-      keepPrivateAudioInput.addEventListener('change', ()=>{
-        keepPrivateAudio = keepPrivateAudioInput.checked;
-      });
-    }
     if(sttUndoBtn){
       sttUndoBtn.addEventListener('click', e=>{
         e.preventDefault();
@@ -3149,9 +3139,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         lastAudioDurationSec = Math.min(duration, sttClipLimit || duration);
         applyTranscriptionResult(text);
         setSttStatus('success');
-        if(!keepPrivateAudio){
-          clearAudioSelection();
-        }
+        clearAudioSelection();
         window.setTimeout(()=>{
           if(!sttAbortController){
             setSttStatus('idle');
@@ -4659,10 +4647,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       clearFocusAudio();
       privateAudioOnly = false;
       lastAudioDurationSec = 0;
-      if(keepPrivateAudioInput){
-        keepPrivateAudioInput.checked = false;
-        keepPrivateAudio = false;
-      }
       if(sttAbortController){
         try{ sttAbortController.abort(); }catch(_e){}
         sttAbortController = null;
