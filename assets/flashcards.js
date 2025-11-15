@@ -2598,12 +2598,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function displayRect(rect){
       const topLeft = imageToCanvasPoint({x:rect.x, y:rect.y});
       const bottomRight = imageToCanvasPoint({x:rect.x + rect.width, y:rect.y + rect.height});
+      return {
+        x: topLeft.x,
+        y: topLeft.y,
+        width: bottomRight.x - topLeft.x,
+        height: bottomRight.y - topLeft.y,
+      };
+    }
+    function displayRectCss(rect){
+      const base = displayRect(rect);
       const {scaleX, scaleY} = getCanvasCssScale();
       return {
-        x: topLeft.x * scaleX,
-        y: topLeft.y * scaleY,
-        width: (bottomRight.x - topLeft.x) * scaleX,
-        height: (bottomRight.y - topLeft.y) * scaleY,
+        x: base.x * scaleX,
+        y: base.y * scaleY,
+        width: base.width * scaleX,
+        height: base.height * scaleY,
       };
     }
     function clampCropRect(rect){
@@ -2636,7 +2645,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         viewX, viewY, viewWidth, viewHeight,
         0, 0, cropCanvas.width, cropCanvas.height
       );
-      const rect = displayRect(cropRect);
+      const rect = displayRectCss(cropRect);
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
