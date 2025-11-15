@@ -2239,7 +2239,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let baseZoom=1;
     let viewX=0;
     let viewY=0;
-    const CANVAS_DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const CANVAS_DPR = 1;
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
