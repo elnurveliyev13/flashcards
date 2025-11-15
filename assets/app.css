@@ -1123,7 +1123,8 @@ audio{max-width:260px}
 .handle-s{bottom:-12px;left:50%;transform:translateX(-50%);cursor:ns-resize}
 .handle-w{left:-12px;top:50%;transform:translateY(-50%);cursor:ew-resize}
 .handle-e{right:-12px;top:50%;transform:translateY(-50%);cursor:ew-resize}
-.ocr-crop-actions{gap:12px;justify-content:space-between;padding:0 8px;flex-wrap:wrap}
+.ocr-crop-actions{gap:12px;justify-content:center;padding:8px 12px;flex-wrap:wrap}
+.ocr-crop-actions button{flex:1;min-width:90px;max-width:140px}
 .ocr-crop-actions .ok{white-space:nowrap}
 body.cropper-open{overflow:hidden;height:100vh;touch-action:none}
 #ocrCropModal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:1002;touch-action:none;padding:12px}

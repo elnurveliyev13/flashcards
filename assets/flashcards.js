@@ -2235,6 +2235,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let baseZoom=1;
     let viewX=0;
     let viewY=0;
+    const CANVAS_DPR = Math.min(window.devicePixelRatio || 1, 2);
     let keepPrivateAudio=false;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
@@ -2684,15 +2685,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         const bodyRect = cropModal.querySelector('.ocr-crop-body')?.getBoundingClientRect();
-        const containerWidth = Math.max(260, bodyRect?.width || viewportWidth * 0.92);
-        const containerHeight = Math.max(260, bodyRect?.height || viewportHeight * 0.7);
-        const maxWidth = Math.max(240, Math.min(containerWidth - (isMobile ? 12 : 40), viewportWidth - (isMobile ? 24 : 160)));
-        const maxHeight = Math.max(260, Math.min(containerHeight - (isMobile ? 40 : 80), viewportHeight - (isMobile ? 140 : 220)));
+        const containerWidth = Math.max(260, bodyRect?.width || viewportWidth * 0.94);
+        const containerHeight = Math.max(260, bodyRect?.height || viewportHeight * 0.8);
+        const maxWidth = Math.max(260, Math.min(containerWidth - (isMobile ? 12 : 48), viewportWidth - (isMobile ? 32 : 120)));
+        const maxHeight = Math.max(320, Math.min(containerHeight - (isMobile ? 24 : 80), viewportHeight - (isMobile ? 120 : 200)));
         const scale = Math.min(maxWidth / cropImage.width, maxHeight / cropImage.height, 1);
         const displayWidth = Math.round(cropImage.width * scale);
         const displayHeight = Math.round(cropImage.height * scale);
-        cropCanvas.width = displayWidth;
-        cropCanvas.height = displayHeight;
+        const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
+        const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
+        cropCanvas.width = physicalWidth;
+        cropCanvas.height = physicalHeight;
         cropCanvas.style.width = `${displayWidth}px`;
         cropCanvas.style.height = `${displayHeight}px`;
         if(cropStage){
@@ -2704,6 +2707,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusOnCropRect(true);
         drawCropPreview();
         resetCropHistory();
+        pushCropHistory();
       }catch(err){
         setOcrStatus('error', err?.message || ocrStrings.error);
         closeCropper();
@@ -4155,7 +4159,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{ if(studentAudioPlayer){ studentAudioPlayer.pause(); studentAudioPlayer.currentTime = 0; } }catch(_e){}
       }
 
-      // Playback chain: student → original → student (loop)
+      // Playback chain: student → original → STOP (one-time playback)
       async function playbackChain(){
         console.log('[PronunciationPractice] playbackChain called');
         console.log('[PronunciationPractice] capturedCardAudioUrl:', capturedCardAudioUrl);
@@ -4174,7 +4178,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // THEN activate new loop
         playbackLoopActive = true;
 
-        console.log('[PronunciationPractice] Starting playback loop');
+        console.log('[PronunciationPractice] Starting one-time playback: student → original');
 
         // 1. Play STUDENT recording FIRST
         console.log('[PronunciationPractice] Playing student recording');
@@ -4204,12 +4208,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           player.playbackRate = 1;
           player.currentTime = 0;
 
-          // When original finishes, loop back to student
+          // When original finishes, STOP (one-time playback only)
           player.onended = () => {
-            if(!playbackLoopActive) return; // Loop was stopped
-
-            console.log('[PronunciationPractice] Original finished, looping to student');
-            playbackChain(); // Loop!
+            console.log('[PronunciationPractice] Original finished, stopping playback');
+            playbackLoopActive = false; // Stop after one cycle
+            URL.revokeObjectURL(studentUrl); // Clean up blob URL
           };
 
           player.play().catch(err=>{
