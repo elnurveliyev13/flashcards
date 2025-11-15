@@ -4232,6 +4232,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let activePointerToken = null;
       let studentAudioPlayer = null;
       let playbackLoopActive = false;
+      let studentAudioUrl = null;
 
       // Reuse iOS recorder if available
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
@@ -4299,19 +4300,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       function stopPlaybackLoop(){
         playbackLoopActive = false;
         try{ player.pause(); player.currentTime = 0; }catch(_e){}
-        try{ if(studentAudioPlayer){ studentAudioPlayer.pause(); studentAudioPlayer.currentTime = 0; } }catch(_e){}
+        try{
+          if(studentAudioPlayer){
+            studentAudioPlayer.pause();
+            studentAudioPlayer.currentTime = 0;
+          }
+        }catch(_e){}
+        if(studentAudioUrl){
+          try{ URL.revokeObjectURL(studentAudioUrl); }catch(_e){}
+          studentAudioUrl = null;
+        }
       }
 
       // Playback chain: student → original → STOP (one-time playback)
       async function playbackChain(){
         console.log('[PronunciationPractice] playbackChain called');
-        console.log('[PronunciationPractice] capturedCardAudioUrl:', capturedCardAudioUrl);
         console.log('[PronunciationPractice] studentRecordingBlob:', studentRecordingBlob);
 
-        if(!capturedCardAudioUrl || !studentRecordingBlob){
+        if(!studentRecordingBlob){
           console.log('[PronunciationPractice] ERROR: Missing data! Cannot start playback');
-          console.log('[PronunciationPractice] capturedCardAudioUrl:', capturedCardAudioUrl);
-          console.log('[PronunciationPractice] studentRecordingBlob:', studentRecordingBlob);
           return;
         }
 
@@ -4321,9 +4328,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // THEN activate new loop
         playbackLoopActive = true;
 
-        console.log('[PronunciationPractice] Starting one-time playback: original → student');
-
-        const studentUrl = URL.createObjectURL(studentRecordingBlob);
+        console.log('[PronunciationPractice] Starting one-time playback: student only');
 
         // Clean up previous student player if needed
         if(studentAudioPlayer){
@@ -4335,37 +4340,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }catch(_e){}
         }
 
-        // Play card audio first
-        player.src = capturedCardAudioUrl;
-        player.playbackRate = 1;
-        player.currentTime = 0;
+        const studentUrl = URL.createObjectURL(studentRecordingBlob);
+        studentAudioUrl = studentUrl;
+        studentAudioPlayer = new Audio(studentUrl);
 
-        player.onended = () => {
-          if(!playbackLoopActive){
-            URL.revokeObjectURL(studentUrl);
-            return;
+        studentAudioPlayer.onended = () => {
+          console.log('[PronunciationPractice] Student finished, stopping playback');
+          playbackLoopActive = false;
+          if(studentAudioUrl){
+            try{ URL.revokeObjectURL(studentAudioUrl); }catch(_e){}
+            studentAudioUrl = null;
           }
-
-          console.log('[PronunciationPractice] Original finished, playing student recording');
-          studentAudioPlayer = new Audio(studentUrl);
-
-          studentAudioPlayer.onended = () => {
-            console.log('[PronunciationPractice] Student finished, stopping playback');
-            playbackLoopActive = false;
-            URL.revokeObjectURL(studentUrl);
-          };
-
-          studentAudioPlayer.play().catch(err=>{
-            console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
-            playbackLoopActive = false;
-            URL.revokeObjectURL(studentUrl);
-          });
+          studentRecordingBlob = null;
         };
 
-        player.play().catch(err=>{
-          console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
+        studentAudioPlayer.play().catch(err=>{
+          console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
           playbackLoopActive = false;
-          URL.revokeObjectURL(studentUrl);
+          if(studentAudioUrl){
+            try{ URL.revokeObjectURL(studentAudioUrl); }catch(_e){}
+            studentAudioUrl = null;
+          }
+          studentRecordingBlob = null;
         });
       }
 
