@@ -4169,13 +4169,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // THEN activate new loop
         playbackLoopActive = true;
 
-        console.log('[PronunciationPractice] Starting one-time playback: student → original');
+        console.log('[PronunciationPractice] Starting one-time playback: original → student');
 
-        // 1. Play STUDENT recording FIRST
-        console.log('[PronunciationPractice] Playing student recording');
         const studentUrl = URL.createObjectURL(studentRecordingBlob);
 
-        // Clean up previous player
+        // Clean up previous student player if needed
         if(studentAudioPlayer){
           try{
             studentAudioPlayer.pause();
@@ -4185,37 +4183,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }catch(_e){}
         }
 
-        studentAudioPlayer = new Audio(studentUrl);
+        // Play card audio first
+        player.src = capturedCardAudioUrl;
+        player.playbackRate = 1;
+        player.currentTime = 0;
 
-        // When student recording finishes, play original
-        studentAudioPlayer.onended = () => {
+        player.onended = () => {
           if(!playbackLoopActive){
             URL.revokeObjectURL(studentUrl);
-            return; // Loop was stopped
+            return;
           }
 
-          console.log('[PronunciationPractice] Student finished, playing original audio');
-          player.src = capturedCardAudioUrl;
-          player.playbackRate = 1;
-          player.currentTime = 0;
+          console.log('[PronunciationPractice] Original finished, playing student recording');
+          studentAudioPlayer = new Audio(studentUrl);
 
-          // When original finishes, STOP (one-time playback only)
-          player.onended = () => {
-            console.log('[PronunciationPractice] Original finished, stopping playback');
-            playbackLoopActive = false; // Stop after one cycle
-            URL.revokeObjectURL(studentUrl); // Clean up blob URL
+          studentAudioPlayer.onended = () => {
+            console.log('[PronunciationPractice] Student finished, stopping playback');
+            playbackLoopActive = false;
+            URL.revokeObjectURL(studentUrl);
           };
 
-          player.play().catch(err=>{
-            console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
+          studentAudioPlayer.play().catch(err=>{
+            console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
             playbackLoopActive = false;
+            URL.revokeObjectURL(studentUrl);
           });
         };
 
-        studentAudioPlayer.play().catch(err=>{
-          console.log('[PronunciationPractice] Student playback failed: '+(err?.message||err));
-          URL.revokeObjectURL(studentUrl);
+        player.play().catch(err=>{
+          console.log('[PronunciationPractice] Original playback failed: '+(err?.message||err));
           playbackLoopActive = false;
+          URL.revokeObjectURL(studentUrl);
         });
       }
 
