@@ -2474,7 +2474,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
       const containerSize = getCropContainerSize();
       const toolbarRect = cropToolbar?.getBoundingClientRect();
-      const toolbarReserve = (toolbarRect ? toolbarRect.height : 64) + 56;
+      const toolbarReserve = (toolbarRect ? toolbarRect.height : 56) + 32;
       const minStageWidth = 220;
       const minStageHeight = 220;
       const usableWidth = Math.max(minStageWidth, Math.min(containerSize.width, viewportWidth));
