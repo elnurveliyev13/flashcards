@@ -950,6 +950,13 @@ input[type=text]::placeholder {
 }
 /* play row below content */
 .playRow{display:flex;gap:var(--space-1);align-items:center;margin:var(--space-2) 0}
+#mod_flashcards_container .playRow .iconbtn#btnPlay,
+#mod_flashcards_container .playRow .iconbtn#btnPlaySlow{
+  width:72px;
+  height:72px;
+  border-radius:999px;
+  font-size:1.35rem;
+}
 .meta{display:flex;gap:var(--space-1);color:var(--muted);font-size:0.8125rem;align-items:center;flex-wrap:wrap;margin-top:var(--space-2)} /* 13px */
 .row2{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-2)}
 .ok{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.35)}

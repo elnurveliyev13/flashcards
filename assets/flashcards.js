@@ -3342,6 +3342,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return null;
     }
+    function initialVisibleSlots(card){
+      if(!card || !Array.isArray(card.order) || !card.order.length) return 1;
+      const audioIndex = card.order.indexOf('audio');
+      const textIndex = card.order.indexOf('text');
+      if(audioIndex !== -1 && textIndex !== -1){
+        return Math.min(card.order.length, Math.max(audioIndex, textIndex) + 1);
+      }
+      return 1;
+    }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
 
     function buildQueue(){
@@ -3384,9 +3393,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setIconVisibility(false); hidePlayIcons();
         return;
       }
-      emptyState.classList.add("hidden");
-      current=0; visibleSlots=1; currentItem=queue[current];
-      showCurrent();
+        emptyState.classList.add("hidden");
+        current = 0;
+        currentItem = queue[current];
+        visibleSlots = initialVisibleSlots(currentItem?.card);
+        showCurrent();
     }
     function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
     async function showCurrent(forceRender=false){
@@ -3435,7 +3446,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         buildQueue();
       } else {
         currentItem = queue[Math.min(current, queue.length - 1)];
-        visibleSlots = 1;
+        visibleSlots = initialVisibleSlots(currentItem?.card);
         showCurrent();
         setDue(queue.length);
       }
@@ -3461,7 +3472,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         buildQueue();
       } else {
         currentItem = queue[Math.min(current, queue.length - 1)];
-        visibleSlots = 1;
+        visibleSlots = initialVisibleSlots(currentItem?.card);
         showCurrent();
         setDue(queue.length);
       }
@@ -3483,9 +3494,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Move to end of queue
       queue.push(it);
       queue.splice(current, 1);
-      currentItem = queue[Math.min(current, queue.length - 1)];
-      visibleSlots = 1;
-      showCurrent();
+        currentItem = queue[Math.min(current, queue.length - 1)];
+        visibleSlots = initialVisibleSlots(currentItem?.card);
+        showCurrent();
       setDue(queue.length);
     }
 
@@ -4892,7 +4903,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(card){
             // Set up for editing this card
             currentItem={deckId:r.deckId,card:normalizeLessonCard({...card}),rec:state.decks[r.deckId][r.id],index:0};
-            visibleSlots=1;
+            visibleSlots=initialVisibleSlots(currentItem.card);
             showCurrent();
             $("#listModal").style.display="none";
             // Trigger edit button to populate form
