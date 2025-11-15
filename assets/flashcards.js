@@ -2422,6 +2422,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       viewX = Math.max(0, (cropImage.width - viewWidth) / 2);
       viewY = Math.max(0, (cropImage.height - viewHeight) / 2);
     }
+    function ensureViewBounds(){
+      if(!cropImage || !cropCanvas){
+        return;
+      }
+      const viewWidth = cropCanvas.width / viewZoom;
+      const viewHeight = cropCanvas.height / viewZoom;
+      viewX = clamp(viewX, 0, Math.max(0, cropImage.width - viewWidth));
+      viewY = clamp(viewY, 0, Math.max(0, cropImage.height - viewHeight));
+    }
+
     function focusOnCropRect(force = false){
       if(!cropImage || !cropRect){
         return;
@@ -2440,6 +2450,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const centerY = cropRect.y + cropRect.height / 2;
       viewX = clamp(centerX - viewWidth / 2, 0, Math.max(0, cropImage.width - viewWidth));
       viewY = clamp(centerY - viewHeight / 2, 0, Math.max(0, cropImage.height - viewHeight));
+      ensureViewBounds();
     }
     function imageToCanvasPoint(point){
       return {
