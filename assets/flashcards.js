@@ -325,6 +325,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
+    const cropStageFrame = root.querySelector('.ocr-crop-stage');
+    const cropStageFrame = root.querySelector('.ocr-crop-stage');
     const cropCanvas = $("#ocrCropCanvas");
     const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
@@ -2695,9 +2697,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cropImage = await loadCropImage(file);
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
-        const stageRect = cropStage?.getBoundingClientRect();
-        const displayWidth = Math.round(stageRect?.width || viewportWidth);
-        const displayHeight = Math.round(stageRect?.height || viewportHeight);
+        const stageRect = cropStageFrame?.getBoundingClientRect();
+        const isMobile = window.innerWidth <= 640;
+        const handlePadding = isMobile ? 48 : 56;
+        let availableWidth = Math.max(180, (stageRect?.width || viewportWidth) - handlePadding);
+        let availableHeight = Math.max(220, (stageRect?.height || viewportHeight) - handlePadding);
+        const aspect = cropImage.width / cropImage.height || 1;
+        let displayWidth = availableWidth;
+        let displayHeight = displayWidth / aspect;
+        if(displayHeight > availableHeight){
+          displayHeight = availableHeight;
+          displayWidth = displayHeight * aspect;
+        }
+        displayWidth = Math.max(160, displayWidth);
+        displayHeight = Math.max(160, displayHeight);
+        cropStage.style.width = `${displayWidth}px`;
+        cropStage.style.height = `${displayHeight}px`;
+        cropStage.style.maxWidth = '100%';
+        cropStage.style.maxHeight = '100%';
         const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
         const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
         cropCanvas.width = physicalWidth;
