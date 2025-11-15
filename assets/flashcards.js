@@ -326,7 +326,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
     const cropStageFrame = root.querySelector('.ocr-crop-stage');
-    const cropStageFrame = root.querySelector('.ocr-crop-stage');
     const cropCanvas = $("#ocrCropCanvas");
     const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
