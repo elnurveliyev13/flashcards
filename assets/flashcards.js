@@ -4481,6 +4481,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         stopPlaybackLoop(); // Stop any active playback
       };
 
+      // If a card audio URL was attached before the recorder initialized,
+      // reuse it immediately so the first recording has something to play back.
+      if(!currentCardAudioUrl && audioURL){
+        console.log('[PronunciationPractice] Applying pending audioURL to study recorder');
+        window.setStudyRecorderAudio(audioURL);
+      }
+
       console.log('[PronunciationPractice] Initialized successfully');
     }
 
