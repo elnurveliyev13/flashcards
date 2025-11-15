@@ -370,8 +370,7 @@ $string['error_vision_quota'] = 'You reached the monthly OCR limit ({$a}).';
 $string['ocr_crop_title'] = 'Crop the page';
 $string['ocr_crop_hint'] = 'Drag over the image to define exactly the area you want the OCR to read.';
 $string['attach_image'] = 'Attach as image';
-$string['use_for_ocr'] = 'Use for OCR';
-$string['use'] = 'Use';
+$string['use_for_ocr'] = 'Use';
 
 // Fill field dialog
 $string['fill_field'] = 'Please fill: {$a}';

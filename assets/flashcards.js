@@ -325,12 +325,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
-    const cropStageFrameEl = root.querySelector('.ocr-crop-stage');
+    const cropStageContainer = root.querySelector('.ocr-crop-body');
     const cropCanvas = $("#ocrCropCanvas");
     const cropRectEl = $("#ocrCropRect");
     const cropApplyBtn = $("#ocrCropApply");
     const cropCancelBtn = $("#ocrCropCancel");
     const cropUndoBtn = $("#ocrCropUndo");
+    const cropToolbar = $("#ocrCropToolbar");
     const aiStrings = {
       click: dataset.aiClick || 'Tap a word to highlight an expression',
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
@@ -2433,24 +2434,67 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       viewX = clamp(viewX, 0, Math.max(0, cropImage.width - viewWidth));
       viewY = clamp(viewY, 0, Math.max(0, cropImage.height - viewHeight));
     }
+    function parsePxValue(value){
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    function getCropContainerSize(){
+      if(!cropStageContainer){
+        return {
+          width: window.innerWidth || document.documentElement.clientWidth || 0,
+          height: window.innerHeight || document.documentElement.clientHeight || 0,
+        };
+      }
+      const styles = window.getComputedStyle(cropStageContainer);
+      const width = Math.max(
+        0,
+        cropStageContainer.clientWidth
+          - parsePxValue(styles.paddingLeft)
+          - parsePxValue(styles.paddingRight)
+      );
+      const height = Math.max(
+        0,
+        cropStageContainer.clientHeight
+          - parsePxValue(styles.paddingTop)
+          - parsePxValue(styles.paddingBottom)
+      );
+      if(width <= 0 || height <= 0){
+        return {
+          width: window.innerWidth || document.documentElement.clientWidth || 0,
+          height: window.innerHeight || document.documentElement.clientHeight || 0,
+        };
+      }
+      return {width, height};
+    }
     function layoutCropStage(resetView = false){
       if(!cropStage || !cropCanvas || !cropImage){
         return;
       }
       const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-      const frameRect = cropStageFrameEl?.getBoundingClientRect();
-      const availableWidth = Math.max(220, frameRect?.width || viewportWidth);
-      const availableHeight = Math.max(260, frameRect?.height || viewportHeight);
+      const containerSize = getCropContainerSize();
+      const toolbarRect = cropToolbar?.getBoundingClientRect();
+      const toolbarReserve = toolbarRect ? (toolbarRect.height + 24) : 112;
+      const minStageWidth = 220;
+      const minStageHeight = 220;
+      const measuredWidth = containerSize.width || viewportWidth;
+      const measuredHeight = containerSize.height || viewportHeight;
+      const maxWidth = Math.min(Math.max(minStageWidth, measuredWidth), viewportWidth);
+      const rawHeightLimit = Math.max(minStageHeight, viewportHeight - toolbarReserve);
+      const maxHeightBase = Math.min(Math.max(minStageHeight, measuredHeight), rawHeightLimit);
+      let handleMarginX = Math.max(64, Math.min(160, viewportWidth * 0.18));
+      let handleMarginY = Math.max(70, Math.min(180, viewportHeight * 0.18));
+      handleMarginX = Math.min(handleMarginX, Math.max(0, maxWidth - minStageWidth));
+      handleMarginY = Math.min(handleMarginY, Math.max(0, maxHeightBase - minStageHeight));
+      const innerWidth = Math.max(minStageWidth, maxWidth - handleMarginX);
+      const innerHeight = Math.max(minStageHeight, maxHeightBase - handleMarginY);
       const aspect = cropImage.height ? (cropImage.width / cropImage.height) : 1;
-      let displayWidth = availableWidth;
+      let displayWidth = innerWidth;
       let displayHeight = displayWidth / aspect;
-      if(displayHeight > availableHeight){
-        displayHeight = availableHeight;
+      if(displayHeight > innerHeight){
+        displayHeight = innerHeight;
         displayWidth = displayHeight * aspect;
       }
-      displayWidth = Math.max(180, Math.min(displayWidth, viewportWidth));
-      displayHeight = Math.max(180, Math.min(displayHeight, viewportHeight));
       const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
       const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
       cropStage.style.width = `${displayWidth}px`;

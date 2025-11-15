@@ -1142,8 +1142,8 @@ audio{max-width:260px}
 #ocrCropRect .handle-w::before{width:3px;height:48px;left:22px;top:50%;transform:translateY(-50%)}
 #ocrCropRect .handle-e::before{width:3px;height:48px;right:22px;top:50%;transform:translateY(-50%)}
 #ocrCropModal .ocr-crop-toolbar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(8,11,25,.9);padding:8px 12px;border-radius:999px;backdrop-filter:blur(18px);box-shadow:0 18px 40px rgba(0,0,0,.55)}
-#ocrCropModal .ocr-crop-toolbar button{min-width:72px}
-#ocrCropModal .ocr-crop-toolbar .icon-only{min-width:44px;width:44px;height:44px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center}
+#ocrCropModal .ocr-crop-toolbar button{min-width:72px;height:44px;padding:0 18px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:600}
+#ocrCropModal .ocr-crop-toolbar .icon-only{min-width:44px;width:44px;height:44px;padding:0;border-radius:50%}
 
 body.cropper-open{overflow:hidden;height:100vh;touch-action:none}
 .table{width:100%;border-collapse:collapse}
