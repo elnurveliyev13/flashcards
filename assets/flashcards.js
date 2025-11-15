@@ -2474,27 +2474,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
       const containerSize = getCropContainerSize();
       const toolbarRect = cropToolbar?.getBoundingClientRect();
-      const toolbarReserve = toolbarRect ? (toolbarRect.height + 24) : 112;
+      const toolbarReserve = toolbarRect ? (toolbarRect.height + 16) : 96;
       const minStageWidth = 220;
       const minStageHeight = 220;
-      const measuredWidth = containerSize.width || viewportWidth;
-      const measuredHeight = containerSize.height || viewportHeight;
-      const maxWidth = Math.min(Math.max(minStageWidth, measuredWidth), viewportWidth);
-      const rawHeightLimit = Math.max(minStageHeight, viewportHeight - toolbarReserve);
-      const maxHeightBase = Math.min(Math.max(minStageHeight, measuredHeight), rawHeightLimit);
-      let handleMarginX = Math.max(64, Math.min(160, viewportWidth * 0.18));
-      let handleMarginY = Math.max(70, Math.min(180, viewportHeight * 0.18));
-      handleMarginX = Math.min(handleMarginX, Math.max(0, maxWidth - minStageWidth));
-      handleMarginY = Math.min(handleMarginY, Math.max(0, maxHeightBase - minStageHeight));
-      const innerWidth = Math.max(minStageWidth, maxWidth - handleMarginX);
-      const innerHeight = Math.max(minStageHeight, maxHeightBase - handleMarginY);
+      const usableWidth = Math.max(minStageWidth, Math.min(containerSize.width, viewportWidth));
+      const usableHeight = Math.max(
+        minStageHeight,
+        Math.min(containerSize.height, viewportHeight - toolbarReserve)
+      );
       const aspect = cropImage.height ? (cropImage.width / cropImage.height) : 1;
-      let displayWidth = innerWidth;
+      let displayWidth = usableWidth;
       let displayHeight = displayWidth / aspect;
-      if(displayHeight > innerHeight){
-        displayHeight = innerHeight;
+      if(displayHeight > usableHeight){
+        displayHeight = usableHeight;
         displayWidth = displayHeight * aspect;
       }
+      displayWidth = Math.max(minStageWidth, Math.min(displayWidth, viewportWidth));
+      displayHeight = Math.max(minStageHeight, Math.min(displayHeight, viewportHeight - toolbarReserve));
       const physicalWidth = Math.max(1, Math.round(displayWidth * CANVAS_DPR));
       const physicalHeight = Math.max(1, Math.round(displayHeight * CANVAS_DPR));
       cropStage.style.width = `${displayWidth}px`;
