@@ -426,11 +426,12 @@ h1{
 }
 
 .header-pref-panel{
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-1));
+  position: fixed;
+  top: calc(var(--space-2) + 52px);
+  right: var(--space-2);
+  left: auto;
   min-width: 220px;
-  width: min(280px, 100vw - 16px);
+  width: min(320px, 100vw - 32px);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 16px;
