@@ -234,10 +234,12 @@ header{
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   overflow-x: hidden;
+  overflow-y: visible;
   margin-left: 0;
   margin-right: 0;
   position: relative;
   left: 0;
+  z-index: 10;
 }
 
 .header-top{
@@ -428,7 +430,7 @@ h1{
   right: 0;
   top: calc(100% + var(--space-1));
   min-width: 220px;
-  width: min(260px, 100vw - 16px);
+  width: min(280px, 100vw - 16px);
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -436,7 +438,9 @@ h1{
   box-shadow: 0 14px 32px rgba(11,18,32,0.45);
   display: none;
   gap: var(--space-2);
-  z-index: 40;
+  z-index: 120;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .pref-field{
