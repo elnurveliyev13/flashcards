@@ -4251,14 +4251,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // Stop any active playback loop
         stopPlaybackLoop();
 
-        // CRITICAL: Capture current audio URL BEFORE recording starts
-        // This prevents race condition if renderCard() clears it during recording
-        if(!currentCardAudioUrl){
-          console.log('[PronunciationPractice] ERROR: No audio URL available, cannot record');
-          return;
-        }
+        // Capture current audio URL if available (will be checked at playback time)
         capturedCardAudioUrl = currentCardAudioUrl;
-        console.log('[PronunciationPractice] Captured audio URL for playback:', capturedCardAudioUrl);
+        console.log('[PronunciationPractice] Starting recording, current audio URL:', capturedCardAudioUrl);
 
         // iOS recorder path
         if(useIOSRecorder){
@@ -4478,7 +4473,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       window.setStudyRecorderAudio = function(url){
         console.log('[PronunciationPractice] setStudyRecorderAudio called with:', url);
         currentCardAudioUrl = url;
-        capturedCardAudioUrl = null; // Clear captured URL when card changes
+        capturedCardAudioUrl = url; // Also update captured URL so it's ready for recording
         studentRecordingBlob = null; // Reset student recording when card changes
         stopPlaybackLoop(); // Stop any active playback
       };
