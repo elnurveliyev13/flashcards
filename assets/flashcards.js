@@ -4251,9 +4251,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // Stop any active playback loop
         stopPlaybackLoop();
 
-        // Capture current audio URL if available (will be checked at playback time)
-        capturedCardAudioUrl = currentCardAudioUrl;
-        console.log('[PronunciationPractice] Starting recording, current audio URL:', capturedCardAudioUrl);
+        // Update captured URL if currentCardAudioUrl is available
+        // (Don't overwrite with null if it's already set from setStudyRecorderAudio)
+        if(currentCardAudioUrl){
+          capturedCardAudioUrl = currentCardAudioUrl;
+        }
+        console.log('[PronunciationPractice] Starting recording, capturedCardAudioUrl:', capturedCardAudioUrl);
 
         // iOS recorder path
         if(useIOSRecorder){
