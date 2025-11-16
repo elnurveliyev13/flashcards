@@ -1691,6 +1691,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .status-chip.translation-status {
@@ -1709,6 +1711,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   justify-content: center;
   gap: 0.25rem;
   transition: all 0.15s ease;
+  max-width: min(65vw, 18rem);
+  text-align: center;
+  white-space: normal;
 }
 
 .status-chip[data-state="loading"] {
@@ -1906,9 +1911,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-shrink:0;
 }
 #mod_flashcards_container .slot-head-inline-row .status-chip{
-  flex-shrink:0;
-  white-space:nowrap;
-  font-size:0.8rem;
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: normal;
+  font-size: 0.8rem;
+  max-width: min(60vw, 14rem);
+  overflow-wrap: anywhere;
 }
 @media (max-width:520px){
   #mod_flashcards_container .slot-head-inline-row{
