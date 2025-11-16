@@ -1069,7 +1069,7 @@ audio{max-width:260px}
 /* Ensure form slots have a consistent horizontal safe zone */
 .slot{
   margin: var(--space-2) 0;
-  padding: 0 var(--space-2);
+  padding: 0 0.75rem;
   box-sizing: border-box;
 }
 .slot .tag{

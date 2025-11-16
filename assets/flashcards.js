@@ -315,7 +315,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const dataset = root?.dataset || {};
     const privateAudioLabel = dataset.privateAudioLabel || 'Private audio';
     const sttStrings = {
-      idle: dataset.sttIdle || 'Speech-to-text ready',
+      idle: 'Status',
       uploading: dataset.sttUploading || 'Uploading Private audio…',
       transcribing: dataset.sttTranscribing || 'Transcribing…',
       success: dataset.sttSuccess || 'Transcription inserted',
@@ -333,7 +333,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const ocrEnabled = !!ocrConfig.enabled;
     const ocrMaxFileSize = Number(ocrConfig.maxFileSize || 0);
     const ocrStrings = {
-      idle: dataset.ocrIdle || 'Text scanner ready',
+      idle: 'Status',
       processing: dataset.ocrProcessing || 'Scanning photo...',
       success: dataset.ocrSuccess || 'Text inserted',
       error: dataset.ocrError || 'Could not read the text',
@@ -355,7 +355,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       detecting: dataset.aiDetecting || 'Detecting expression…',
       success: dataset.aiSuccess || 'Focus phrase updated',
       error: dataset.aiError || 'Unable to detect an expression',
-      notext: dataset.aiNoText || 'Type a sentence first',
+      notext: dataset.aiNoText || 'Type a sentence to enable the helper',
       focusAudio: dataset.focusAudioLabel || 'Focus audio',
       frontAudio: dataset.frontAudioLabel || 'Audio',
       voicePlaceholder: dataset.voicePlaceholder || 'Default voice',
@@ -365,7 +365,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ttsError: dataset.ttsError || 'Audio generation failed.',
       frontTransShow: dataset.frontTransShow || 'Show translation',
       frontTransHide: dataset.frontTransHide || 'Hide translation',
-      translationIdle: dataset.translationIdle || 'Translation ready',
+      translationIdle: 'Status',
       translationLoading: dataset.translationLoading || 'Translating…',
       translationError: dataset.translationError || 'Translation failed',
       translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.',
