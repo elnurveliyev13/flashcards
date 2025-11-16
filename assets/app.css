@@ -2006,6 +2006,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   margin-bottom: 0.5rem;
 }
 
+.fc-media-badges #audBadge,
+.fc-media-badges #focusAudBadge {
+  display: none !important;
+}
+
+audio#audPrev,
+audio#focusAudPrev {
+  display: none !important;
+}
+
 .fc-quick-preview {
   margin-top: 12px;
   padding: 12px;
