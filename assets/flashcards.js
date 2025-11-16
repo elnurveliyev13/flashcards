@@ -209,7 +209,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           });
         }, 50);
       }
-      let savedValue = '100';
+      let savedValue = '115';
       try {
         const stored = localStorage.getItem(FONT_SCALE_STORAGE_KEY);
         if (stored && FONT_SCALE_STEPS[stored]) {
@@ -317,7 +317,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const sttConfig = runtimeConfig.stt || {};
     const aiEnabled = !!aiConfig.enabled;
     const voiceOptionsRaw = Array.isArray(aiConfig.voices) ? aiConfig.voices : [];
-    let selectedVoice = aiConfig.defaultVoice || (voiceOptionsRaw[0]?.voice || '');
+    const savedVoiceChoice = getSavedVoice();
+    let selectedVoice = savedVoiceChoice || aiConfig.defaultVoice || (voiceOptionsRaw[0]?.voice || '');
     const dataset = root?.dataset || {};
     const privateAudioLabel = dataset.privateAudioLabel || 'Private audio';
     const sttStrings = {
@@ -422,6 +423,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function saveInterfaceLang(lang){
       try{
         localStorage.setItem('flashcards_interface_lang', lang);
+      }catch(_e){}
+    }
+
+    const VOICE_SELECTION_KEY = 'flashcards_tts_voice';
+    const DEFAULT_INTERFACE_FALLBACK = 'uk';
+
+    function getSavedVoice(){
+      try{
+        return localStorage.getItem(VOICE_SELECTION_KEY) || null;
+      }catch(_e){
+        return null;
+      }
+    }
+
+    function saveVoice(voice){
+      try{
+        if(voice){
+          localStorage.setItem(VOICE_SELECTION_KEY, voice);
+        }else{
+          localStorage.removeItem(VOICE_SELECTION_KEY);
+        }
       }catch(_e){}
     }
 
@@ -1217,12 +1239,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     const savedInterfaceLang = getSavedInterfaceLang();
     const savedTransLang = getSavedTransLang();
-    // Priority: saved translation lang > saved interface lang > page/Moodle lang > browser
-    const rawLang = savedTransLang || savedInterfaceLang || pageLang() || (window.M && M.cfg && M.cfg.lang) || (navigator.language || 'en');
-    const userLang = (rawLang || 'en').toLowerCase();
-    let userLang2 = userLang.split(/[\-_]/)[0] || 'en';
-    
-    // Initialize interface language (use saved interface lang or fallback to translation lang)
+    const moodleLang = (window.M && M.cfg && M.cfg.lang) || pageLang();
+    const fallbackLang = DEFAULT_INTERFACE_FALLBACK;
+    const rawLang = savedInterfaceLang || savedTransLang || moodleLang || (navigator.language || fallbackLang);
+    const userLang = (rawLang || fallbackLang).toLowerCase();
+    let userLang2 = userLang.split(/[\-_]/)[0] || fallbackLang;
+
+    // Initialize interface language (use saved interface lang or fallback to computed language)
     let currentInterfaceLang = savedInterfaceLang || userLang2;
 
     const voiceSelectEl = document.getElementById('ttsVoice');
@@ -1252,7 +1275,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             voiceSelectEl.value = selectedVoice;
           }
         });
-        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; setTtsStatus('', ''); });
+        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; saveVoice(selectedVoice); setTtsStatus('', ''); });
         if(voiceSlotEl) voiceSlotEl.classList.remove('hidden');
         if(!aiConfig.ttsEnabled){
           setTtsStatus(aiStrings.voiceDisabled, 'warn');
