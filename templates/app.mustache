@@ -112,11 +112,10 @@
                 </button>
               </div>
               <div class="pref-field pref-voice-field">
-                <div class="slot hidden" id="slot_ttsVoice">
-                  <span class="tag" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</span>
-                  <select id="ttsVoice"></select>
-                  <div class="small" id="ttsVoiceStatus" data-i18n="tts_voice_hint">{{#str}} tts_voice_hint, mod_flashcards {{/str}}</div>
-                </div>
+                <div class="pref-heading" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</div>
+                <label class="pref-label sr-only" for="ttsVoice">{{#str}} tts_voice, mod_flashcards {{/str}}</label>
+                <select id="ttsVoice"></select>
+                <div class="small" id="ttsVoiceStatus" aria-live="polite"></div>
               </div>
             </div>
           </div>
