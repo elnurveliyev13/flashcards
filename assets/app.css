@@ -1069,7 +1069,7 @@ audio{max-width:260px}
 /* Ensure form slots have a consistent horizontal safe zone */
 .slot{
   margin: var(--space-2) 0;
-  padding: 0 0.75rem;
+  padding: 0 var(--space-2);
   box-sizing: border-box;
 }
 .slot .tag{
@@ -1078,6 +1078,13 @@ audio{max-width:260px}
   color: var(--text-muted);
   margin-bottom: 6px;
   display: inline-block;
+}
+#cardCreationForm .slot textarea.autogrow,
+#cardCreationForm .slot .row.has-action textarea.autogrow{
+  width: calc(100% + 1.5rem);
+  margin-left: -0.75rem;
+  box-sizing: border-box;
+  display: block;
 }
 .front-slot,
 .front-translation-slot{
