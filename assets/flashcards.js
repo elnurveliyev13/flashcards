@@ -10,15 +10,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const $$ = s => Array.from(root.querySelectorAll(s));
     const uniq = a => [...new Set(a.filter(Boolean))];
     const formatActiveVocab = value => {
-      const numeric = Number(value);
-      if (!Number.isFinite(numeric) || numeric < 0) {
-        return '0';
-      }
-      const decimals = numeric >= 100 ? 0 : 1;
-      return numeric.toLocaleString(undefined, {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals
-      });
+      const numeric = Math.round(Number(value) || 0);
+      return numeric.toString();
     };
     function formatFileSize(bytes){
       if(!Number.isFinite(bytes) || bytes <= 0){
