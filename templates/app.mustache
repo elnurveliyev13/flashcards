@@ -200,33 +200,24 @@
                     </button>
                   </div>
                 </div>
-                <div class="translation-mode-hint" id="translationModeHint" data-i18n="front_translation_mode_hint">
-                  {{#str}} front_translation_mode_hint, mod_flashcards {{/str}}
-                </div>
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
               <div class="media-row">
                 <div class="media-status-panel" aria-live="polite">
-                  <span class="status-chip translation-status" id="frontTranslationStatus" data-i18n="front_translation_status_idle">
+                  <span class="status-chip translation-status" id="mediaStatusIndicator" data-i18n="front_translation_status_idle">
                     {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
                   </span>
-                  <div class="stt-status-wrap">
-                    <div id="sttStatus" class="stt-status-chip">{{#str}} whisper_status_idle, mod_flashcards {{/str}}</div>
-                    <div class="stt-status-actions">
-                      <button id="sttRetry" type="button" class="stt-link hidden">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
-                      <button id="sttUndo" type="button" class="stt-link hidden">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
-                    </div>
-                  </div>
-                  <div class="stt-status-wrap ocr-status-wrap">
-                    <div id="ocrStatus" class="stt-status-chip">{{#str}} ocr_status_idle, mod_flashcards {{/str}}</div>
-                    <div class="stt-status-actions">
-                      <button id="ocrRetry" type="button" class="stt-link hidden">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
-                      <button id="ocrUndo" type="button" class="stt-link hidden">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
-                    </div>
+                  <div class="status-action-row">
+                    <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                    <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                    <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
+                    <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
                   </div>
                 </div>
                 <div class="media-actions" aria-live="polite">
-                  <label for="uAudio" class="fc-link-btn fc-media-link" data-i18n="chooseaudiofile">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</label>
+                  <label for="uAudio" class="fc-link-btn fc-media-link" aria-label="{{#str}} chooseaudiofile, mod_flashcards {{/str}}" data-i18n="chooseaudiofile">
+                    <span class="sr-only">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</span>
+                  </label>
                   <div class="media-button-group">
                     <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
                       <span class="fc-media-icon">&#128247;</span>

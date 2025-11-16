@@ -1380,11 +1380,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function setTranslationPreview(state, custom){
-      if(frontTranslationStatus){
-        const label = custom || (state === 'loading' ? aiStrings.translationLoading :
-          (state === 'error' ? aiStrings.translationError : aiStrings.translationIdle));
-        frontTranslationStatus.dataset.state = state || '';
-        frontTranslationStatus.textContent = label;
+      const label = custom || (state === 'loading' ? aiStrings.translationLoading :
+        (state === 'error' ? aiStrings.translationError : aiStrings.translationIdle));
+      setMediaStatus(state, label);
+    }
+
+    function setMediaStatus(state, label){
+      if(!mediaStatusIndicator){
+        return;
+      }
+      const text = label || aiStrings.translationIdle;
+      mediaStatusIndicator.textContent = text;
+      mediaStatusIndicator.dataset.state = state || '';
+      mediaStatusIndicator.classList.remove('error','success');
+      if(state === 'error'){
+        mediaStatusIndicator.classList.add('error');
+      } else if(state === 'success'){
+        mediaStatusIndicator.classList.add('success');
       }
     }
 
@@ -1655,7 +1667,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationReverseLabel = document.getElementById('translationModeReverse');
     const translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
-    const frontTranslationStatus = document.getElementById('frontTranslationStatus');
+    const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
     const focusTranslationText = document.getElementById('focusTranslationText');
     const translationHintDefault = translationModeHint ? translationModeHint.textContent : '';
     let translationDirection = 'no-user';
@@ -2447,14 +2459,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       sttRetryBtn.classList.toggle('hidden', !show);
     }
     function setSttStatus(state, customText){
+      const message = customText || sttStrings[state] || sttStrings.idle;
+      setMediaStatus(state, message);
+      const isError = state === 'error' || state === 'limit' || state === 'quota';
+      const isSuccess = state === 'success';
+      setSttRetryVisible(isError);
+      if(state === 'idle' || state === 'disabled'){
+        setSttUndoVisible(false);
+      }
       if(!sttStatusEl){
         return;
       }
-      const message = customText || sttStrings[state] || sttStrings.idle;
       sttStatusEl.textContent = message;
       sttStatusEl.classList.remove('error','success');
-      const isError = state === 'error' || state === 'limit' || state === 'quota';
-      const isSuccess = state === 'success';
       if(isError){
         sttStatusEl.classList.add('error');
       } else if(isSuccess){
@@ -2462,10 +2479,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(state === 'disabled'){
         sttStatusEl.classList.add('error');
-      }
-      setSttRetryVisible(isError);
-      if(state === 'idle' || state === 'disabled'){
-        setSttUndoVisible(false);
       }
     }
     function setOcrRetryVisible(show){
@@ -2477,25 +2490,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ocrUndoBtn.classList.toggle('hidden', !show);
     }
     function setOcrStatus(state, customText){
+      const message = customText || ocrStrings[state] || ocrStrings.idle;
+      setMediaStatus(state, message);
+      const isError = state === 'error';
+      setOcrRetryVisible(isError);
+      if(state === 'idle' || state === 'disabled'){
+        setOcrUndoVisible(false);
+      }
       if(!ocrStatusEl){
         return;
       }
-      const message = customText || ocrStrings[state] || ocrStrings.idle;
       ocrStatusEl.textContent = message;
       ocrStatusEl.classList.remove('error','success');
-      const isError = state === 'error';
-      const isSuccess = state === 'success';
       if(isError){
         ocrStatusEl.classList.add('error');
-      } else if(isSuccess){
+      } else if(state === 'success'){
         ocrStatusEl.classList.add('success');
       }
       if(state === 'disabled'){
         ocrStatusEl.classList.add('error');
-      }
-      setOcrRetryVisible(isError);
-      if(state === 'idle' || state === 'disabled'){
-        setOcrUndoVisible(false);
       }
     }
     function getCropContext(){
@@ -2984,12 +2997,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       closeCropper();
       triggerOcrRecognition(croppedFile);
     }
-    if(sttStatusEl){
-      setSttStatus(sttEnabled ? 'idle' : 'disabled');
-    }
-    if(ocrStatusEl){
-      setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
-    }
+    setSttStatus(sttEnabled ? 'idle' : 'disabled');
+    setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
     if(cropStage && !cropStage.dataset.bound){
       cropStage.dataset.bound = '1';
       cropStage.addEventListener('pointerdown', handleCropPointerDown);
