@@ -190,15 +190,18 @@
                       </button>
                     </div>
                   </div>
-                  <div class="slot-inline-controls">
-                    <button id="btnImagePicker" class="fc-quick-media-btn fc-media-inline" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
-                      <span class="fc-media-icon">&#128247;</span>
-                    </button>
-                    <button id="btnRec" class="fc-quick-media-btn fc-media-inline micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
-                      <span class="fc-media-icon">&#127897;&#65039;</span>
-                      <span id="recTimer" class="rec-timer hidden">00:00</span>
-                    </button>
-                  </div>
+                    <div class="slot-inline-controls">
+                     <button id="btnImagePicker" class="fc-quick-media-btn fc-media-inline" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
+                       <span class="fc-media-icon">&#128247;</span>
+                     </button>
+                     <button id="btnRec" class="fc-quick-media-btn fc-media-inline micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
+                       <span class="fc-media-icon">&#127897;&#65039;</span>
+                       <span id="recTimer" class="rec-timer hidden">00:00</span>
+                     </button>
+                     <span class="status-chip translation-status" id="mediaStatusIndicator" data-i18n="front_translation_status_idle">
+                       {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
+                     </span>
+                   </div>
                 </div>
                 <div class="status-action-row compact-actions">
                   <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
@@ -218,9 +221,6 @@
                       <button type="button" class="translation-mode-btn" data-dir="user-no" data-translation-btn>
                         <span class="translation-mode-label" id="translationModeReverse">EN → NO</span>
                       </button>
-                      <span class="status-chip translation-status" id="mediaStatusIndicator" data-i18n="front_translation_status_idle">
-                        {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
-                      </span>
                     </div>
                   </div>
                 </div>
