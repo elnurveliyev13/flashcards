@@ -1079,10 +1079,10 @@ audio{max-width:260px}
   margin-bottom: 6px;
   display: inline-block;
 }
-#cardCreationForm .slot textarea.autogrow,
-#cardCreationForm .slot .row.has-action textarea.autogrow{
-  width: calc(100% + 1.5rem);
-  margin-left: -0.75rem;
+#cardCreationForm .slot > textarea.autogrow{
+  width: calc(100% + (var(--space-2) * 2));
+  margin-left: calc(var(--space-2) * -1);
+  margin-right: calc(var(--space-2) * -1);
   box-sizing: border-box;
   display: block;
 }
