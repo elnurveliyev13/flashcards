@@ -1079,6 +1079,24 @@ audio{max-width:260px}
   margin-bottom: 6px;
   display: inline-block;
 }
+.front-slot,
+.front-translation-slot{
+  margin: 0;
+}
+.front-translation-slot{
+  margin: var(--space-1) 0 0.25rem;
+}
+.front-slot{
+  margin-top: 0;
+  margin-bottom: var(--space-1);
+}
+.front-translation-slot + .front-slot{
+  margin-top: 0;
+}
+.front-slot .slot-head,
+.front-translation-slot .slot-head{
+  margin-bottom: 0.35rem;
+}
 .slot-head{
   display:flex;
   justify-content:space-between;
