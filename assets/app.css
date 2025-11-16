@@ -1788,6 +1788,23 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
 }
 
+#mod_flashcards_container .slot-head-inline-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0.35rem;
+}
+
+#mod_flashcards_container .slot-head-main{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+#mod_flashcards_container .slot-head-inline-row .translation-mode,
+#mod_flashcards_container .slot-head-inline-row .status-chip{
+  flex:0 0 auto;
+}
+
 /* Compact header layout for quick input */
 #mod_flashcards_container .slot-head-inline{
   display:flex;
