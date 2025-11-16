@@ -1742,6 +1742,75 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-quick-media-btn.fc-media-inline .fc-media-icon{
   font-size:1.2rem;
 }
+.compact-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.35rem;
+}
+.compact-actions .stt-link{
+  padding:0.15rem 0.35rem;
+}
+.slot-inline-controls{
+  display:flex;
+  gap:0.35rem;
+  align-items:center;
+  margin-left:auto;
+}
+.slot-inline-controls .fc-quick-media-btn.fc-media-inline{
+  min-width:60px;
+  min-height:48px;
+  padding:6px 8px;
+}
+@media (max-width:520px){
+  .slot-inline-controls{
+    width:100%;
+    margin-left:0;
+    justify-content:flex-start;
+  }
+  .slot-head-inline-row .status-chip{
+    width:100%;
+  }
+}
+
+/* Compact header layout for quick input */
+#mod_flashcards_container .slot-head-inline{
+  display:flex;
+  flex-direction:column;
+  gap:0.25rem;
+  align-items:flex-start;
+}
+#mod_flashcards_container .slot-head-inline-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:0.35rem;
+  width:100%;
+}
+#mod_flashcards_container .slot-head-main{
+  display:flex;
+  align-items:center;
+  gap:0.35rem;
+  flex-wrap:wrap;
+}
+#mod_flashcards_container .slot-head-main .tag{
+  margin-right:0.35rem;
+}
+#mod_flashcards_container .slot-head-inline-row .translation-mode{
+  flex-shrink:0;
+}
+#mod_flashcards_container .slot-head-inline-row .status-chip{
+  flex-shrink:0;
+  white-space:nowrap;
+  font-size:0.8rem;
+}
+@media (max-width:520px){
+  #mod_flashcards_container .slot-head-inline-row{
+    gap:0.25rem;
+  }
+  #mod_flashcards_container .slot-inline-controls{
+    width:100%;
+  }
+}
 
 .fc-quick-media-btn.fc-media-large .fc-media-label {
   font-size: 0.875rem; /* 14px */
