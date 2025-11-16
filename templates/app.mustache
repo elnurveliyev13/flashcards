@@ -57,9 +57,9 @@
       </div>
     </div>
 
-    <header>
-      <div class="header-top">
-        <div class="header-metrics">
+    <div class="tabs-toolbar">
+      <div class="tabs-toolbar-row">
+        <div class="header-metrics" aria-label="{{#str}} header_stats, mod_flashcards {{/str}}">
           <span class="header-stat" title="Total Cards Created">
             <span class="header-stat-icon icon-plus">&#10133;</span>
             <span id="headerTotalCards">0</span>
@@ -73,6 +73,21 @@
             <span id="headerStreak">0</span>
           </span>
         </div>
+        <nav class="fc-tabs" role="tablist">
+          <button class="fc-tab" id="tabQuickInput" role="tab" aria-selected="false" aria-controls="quickInputSection">
+            <span class="fc-tab-icon icon-plus">&#10133;</span>
+            <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
+          </button>
+          <button class="fc-tab fc-tab-active" id="tabStudy" role="tab" aria-selected="true" aria-controls="studySection">
+            <span class="fc-tab-icon">&#128218;</span>
+            <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
+            <span class="fc-tab-badge hidden" id="studyBadge"></span>
+          </button>
+          <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
+            <span class="fc-tab-icon">&#128200;</span>
+            <span class="fc-tab-label" id="t_tab_dashboard">{{#str}} tab_dashboard, mod_flashcards {{/str}}</span>
+          </button>
+        </nav>
         <div class="header-controls">
           <div class="header-settings">
             <button type="button"
@@ -126,24 +141,7 @@
           </div>
         </div>
       </div>
-    </header>
-
-    <!-- Tab Navigation -->
-    <nav class="fc-tabs" role="tablist">
-      <button class="fc-tab" id="tabQuickInput" role="tab" aria-selected="false" aria-controls="quickInputSection">
-        <span class="fc-tab-icon icon-plus">&#10133;</span>
-        <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
-      </button>
-      <button class="fc-tab fc-tab-active" id="tabStudy" role="tab" aria-selected="true" aria-controls="studySection">
-        <span class="fc-tab-icon">&#128218;</span>
-        <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
-        <span class="fc-tab-badge hidden" id="studyBadge"></span>
-      </button>
-      <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
-        <span class="fc-tab-icon">&#128200;</span>
-        <span class="fc-tab-label" id="t_tab_dashboard">{{#str}} tab_dashboard, mod_flashcards {{/str}}</span>
-      </button>
-    </nav>
+    </div>
 
     <div class="row hidden">
       <select id="deckSelect"></select>
@@ -236,18 +234,7 @@
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
             </div>
-            <div class="slot ai-question-slot">
-              <div class="ai-question-head">
-                <span class="tag" data-i18n="ai_question_label">{{#str}} ai_question_label, mod_flashcards {{/str}}</span>
-              </div>
-              <div class="ai-chat-pane" id="aiChatPane" role="log" aria-live="polite">
-                <p class="ai-chat-empty">{{#str}} ai_chat_empty, mod_flashcards {{/str}}</p>
-              </div>
-              <textarea id="uAiQuestion" class="autogrow" placeholder="{{#str}} ai_question_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="ai_question_placeholder"></textarea>
-              <div class="ai-chat-actions">
-                <button type="button" id="btnAskAi" class="fc-link-btn" data-i18n="ai_question_button">{{#str}} ai_question_button, mod_flashcards {{/str}}</button>
-              </div>
-            </div>
+
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
@@ -260,6 +247,18 @@
               <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
               <div class="row has-action">
                 <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
+              </div>
+            </div>
+            <div class="slot ai-question-slot">
+              <div class="ai-question-head">
+                <span class="tag" data-i18n="ai_question_label">{{#str}} ai_question_label, mod_flashcards {{/str}}</span>
+              </div>
+              <div class="ai-chat-pane" id="aiChatPane" role="log" aria-live="polite">
+                <p class="ai-chat-empty">{{#str}} ai_chat_empty, mod_flashcards {{/str}}</p>
+              </div>
+              <textarea id="uAiQuestion" class="autogrow" placeholder="{{#str}} ai_question_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="ai_question_placeholder"></textarea>
+              <div class="ai-chat-actions">
+                <button type="button" id="btnAskAi" class="fc-link-btn" data-i18n="ai_question_button">{{#str}} ai_question_button, mod_flashcards {{/str}}</button>
               </div>
             </div>
             <div class="fc-quick-advanced-toggle">
