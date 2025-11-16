@@ -265,6 +265,54 @@ PROMPT;
         ];
     }
 
+    public function answer_question(string $context, string $question, string $language, array $options = []): array {
+        if (!$this->is_enabled()) {
+            throw new coding_exception('openai client is not configured');
+        }
+
+        $context = trim($context);
+        $question = trim($question);
+        if ($context === '' || $question === '') {
+            throw new coding_exception('Missing text for AI question');
+        }
+
+        $languageCode = $this->sanitize_language($language);
+        $languageName = $this->language_name($languageCode);
+
+        $systemprompt = "ROLE: Norwegian tutor for {$languageName}-speaking learners.\n"
+            . "RULES: Use the Norwegian sentence context to answer the question. Provide concise, learner-friendly replies in {$languageName} without inventing facts.";
+        $userprompt = implode("\n", [
+            "CONTEXT (Norwegian): " . $this->trim_prompt_text($context, 500),
+            "QUESTION ({$languageName}): " . $this->trim_prompt_text($question, 400),
+        ]);
+
+        $payload = [
+            'model' => $this->model,
+            'temperature' => $options['temperature'] ?? 0.35,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemprompt,
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $userprompt,
+                ],
+            ],
+        ];
+
+        $response = $this->request($payload);
+        $content = trim($response->choices[0]->message->content ?? '');
+        if ($content === '') {
+            throw new moodle_exception('ai_empty_response', 'mod_flashcards');
+        }
+
+        return [
+            'answer' => core_text::substr($content, 0, 1200),
+            'language' => $languageCode,
+        ];
+    }
+
     protected function fallback_focus(string $word): array {
         $word = trim($word);
         if ($word === '') {

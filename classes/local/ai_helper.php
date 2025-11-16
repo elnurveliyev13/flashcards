@@ -153,6 +153,21 @@ class ai_helper {
         ];
     }
 
+    public function answer_question(string $fronttext, string $question, array $options = []): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+
+        $fronttext = trim($fronttext);
+        $question = trim($question);
+        if ($fronttext === '' || $question === '') {
+            throw new coding_exception('Missing text for AI question');
+        }
+
+        $language = clean_param($options['language'] ?? 'uk', PARAM_ALPHANUMEXT);
+        return $this->openai->answer_question($fronttext, $question, $language);
+    }
+
     protected function enforce_clicked_focus(string $focus, string $clicked): string {
         $focus = trim($focus);
         $clicked = trim($clicked);

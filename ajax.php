@@ -26,7 +26,7 @@ if ($globalmode) {
     $access = \mod_flashcards\access_manager::check_user_access($USER->id);
 
     // Check permissions based on action
-    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'recognize_image' || $action === 'ai_focus_helper' || $action === 'ai_translate') {
+    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'recognize_image' || $action === 'ai_focus_helper' || $action === 'ai_translate' || $action === 'ai_question') {
         // Allow site administrators and managers regardless of grace period/access
         $createallowed = !empty($access['can_create']);
         if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
@@ -364,6 +364,23 @@ switch ($action) {
         $direction = ($payload['direction'] ?? '') === 'user-no' ? 'user-no' : 'no-user';
         $helper = new \mod_flashcards\local\ai_helper();
         $data = $helper->translate_text($userid, $text, $source, $target, ['direction' => $direction]);
+        echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
+    case 'ai_question':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $fronttext = trim($payload['frontText'] ?? '');
+        $question = trim($payload['question'] ?? '');
+        if ($fronttext === '' || $question === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $language = clean_param($payload['language'] ?? 'uk', PARAM_ALPHANUMEXT);
+        $helper = new \mod_flashcards\local\ai_helper();
+        $data = $helper->answer_question($fronttext, $question, ['language' => $language]);
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 

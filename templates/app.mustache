@@ -7,6 +7,11 @@
      data-ai-success="{{#str}} ai_helper_success, mod_flashcards {{/str}}"
      data-ai-error="{{#str}} ai_helper_error, mod_flashcards {{/str}}"
      data-ai-no-text="{{#str}} ai_no_text, mod_flashcards {{/str}}"
+     data-ai-chat-empty="{{#str}} ai_chat_empty, mod_flashcards {{/str}}"
+     data-ai-chat-user="{{#str}} ai_chat_user, mod_flashcards {{/str}}"
+     data-ai-chat-assistant="{{#str}} ai_chat_assistant, mod_flashcards {{/str}}"
+     data-ai-chat-loading="{{#str}} ai_chat_loading, mod_flashcards {{/str}}"
+     data-ai-chat-error="{{#str}} ai_chat_error, mod_flashcards {{/str}}"
      data-focus-audio-label="{{#str}} focus_audio_badge, mod_flashcards {{/str}}"
      data-front-audio-label="{{#str}} front_audio_badge, mod_flashcards {{/str}}"
      data-voice-placeholder="{{#str}} tts_voice_placeholder, mod_flashcards {{/str}}"
@@ -162,35 +167,6 @@
                 <span class="rot">&#8634;</span>
               </button>
             </div>
-            <div class="fc-quick-media">
-              <div class="fc-quick-media-grid">
-                <button id="btnRec" class="fc-quick-media-btn fc-media-large micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
-                  <span class="fc-media-icon">&#127897;&#65039;</span>
-                  <span class="fc-media-label" data-i18n="quick_audio">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
-                  <span id="recTimer" class="rec-timer hidden">00:00</span>
-                </button>
-                <label for="uAudio" class="fc-link-btn fc-media-link" data-i18n="chooseaudiofile">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</label>
-                <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
-                  <span class="fc-media-icon">&#128247;</span>
-                  <span class="fc-media-label" data-i18n="quick_photo">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
-                </button>
-              </div>
-              <div class="stt-status-wrap" aria-live="polite">
-                <div id="sttStatus" class="stt-status-chip">{{#str}} whisper_status_idle, mod_flashcards {{/str}}</div>
-                <div class="stt-status-actions">
-                  <button id="sttRetry" type="button" class="stt-link hidden">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="sttUndo" type="button" class="stt-link hidden">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
-                </div>
-              </div>
-              <div class="stt-status-wrap ocr-status-wrap" aria-live="polite">
-                <div id="ocrStatus" class="stt-status-chip">{{#str}} ocr_status_idle, mod_flashcards {{/str}}</div>
-                <div class="stt-status-actions">
-                  <button id="ocrRetry" type="button" class="stt-link hidden">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="ocrUndo" type="button" class="stt-link hidden">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
-                </div>
-              </div>
-              
-            </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
             <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
@@ -218,40 +194,82 @@
               <div class="slot-head slot-head-stacked">
                 <div class="slot-head-row">
                   <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
-                </div>
-                <div class="translation-mode" id="translationDirection">
-                  <button type="button" class="translation-mode-btn active" data-dir="no-user">
-                    <span class="translation-mode-label" id="translationModeForward">NO → EN</span>
-                  </button>
-                  <button type="button" class="translation-mode-btn" data-dir="user-no">
-                    <span class="translation-mode-label" id="translationModeReverse">EN → NO</span>
-                  </button>
+                  <div class="translation-mode translation-mode-inline">
+                    <button type="button" class="translation-mode-btn active" data-dir="no-user" data-translation-btn>
+                      <span class="translation-mode-label" id="translationModeForward">NO → EN</span>
+                    </button>
+                  </div>
                 </div>
                 <div class="translation-mode-hint" id="translationModeHint" data-i18n="front_translation_mode_hint">
                   {{#str}} front_translation_mode_hint, mod_flashcards {{/str}}
                 </div>
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
-              <div class="translation-preview" id="frontTranslationPreview">
-                <div class="translation-preview-body">
-                  <div class="translation-preview-output" id="frontTranslationOutput">-</div>
-                  <div class="translation-preview-status" id="frontTranslationStatus" data-i18n="front_translation_status_idle">
+              <div class="media-row">
+                <div class="media-status-panel" aria-live="polite">
+                  <span class="status-chip translation-status" id="frontTranslationStatus" data-i18n="front_translation_status_idle">
                     {{#str}} front_translation_status_idle, mod_flashcards {{/str}}
+                  </span>
+                  <div class="stt-status-wrap">
+                    <div id="sttStatus" class="stt-status-chip">{{#str}} whisper_status_idle, mod_flashcards {{/str}}</div>
+                    <div class="stt-status-actions">
+                      <button id="sttRetry" type="button" class="stt-link hidden">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                      <button id="sttUndo" type="button" class="stt-link hidden">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                    </div>
+                  </div>
+                  <div class="stt-status-wrap ocr-status-wrap">
+                    <div id="ocrStatus" class="stt-status-chip">{{#str}} ocr_status_idle, mod_flashcards {{/str}}</div>
+                    <div class="stt-status-actions">
+                      <button id="ocrRetry" type="button" class="stt-link hidden">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
+                      <button id="ocrUndo" type="button" class="stt-link hidden">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="media-actions" aria-live="polite">
+                  <label for="uAudio" class="fc-link-btn fc-media-link" data-i18n="chooseaudiofile">{{#str}} chooseaudiofile, mod_flashcards {{/str}}</label>
+                  <div class="media-button-group">
+                    <button id="btnImagePicker" class="fc-quick-media-btn fc-media-large" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
+                      <span class="fc-media-icon">&#128247;</span>
+                      <span class="fc-media-label" data-i18n="quick_photo">{{#str}} quick_photo, mod_flashcards {{/str}}</span>
+                    </button>
+                    <button id="btnRec" class="fc-quick-media-btn fc-media-large micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
+                      <span class="fc-media-icon">&#127897;&#65039;</span>
+                      <span class="fc-media-label" data-i18n="quick_audio">{{#str}} quick_audio, mod_flashcards {{/str}}</span>
+                      <span id="recTimer" class="rec-timer hidden">00:00</span>
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="slot front-translation-slot" id="slot_front_translation">
-              <span class="tag" id="tag_trans_local" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
+              <div class="slot-head-row">
+                <span class="tag" id="tag_trans_local" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
+                <div class="translation-mode translation-mode-inline">
+                  <button type="button" class="translation-mode-btn" data-dir="user-no" data-translation-btn>
+                    <span class="translation-mode-label" id="translationModeReverse">EN → NO</span>
+                  </button>
+                </div>
+              </div>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
             </div>
             <div class="slot focus-helper-slot">
               <div class="focus-helper-head">
-                <span class="tag" data-i18n="ai_helper_label">{{#str}} ai_helper_label, mod_flashcards {{/str}}</span>
-                <span class="focus-helper-hint" id="focusHelperHint" data-i18n="ai_click_hint">{{#str}} ai_click_hint, mod_flashcards {{/str}}</span>
+                <span class="tag" data-i18n="choose_focus_word">{{#str}} choose_focus_word, mod_flashcards {{/str}}</span>
               </div>
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
+            </div>
+            <div class="slot ai-question-slot">
+              <div class="ai-question-head">
+                <span class="tag" data-i18n="ai_question_label">{{#str}} ai_question_label, mod_flashcards {{/str}}</span>
+              </div>
+              <div class="ai-chat-pane" id="aiChatPane" role="log" aria-live="polite">
+                <p class="ai-chat-empty">{{#str}} ai_chat_empty, mod_flashcards {{/str}}</p>
+              </div>
+              <textarea id="uAiQuestion" class="autogrow" placeholder="{{#str}} ai_question_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="ai_question_placeholder"></textarea>
+              <div class="ai-chat-actions">
+                <button type="button" id="btnAskAi" class="fc-link-btn" data-i18n="ai_question_button">{{#str}} ai_question_button, mod_flashcards {{/str}}</button>
+              </div>
             </div>
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
@@ -260,6 +278,12 @@
             <div class="focus-translation-pill" id="focusTranslationPreview">
               <span class="focus-translation-label" data-i18n="focus_translation_label">{{#str}} focus_translation_label, mod_flashcards {{/str}}</span>
               <span class="focus-translation-text" id="focusTranslationText">—</span>
+            </div>
+            <div class="slot">
+              <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
+              <div class="row has-action">
+                <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
+              </div>
             </div>
             <div class="slot">
               <span class="tag" data-i18n="focus_baseform">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
@@ -351,12 +375,6 @@
                 <span class="tag" data-i18n="collocations">{{#str}} collocations, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                   <textarea id="uCollocations" class="autogrow" placeholder="collocations..." data-i18n-placeholder="collocations_placeholder"></textarea>
-                </div>
-              </div>
-              <div class="slot">
-                <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
-                <div class="row has-action">
-                  <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
                 </div>
               </div>
               <div class="slot">
