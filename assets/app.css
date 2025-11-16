@@ -170,7 +170,7 @@ body {
 .wrap{
   max-width: 960px;
   margin: 0 auto;
-  padding: var(--space-2) var(--space-2) calc(var(--space-4) + 80px);
+  padding: 0 var(--space-2) calc(var(--space-4) + 80px);
   display: grid;
   gap: var(--space-2);
 }
