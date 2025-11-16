@@ -2456,6 +2456,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setMediaStatus(state, message);
       const isError = state === 'error' || state === 'limit' || state === 'quota';
       const isSuccess = state === 'success';
+      const showSttStatus = isError || state === 'disabled';
       setSttRetryVisible(isError);
       if(state === 'idle' || state === 'disabled'){
         setSttUndoVisible(false);
@@ -2473,6 +2474,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(state === 'disabled'){
         sttStatusEl.classList.add('error');
       }
+      sttStatusEl.classList.toggle('hidden', !showSttStatus);
     }
     function setOcrRetryVisible(show){
       if(!ocrRetryBtn) return;
