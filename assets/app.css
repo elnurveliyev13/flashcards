@@ -230,7 +230,7 @@ button:focus-visible,
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-2);
+  padding: calc(var(--space-1) / 2) var(--space-2) calc(var(--space-1) / 2) var(--space-2);
   background: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   overflow-x: hidden;
@@ -565,7 +565,7 @@ h1{
     max-width: 100vw !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    padding: 8px;
+    padding: calc(var(--space-1) / 2) 8px;
   }
 
   .tabs-toolbar-top{
@@ -1392,7 +1392,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
   /* Additional safe-area support for tabs toolbar and other elements */
   .tabs-toolbar{
-    padding-top: max(16px, calc(16px + env(safe-area-inset-top)));
+    padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
   }
   .bottom-actions{
     padding-left: max(14px, calc(14px + env(safe-area-inset-left)));
@@ -1413,11 +1413,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
   /* Reduce header padding in landscape */
   .tabs-toolbar {
-    padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
-    padding-bottom: 8px;
+    padding-top: max(4px, calc(4px + env(safe-area-inset-top)));
+    padding-bottom: 4px;
   }
   .tabs-toolbar-top {
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
   /* Adjust card padding for landscape */
   .card {
@@ -1447,8 +1447,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-1);
-  margin-top: var(--space-1);
+  margin-bottom: calc(var(--space-1) / 2);
+  margin-top: calc(var(--space-1) / 2);
   background: var(--surface-1);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;
