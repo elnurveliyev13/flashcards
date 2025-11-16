@@ -1673,7 +1673,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .translation-mode-inline {
-  margin-left: 0.3rem;
+  margin-left: 0;
+  display:inline-flex;
 }
 
 .fc-quick-media-btn {
@@ -2347,9 +2348,19 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-wrap:wrap;
   gap:0.5rem;
 }
-.slot-head-align {
+.slot-head-inline {
+  align-items:flex-start;
+  width:auto;
+  flex:0 0 auto;
+}
+.slot-head-inline-row {
   justify-content:flex-start;
-  gap:0.4rem;
+  align-items:center;
+  gap:0.35rem;
+  width:auto;
+}
+.slot-head-inline-row .tag {
+  margin-right:0.35rem;
 }
 .translation-mode {
   display:flex;
