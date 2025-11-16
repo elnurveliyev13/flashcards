@@ -251,12 +251,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const prefsToggle = document.getElementById('prefsToggle');
     const prefsPanel = document.getElementById('prefsPanel');
     if (prefsToggle && prefsPanel) {
+      const attachPrefsPanel = () => {
+        if (document.body && !document.body.contains(prefsPanel)) {
+          document.body.appendChild(prefsPanel);
+        }
+      };
+      const repositionPrefsPanel = () => {
+        const rect = prefsToggle.getBoundingClientRect();
+        const gutter = 12;
+        prefsPanel.style.top = `${Math.max(gutter, rect.bottom + gutter)}px`;
+        prefsPanel.style.right = `${Math.max(gutter, window.innerWidth - rect.right + gutter)}px`;
+        prefsPanel.style.left = 'auto';
+      };
+      const refreshPrefsPanelPosition = () => {
+        if (prefsPanel.classList.contains('open')) {
+          repositionPrefsPanel();
+        }
+      };
+
       let prefsOpen = false;
       const updatePrefsState = open => {
         prefsOpen = open;
         prefsPanel.classList.toggle('open', open);
         prefsPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
         prefsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) {
+          attachPrefsPanel();
+          repositionPrefsPanel();
+        }
       };
       prefsToggle.addEventListener('click', e => {
         e.preventDefault();
@@ -283,6 +305,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           updatePrefsState(false);
         }
       });
+      window.addEventListener('scroll', refreshPrefsPanelPosition, { passive: true });
       updatePrefsState(false);
     }
 
