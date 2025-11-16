@@ -2453,8 +2453,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function setSttStatus(state, customText){
       const message = customText || sttStrings[state] || sttStrings.idle;
-      setMediaStatus(state, message);
       const isError = state === 'error' || state === 'limit' || state === 'quota';
+      if(!isError && state !== 'disabled'){
+        setMediaStatus(state, message);
+      } else {
+        setMediaStatus('idle', sttStrings.idle);
+      }
       const isSuccess = state === 'success';
       const showSttStatus = isError || state === 'disabled';
       setSttRetryVisible(isError);

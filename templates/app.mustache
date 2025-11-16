@@ -194,12 +194,6 @@
                     Status
                   </span>
                 </div>
-                <div class="status-action-row compact-actions">
-                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
-                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
-                </div>
               </div>
               <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
             </div>
@@ -227,6 +221,12 @@
               </div>
               <div class="stt-status-wrap stt-status-block" aria-live="polite">
                 <span id="sttStatus" class="stt-status-chip hidden" role="status"></span>
+                <div class="stt-status-actions">
+                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
+                </div>
               </div>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
             </div>
