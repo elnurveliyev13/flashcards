@@ -242,7 +242,7 @@ button:focus-visible,
   z-index: 10;
 }
 
-.tabs-toolbar-row{
+.tabs-toolbar-top{
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -251,7 +251,7 @@ button:focus-visible,
   contain: layout;
 }
 
-.tabs-toolbar-row .header-metrics{
+.tabs-toolbar-top .header-metrics{
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -260,12 +260,7 @@ button:focus-visible,
   min-width: 0;
 }
 
-.tabs-toolbar-row .fc-tabs{
-  flex: 1 1 340px;
-  min-width: 0;
-}
-
-.tabs-toolbar-row .header-controls{
+.tabs-toolbar-top .header-controls{
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -573,7 +568,7 @@ h1{
     padding: 8px;
   }
 
-  .tabs-toolbar-row{
+  .tabs-toolbar-top{
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -1421,7 +1416,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     padding-top: max(8px, calc(8px + env(safe-area-inset-top)));
     padding-bottom: 8px;
   }
-  .tabs-toolbar-row {
+  .tabs-toolbar-top {
     margin-bottom: 8px;
   }
   /* Adjust card padding for landscape */
@@ -1448,11 +1443,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 /* ========== TAB NAVIGATION (v0.7.0) ========== */
-.fc-tabs {
+.tabs-toolbar .fc-tabs {
   display: flex;
   gap: 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: var(--space-1);
+  margin-top: var(--space-1);
   background: var(--surface-1);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;

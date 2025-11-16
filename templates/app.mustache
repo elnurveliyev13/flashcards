@@ -58,7 +58,7 @@
     </div>
 
     <div class="tabs-toolbar">
-      <div class="tabs-toolbar-row">
+      <div class="tabs-toolbar-top">
         <div class="header-metrics" aria-label="{{#str}} header_stats, mod_flashcards {{/str}}">
           <span class="header-stat" title="Total Cards Created">
             <span class="header-stat-icon icon-plus">&#10133;</span>
@@ -73,21 +73,6 @@
             <span id="headerStreak">0</span>
           </span>
         </div>
-        <nav class="fc-tabs" role="tablist">
-          <button class="fc-tab" id="tabQuickInput" role="tab" aria-selected="false" aria-controls="quickInputSection">
-            <span class="fc-tab-icon icon-plus">&#10133;</span>
-            <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
-          </button>
-          <button class="fc-tab fc-tab-active" id="tabStudy" role="tab" aria-selected="true" aria-controls="studySection">
-            <span class="fc-tab-icon">&#128218;</span>
-            <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
-            <span class="fc-tab-badge hidden" id="studyBadge"></span>
-          </button>
-          <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
-            <span class="fc-tab-icon">&#128200;</span>
-            <span class="fc-tab-label" id="t_tab_dashboard">{{#str}} tab_dashboard, mod_flashcards {{/str}}</span>
-          </button>
-        </nav>
         <div class="header-controls">
           <div class="header-settings">
             <button type="button"
@@ -141,6 +126,21 @@
           </div>
         </div>
       </div>
+      <nav class="fc-tabs" role="tablist">
+        <button class="fc-tab" id="tabQuickInput" role="tab" aria-selected="false" aria-controls="quickInputSection">
+          <span class="fc-tab-icon icon-plus">&#10133;</span>
+          <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
+        </button>
+        <button class="fc-tab fc-tab-active" id="tabStudy" role="tab" aria-selected="true" aria-controls="studySection">
+          <span class="fc-tab-icon">&#128218;</span>
+          <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
+          <span class="fc-tab-badge hidden" id="studyBadge"></span>
+        </button>
+        <button class="fc-tab" id="tabDashboard" role="tab" aria-selected="false" aria-controls="dashboardSection">
+          <span class="fc-tab-icon">&#128200;</span>
+          <span class="fc-tab-label" id="t_tab_dashboard">{{#str}} tab_dashboard, mod_flashcards {{/str}}</span>
+        </button>
+      </nav>
     </div>
 
     <div class="row hidden">
