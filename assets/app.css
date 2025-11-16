@@ -1829,6 +1829,22 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .slot-inline-controls .fc-media-icon{
   font-size:1.35rem;
 }
+.translation-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.35rem;
+  margin-top:-0.35rem;
+  flex-wrap:wrap;
+}
+.translation-actions .translation-mode{
+  margin:0;
+}
+.translation-media-controls{
+  display:flex;
+  align-items:center;
+  gap:0.35rem;
+}
 .compact-actions{
   display:flex;
   flex-wrap:wrap;
