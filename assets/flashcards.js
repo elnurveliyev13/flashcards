@@ -252,9 +252,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const prefsPanel = document.getElementById('prefsPanel');
     if (prefsToggle && prefsPanel) {
       const attachPrefsPanel = () => {
-        if (document.body && !document.body.contains(prefsPanel)) {
-          document.body.appendChild(prefsPanel);
+        if (!document.body) {
+          return;
         }
+        document.body.appendChild(prefsPanel);
       };
       const repositionPrefsPanel = () => {
         const rect = prefsToggle.getBoundingClientRect();
