@@ -1981,6 +1981,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 6px 12px;
   font-size: 0.8125rem; /* 13px */
   color: var(--text);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(70vw, 16rem);
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .media-pill .iconbtn {
@@ -1989,6 +1994,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   color: inherit;
   font-size: 0.875rem; /* 14px */
   padding: 0;
+}
+
+.fc-media-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin-bottom: 0.5rem;
 }
 
 .fc-quick-preview {
