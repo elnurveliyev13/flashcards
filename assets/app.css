@@ -1802,9 +1802,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 @media (max-width:520px){
   .slot-inline-controls{
-    width:auto;
     margin-left:auto;
-    justify-content:flex-start;
+    justify-content:flex-end;
   }
   .slot-head-main{
     gap:0.2rem;
@@ -1872,9 +1871,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 @media (max-width:520px){
   #mod_flashcards_container .slot-head-inline-row{
     gap:0.25rem;
-  }
-  #mod_flashcards_container .slot-inline-controls{
-    width:100%;
   }
 }
 
