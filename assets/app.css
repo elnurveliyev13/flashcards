@@ -1858,7 +1858,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   min-width:0;
 }
 
-#mod_flashcards_container .slot-head,
+#mod_flashcards_container .slot-head{
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  padding: 0 var(--slot-horizontal-gutter);
+  box-sizing: border-box;
+}
+
 #mod_flashcards_container .slot-head-row,
 #mod_flashcards_container .slot-head-inline-row{
   width: 100%;
