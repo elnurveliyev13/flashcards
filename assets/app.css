@@ -1066,10 +1066,9 @@ img.media{max-width:180px;max-height:120px;object-fit:cover;border-radius:12px}
   transform:scale(1.04);
 }
 audio{max-width:260px}
-/* Ensure form slots have a consistent horizontal safe zone */
 .slot{
   margin: var(--space-2) 0;
-  padding: 0 var(--space-2);
+  padding: 0 0.75rem;
   box-sizing: border-box;
 }
 .slot .tag{
@@ -1078,13 +1077,6 @@ audio{max-width:260px}
   color: var(--text-muted);
   margin-bottom: 6px;
   display: inline-block;
-}
-#cardCreationForm .slot > textarea.autogrow{
-  width: calc(100% + (var(--space-2) * 2));
-  margin-left: calc(var(--space-2) * -1);
-  margin-right: calc(var(--space-2) * -1);
-  box-sizing: border-box;
-  display: block;
 }
 .front-slot,
 .front-translation-slot{
