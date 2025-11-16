@@ -3101,10 +3101,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(label){
         label.textContent = advancedVisible ? t('hide_advanced') : t('show_advanced');
       }
-      const icon = $("#editorAdvancedIcon");
-      if(icon){
-        icon.textContent = advancedVisible ? '^' : '�';
-      }
     }
     function showAudioBadge(label){
       const badge=document.getElementById('audBadge');
