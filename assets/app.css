@@ -1724,6 +1724,23 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size: 1.4rem;
   color: var(--icon-muted);
 }
+.media-inline-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:var(--space-1);
+}
+.media-inline-buttons{
+  display:flex;
+  gap:0.5rem;
+}
+.fc-quick-media-btn.fc-media-inline{
+  padding:8px 10px;
+  min-width:90px;
+  min-height:52px;
+}
+.fc-quick-media-btn.fc-media-inline .fc-media-icon{
+  font-size:1.2rem;
+}
 
 .fc-quick-media-btn.fc-media-large .fc-media-label {
   font-size: 0.875rem; /* 14px */
