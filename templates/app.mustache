@@ -158,15 +158,6 @@
       <div class="fc-editor-wrap">
         <div class="card" id="cardCreationFormWrap">
           <div class="card-form-content" id="cardCreationForm">
-            <div class="fc-editor-actions">
-              <button id="btnQuickFormReset"
-                      class="iconbtn ghost"
-                      title="{{#str}} resetform, mod_flashcards {{/str}}"
-                      aria-label="{{#str}} resetform, mod_flashcards {{/str}}">
-                <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
-                <span class="rot">&#8634;</span>
-              </button>
-            </div>
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
             <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
@@ -276,10 +267,6 @@
                 <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
               </div>
             </div>
-            <div class="slot">
-              <span class="tag" data-i18n="focus_baseform">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
-              <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}" data-i18n-placeholder="focus_baseform_ph"></textarea>
-            </div>
             <div class="fc-quick-advanced-toggle">
               <button id="btnEditorAdvanced" class="fc-link-btn">
                 <span id="editorAdvancedLabel" data-i18n="show_advanced">{{#str}} show_advanced, mod_flashcards {{/str}}</span>
@@ -292,12 +279,16 @@
                 <span class="tag" data-i18n="back_en">Translation (English)</span>
                 <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..." data-i18n-placeholder="translation_en_placeholder"></textarea>
               </div>
-              <div class="slot">
-                <span class="tag" id="t_explanationText" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</span>
-                <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
-              </div>
-              <div class="slot">
-                <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
+            <div class="slot">
+              <span class="tag" id="t_explanationText" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</span>
+              <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
+            </div>
+            <div class="slot">
+              <span class="tag" data-i18n="focus_baseform">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
+              <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}" data-i18n-placeholder="focus_baseform_ph"></textarea>
+            </div>
+            <div class="slot">
+              <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
                 <div class="row has-action">
                     <div class="input-wrap">
                      <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
@@ -400,6 +391,7 @@
             </div>
 
             <div class="row2">
+              <button id="btnQuickFormReset" class="mid ghost" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
               <button id="btnUpdate"
                       class="ok"
                       data-role="update"
