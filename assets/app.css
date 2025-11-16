@@ -1655,7 +1655,21 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .status-chip.translation-status {
-  font-weight: 700;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  min-height: 30px;
+  background: rgba(15, 23, 42, 0.8);
+  color: var(--text-subtle);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
 }
 
 .status-chip[data-state="loading"] {
@@ -2481,6 +2495,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-shrink:0;
   white-space:nowrap;
   font-size:0.8rem;
+}
+.front-slot .slot-head-main #t_frontText,
+.front-translation-slot .slot-head-main #tag_trans_local {
+  display:none;
 }
 .translation-mode {
   display:flex;
