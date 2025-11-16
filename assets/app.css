@@ -813,7 +813,6 @@ button[data-role="update"]:disabled::before {
 /* Press-and-hold mic button */
 .rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
 .micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center} /* 32px */
-.micbtn:not(.iconbtn){width:72px;height:72px;border-radius:50%}
 .rec-hint{ color:var(--muted); font-size:0.8125rem } /* 13px */
 .stt-status-wrap{ display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center }
 .stt-status-chip{ background:rgba(59,130,246,.15); border:1px solid rgba(147,197,253,.4); color:#cfe4ff; font-size:0.75rem; padding:4px 12px; border-radius:999px; min-height:26px; display:flex; align-items:center } /* 12px */
@@ -1753,11 +1752,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size:1.25rem;
 }
 .slot-inline-controls .fc-quick-media-btn.fc-media-inline{
-  min-width:64px;
-  min-height:48px;
-  padding:6px 8px;
+  width:56px;
+  height:56px;
+  min-width:auto;
+  min-height:auto;
+  padding:0;
   justify-content:center;
   align-items:center;
+  border-radius:var(--radius-lg);
+  flex-shrink:0;
 }
 .slot-inline-controls .fc-media-icon{
   font-size:1.35rem;
@@ -1784,8 +1787,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     padding:0.15rem 0.45rem;
   }
   .slot-inline-controls .fc-quick-media-btn.fc-media-inline{
-    min-width:56px;
-    min-height:44px;
+    width:48px;
+    height:48px;
   }
 }
 
