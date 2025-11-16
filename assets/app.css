@@ -1078,6 +1078,13 @@ audio{max-width:260px}
   margin-bottom: 6px;
   display: inline-block;
 }
+.slot textarea.autogrow{
+  width: calc(100% + (var(--space-2) * 2));
+  margin-left: calc(var(--space-2) * -1);
+  margin-right: calc(var(--space-2) * -1);
+  box-sizing: border-box;
+  display: block;
+}
 .front-slot,
 .front-translation-slot{
   margin: 0;
