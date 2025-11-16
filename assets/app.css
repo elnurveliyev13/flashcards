@@ -2508,6 +2508,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   gap:0.35rem;
   width:auto;
 }
+.translation-header {
+  justify-content:space-between;
+  width:100%;
+}
+.translation-header .slot-head-main {
+  min-width:0;
+}
 .slot-head-main{
   display:flex;
   align-items:center;
