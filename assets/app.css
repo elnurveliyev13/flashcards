@@ -1996,10 +1996,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size: 0.8rem;
   max-width: min(60vw, 14rem);
   position: absolute;
-  top: 100%;
+  bottom: 0;
   right: 0;
-  transform: translateY(0);
-  margin-top: 0;
+  transform: none;
+  margin: 0;
   white-space: normal;
   overflow: visible;
   z-index: 2;
