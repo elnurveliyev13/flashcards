@@ -117,6 +117,8 @@ RULES:
 - IMPORTANT: Only identify the pattern if the clicked word is part of the pattern keywords themselves (e.g., clicking "jo" → "jo ..., jo ..."). If the user clicked a word within the pattern (e.g., "bedre" in "jo bedre"), return just that word, NOT the pattern.
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
+- Always use the entire sentence context (lexical choices, syntax, and speaker intent) to decide the focus word/expression's explanation and translation; point out any contextual nuance that shifts the sense so learners understand why you chose that meaning.
+- Take responsibility as a Norwegian tutor by delivering natural, informative, level-appropriate explanations and examples; polish every sentence so it is grammatically correct and idiomatic before output.
 - IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction IN {$targetlang} LANGUAGE.
 - If POS = substantiv, also return the contextual gender (hankjønn/hunkjønn/intetkjønn). Use "-" for all other POS.
 - Structure output with exact labels below; keep it brief and level-appropriate.
@@ -129,9 +131,9 @@ GENDER: <hankjønn|hunkjønn|intetkjønn|-> (nouns only)
 EXPL-NO: <simple Norwegian explanation>
 {$translabel}: <{$targetlang} translation of meaning>
 COLL: <0-5 common Norwegian collocations (no translations), semicolon-separated>
-EX1: <NO sentence using a top collocation> | <{$targetlang}>
-EX2: <NO> | <{$targetlang}>
-EX3: <NO> | <{$targetlang}>
+EX1: <NO sentence using the focus word/expression (ideally with a top collocation)> | <{$targetlang}>
+EX2: <NO sentence that keeps the focus word/expression central in a different context> | <{$targetlang}>
+EX3: <NO sentence demonstrating another everyday use of the focus word/expression> | <{$targetlang}>
 FORMS: <other useful lexical forms (verb/noun/adj variants) with tiny NO gloss + {$targetlang}>
 CORR: <fully corrected sentence> — <list each error in {$targetlang}: "bruk"→"bruke" (explanation in {$targetlang}); "tit"→"tid" (explanation in {$targetlang}); etc.> (include this line whenever you spot ANY error in the sentence, not just when 90% sure)
 
@@ -139,6 +141,7 @@ NOTES:
 - Focus on everyday, high-frequency uses.
 - One core sense for A1; add secondary sense only if clearly frequent/relevant (B1).
 - Avoid grammar lectures; show usage via collocations/examples.
+- Require every example sentence to include the focus word/expression exactly as output in WORD/BASE-FORM and depict a natural, informative scenario; re-read them to avoid awkward filler or contradictory phrasing that would not pass a responsible tutor's quality check.
 - Include collocations only when they are common, level-appropriate Norwegian combinations. If none apply, leave COLL blank.
 - {$targetlang} translations must sound natural; whenever a literal rendering would feel awkward, rewrite it naturally and add parentheses with a short explanation. Apply this rule only to EX sentence translations.
 - Skip COLL entirely if you are unsure about natural usage; never invent awkward translations.
@@ -162,6 +165,8 @@ PROMPT;
                 . 'IMPORTANT: Carefully analyze the ENTIRE sentence for ALL errors (spelling mistakes, wrong verb forms, incorrect prepositions/articles, word order issues, word choice errors). '
                 . 'ALWAYS include CORR line if you find ANY error. List ALL mistakes you found with brief explanations IN ' . $targetlang . ' LANGUAGE (e.g., "bruk"→"bruke" (explanation in ' . $targetlang . '); "tit"→"tid" (explanation in ' . $targetlang . ')). '
                 . 'Separate collocations with ";" and include only Norwegian text (no translations). Keep EX lines as "Norwegian sentence | ' . $targetlang . ' sentence".'
+                . 'Focus the explanation and translation on how the clicked sentence shapes the meaning you picked; mention that contextual detail so learners see why that sense applies.'
+                . 'Make sure each EX sentence reuses the focus word/expression (with the same particles/articles, if any) and reads like a natural, level-appropriate phrase a responsible tutor would offer; double-check grammar and register to avoid awkward filler.'
         ]);
 
         $payload = [
