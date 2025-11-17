@@ -373,7 +373,6 @@
             </div>
 
             <div class="row2">
-              <button id="btnQuickFormReset" class="mid ghost" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
               <button id="btnUpdate"
                       class="ok"
                       data-role="update"
@@ -492,7 +491,10 @@
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
           <span class="tag" id="tag_trans_local">Translation (?)</span>
-          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
+              <div class="translation-reset">
+                <button id="btnQuickFormReset" class="mid ghost" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
+              </div>
+              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
           <span class="tag" data-i18n="back_en">{{#str}} back_en, mod_flashcards {{/str}}</span>
