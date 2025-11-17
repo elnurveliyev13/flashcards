@@ -1835,7 +1835,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   justify-content:space-between;
   gap:0.35rem;
   margin-top:-1px;
-  flex-wrap:nowrap;
+  flex-wrap:wrap;
 }
 .translation-actions .translation-mode{
   margin:0;
@@ -1847,6 +1847,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items:center;
   gap:0.35rem;
   flex:0 0 auto;
+  margin-left:auto;
 }
 .compact-actions{
   display:flex;
@@ -1871,6 +1872,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   .slot-inline-controls .fc-quick-media-btn.fc-media-inline{
     width:48px;
     height:48px;
+  }
+}
+
+@media (max-width:420px){
+  .translation-media-controls{
+    margin-left:0;
+    flex:1 1 100%;
+    justify-content:flex-start;
   }
 }
 
