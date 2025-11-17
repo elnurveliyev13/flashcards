@@ -284,11 +284,11 @@ $string['achievement_level_b1'] = 'Level B1 - Intermediate';
 $string['achievement_level_b2'] = 'Level B2 - Upper-Intermediate';
 
 // Placeholders
-$string['collocations_ph'] = 'One per line...';
-$string['examples_ph'] = 'Example sentences...';
+$string['collocations_ph'] = 'Eine pro Zeile...';
+$string['examples_ph'] = 'Beispielsätze...';
 $string['front_placeholder'] = 'Jeg elsker deg';
+$string['translation_placeholder'] = 'I love you';
 $string['translation_en_placeholder'] = 'I love you';
-$string['translation_placeholder'] = 'Jeg elsker deg';
 $string['explanation_placeholder'] = 'Explanation...';
 $string['focus_placeholder'] = 'Focus word/phrase...';
 $string['collocations_placeholder'] = 'collocations...';
@@ -298,6 +298,7 @@ $string['cognates_placeholder'] = 'cognates...';
 $string['sayings_placeholder'] = 'sayings...';
 $string['transcription_placeholder'] = '[IPA e.g. /hu:s/]';
 $string['one_per_line_placeholder'] = 'one per line...';
+$string['translation_in_phrase'] = 'Translation in ';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'AI assistant';
