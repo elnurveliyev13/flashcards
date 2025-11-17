@@ -1168,10 +1168,9 @@ audio{max-width:260px}
   padding: 0;
 }
 .front-slot .slot-head.slot-head-stacked.slot-head-inline {
-  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
-  margin-left: calc(var(--slot-horizontal-gutter) * -1);
-  margin-right: calc(var(--slot-horizontal-gutter) * -1);
-  padding: 0 var(--slot-horizontal-gutter);
+  width: 100%;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
   display:flex;
   flex-direction:column;
@@ -2690,13 +2689,10 @@ audio#focusAudPrev {
 .slot-head-main .tag{
   margin-right:0;
 }
-#mod_flashcards_container .translation-header {
-  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
-  margin-left: calc(var(--slot-horizontal-gutter) * -1);
-  margin-right: calc(var(--slot-horizontal-gutter) * -1);
-  margin-top: calc(var(--space-2) / 5);
-  padding-left: 0;
-  padding-right: 0;
+ #mod_flashcards_container .translation-header {
+  width: 100%;
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
   display:flex;
   align-items:center;
