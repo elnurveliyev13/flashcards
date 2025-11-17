@@ -2689,10 +2689,13 @@ audio#focusAudPrev {
 .slot-head-main .tag{
   margin-right:0;
 }
- #mod_flashcards_container .translation-header {
-  width: 100%;
-  margin: 0;
-  padding: 0;
+#mod_flashcards_container .translation-header {
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  margin-top: calc(var(--space-2) / 5);
+  padding-left: 0;
+  padding-right: var(--slot-horizontal-gutter);
   box-sizing: border-box;
   display:flex;
   align-items:center;
