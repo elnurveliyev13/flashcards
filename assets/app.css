@@ -1163,6 +1163,13 @@ audio{max-width:260px}
 .front-translation-slot .slot-head{
   margin-bottom: 0.35rem;
 }
+.front-slot .slot-head.slot-head-stacked.slot-head-inline {
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  padding: 0 var(--slot-horizontal-gutter);
+  box-sizing: border-box;
+}
 .slot-head{
   display:flex;
   justify-content:space-between;
