@@ -286,18 +286,18 @@ $string['achievement_level_b2'] = 'Level B2 - Upper-Intermediate';
 // Placeholders
 $string['collocations_ph'] = 'Eine pro Zeile...';
 $string['examples_ph'] = 'Beispielsätze...';
-$string['front_placeholder'] = 'Jeg elsker deg';
-$string['translation_placeholder'] = 'I love you';
-$string['translation_en_placeholder'] = 'I love you';
+$string['front_placeholder'] = '';
+$string['translation_placeholder'] = '';
+$string['translation_en_placeholder'] = '';
 $string['explanation_placeholder'] = 'Explanation...';
 $string['focus_placeholder'] = 'Focus word/phrase...';
-$string['collocations_placeholder'] = 'collocations...';
-$string['examples_placeholder'] = 'examples...';
-$string['antonyms_placeholder'] = 'antonyms...';
-$string['cognates_placeholder'] = 'cognates...';
-$string['sayings_placeholder'] = 'sayings...';
-$string['transcription_placeholder'] = '[IPA e.g. /hu:s/]';
-$string['one_per_line_placeholder'] = 'one per line...';
+$string['collocations_placeholder'] = '';
+$string['examples_placeholder'] = '';
+$string['antonyms_placeholder'] = '';
+$string['cognates_placeholder'] = '';
+$string['sayings_placeholder'] = '';
+$string['transcription_placeholder'] = '';
+$string['one_per_line_placeholder'] = '';
 $string['translation_in_phrase'] = 'Translation in ';
 
 // Settings - AI & TTS
