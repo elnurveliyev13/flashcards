@@ -2674,14 +2674,25 @@ audio#focusAudPrev {
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   margin-top: calc(var(--space-2) / 5);
+  padding: 0 var(--slot-horizontal-gutter);
   box-sizing: border-box;
 }
 .translation-header .slot-head-main {
   min-width:0;
+  width: 100%;
 }
-.translation-header .status-chip {
+.translation-header .slot-head-extra{
   margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:0.35rem;
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
+}
+.translation-header .slot-head-extra .translation-reset{
+  margin:0;
+}
+.translation-header .slot-head-extra .status-chip{
+  margin:0;
 }
 .slot-head-main .translation-mode{
   flex-shrink:0;
