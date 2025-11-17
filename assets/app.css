@@ -2702,6 +2702,7 @@ audio#focusAudPrev {
   align-items:center;
   gap:0.35rem;
   flex-wrap:nowrap;
+  justify-content:space-between;
 }
 .translation-header .slot-head-main {
   min-width:0;
@@ -2710,17 +2711,11 @@ audio#focusAudPrev {
   align-items:center;
   gap:0.35rem;
 }
-.slot-head-actions{
-  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
-  margin-left: calc(var(--slot-horizontal-gutter) * -1);
-  margin-right: calc(var(--slot-horizontal-gutter) * -1);
-  padding: 0 var(--slot-horizontal-gutter);
-  box-sizing: border-box;
+.slot-head-extra{
+  margin-left:auto;
   display:flex;
-  justify-content:flex-end;
-}
-.slot-head-actions .translation-reset{
-  margin:0;
+  align-items:center;
+  gap:0.35rem;
 }
 .translation-reset{
   border:1px solid var(--border);
