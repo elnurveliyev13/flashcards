@@ -2678,11 +2678,20 @@ audio#focusAudPrev {
   padding-right: var(--slot-horizontal-gutter);
   box-sizing: border-box;
 }
+.translation-header .slot-head-row{
+  width:100%;
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.35rem;
+}
 .translation-header .slot-head-main {
   min-width:0;
   width: 100%;
   flex-wrap:nowrap;
   align-items:flex-start;
+  flex:1;
 }
 .translation-header .slot-head-extra{
   margin-left:auto;
