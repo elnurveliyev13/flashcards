@@ -2674,7 +2674,7 @@ audio#focusAudPrev {
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   margin-top: calc(var(--space-2) / 5);
-  padding: 0 var(--slot-horizontal-gutter);
+  padding-right: var(--slot-horizontal-gutter);
   box-sizing: border-box;
 }
 .translation-header .slot-head-main {
@@ -2691,11 +2691,27 @@ audio#focusAudPrev {
 .translation-header .slot-head-extra .translation-reset{
   margin:0;
 }
+.translation-reset{
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:0.2rem 0.65rem;
+  background:rgba(15,23,42,0.8);
+  color:var(--text-subtle);
+  font-size:0.78rem;
+  font-weight:600;
+  cursor:pointer;
+  min-height:30px;
+  transition:all 0.15s ease;
+}
+.translation-reset:hover{
+  border-color:var(--primary);
+  color:var(--text);
+}
 .translation-status-row{
   width: calc(100% + (var(--slot-horizontal-gutter) * 2));
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
-  margin-top: 0.25rem;
+  margin-top: 0;
   display:flex;
   justify-content:flex-end;
   box-sizing:border-box;
