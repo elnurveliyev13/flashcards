@@ -2648,7 +2648,10 @@ audio#focusAudPrev {
   gap:0.35rem;
   width:auto;
 }
-.translation-header {
+.slot-head-inline-row.translation-header {
+  position:relative;
+}
+#mod_flashcards_container .translation-header {
   justify-content:space-between;
   width: calc(100% + (var(--slot-horizontal-gutter) * 2));
   margin-top:calc(var(--space-2) / 5);
@@ -2656,7 +2659,7 @@ audio#focusAudPrev {
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   box-sizing: border-box;
 }
-.translation-header .slot-head-main {
+#mod_flashcards_container .translation-header .slot-head-main {
   min-width:0;
   width: calc(100% + (var(--slot-horizontal-gutter) * 2));
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
@@ -2672,7 +2675,7 @@ audio#focusAudPrev {
 .slot-head-main .tag{
   margin-right:0;
 }
-.translation-header .status-chip {
+#mod_flashcards_container .translation-header .status-chip {
   right: calc(var(--slot-horizontal-gutter) * -1);
 }
 .slot-head-main .translation-mode{
