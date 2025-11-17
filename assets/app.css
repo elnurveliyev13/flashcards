@@ -2674,12 +2674,14 @@ audio#focusAudPrev {
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   margin-top: calc(var(--space-2) / 5);
-  padding-left: var(--slot-horizontal-gutter);
-  padding-right: 0;
   box-sizing: border-box;
 }
 .translation-header .slot-head-main {
   min-width:0;
+}
+.translation-header .status-chip {
+  margin-left:auto;
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
 }
 .slot-head-main .translation-mode{
   flex-shrink:0;
