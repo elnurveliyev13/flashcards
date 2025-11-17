@@ -110,6 +110,8 @@ html[data-font-size="extra-large"] {
 
   --radius-xl: 16px;
 
+  --header-row-height: 34px;
+
 
 
   /* Legacy support */
@@ -259,6 +261,7 @@ button:focus-visible,
   flex-wrap: wrap;
   flex-shrink: 0;
   min-width: 0;
+  min-height: var(--header-row-height);
 }
 
 .tabs-toolbar-top .header-controls{
@@ -279,7 +282,7 @@ h1{
   display: flex;
   gap: var(--space-2);
   align-items: center;
-  min-height: 44px;
+  min-height: var(--header-row-height);
 }
 
 .header-controls{
@@ -418,8 +421,8 @@ h1{
 }
 
 .header-hexagon{
-  min-width: 36px;
-  min-height: 36px;
+  width: var(--header-row-height);
+  height: var(--header-row-height);
   border: none;
   border-radius: 14px;
   background: var(--surface-2);
@@ -432,7 +435,7 @@ h1{
   line-height: 1;
   clip-path: polygon(25% 4%, 75% 4%, 100% 50%, 75% 96%, 25% 96%, 0% 50%);
   transition: background 0.2s ease, color 0.2s ease;
-  padding: 6px 12px;
+  padding: 0;
 }
 
 .header-hexagon:hover,
@@ -626,12 +629,12 @@ h1{
   }
 
   .header-hexagon {
-    min-width: 32px;
-    min-height: 32px;
+    width: var(--header-row-height);
+    height: var(--header-row-height);
     font-size: 16px;
     border-radius: 10px;
     clip-path: none;
-    padding: 4px 10px;
+    padding: 0;
     line-height: 1;
   }
 
@@ -694,6 +697,7 @@ h1{
   font-size: var(--font-size-sm);
   color: var(--text);
   font-weight: 600;
+  min-height: var(--header-row-height);
 }
 
 .header-stat-icon{
