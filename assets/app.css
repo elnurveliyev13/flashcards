@@ -2703,6 +2703,7 @@ audio#focusAudPrev {
   gap:0.35rem;
   flex-wrap:nowrap;
   justify-content:space-between;
+  position:relative;
 }
 .translation-header .slot-head-main {
   min-width:0;
