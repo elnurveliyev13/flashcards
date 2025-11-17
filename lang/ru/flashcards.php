@@ -247,7 +247,7 @@ $string['achievement_level_b2'] = 'Уровень B2 - Выше среднего
 // Placeholders
 $string['collocations_ph'] = 'По одному на строку...';
 $string['examples_ph'] = 'Примеры предложений...';
-$string['front_placeholder'] = 'Jeg elsker deg';
+$string['front_placeholder'] = '_ _ _';
 $string['translation_placeholder'] = 'Я тебя люблю';
 $string['translation_en_placeholder'] = 'I love you';
 $string['translation_in_phrase'] = 'Перевод на ';

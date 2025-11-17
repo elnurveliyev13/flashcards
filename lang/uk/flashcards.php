@@ -259,7 +259,7 @@ $string['sayings_placeholder'] = 'вислови...';
 $string['transcription_placeholder'] = '[МФА напр. /hu:s/]';
 $string['one_per_line_placeholder'] = 'по одному на рядок...';
 $string['translation_in_phrase'] = 'Переклад на ';
-$string['front_placeholder'] = 'Jeg elsker deg';
+$string['front_placeholder'] = '_ _ _';
 
 // Settings - AI & TTS
 $string['settings_ai_section'] = 'AI помічник';

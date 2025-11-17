@@ -247,7 +247,7 @@ $string['achievement_level_b2'] = 'Poziom B2 - Zaawansowany średni';
 // Placeholders
 $string['collocations_ph'] = 'Jeden na linię...';
 $string['examples_ph'] = 'Przykładowe zdania...';
-$string['front_placeholder'] = 'Jeg elsker deg';
+$string['front_placeholder'] = '_ _ _';
 $string['translation_placeholder'] = 'Kocham cię';
 $string['translation_en_placeholder'] = 'I love you';
 

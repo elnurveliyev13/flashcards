@@ -247,7 +247,7 @@ $string['achievement_level_b2'] = 'Niveau B2 - Intermédiaire supérieur';
 // Placeholders
 $string['collocations_ph'] = 'Un par ligne...';
 $string['examples_ph'] = 'Exemples de phrases...';
-$string['front_placeholder'] = 'Jeg elsker deg';
+$string['front_placeholder'] = '_ _ _';
 $string['translation_placeholder'] = 'Je t\'aime';
 $string['translation_en_placeholder'] = 'I love you';
 
