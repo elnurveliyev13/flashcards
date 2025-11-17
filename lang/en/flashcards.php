@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 // Strings for component 'mod_flashcards'
 
 defined('MOODLE_INTERNAL') || die();
