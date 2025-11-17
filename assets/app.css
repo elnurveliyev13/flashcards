@@ -1239,9 +1239,9 @@ audio{max-width:260px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
 .modal>.box{max-width:960px;width:100%;max-height:85vh;overflow:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:16px;padding:16px}
 #ocrCropModal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1002;touch-action:none;padding:0}
-#ocrCropModal .box{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;border:none;padding:env(safe-area-inset-top,12px) env(safe-area-inset-right,12px) env(safe-area-inset-bottom,12px) env(safe-area-inset-left,12px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;box-sizing:border-box}
+#ocrCropModal .box{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;border:none;padding:env(safe-area-inset-top,12px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;box-sizing:border-box}
 .ocr-crop-box{flex:1;display:flex;flex-direction:column;width:100%;min-height:0;max-height:100%;position:relative;overflow:hidden;background:transparent;justify-content:center;align-items:center;gap:12px}
-.ocr-crop-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px)+8px) 0 0;box-sizing:border-box;width:100%;height:100%}
+.ocr-crop-body{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:calc(env(safe-area-inset-top,0px)+8px) 0 calc(env(safe-area-inset-bottom,0px)+72px);box-sizing:border-box;width:100%;height:100%}
 .ocr-crop-stage{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:visible}
 .ocr-crop-surface{position:relative;overflow:visible;border-radius:0;background:#030711;touch-action:none;display:flex;align-items:center;justify-content:center;width:100%;height:100%}
 .ocr-crop-canvas{width:100%;height:100%;display:block}
@@ -1265,7 +1265,7 @@ audio{max-width:260px}
 #ocrCropRect .handle-se::after{width:30px;height:3px;right:2px;bottom:2px}
 #ocrCropRect .handle-w::before{width:3px;height:44px;left:2px;top:50%;transform:translateY(-50%)}
 #ocrCropRect .handle-e::before{width:3px;height:44px;right:2px;top:50%;transform:translateY(-50%)}
-#ocrCropModal .ocr-crop-toolbar{display:flex;gap:12px;margin:12px auto calc(env(safe-area-inset-bottom,0px) + 8px);padding:0 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;align-self:center;border:1px solid rgba(255,255,255,.08);height:52px}
+#ocrCropModal .ocr-crop-toolbar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);left:50%;transform:translateX(-50%);display:flex;gap:12px;margin:0;padding:0 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;border:1px solid rgba(255,255,255,.08);height:52px}
 #ocrCropModal .ocr-crop-toolbar button{min-width:82px;height:52px;padding:0 20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:600}
 #ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.35rem}
 
