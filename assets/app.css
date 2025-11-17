@@ -2696,7 +2696,7 @@ audio#focusAudPrev {
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   margin-top: calc(var(--space-2) / 5);
   padding-left: 0;
-  padding-right: var(--slot-horizontal-gutter);
+  padding-right: 0;
   box-sizing: border-box;
   display:flex;
   align-items:center;
@@ -2716,6 +2716,7 @@ audio#focusAudPrev {
   display:flex;
   align-items:center;
   gap:0.35rem;
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
 }
 .translation-reset{
   border:1px solid var(--border);

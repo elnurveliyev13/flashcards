@@ -1180,6 +1180,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
 
+      // Special handling for uTransLocal dynamic translation placeholder
+      const uTransLocal = document.getElementById('uTransLocal');
+      if (uTransLocal) {
+        const langNames = {en: 'English', uk: 'Українська', ru: 'Русский', fr: 'Français', es: 'Español', pl: 'Polski', it: 'Italiano', de: 'Deutsch'};
+        const selectedLang = userLang2;
+        const langDisplay = langNames[selectedLang] || (function(){
+          switch(selectedLang){
+            case 'uk': return 'Українська';
+            case 'ru': return 'Русский';
+            case 'fr': return 'Français';
+            case 'es': return 'Español';
+            case 'pl': return 'Polski';
+            case 'it': return 'Italiano';
+            case 'de': return 'Deutsch';
+            default: return 'selected language';
+          }
+        })();
+        uTransLocal.placeholder = 'Translation in ' + langDisplay + '...';
+      }
+
       // Update title attributes
       const i18nTitles = document.querySelectorAll('[data-i18n-title]');
       i18nTitles.forEach(function(el){
