@@ -253,6 +253,7 @@ button:focus-visible,
   contain: layout;
   margin-bottom: 0;
   position: relative;
+  padding-left: 56px;
 }
 
 .tabs-toolbar-top::before{
@@ -266,6 +267,20 @@ button:focus-visible,
   background: url('../app/icons/icon-512.png') center/contain no-repeat;
   pointer-events: none;
 }
+
+.tabs-toolbar-top .tabs-toolbar-title{
+  position: absolute;
+  left: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 
 .tabs-toolbar-top .header-metrics{
   display: flex;
