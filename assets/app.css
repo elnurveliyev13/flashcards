@@ -249,6 +249,7 @@ button:focus-visible,
   gap: var(--space-2);
   flex-wrap: wrap;
   contain: layout;
+  margin-bottom: 0;
 }
 
 .tabs-toolbar-top .header-metrics{
@@ -1548,7 +1549,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   gap: 0;
   border-bottom: 1px solid var(--border);
   margin-bottom: calc(var(--space-1) / 2);
-  margin-top: calc(var(--space-1) / 2);
+  margin-top: 0;
   background: var(--surface-1);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;
