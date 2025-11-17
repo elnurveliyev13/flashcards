@@ -1907,7 +1907,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items:flex-start;
   justify-content:space-between;
   gap:0.35rem;
-  margin-top:0.2rem;
+  margin-top:0;
   width: calc(100% + (var(--slot-horizontal-gutter) * 2));
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
