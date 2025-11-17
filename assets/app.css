@@ -2660,6 +2660,13 @@ audio#focusAudPrev {
   width:auto;
   flex:0 0 auto;
 }
+.slot-head.slot-head-stacked.slot-head-inline {
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  padding: 0 var(--slot-horizontal-gutter);
+  box-sizing: border-box;
+}
 .slot-head-main{
   display:flex;
   align-items:center;
