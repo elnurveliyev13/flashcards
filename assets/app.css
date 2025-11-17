@@ -2703,14 +2703,16 @@ audio#focusAudPrev {
   align-items:center;
   gap:0.35rem;
 }
-.translation-header .slot-head-extra{
-  margin-left:auto;
+.slot-head-actions{
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  padding: 0 var(--slot-horizontal-gutter);
+  box-sizing: border-box;
   display:flex;
-  align-items:center;
-  gap:0.35rem;
-  flex-shrink:0;
+  justify-content:flex-end;
 }
-.translation-header .slot-head-extra .translation-reset{
+.slot-head-actions .translation-reset{
   margin:0;
 }
 .translation-reset{
