@@ -273,12 +273,25 @@ button:focus-visible,
   left: 44px;
   top: 50%;
   transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text);
   letter-spacing: 0.01em;
   white-space: nowrap;
   pointer-events: none;
+}
+.tabs-toolbar-top .tabs-toolbar-title svg{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.tabs-toolbar-top .tabs-toolbar-title__icon{
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
 }
 
 
