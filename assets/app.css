@@ -2691,7 +2691,16 @@ audio#focusAudPrev {
 .translation-header .slot-head-extra .translation-reset{
   margin:0;
 }
-.translation-header .slot-head-extra .status-chip{
+.translation-status-row{
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  margin-top: 0.25rem;
+  display:flex;
+  justify-content:flex-end;
+  box-sizing:border-box;
+}
+.translation-status-row .status-chip{
   margin:0;
 }
 .slot-head-main .translation-mode{
