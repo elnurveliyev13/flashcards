@@ -28,6 +28,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return `${display} ${units[index]}`;
     }
 
+    const TEXTAREA_VALUE_HOOK_FLAG = '__flashcardsAutogrowValueHooked';
+    (function ensureAutogrowValueRefresh(){
+      if(HTMLTextAreaElement.prototype[TEXTAREA_VALUE_HOOK_FLAG]) {
+        return;
+      }
+      const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
+      if(!descriptor || !descriptor.get || !descriptor.set) {
+        return;
+      }
+      const { get, set } = descriptor;
+      Object.defineProperty(HTMLTextAreaElement.prototype, 'value', {
+        configurable: descriptor.configurable ?? true,
+        enumerable: descriptor.enumerable ?? false,
+        get(){
+          return get.call(this);
+        },
+        set(value){
+          const previous = get.call(this);
+          set.call(this, value);
+          if(this.classList && this.classList.contains('autogrow') && previous !== value) {
+            this.dispatchEvent(new Event('autogrow:refresh'));
+          }
+        }
+      });
+      HTMLTextAreaElement.prototype[TEXTAREA_VALUE_HOOK_FLAG] = true;
+    })();
+
     function initAutogrow(){
       const parsePx = value => Number.parseFloat(value) || 0;
       const getLineCount = value => {
