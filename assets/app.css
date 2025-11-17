@@ -1125,17 +1125,14 @@ audio{max-width:260px}
   display: inline-block;
 }
 .slot textarea.autogrow{
-  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  width: min(calc(100% + (var(--slot-horizontal-gutter) * 2)), 100vw);
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   box-sizing: border-box;
   display: block;
-  max-width: none;
-}
-.front-slot textarea.autogrow#uFront {
-  width: 100%;
-  max-width: 100%;
-  margin: 0;
+  max-width: 100vw;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .front-slot,
 .front-translation-slot{
