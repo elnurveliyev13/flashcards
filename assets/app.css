@@ -835,33 +835,30 @@ button[data-role="update"]:disabled::before {
   justify-content:center;
   min-width:64px;
   line-height:1.2;
+  position:absolute;
+  top:-1.45rem;
+  left:50%;
+  transform:translateX(-50%);
+  pointer-events:none;
+  z-index:5;
+  text-align:center;
 }
 /* Press-and-hold mic button */
 .rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
 .rec-control{
-  display:flex;
-  flex-direction:column;
+  position:relative;
+  display:inline-flex;
   align-items:center;
-  justify-content:flex-start;
-  gap:0.25rem;
-  min-width:64px;
-}
-.rec-control-inline{
+  justify-content:center;
   min-width:auto;
+}
+.rec-control-inline .rec-buttons{
+  margin-top:0;
 }
 .rec-buttons{
   display:flex;
   align-items:center;
   gap:0.35rem;
-}
-.translation-media-controls .rec-control{
-  align-self:flex-start;
-}
-.playRow .rec-control{
-  align-items:center;
-}
-.rec-control .rec-timer{
-  margin:0;
 }
 .micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center} /* 32px */
 .rec-hint{ color:var(--muted); font-size:0.8125rem } /* 13px */
