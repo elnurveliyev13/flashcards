@@ -1265,7 +1265,7 @@ audio{max-width:260px}
 #ocrCropRect .handle-se::after{width:30px;height:3px;right:2px;bottom:2px}
 #ocrCropRect .handle-w::before{width:3px;height:44px;left:2px;top:50%;transform:translateY(-50%)}
 #ocrCropRect .handle-e::before{width:3px;height:44px;right:2px;top:50%;transform:translateY(-50%)}
-#ocrCropModal .ocr-crop-toolbar{display:flex;gap:12px;margin:0 auto calc(env(safe-area-inset-bottom,0px) + 32px);padding:0 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;align-self:center;border:1px solid rgba(255,255,255,.08);height:52px}
+#ocrCropModal .ocr-crop-toolbar{display:flex;gap:12px;margin:0 auto calc(env(safe-area-inset-bottom,0px) + 48px);padding:0 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;align-self:center;border:1px solid rgba(255,255,255,.08);height:52px}
 #ocrCropModal .ocr-crop-toolbar button{min-width:82px;height:52px;padding:0 20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:600}
 #ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.35rem}
 
