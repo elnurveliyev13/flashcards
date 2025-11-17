@@ -2659,6 +2659,10 @@ audio#focusAudPrev {
 }
 .translation-header .slot-head-main {
   min-width:0;
+  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
+  margin-left: calc(var(--slot-horizontal-gutter) * -1);
+  margin-right: calc(var(--slot-horizontal-gutter) * -1);
+  box-sizing: border-box;
 }
 .slot-head-main{
   display:flex;
