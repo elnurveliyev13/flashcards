@@ -1828,7 +1828,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(Array.isArray(data.examples) && data.examples.length){
         const examplesEl = document.getElementById('uExamples');
         if(examplesEl && !examplesEl.value.trim()){
-          examplesEl.value = data.examples.join('\\n');
+          examplesEl.value = data.examples.join('\n');
         }
       }
       if(data.audio && data.audio.front && data.audio.front.url){
