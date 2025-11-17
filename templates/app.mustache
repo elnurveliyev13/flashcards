@@ -200,9 +200,12 @@
                   <div class="slot-head-main">
                     <span class="tag" id="tag_trans_local" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
                   </div>
-                  <span class="status-chip translation-status" id="mediaStatusIndicator">
-                    Status
-                  </span>
+                  <div class="slot-head-extra">
+                    <button id="btnQuickFormReset" class="mid ghost translation-reset" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
+                    <span class="status-chip translation-status" id="mediaStatusIndicator">
+                      Status
+                    </span>
+                  </div>
                 </div>
               </div>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
@@ -491,10 +494,7 @@
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
           <span class="tag" id="tag_trans_local">Translation (?)</span>
-              <div class="translation-reset">
-                <button id="btnQuickFormReset" class="mid ghost" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
-              </div>
-              <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
+          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
           <span class="tag" data-i18n="back_en">{{#str}} back_en, mod_flashcards {{/str}}</span>
