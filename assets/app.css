@@ -264,7 +264,7 @@ button:focus-visible,
   width: 34px;
   height: 34px;
   transform: translateY(-50%);
-  background: url('../pix/icon-512.png') center/contain no-repeat;
+  background: url('../pix/icon-705x532.svg') center/contain no-repeat;
   pointer-events: none;
 }
 
