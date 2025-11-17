@@ -283,9 +283,15 @@ button:focus-visible,
   white-space: nowrap;
   pointer-events: none;
 }
-.tabs-toolbar-top .tabs-toolbar-title svg{
+.tabs-toolbar-top .tabs-toolbar-title__icon{
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+}
+.tabs-toolbar-top .tabs-toolbar-title__icon img{
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 .tabs-toolbar-top .tabs-toolbar-title__icon{
