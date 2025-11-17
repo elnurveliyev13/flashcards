@@ -72,8 +72,8 @@
             <span id="headerActiveVocab">0</span>
           </span>
           <span class="header-stat" title="Current Streak">
-            <span id="headerStreak">0</span>
             <span class="header-stat-icon">&#128293;</span>
+            <span id="headerStreak">0</span>
           </span>
         </div>
         <div class="header-controls">
@@ -161,8 +161,6 @@
           <div class="card-form-content" id="cardCreationForm">
             <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
             <input id="uAudio" type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/m4a,audio/aac" class="hidden">
-            <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
-            <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
             <input id="uImage" type="file" accept="image/*" class="hidden">
             <img id="imgPrev" class="media hidden" alt=""/>
             <div class="slot front-slot">
@@ -210,6 +208,29 @@
                     <button id="btnRec" class="fc-quick-media-btn fc-media-inline micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
                       <span class="fc-media-icon">&#127897;&#65039;</span>
                     </button>
+                  </div>
+                </div>
+                <div class="translation-media-tts">
+                  <div class="fc-media-badges">
+                    <span id="audBadge" class="media-pill hidden">
+                      <span class="icon">&#127897;&#65039;</span>
+                      <span id="audName" class="media-name"></span>
+                      <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+                    </span>
+                    <span id="focusAudBadge" class="media-pill hidden">
+                      <span class="icon">&#128266;</span>
+                      <span id="focusAudName" class="media-name"></span>
+                      <button id="btnClearFocusAud" class="iconbtn" title="Clear">&times;</button>
+                    </span>
+                    <span id="imgBadge" class="media-pill hidden">
+                      <span class="icon">&#128247;</span>
+                      <span id="imgName" class="media-name"></span>
+                      <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
+                    </span>
+                  </div>
+                  <div class="translation-audio-previews">
+                    <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
+                    <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
                   </div>
                 </div>
               </div>

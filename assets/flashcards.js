@@ -3980,26 +3980,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               excludeAcceptAllOption: true,
               types: [{ description: 'Audio', accept: { 'audio/*': ['.mp3','.m4a','.wav','.ogg','.webm'] } }]
             });
-            if(h){
-              const f = await h.getFile();
-              if(f){
-                $("#audName").textContent = f.name;
-                showAudioBadge(f.name);
-                lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
-                const stored = await idbPutSafe(lastAudioKey, f);
-                if(!stored){
-                  recorderLog('File picker audio stored in memory fallback');
-                  lastAudioKey = null;
-                  lastAudioBlob = f;
-                } else {
-                  lastAudioBlob = null;
-                }
-                lastAudioUrl = null;
-                $("#audPrev").src = URL.createObjectURL(f);
-                $("#audPrev").classList.remove("hidden");
-                handled = true;
-              }
-            }
+      if(h){
+        const f = await h.getFile();
+        if(f){
+          lastAudioKey = "my-"+Date.now().toString(36)+"-aud";
+          const stored = await idbPutSafe(lastAudioKey, f);
+          if(!stored){
+            recorderLog('File picker audio stored in memory fallback');
+            lastAudioKey = null;
+            lastAudioBlob = f;
+          } else {
+            lastAudioBlob = null;
+          }
+          lastAudioUrl = null;
+          handled = true;
+        }
+      }
           }
         }catch(_e){}
         if(!handled){
@@ -4043,8 +4039,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       privateAudioOnly=false;
       lastAudioDurationSec=0;
       resetAudioPreview();
-      $("#audName").textContent=f.name;
-      showAudioBadge(f.name);
       lastAudioUrl=null;
       lastAudioBlob=null;
       lastAudioKey="my-"+Date.now().toString(36)+"-aud";
@@ -4055,15 +4049,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         lastAudioBlob=f;
       } else {
         lastAudioBlob=null;
-      }
-      const objectURL=URL.createObjectURL(f);
-      previewAudioURL = objectURL;
-      const a=$("#audPrev");
-      if(a){
-        try{a.pause();}catch(_e){}
-        a.src=objectURL;
-        a.classList.remove("hidden");
-        try{a.load();}catch(_e){}
       }
     });
     $("#btnClearImg").addEventListener("click",()=>{ clearImageSelection(); });
@@ -4152,17 +4137,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           lastAudioBlob = blob;
         }
         privateAudioOnly = true;
-        const a = $("#audPrev");
-        resetAudioPreview();
-        const objectURL = URL.createObjectURL(blob);
-        previewAudioURL = objectURL;
-        if(a){
-          a.src = objectURL;
-          a.classList.remove("hidden");
-          try{ a.load(); }catch(_e){}
-        }
-        const nameNode = $("#audName"); if(nameNode) nameNode.textContent = privateAudioLabel;
-        showAudioBadge(privateAudioLabel);
         const approxDuration = Math.max(1, Math.round((Date.now() - (t0 || Date.now())) / 1000));
         if(Number.isFinite(approxDuration)){
           lastAudioDurationSec = approxDuration;

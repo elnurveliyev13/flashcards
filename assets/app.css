@@ -334,7 +334,7 @@ h1{
 }
 
 .header-metrics .header-stat{
-  gap: 6px;
+  gap: 4px;
 }
 
 .header-controls{
@@ -2158,9 +2158,52 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   color: var(--icon-muted);
 }
 
-audio#audPrev,
-audio#focusAudPrev {
-  display: none !important;
+.media-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8125rem; /* 13px */
+  color: var(--text);
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: min(70vw, 16rem);
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.media-pill .iconbtn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.875rem; /* 14px */
+  padding: 0;
+}
+
+.fc-media-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.translation-media-tts {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.translation-audio-previews {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
 }
 
 .fc-quick-preview {
