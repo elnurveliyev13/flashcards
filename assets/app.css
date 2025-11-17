@@ -1910,7 +1910,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   margin-left: calc(var(--slot-horizontal-gutter) * -1);
   margin-right: calc(var(--slot-horizontal-gutter) * -1);
   box-sizing: border-box;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
 }
 .translation-actions .translation-mode{
   margin:0;
@@ -1955,6 +1955,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     margin-left:0;
     flex:1 1 100%;
     justify-content:flex-start;
+  }
+  .translation-actions{
+    flex-wrap:wrap;
   }
 }
 
