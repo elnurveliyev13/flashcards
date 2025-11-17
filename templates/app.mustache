@@ -205,15 +205,6 @@
                   </div>
                 </div>
               </div>
-              <div class="stt-status-wrap stt-status-block" aria-live="polite">
-                <span id="sttStatus" class="stt-status-chip hidden" role="status"></span>
-                <div class="stt-status-actions">
-                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
-                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
-                </div>
-              </div>
               <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
               <div class="translation-actions">
                 <div class="translation-mode translation-mode-inline">
@@ -225,10 +216,21 @@
                   <button id="btnImagePicker" class="fc-quick-media-btn fc-media-inline" title="{{#str}} title_camera, mod_flashcards {{/str}}" aria-label="{{#str}} title_camera, mod_flashcards {{/str}}">
                     <span class="fc-media-icon">&#128247;</span>
                   </button>
-                  <button id="btnRec" class="fc-quick-media-btn fc-media-inline micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
-                    <span class="fc-media-icon">&#127897;&#65039;</span>
-                    <span id="recTimer" class="rec-timer hidden">00:00</span>
-                  </button>
+                  <div class="rec-control">
+                    <span id="recTimer" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
+                    <button id="btnRec" class="fc-quick-media-btn fc-media-inline micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">
+                      <span class="fc-media-icon">&#127897;&#65039;</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="stt-status-wrap stt-status-block" aria-live="polite">
+                <span id="sttStatus" class="stt-status-chip hidden" role="status"></span>
+                <div class="stt-status-actions">
+                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
                 </div>
               </div>
             </div>
@@ -401,8 +403,10 @@
         <div class="playRow">
           <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">&#128266;</button>
           <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">&#128034;</button>
-          <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-          <span id="recTimerStudy" class="rec-timer hidden">00:00</span>
+          <div class="rec-control rec-control-inline">
+            <span id="recTimerStudy" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
+            <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+          </div>
         </div>
         <div class="meta">
           <button id="btnRevealNext" class="primary" data-i18n="showmore">{{#str}} showmore, mod_flashcards {{/str}}</button>
@@ -448,9 +452,13 @@
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
             <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
             <div class="rec-wrap">
-              <button id="btnRec"  class="iconbtn micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-              <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
-              <span id="recTimer" class="rec-timer hidden">00:00</span>
+              <div class="rec-control rec-control-inline">
+                <span id="recTimer" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
+                <div class="rec-buttons">
+                  <button id="btnRec"  class="iconbtn micbtn" title="{{#str}} title_record, mod_flashcards {{/str}}" aria-label="{{#str}} title_record, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+                  <button id="btnStop" class="iconbtn hidden" title="{{#str}} title_stop, mod_flashcards {{/str}}" aria-label="{{#str}} title_stop, mod_flashcards {{/str}}">&#9209;</button>
+                </div>
+              </div>
               <div id="recHint" class="rec-hint">{{#str}} press_hold_to_record, mod_flashcards {{/str}}</div>
             </div>
           </div>

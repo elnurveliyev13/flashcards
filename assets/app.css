@@ -1,4 +1,4 @@
-/* Base font size for accessibility - allows user scaling while maintaining iOS zoom prevention */
+﻿/* Base font size for accessibility - allows user scaling while maintaining iOS zoom prevention */
 html {
   font-size: 18px; /* Base size for rem calculations */
 }
@@ -820,9 +820,49 @@ button[data-role="update"]:disabled::before {
 .iconbtn, .btnFile{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
 .iconbtn *{ pointer-events:none }
 .iconbtn.recording{ background:#7f1d1d; border-color:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6) }
-.rec-timer{ color:#fca5a5; font-size:0.75rem; margin-left:8px } /* 12px */
+.rec-timer{
+  color:#fee2e2;
+  font-size:1rem; /* 16px */
+  font-weight:700;
+  letter-spacing:0.04em;
+  padding:0.1rem 0.6rem;
+  border-radius:999px;
+  background:rgba(15,23,42,0.85);
+  text-shadow:0 1px 2px rgba(15,23,42,0.75);
+  box-shadow:0 4px 10px rgba(15,23,42,0.35);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:64px;
+  line-height:1.2;
+}
 /* Press-and-hold mic button */
 .rec-wrap{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+.rec-control{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:0.25rem;
+  min-width:64px;
+}
+.rec-control-inline{
+  min-width:auto;
+}
+.rec-buttons{
+  display:flex;
+  align-items:center;
+  gap:0.35rem;
+}
+.translation-media-controls .rec-control{
+  align-self:flex-start;
+}
+.playRow .rec-control{
+  align-items:center;
+}
+.rec-control .rec-timer{
+  margin:0;
+}
 .micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center} /* 32px */
 .rec-hint{ color:var(--muted); font-size:0.8125rem } /* 13px */
 .stt-status-wrap{ display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center }
@@ -880,6 +920,9 @@ select:focus-visible{
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: var(--space-2);
+}
+#cardCreationFormWrap{
+  padding-top: calc(var(--space-2) / 5);
 }
 .capture-video{width:100%;border-radius:12px;display:block}
 .actionTop{position:absolute;top:var(--space-1);right:var(--space-1);display:flex;gap:var(--space-1)}
@@ -1970,13 +2013,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   margin: 6px 0 12px;
 }
 
-.fc-quick-media-btn .rec-timer {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-weight: 600;
-  color: #a5b4fc;
-}
+
 
 .fc-quick-media-btn.micbtn.recording {
   background: rgba(239, 68, 68, 0.2);
@@ -2872,3 +2909,4 @@ audio#focusAudPrev {
 #ttsVoiceStatus[data-state="success"] {
   color:var(--success);
 }
+
