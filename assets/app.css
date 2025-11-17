@@ -333,6 +333,10 @@ h1{
   min-height: var(--header-row-height);
 }
 
+.header-metrics .header-stat{
+  gap: 6px;
+}
+
 .header-controls{
   display: flex;
   gap: var(--space-1);
