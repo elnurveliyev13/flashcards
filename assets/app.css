@@ -2681,6 +2681,10 @@ audio#focusAudPrev {
   width:100%;
   position:relative;
 }
+.translation-header .status-chip {
+  position:relative;
+  right: calc(var(--slot-horizontal-gutter) * -1);
+}
 .slot-head-main .translation-mode{
   flex-shrink:0;
 }
