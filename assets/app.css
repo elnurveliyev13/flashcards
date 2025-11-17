@@ -275,6 +275,7 @@ button:focus-visible,
   flex-shrink: 0;
   min-width: 0;
   min-height: var(--header-row-height);
+  margin-left: auto;
 }
 
 .tabs-toolbar-top .header-controls{
@@ -612,6 +613,7 @@ h1{
     flex-wrap: nowrap;
     flex: 1 1 auto;
     min-width: 0;
+    margin-left: auto;
   }
 
   .header-stat {
