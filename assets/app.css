@@ -1333,6 +1333,17 @@ audio{max-width:260px}
 #ocrCropModal .ocr-crop-toolbar button{min-width:82px;height:52px;padding:0 20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:600}
 #ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.35rem}
 
+@media (max-width: 720px){
+  /* nudge crop controls upward on compact screens */
+  #ocrCropRect{
+    transform:translateY(-15px);
+  }
+  #ocrCropModal .ocr-crop-toolbar{
+    bottom:calc(env(safe-area-inset-bottom,0px) + 23px);
+    transform:translate(-50%,-15px);
+  }
+}
+
 body.cropper-open{overflow:hidden;height:100vh;touch-action:none}
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{border-bottom:1px solid var(--border);padding:8px;text-align:left;font-size:0.875rem} /* 14px */
