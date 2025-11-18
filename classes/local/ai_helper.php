@@ -61,6 +61,13 @@ class ai_helper {
             'translation_lang' => $focusdata['translation_lang'] ?? $language,
         ];
 
+        $result['focusWord'] = $this->build_lemma_focus_word(
+            $result['focusWord'],
+            $result['focusBaseform'],
+            $result['pos'],
+            $result['gender'] ?? ''
+        );
+
         if (!empty($focusdata['definition'])) {
             $result['definition'] = $focusdata['definition'];
         }
@@ -314,5 +321,82 @@ class ai_helper {
         $baseWord = self::strip_articles_and_markers($baseWord);
 
         return trim($baseWord);
+    }
+
+    /**
+     * Build a normalized focus word that always reflects the lemma rules.
+     */
+    protected function build_lemma_focus_word(string $focusword, string $baseform, string $pos, string $gender): string {
+        $focusword = trim($focusword);
+        $baseform = trim($baseform);
+        $pos = core_text::strtolower(trim($pos));
+
+        if ($baseform === '') {
+            return $focusword;
+        }
+
+        switch ($pos) {
+            case 'verb':
+                $candidate = $this->ensure_infinitive_form($baseform);
+                break;
+            case 'substantiv':
+                $candidate = $this->ensure_substantive_form($baseform, core_text::strtolower(trim($gender)));
+                break;
+            case 'adjektiv':
+                $candidate = $this->ensure_adjective_form($baseform);
+                break;
+            case 'adverb':
+                $candidate = $this->ensure_adverb_form($baseform);
+                break;
+            default:
+                $candidate = self::strip_articles_and_markers($baseform);
+                break;
+        }
+
+        if ($candidate === '') {
+            return $focusword !== '' ? $focusword : $baseform;
+        }
+
+        return $candidate;
+    }
+
+    protected function ensure_infinitive_form(string $baseform): string {
+        $clean = self::strip_articles_and_markers($baseform);
+        $clean = preg_replace('/^å\s+/iu', '', $clean);
+        $clean = trim($clean);
+        if ($clean === '') {
+            return $baseform;
+        }
+        return 'å ' . $clean;
+    }
+
+    protected function ensure_substantive_form(string $baseform, string $gender): string {
+        $clean = self::strip_articles_and_markers($baseform);
+        $article = $this->article_for_gender($gender);
+        if ($article === '') {
+            return $clean;
+        }
+        return trim($article . ' ' . $clean);
+    }
+
+    protected function ensure_adjective_form(string $baseform): string {
+        return self::strip_articles_and_markers($baseform);
+    }
+
+    protected function ensure_adverb_form(string $baseform): string {
+        return self::strip_articles_and_markers($baseform);
+    }
+
+    protected function article_for_gender(string $gender): string {
+        switch ($gender) {
+            case 'hankjonn':
+                return 'en';
+            case 'hunkjonn':
+                return 'ei';
+            case 'intetkjonn':
+                return 'et';
+            default:
+                return 'en';
+        }
     }
 }
