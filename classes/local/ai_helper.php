@@ -125,8 +125,12 @@ class ai_helper {
                 $errors['tts_front'] = $message;
             }
             try {
-                if ($focusword !== '') {
-                    $audio['focus'] = $this->tts->synthesize($userid, $focusword, [
+                $focusAudioText = trim((string)($result['focusBaseform'] ?? ''));
+                if ($focusAudioText === '') {
+                    $focusAudioText = trim((string)($result['focusWord'] ?? $focusword));
+                }
+                if ($focusAudioText !== '') {
+                    $audio['focus'] = $this->tts->synthesize($userid, $focusAudioText, [
                         'voice' => $voice,
                         'label' => 'focus',
                     ]);

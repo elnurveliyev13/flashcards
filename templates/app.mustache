@@ -211,6 +211,32 @@
                 </div>
               </div>
             </div>
+              <div class="stt-status-wrap stt-status-block" aria-live="polite">
+                <span id="sttStatus" class="stt-status-chip hidden" role="status"></span>
+                <div class="stt-status-actions">
+                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
+                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
+                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
+                </div>
+              </div>
+            </div>
+            <div class="slot focus-helper-slot">
+              <div class="focus-helper-head">
+                <span class="tag" data-i18n="choose_focus_word">{{#str}} choose_focus_word, mod_flashcards {{/str}}</span>
+              </div>
+              <div id="focusWordList" class="focus-word-list"></div>
+              <div id="focusHelperStatus" class="focus-helper-status small"></div>
+            </div>
+
+            <div class="slot">
+              <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
+              <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
+            </div>
+            <div class="slot">
+              <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
+              <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
+            </div>
             <div class="translation-media-tts">
               <div class="fc-media-badges">
                 <span id="audBadge" class="media-pill hidden">
@@ -233,28 +259,6 @@
                 <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
                 <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
               </div>
-            </div>
-              <div class="stt-status-wrap stt-status-block" aria-live="polite">
-                <span id="sttStatus" class="stt-status-chip hidden" role="status"></span>
-                <div class="stt-status-actions">
-                  <button id="sttRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="sttUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} whisper_status_undo, mod_flashcards {{/str}}</button>
-                  <button id="ocrRetry" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_retry, mod_flashcards {{/str}}</button>
-                  <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
-                </div>
-              </div>
-            </div>
-            <div class="slot focus-helper-slot">
-              <div class="focus-helper-head">
-                <span class="tag" data-i18n="choose_focus_word">{{#str}} choose_focus_word, mod_flashcards {{/str}}</span>
-              </div>
-              <div id="focusWordList" class="focus-word-list"></div>
-              <div id="focusHelperStatus" class="focus-helper-status small"></div>
-            </div>
-
-            <div class="slot">
-              <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
-              <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
             </div>
             <div class="focus-translation-pill" id="focusTranslationPreview" aria-label="{{#str}} focus_translation_label, mod_flashcards {{/str}}">
               <span class="focus-translation-text" id="focusTranslationText">—</span>
@@ -295,10 +299,6 @@
               <textarea id="uFocusBase" class="autogrow" placeholder="{{#str}} focus_baseform_ph, mod_flashcards {{/str}}" data-i18n-placeholder="focus_baseform_ph"></textarea>
             </div>
             <div class="slot">
-              <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
-              <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
-            </div>
-              <div class="slot">
                 <span class="tag" data-i18n="pos">{{#str}} pos, mod_flashcards {{/str}}</span>
                 <select id="uPOS">
                   <option value="">-</option>
@@ -507,14 +507,6 @@
           <textarea id="uTransEn" class="autogrow" placeholder="I love you" data-i18n-placeholder="translation_en_placeholder"></textarea>
         </div>
         <!-- Linguistic enrichment fields -->
-        <div class="slot">
-          <span class="tag">{{#str}} transcription, mod_flashcards {{/str}}</span>
-          <div class="row has-action">
-              <div class="input-wrap">
-               <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
-            </div>
-          </div>
-        </div>
         <div class="slot">
           <span class="tag">{{#str}} pos, mod_flashcards {{/str}}</span>
           <div class="row has-action">
