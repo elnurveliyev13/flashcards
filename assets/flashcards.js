@@ -4492,6 +4492,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let studentAudioPlayer = null;
       let playbackLoopActive = false;
       let studentAudioUrl = null;
+      let studyAudioContext = null;
+      let studyBufferSource = null;
 
       // Reuse iOS recorder if available
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
@@ -4590,10 +4592,67 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             studentAudioPlayer.currentTime = 0;
           }
         }catch(_e){}
+        stopStudyBufferSource();
         if(studentAudioUrl){
           try{ URL.revokeObjectURL(studentAudioUrl); }catch(_e){}
           studentAudioUrl = null;
         }
+      }
+
+      function stopStudyBufferSource(){
+        if(!studyBufferSource) return;
+        try{ studyBufferSource.onended = null; }catch(_e){}
+        try{ studyBufferSource.stop(); }catch(_e){}
+        try{ studyBufferSource.disconnect(); }catch(_e){}
+        studyBufferSource = null;
+      }
+
+      async function ensureStudyAudioContextUnlocked(){
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if(!AudioCtx){
+          return null;
+        }
+        if(!studyAudioContext){
+          try{
+            studyAudioContext = new AudioCtx();
+          }catch(_e){
+            studyAudioContext = null;
+            return null;
+          }
+        }
+        if(studyAudioContext && studyAudioContext.state !== 'running'){
+          try{ await studyAudioContext.resume(); }catch(_e){}
+        }
+        return studyAudioContext;
+      }
+
+      async function decodeStudyAudioBuffer(blob){
+        if(!blob){
+          return null;
+        }
+        const ctx = await ensureStudyAudioContextUnlocked();
+        if(!ctx){
+          return null;
+        }
+        let arrayBuffer;
+        try{
+          arrayBuffer = await blob.arrayBuffer();
+        }catch(_e){
+          return null;
+        }
+        return new Promise((resolve, reject) => {
+          let done = false;
+          const doneResolve = value => { if(done) return; done = true; resolve(value); };
+          const doneReject = err => { if(done) return; done = true; reject(err); };
+          try{
+            const maybePromise = ctx.decodeAudioData(arrayBuffer, doneResolve, doneReject);
+            if(maybePromise && typeof maybePromise.then === 'function'){
+              maybePromise.then(doneResolve, doneReject);
+            }
+          }catch(err){
+            doneReject(err);
+          }
+        });
       }
 
       // Playback chain: student → original → STOP (one-time playback)
@@ -4613,6 +4672,38 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         playbackLoopActive = true;
 
         console.log('[PronunciationPractice] Starting one-time playback: student only');
+
+        if(IS_IOS){
+          try{
+            const decodedBuffer = await decodeStudyAudioBuffer(studentRecordingBlob);
+            if(decodedBuffer){
+              console.log('[PronunciationPractice] Starting audio context playback (iOS)');
+              stopStudyBufferSource();
+              if(studyAudioContext){
+                studyBufferSource = studyAudioContext.createBufferSource();
+                studyBufferSource.buffer = decodedBuffer;
+                studyBufferSource.onended = () => {
+                  console.log('[PronunciationPractice] Student finished (buffer), stopping playback');
+                  playbackLoopActive = false;
+                  stopStudyBufferSource();
+                  studentRecordingBlob = null;
+                };
+                studyBufferSource.connect(studyAudioContext.destination);
+                try{
+                  studyBufferSource.start(0);
+                }catch(err){
+                  console.log('[PronunciationPractice] BufferSource start failed: '+(err?.message||err));
+                  playbackLoopActive = false;
+                  stopStudyBufferSource();
+                  studentRecordingBlob = null;
+                }
+                return;
+              }
+            }
+          }catch(err){
+            console.log('[PronunciationPractice] iOS AudioContext playback failed: '+(err?.message||err));
+          }
+        }
 
         // Clean up previous student player if needed
         if(studentAudioPlayer){
@@ -4843,6 +4934,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         holdActive = true;
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
+        ensureStudyAudioContextUnlocked().catch(()=>{});
 
         // 0.5s delay before recording starts
         holdTimeout = setTimeout(() => {
