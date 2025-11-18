@@ -596,7 +596,8 @@ h1{
   box-sizing: border-box;
   appearance: none;
 }
-.header-pref-panel select option{
+.header-pref-panel select option,
+.header-pref-panel select option:checked{
   color: var(--text);
 }
 #langSel,
@@ -1062,6 +1063,10 @@ input[type=text]::placeholder {
 #mod_flashcards_container input[type=search],
 #mod_flashcards_container select,
 #mod_flashcards_container option {
+  color: var(--text) !important;
+}
+
+#mod_flashcards_container select option:checked {
   color: var(--text) !important;
 }
 
