@@ -4496,6 +4496,31 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Reuse iOS recorder if available
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
       const iosRecorderInstance = useIOSRecorder ? iosRecorderGlobal : null;
+      let pendingIOSRelease = null;
+
+      function releaseIOSMic(){
+        if(!iosRecorderInstance){
+          return Promise.resolve();
+        }
+        if(!pendingIOSRelease){
+          pendingIOSRelease = iosRecorderInstance.releaseMic()
+            .catch(err=>{
+              console.log('[PronunciationPractice] releaseMic failed: '+(err?.message||err));
+            })
+            .finally(()=>{
+              pendingIOSRelease = null;
+            });
+        }
+        return pendingIOSRelease;
+      }
+
+      async function waitForIOSRelease(){
+        if(pendingIOSRelease){
+          try{
+            await pendingIOSRelease;
+          }catch(_e){}
+        }
+      }
 
       // Timer functions
       function formatTime(ms){
@@ -4657,6 +4682,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // iOS recorder path
         if(useIOSRecorder){
           try{
+            await waitForIOSRelease();
             console.log('[PronunciationPractice] Starting iOS recorder');
             await iosRecorderInstance.start();
             isRecording = true;
@@ -4765,23 +4791,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // iOS recorder path
         if(useIOSRecorder){
           if(!isRecording){
-            try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
+            await releaseIOSMic();
             btnRecordStudy.classList.remove("recording");
             stopTimer();
             return;
           }
 
+          let exportedBlob = null;
           try{
-            const blob = await iosRecorderInstance.exportWav();
-            await handleStudentRecording(blob);
-            console.log('[PronunciationPractice] iOS export: '+(blob?.size||0)+' bytes');
+            exportedBlob = await iosRecorderInstance.exportWav();
+            console.log('[PronunciationPractice] iOS export: '+(exportedBlob?.size||0)+' bytes');
           }catch(err){
             console.log('[PronunciationPractice] iOS stop failed: '+(err?.message||err));
-          }finally{
-            try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
-            isRecording = false;
-            btnRecordStudy.classList.remove("recording");
-            stopTimer();
+          }
+
+          await releaseIOSMic();
+          isRecording = false;
+          btnRecordStudy.classList.remove("recording");
+          stopTimer();
+
+          if(exportedBlob){
+            await handleStudentRecording(exportedBlob);
           }
           return;
         }
