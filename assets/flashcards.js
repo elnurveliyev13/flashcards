@@ -2399,6 +2399,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const DEFAULT_ORDER=["audio","transcription","audio_text","text","translation"];
     let state,registry,queue=[],current=-1,visibleSlots=1,currentItem=null;
     let activeTab='quickInput';
+    let tabSwitcher=null;
     let pendingStudyRender=false;
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
     function saveState(){localStorage.setItem(storageKey(STORAGE_STATE),JSON.stringify(state));}
@@ -3616,8 +3617,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(c.transcription) c.order.push("transcription");
         if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
         if(c.text) c.order.push("text");
-        if(c.image||c.imageKey) c.order.push("image");
-        if(c.explanation) c.order.push("explanation");
         if(c.translation) c.order.push("translation");
       }
       c.order=uniq(c.order);
@@ -3779,10 +3778,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
         emptyState.classList.add("hidden");
-        current = 0;
+      current = 0;
+      currentItem = queue[current];
+      visibleSlots = initialVisibleSlots(currentItem?.card);
+      showCurrent();
+    }
+    // Ensure the Study queue highlights the requested card (even if it needs a temporary entry).
+    function focusQueueCard(deckId, cardId){
+      if(!deckId || !cardId) return false;
+      const idx = queue.findIndex(item => item.deckId === deckId && item.card && item.card.id === cardId);
+      if(idx >= 0){
+        current = idx;
         currentItem = queue[current];
-        visibleSlots = initialVisibleSlots(currentItem?.card);
-        showCurrent();
+        visibleSlots = initialVisibleSlots(currentItem.card);
+        return true;
+      }
+      const deck = registry[deckId];
+      if(!deck) return false;
+      const card = deck.cards.find(c => c.id === cardId);
+      if(!card) return false;
+      ensureDeckProgress(deckId, deck.cards);
+      let recRecord = state.decks?.[deckId]?.[cardId];
+      if(!recRecord){
+        recRecord = {step:0,due:today0(),addedAt:today0(),lastAt:null};
+        state.decks = state.decks || {};
+        state.decks[deckId] = state.decks[deckId] || {};
+        state.decks[deckId][cardId] = recRecord;
+      }
+      const normalizedCard = normalizeLessonCard({...card});
+      const entry = {deckId, card:normalizedCard, rec:recRecord, index:0};
+      queue.unshift(entry);
+      current = 0;
+      currentItem = entry;
+      visibleSlots = initialVisibleSlots(currentItem.card);
+      setDue(queue.length);
+      return true;
     }
     function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
     async function showCurrent(forceRender=false){
@@ -5170,6 +5200,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       refreshSelect();
       updateBadge();
       buildQueue();
+      focusQueueCard(localDeckId, id);
+      if(tabSwitcher) tabSwitcher('study');
       closeEditor();
       $("#status").textContent= isUpdate ? "Updated" : "Added";
 
@@ -5872,6 +5904,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         debugLog(`[Tabs] Switched to ${tabName}`);
       }
+
+      tabSwitcher = switchTab;
 
       // Tab click handlers
       if (tabQuickInput) {
