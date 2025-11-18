@@ -531,6 +531,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Update',
         createnew: 'Create',
         audio: 'Audio',
+        order_audio_word: 'Audio (word)',
+        order_audio_text: 'Audio (text)',
         image: 'Image',
         order: 'Order (click in sequence)',
         easy: 'Easy',
@@ -625,6 +627,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Оновити',
         createnew: 'Створити',
         audio: 'Аудіо',
+        order_audio_word: 'Аудіо (слово)',
+        order_audio_text: 'Аудіо (текст)',
         image: 'Зображення',
         order: 'Порядок (натискайте послідовно)',
         easy: 'Легко',
@@ -719,6 +723,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Обновить',
         createnew: 'Создать',
         audio: 'Аудио',
+        order_audio_word: 'Аудио (слово)',
+        order_audio_text: 'Аудио (текст)',
         image: 'Изображение',
         order: 'Порядок (нажимайте последовательно)',
         easy: 'Легко',
@@ -813,6 +819,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Mettre à jour',
         createnew: 'Créer',
         audio: 'Audio',
+        order_audio_word: 'Audio (mot)',
+        order_audio_text: 'Audio (texte)',
         image: 'Image',
         order: 'Ordre (cliquer en séquence)',
         easy: 'Facile',
@@ -907,6 +915,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Actualizar',
         createnew: 'Crear',
         audio: 'Audio',
+        order_audio_word: 'Audio (palabra)',
+        order_audio_text: 'Audio (texto)',
         image: 'Imagen',
         order: 'Orden (hacer clic en secuencia)',
         easy: 'Fácil',
@@ -1001,6 +1011,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aktualizuj',
         createnew: 'Utwórz',
         audio: 'Audio',
+        order_audio_word: 'Audio (słowo)',
+        order_audio_text: 'Audio (tekst)',
         image: 'Obraz',
         order: 'Kolejność (klikaj po kolei)',
         easy: 'Łatwe',
@@ -1095,6 +1107,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aggiorna',
         createnew: 'Crea',
         audio: 'Audio',
+        order_audio_word: 'Audio (parola)',
+        order_audio_text: 'Audio (testo)',
         image: 'Immagine',
         order: 'Ordine (clicca in sequenza)',
         easy: 'Facile',
@@ -1189,6 +1203,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aktualisieren',
         createnew: 'Erstellen',
         audio: 'Audio',
+        order_audio_word: 'Audio (Wort)',
+        order_audio_text: 'Audio (Text)',
         image: 'Bild',
         order: 'Reihenfolge (in Reihenfolge klicken)',
         easy: 'Einfach',
@@ -2380,7 +2396,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function storageKey(base){return `${base}:${localStorage.getItem(PROFILE_KEY)||"Guest"}`;}
     const STORAGE_STATE="srs-v6:state", STORAGE_REG="srs-v6:registry";
     const MY_DECK_ID="my-deck";
-    const DEFAULT_ORDER=["audio","image","text","explanation","translation"];
+    const DEFAULT_ORDER=["audio","transcription","audio_text","text","translation"];
     let state,registry,queue=[],current=-1,visibleSlots=1,currentItem=null;
     let activeTab='quickInput';
     let pendingStudyRender=false;
@@ -3596,20 +3612,70 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       if(!Array.isArray(c.order)||!c.order.length){
         c.order=[];
-        if(c.audio||c.audioKey||c.focusAudio||c.focusAudioKey) c.order.push("audio");
-        if(c.image||c.imageKey) c.order.push("image");
+        if(c.audio||c.audioKey) c.order.push("audio");
+        if(c.transcription) c.order.push("transcription");
+        if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
         if(c.text) c.order.push("text");
+        if(c.image||c.imageKey) c.order.push("image");
         if(c.explanation) c.order.push("explanation");
         if(c.translation) c.order.push("translation");
       }
       c.order=uniq(c.order);
       return c;
     }
+    async function resolveAudioUrl(card, type){
+      if(type==='front'){
+        if(card.audioKey){
+          return await urlForSafe(card.audioKey);
+        }else if(card.audio){
+          return resolveAsset(card.audio);
+        }
+      }else if(type==='focus'){
+        if(card.focusAudioKey){
+          return await urlForSafe(card.focusAudioKey);
+        }else if(card.focusAudio){
+          const resolved = resolveAsset(card.focusAudio);
+          return resolved || card.focusAudio;
+        }
+      }
+      return null;
+    }
+    function renderAudioButtons(el, tracks, options={}){
+      const { attachFront=false, allowAutoplay=false } = options;
+      const row=document.createElement("div");
+      row.className="audio-chip-row";
+      tracks.forEach(track=>{
+        const btn=document.createElement("button");
+        btn.type="button";
+        btn.className="pill"+(track.type==='focus'?' pill-focus':'');
+        btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
+        btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
+        row.appendChild(btn);
+        if(attachFront && track.type==='front'){
+          attachAudio(track.url);
+        }
+        if(allowAutoplay){
+          if(track.type==='front'){
+            el.dataset.autoplay = track.url;
+          }else if(!el.dataset.autoplay){
+            el.dataset.autoplay = track.url;
+          }
+        }
+      });
+      el.appendChild(row);
+      return el;
+    }
     async function buildSlot(kind, card){
       const el=document.createElement("div");
       el.className="slot";
+      const cardOrder = Array.isArray(card.order) ? card.order : [];
+      if(kind==="transcription" && card.transcription){
+        el.innerHTML=`<div class="transcription-text">${card.transcription}</div>`;
+        return el;
+      }
       if(kind==="text" && card.text){
-        const tr = card.transcription ? `<div class="transcription-text">${card.transcription}</div>` : "";
+        const showInlineTranscription = card.transcription && !cardOrder.includes('transcription');
+        const tr = showInlineTranscription ? `<div class="transcription-text">${card.transcription}</div>` : "";
         el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
         return el;
       }
@@ -3632,21 +3698,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       if(kind==="audio"){
-        const tracks=[];
-        let frontUrl=null;
-        if(card.audioKey){
-          frontUrl=await urlForSafe(card.audioKey);
-        }else if(card.audio){
-          frontUrl=resolveAsset(card.audio);
+        const frontUrl = await resolveAudioUrl(card, 'front');
+        const includeFocus = !cardOrder.includes('audio_text');
+        let focusUrl = null;
+        if(includeFocus){
+          focusUrl = await resolveAudioUrl(card, 'focus');
         }
+        const tracks=[];
         if(frontUrl){
           tracks.push({url:frontUrl,type:'front'});
-        }
-        let focusUrl=null;
-        if(card.focusAudioKey){
-          focusUrl=await urlForSafe(card.focusAudioKey);
-        }else if(card.focusAudio){
-          focusUrl=resolveAsset(card.focusAudio) || card.focusAudio;
         }
         if(focusUrl){
           tracks.push({url:focusUrl,type:'focus'});
@@ -3654,24 +3714,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!tracks.length){
           return null;
         }
-        const row=document.createElement("div");
-        row.className="audio-chip-row";
-        tracks.forEach((track, idx)=>{
-          const btn=document.createElement("button");
-          btn.type="button";
-          btn.className="pill"+(track.type==='focus'?' pill-focus':'');
-          btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
-          btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
-          row.appendChild(btn);
-          if(track.type==='front'){
-            attachAudio(track.url);
-            el.dataset.autoplay=track.url;
-          }
-          if(!el.dataset.autoplay && idx===0){
-            el.dataset.autoplay = track.url;
-          }
-        });
-        el.appendChild(row);
+        renderAudioButtons(el, tracks, {attachFront:true, allowAutoplay:true});
+        return el;
+      }
+      if(kind==="audio_text"){
+        const focusUrl = await resolveAudioUrl(card, 'focus');
+        if(!focusUrl){
+          return null;
+        }
+        renderAudioButtons(el, [{url:focusUrl,type:'focus'}], {allowAutoplay:false});
         return el;
       }
       return null;
@@ -4807,7 +4858,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     let orderChosen=[];
-    function updateOrderPreview(){ const chipsMap={ audio: t('audio') || 'audio', image: t('image') || 'image', text: t('front') || 'text', explanation: t('explanation') || 'explanation', translation: t('back') || 'translation' }; $$("#orderChips .chip").forEach(ch=>{ ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind)); }); const pretty=(orderChosen.length?orderChosen:DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → '); const prevEl = document.getElementById('orderPreview'); if(prevEl) prevEl.textContent=pretty; }
+    function updateOrderPreview(){
+      const chipsMap = {
+        audio: t('order_audio_word') || 'audio',
+        transcription: t('transcription') || 'transcription',
+        audio_text: t('order_audio_text') || 'audio_text',
+        text: t('front') || 'text',
+        translation: t('back') || 'translation',
+        image: t('image') || 'image',
+        explanation: t('explanation') || 'explanation',
+      };
+      $$("#orderChips .chip").forEach(ch=>{
+        ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind));
+      });
+      const pretty = (orderChosen.length ? orderChosen : DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → ');
+      const prevEl = document.getElementById('orderPreview');
+      if(prevEl) prevEl.textContent = pretty;
+    }
     $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
     function resetForm(){
       $("#uFront").value="";
