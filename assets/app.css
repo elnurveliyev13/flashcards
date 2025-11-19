@@ -1492,10 +1492,7 @@ audio{max-width:260px}
 #ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.35rem}
 
 @media (max-width: 720px){
-  /* nudge crop controls upward on compact screens */
-  #ocrCropRect{
-    transform:translateY(-20px);
-  }
+  /* nudge crop toolbar upward on compact screens */
   #ocrCropModal .ocr-crop-toolbar{
     bottom:calc(env(safe-area-inset-bottom,0px) + 28px);
     transform:translate(-50%,-20px);

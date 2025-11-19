@@ -2210,6 +2210,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!item) return null;
       const payload = item.payload || {};
       const frontAudio = payload.audioFront || payload.audio || null;
+      const orderFromServer = Array.isArray(payload.order) ? payload.order : [];
+      console.log('[DEBUG normalizeServerCard] cardId:', item.cardId, 'payload.order:', JSON.stringify(payload.order), 'orderFromServer:', JSON.stringify(orderFromServer));
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
@@ -2225,7 +2227,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         audioKey: payload.audioKey || null,
         focusAudio: payload.focusAudio || payload.audioFocus || null,
         focusAudioKey: payload.focusAudioKey || null,
-        order: Array.isArray(payload.order) ? payload.order : [],
+        order: orderFromServer,
         transcription: payload.transcription || "",
         pos: payload.pos || "",
         gender: payload.gender || "",
@@ -2899,18 +2901,31 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(cropDragMode && !force){
         return;
       }
-      const paddingX = Math.max(8, Math.min(24, cropCanvas.width * 0.02));
-      const paddingY = Math.max(8, Math.min(24, cropCanvas.height * 0.02));
-      const zoomX = (cropCanvas.width - paddingX * 2) / cropRect.width;
-      const zoomY = (cropCanvas.height - paddingY * 2) / cropRect.height;
-      const targetZoom = Math.min(8, Math.max(baseZoom, Math.min(zoomX, zoomY)));
-      viewZoom = targetZoom;
-      const viewWidth = cropCanvas.width / viewZoom;
-      const viewHeight = cropCanvas.height / viewZoom;
-      const centerX = cropRect.x + cropRect.width / 2;
-      const centerY = cropRect.y + cropRect.height / 2;
-      viewX = clamp(centerX - viewWidth / 2, 0, Math.max(0, cropImage.width - viewWidth));
-      viewY = clamp(centerY - viewHeight / 2, 0, Math.max(0, cropImage.height - viewHeight));
+      // Check if entire image fits in canvas at baseZoom
+      const baseViewWidth = cropCanvas.width / baseZoom;
+      const baseViewHeight = cropCanvas.height / baseZoom;
+      const imageFitsEntirely = baseViewWidth >= cropImage.width && baseViewHeight >= cropImage.height;
+
+      if(imageFitsEntirely){
+        // Image fits entirely - use baseZoom and center it
+        viewZoom = baseZoom;
+        viewX = Math.max(0, (cropImage.width - baseViewWidth) / 2);
+        viewY = Math.max(0, (cropImage.height - baseViewHeight) / 2);
+      } else {
+        // Image doesn't fit - zoom to fit cropRect with padding
+        const paddingX = Math.max(8, Math.min(24, cropCanvas.width * 0.02));
+        const paddingY = Math.max(8, Math.min(24, cropCanvas.height * 0.02));
+        const zoomX = (cropCanvas.width - paddingX * 2) / cropRect.width;
+        const zoomY = (cropCanvas.height - paddingY * 2) / cropRect.height;
+        const targetZoom = Math.min(8, Math.max(baseZoom, Math.min(zoomX, zoomY)));
+        viewZoom = targetZoom;
+        const viewWidth = cropCanvas.width / viewZoom;
+        const viewHeight = cropCanvas.height / viewZoom;
+        const centerX = cropRect.x + cropRect.width / 2;
+        const centerY = cropRect.y + cropRect.height / 2;
+        viewX = clamp(centerX - viewWidth / 2, 0, Math.max(0, cropImage.width - viewWidth));
+        viewY = clamp(centerY - viewHeight / 2, 0, Math.max(0, cropImage.height - viewHeight));
+      }
       ensureViewBounds();
     }
     function imageToCanvasPoint(point){
@@ -2998,7 +3013,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!cropRectEl || !cropImage || !cropRect){
         return;
       }
-      const rect = displayRect(cropRect);
+      const rect = displayRectCss(cropRect);
       cropRectEl.style.left = `${rect.x}px`;
       cropRectEl.style.top = `${rect.y}px`;
       cropRectEl.style.width = `${rect.width}px`;
@@ -3711,6 +3726,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
 
+      const origOrder = c.order ? JSON.stringify(c.order) : 'undefined';
       if(!Array.isArray(c.order)||!c.order.length){
         c.order=[];
         if(c.audio||c.audioKey) c.order.push("audio");
@@ -3718,6 +3734,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
         if(c.text) c.order.push("text");
         if(c.translation) c.order.push("translation");
+        console.log('[DEBUG normalizeLessonCard] card.id:', c.id, 'order was empty/invalid, generated:', JSON.stringify(c.order), 'origOrder:', origOrder);
       }
       c.order=uniq(c.order);
       return c;
@@ -3866,6 +3883,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       slotContainer.innerHTML="";
       hidePlayIcons();
       audioURL=null;
+      console.log('[DEBUG renderCard] card.id:', card.id, 'order:', JSON.stringify(card.order), 'audio:', !!card.audio, 'audioKey:', !!card.audioKey, 'focusAudio:', !!card.focusAudio, 'focusAudioKey:', !!card.focusAudioKey);
       const allSlots=[];
       for(const kind of card.order){
         const el=await buildSlot(kind,card);
@@ -5346,6 +5364,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
       const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      console.log('[DEBUG saveCard] id:', id, 'orderChosen:', JSON.stringify(orderChosen), 'payload.order:', JSON.stringify(payload.order));
       const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
       if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
