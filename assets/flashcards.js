@@ -1841,6 +1841,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           scheduleTranslationRefresh();
         }
       });
+      translationInputLocal.addEventListener('focus', ()=>{
+        if(translationDirection !== 'user-no' && !translationInputLocal.value.trim()){
+          applyTranslationDirection('user-no');
+        }
+      });
     }
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');

@@ -91,7 +91,7 @@ $string['update_disabled_hint'] = 'Відкрийте наявну картку,
 $string['createnew'] = 'Створити';
 $string['order'] = 'Порядок (натискайте послідовно)';
 $string['empty'] = 'Сьогодні нічого не заплановано';
-$string['resetform'] = 'Скинути форму';
+$string['resetform'] = 'Очистити форму';
 $string['addtomycards'] = 'Додати до моїх карток';
 $string['install_app'] = 'Встановити додаток';
 
