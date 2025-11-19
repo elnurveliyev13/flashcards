@@ -2654,6 +2654,40 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setIOSMicPermissionState('unknown');
     }
     updateIOSMicPermissionIndicators();
+    async function initIOSMicPermissionWatcher(){
+      if(!IS_IOS){
+        return;
+      }
+      const navigatorObj = window.navigator;
+      const canQuery = !!(navigatorObj && navigatorObj.permissions && navigatorObj.permissions.query);
+      if(!canQuery){
+        return;
+      }
+      const applyState = status=>{
+        if(!status){
+          return;
+        }
+        const state = status.state;
+        const mapped = state === 'granted' ? 'granted' : (state === 'denied' ? 'denied' : 'unknown');
+        setIOSMicPermissionState(mapped);
+      };
+      try{
+        const status = await navigatorObj.permissions.query({name:'microphone'});
+        if(!status){
+          return;
+        }
+        applyState(status);
+        const handler = ()=>applyState(status);
+        if(typeof status.addEventListener === 'function'){
+          status.addEventListener('change', handler);
+        }else{
+          status.onchange = handler;
+        }
+      }catch(err){
+        recorderLog('Permission query failed: '+(err?.message||err));
+      }
+    }
+    initIOSMicPermissionWatcher();
 
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
@@ -3012,13 +3046,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const viewWidth = cropCanvas.width / viewZoom;
       const viewHeight = cropCanvas.height / viewZoom;
+      // Clamp source rect to image bounds
+      const srcX = viewX;
+      const srcY = viewY;
+      const srcW = Math.min(viewWidth, cropImage.width - srcX);
+      const srcH = Math.min(viewHeight, cropImage.height - srcY);
+      // Calculate dest rect proportionally
+      const dstW = srcW * viewZoom;
+      const dstH = srcH * viewZoom;
       ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
       ctx.drawImage(
         cropImage,
-        viewX, viewY, viewWidth, viewHeight,
-        0, 0, cropCanvas.width, cropCanvas.height
+        srcX, srcY, srcW, srcH,
+        0, 0, dstW, dstH
       );
-      const rect = displayRectCss(cropRect);
+      const rect = displayRect(cropRect);
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.55)';
       ctx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
@@ -3031,8 +3073,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ctx.clip();
       ctx.drawImage(
         cropImage,
-        viewX, viewY, viewWidth, viewHeight,
-        0, 0, cropCanvas.width, cropCanvas.height
+        srcX, srcY, srcW, srcH,
+        0, 0, dstW, dstH
       );
       ctx.restore();
       refreshCropRectOverlay();
@@ -3209,7 +3251,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         await new Promise(resolve => requestAnimationFrame(resolve));
         cropImage = await loadCropImage(file);
         cropRect = {x:0, y:0, width:cropImage.width, height:cropImage.height};
+        console.log('[Cropper] Image loaded:', cropImage.width, 'x', cropImage.height);
+        console.log('[Cropper] Initial cropRect:', JSON.stringify(cropRect));
         layoutCropStage(true);
+        console.log('[Cropper] After layout - canvas:', cropCanvas.width, 'x', cropCanvas.height);
+        console.log('[Cropper] After layout - baseZoom:', baseZoom, 'viewZoom:', viewZoom);
+        console.log('[Cropper] After layout - viewX:', viewX, 'viewY:', viewY);
+        console.log('[Cropper] After layout - cropRect:', JSON.stringify(cropRect));
+        const rectCss = displayRectCss(cropRect);
+        console.log('[Cropper] displayRectCss:', JSON.stringify(rectCss));
         resetCropHistory();
         pushCropHistory();
         bindCropResize();
