@@ -149,12 +149,53 @@ function mod_flashcards_get_runtime_config(): array {
     $pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: '';
     $pollysecret = trim($config->amazonpolly_secret_key ?? '') ?: getenv('FLASHCARDS_POLLY_SECRET') ?: '';
     $pollyenabled = ($pollyaccess !== '' && $pollysecret !== '');
+    // Whisper STT config
     $whisperkey = trim($config->whisper_apikey ?? '') ?: getenv('FLASHCARDS_WHISPER_KEY') ?: '';
     $whisperenabled = !empty($config->whisper_enabled) && $whisperkey !== '';
     $whisperclip = max(1, (int)($config->whisper_clip_limit ?? 15));
     $whispermonthly = max($whisperclip, (int)($config->whisper_monthly_limit ?? 36000));
     $whisperlang = trim($config->whisper_language ?? '') ?: 'nb';
     $whispertimeout = max(5, (int)($config->whisper_timeout ?? 45));
+
+    // ElevenLabs STT config
+    $elevenlabssttkey = trim($config->elevenlabs_stt_apikey ?? '')
+        ?: trim($config->elevenlabs_apikey ?? '')
+        ?: getenv('FLASHCARDS_ELEVENLABS_KEY') ?: '';
+    $elevenlabssttenabled = !empty($config->elevenlabs_stt_enabled) && $elevenlabssttkey !== '';
+    $elevenlabssttclip = max(1, (int)($config->elevenlabs_stt_clip_limit ?? 15));
+    $elevenlabssttmonthly = max($elevenlabssttclip, (int)($config->elevenlabs_stt_monthly_limit ?? 36000));
+    $elevenlabssttlang = trim($config->elevenlabs_stt_language ?? '') ?: 'nb';
+    $elevenlabsstttimeout = max(5, (int)($config->elevenlabs_stt_timeout ?? 45));
+
+    // Determine active STT provider
+    $sttprovider = trim($config->stt_provider ?? '') ?: 'whisper';
+    $sttenabled = false;
+    $sttclip = 15;
+    $sttmonthly = 36000;
+    $sttlang = 'nb';
+    $stttimeout = 45;
+
+    if ($sttprovider === 'elevenlabs' && $elevenlabssttenabled) {
+        $sttenabled = true;
+        $sttclip = $elevenlabssttclip;
+        $sttmonthly = $elevenlabssttmonthly;
+        $sttlang = $elevenlabssttlang;
+        $stttimeout = $elevenlabsstttimeout;
+    } else if ($whisperenabled) {
+        $sttprovider = 'whisper';
+        $sttenabled = true;
+        $sttclip = $whisperclip;
+        $sttmonthly = $whispermonthly;
+        $sttlang = $whisperlang;
+        $stttimeout = $whispertimeout;
+    } else if ($elevenlabssttenabled) {
+        $sttprovider = 'elevenlabs';
+        $sttenabled = true;
+        $sttclip = $elevenlabssttclip;
+        $sttmonthly = $elevenlabssttmonthly;
+        $sttlang = $elevenlabssttlang;
+        $stttimeout = $elevenlabsstttimeout;
+    }
     $googlevisionkey = trim($config->googlevision_api_key ?? '') ?: getenv('FLASHCARDS_GOOGLEVISION_KEY') ?: '';
     $googlevisionEnabled = !empty($config->googlevision_enabled) && !empty($googlevisionkey);
     $googlevisionLanguage = trim($config->googlevision_language ?? '') ?: 'en';
@@ -192,11 +233,12 @@ function mod_flashcards_get_runtime_config(): array {
             'dictionaryEnabled' => !empty($config->orbokene_enabled),
         ],
         'stt' => [
-            'enabled' => $whisperenabled,
-            'language' => $whisperlang,
-            'clipLimit' => $whisperclip,
-            'monthlyLimit' => $whispermonthly,
-            'timeout' => $whispertimeout,
+            'enabled' => $sttenabled,
+            'provider' => $sttprovider,
+            'language' => $sttlang,
+            'clipLimit' => $sttclip,
+            'monthlyLimit' => $sttmonthly,
+            'timeout' => $stttimeout,
         ],
         'ocr' => [
             'enabled' => $googlevisionEnabled,

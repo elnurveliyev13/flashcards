@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025111205; // YYYYMMDDXX. Fixed translation label - now shows localized text instead of "Translation"
+$plugin->version   = 2025111900; // YYYYMMDDXX. Added ElevenLabs STT as alternative to Whisper
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.12.2-translation-label-fix'; // Fixed translation label localization
+$plugin->release   = '0.13.0-elevenlabs-stt'; // Added ElevenLabs Speech-to-Text provider

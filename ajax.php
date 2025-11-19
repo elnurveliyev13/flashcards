@@ -157,15 +157,38 @@ switch ($action) {
             $mimetype = clean_param($_FILES['file']['type'] ?? '', PARAM_RAW_TRIMMED);
 
             $basedir = make_temp_directory('mod_flashcards');
-            $tempfile = tempnam($basedir, 'whisper');
+            $tempfile = tempnam($basedir, 'stt');
             if ($tempfile === false) {
-                throw new moodle_exception('error_whisper_upload', 'mod_flashcards');
+                throw new moodle_exception('error_stt_upload', 'mod_flashcards');
             }
             if (!move_uploaded_file($_FILES['file']['tmp_name'], $tempfile)) {
-                throw new moodle_exception('error_whisper_upload', 'mod_flashcards');
+                throw new moodle_exception('error_stt_upload', 'mod_flashcards');
             }
 
-            $client = new \mod_flashcards\local\whisper_client();
+            // Determine which STT provider to use
+            $config = get_config('mod_flashcards');
+            $sttprovider = trim($config->stt_provider ?? '') ?: 'whisper';
+
+            // Check provider availability and fallback logic
+            $whisperkey = trim($config->whisper_apikey ?? '') ?: getenv('FLASHCARDS_WHISPER_KEY') ?: '';
+            $whisperenabled = !empty($config->whisper_enabled) && $whisperkey !== '';
+
+            $elevenlabssttkey = trim($config->elevenlabs_stt_apikey ?? '')
+                ?: trim($config->elevenlabs_apikey ?? '')
+                ?: getenv('FLASHCARDS_ELEVENLABS_KEY') ?: '';
+            $elevenlabssttenabled = !empty($config->elevenlabs_stt_enabled) && $elevenlabssttkey !== '';
+
+            // Select client based on provider
+            if ($sttprovider === 'elevenlabs' && $elevenlabssttenabled) {
+                $client = new \mod_flashcards\local\elevenlabs_stt_client();
+            } else if ($whisperenabled) {
+                $client = new \mod_flashcards\local\whisper_client();
+            } else if ($elevenlabssttenabled) {
+                $client = new \mod_flashcards\local\elevenlabs_stt_client();
+            } else {
+                throw new moodle_exception('error_stt_disabled', 'mod_flashcards');
+            }
+
             $text = $client->transcribe(
                 $tempfile,
                 $originalname,
@@ -185,10 +208,10 @@ switch ($action) {
             ];
         } catch (\Throwable $ex) {
             http_response_code(400);
-            debugging('Whisper transcription failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
+            debugging('STT transcription failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             $response = [
                 'ok' => false,
-                'error' => get_string('error_whisper_api', 'mod_flashcards', $ex->getMessage()),
+                'error' => get_string('error_stt_api', 'mod_flashcards', $ex->getMessage()),
                 'errorcode' => 'unknown',
             ];
         } finally {

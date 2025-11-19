@@ -193,6 +193,85 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    // ElevenLabs STT
+    $settings->add(new admin_setting_heading(
+        'mod_flashcards/elevenlabs_stt_heading',
+        get_string('settings_elevenlabs_stt_section', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_section_desc', 'mod_flashcards')
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_flashcards/elevenlabs_stt_enabled',
+        get_string('settings_elevenlabs_stt_enable', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_enable_desc', 'mod_flashcards'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configpasswordunmask(
+        'mod_flashcards/elevenlabs_stt_apikey',
+        get_string('settings_elevenlabs_stt_key', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_key_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_stt_model',
+        get_string('settings_elevenlabs_stt_model', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_model_desc', 'mod_flashcards'),
+        'scribe_v1',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_stt_language',
+        get_string('settings_elevenlabs_stt_language', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_language_desc', 'mod_flashcards'),
+        'nb',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_stt_clip_limit',
+        get_string('settings_elevenlabs_stt_clip_limit', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_clip_limit_desc', 'mod_flashcards'),
+        15,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_stt_monthly_limit',
+        get_string('settings_elevenlabs_stt_monthly_limit', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_monthly_limit_desc', 'mod_flashcards'),
+        36000,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_stt_timeout',
+        get_string('settings_elevenlabs_stt_timeout', 'mod_flashcards'),
+        get_string('settings_elevenlabs_stt_timeout_desc', 'mod_flashcards'),
+        45,
+        PARAM_INT
+    ));
+
+    // STT Provider Selection
+    $settings->add(new admin_setting_heading(
+        'mod_flashcards/stt_provider_heading',
+        get_string('settings_stt_provider_section', 'mod_flashcards'),
+        get_string('settings_stt_provider_section_desc', 'mod_flashcards')
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/stt_provider',
+        get_string('settings_stt_provider', 'mod_flashcards'),
+        get_string('settings_stt_provider_desc', 'mod_flashcards'),
+        'whisper',
+        [
+            'whisper' => get_string('settings_stt_provider_whisper', 'mod_flashcards'),
+            'elevenlabs' => get_string('settings_stt_provider_elevenlabs', 'mod_flashcards'),
+        ]
+    ));
+
     $settings->add(new admin_setting_heading(
         'mod_flashcards/googlevision_heading',
         get_string('settings_googlevision_section', 'mod_flashcards'),

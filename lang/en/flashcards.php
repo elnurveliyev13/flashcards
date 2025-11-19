@@ -359,6 +359,33 @@ $string['settings_whisper_monthly_limit'] = 'Monthly quota per user (seconds)';
 $string['settings_whisper_monthly_limit_desc'] = 'Protects your API budget. 10 hours ~ 36000 seconds.';
 $string['settings_whisper_timeout'] = 'API timeout (seconds)';
 $string['settings_whisper_timeout_desc'] = 'Abort stalled Whisper requests after this many seconds.';
+
+// ElevenLabs STT settings
+$string['settings_elevenlabs_stt_section'] = 'ElevenLabs speech-to-text';
+$string['settings_elevenlabs_stt_section_desc'] = 'Configure ElevenLabs STT as an alternative to Whisper for transcribing learner recordings.';
+$string['settings_elevenlabs_stt_enable'] = 'Enable ElevenLabs STT';
+$string['settings_elevenlabs_stt_enable_desc'] = 'Allow using ElevenLabs for speech-to-text transcription.';
+$string['settings_elevenlabs_stt_key'] = 'ElevenLabs API key for STT';
+$string['settings_elevenlabs_stt_key_desc'] = 'Leave empty to use the same key as TTS. Stored securely on the server.';
+$string['settings_elevenlabs_stt_model'] = 'ElevenLabs STT model';
+$string['settings_elevenlabs_stt_model_desc'] = 'Default scribe_v1. Use scribe_v1_experimental for newer features.';
+$string['settings_elevenlabs_stt_language'] = 'Recognition language';
+$string['settings_elevenlabs_stt_language_desc'] = 'Two-letter code for ElevenLabs (default nb for Norwegian Bokmål).';
+$string['settings_elevenlabs_stt_clip_limit'] = 'Clip length limit (seconds)';
+$string['settings_elevenlabs_stt_clip_limit_desc'] = 'Clips longer than this value are rejected before calling ElevenLabs.';
+$string['settings_elevenlabs_stt_monthly_limit'] = 'Monthly quota per user (seconds)';
+$string['settings_elevenlabs_stt_monthly_limit_desc'] = 'Protects your API budget. 10 hours ~ 36000 seconds.';
+$string['settings_elevenlabs_stt_timeout'] = 'API timeout (seconds)';
+$string['settings_elevenlabs_stt_timeout_desc'] = 'Abort stalled ElevenLabs STT requests after this many seconds.';
+
+// STT Provider selection
+$string['settings_stt_provider_section'] = 'Speech-to-text provider';
+$string['settings_stt_provider_section_desc'] = 'Choose which service to use for transcribing audio recordings.';
+$string['settings_stt_provider'] = 'Active STT provider';
+$string['settings_stt_provider_desc'] = 'Select the primary speech-to-text service. Falls back to the other if unavailable.';
+$string['settings_stt_provider_whisper'] = 'OpenAI Whisper';
+$string['settings_stt_provider_elevenlabs'] = 'ElevenLabs';
+
 $string['settings_googlevision_section'] = 'Google Vision OCR';
 $string['settings_googlevision_section_desc'] = 'Use Google Cloud Vision to turn snapshot text into Front field content.';
 $string['settings_googlevision_enable'] = 'Enable Google Vision OCR';
@@ -396,3 +423,14 @@ $string['error_whisper_quota'] = 'You reached your monthly speech limit ({$a}).'
 $string['error_whisper_upload'] = 'Could not process the uploaded audio file.';
 $string['error_whisper_api'] = 'Speech-to-text service failed: {$a}';
 $string['error_whisper_filesize'] = 'Audio file is too large (max {$a}).';
+
+// ElevenLabs STT errors
+$string['error_elevenlabs_stt_disabled'] = 'ElevenLabs speech-to-text is not available right now.';
+$string['error_elevenlabs_stt_clip'] = 'Private audio is longer than {$a} seconds.';
+$string['error_elevenlabs_stt_quota'] = 'You reached your monthly speech limit ({$a}).';
+$string['error_elevenlabs_stt_api'] = 'ElevenLabs speech-to-text failed: {$a}';
+
+// Generic STT errors
+$string['error_stt_disabled'] = 'Speech-to-text is not configured. Please enable Whisper or ElevenLabs STT.';
+$string['error_stt_upload'] = 'Could not process the uploaded audio file.';
+$string['error_stt_api'] = 'Speech-to-text service failed: {$a}';
