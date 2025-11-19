@@ -931,19 +931,50 @@ button[data-role="update"]:disabled::before {
   gap:0.35rem;
 }
 .micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:visible} /* 32px */
+.micbtn::before{
+  content:'';
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:transparent;
+  border:2px solid transparent;
+  display:none;
+  pointer-events:none;
+  z-index:4;
+}
+.micbtn.mic-permission-pending::before,
+.micbtn.mic-permission-denied::before{
+  display:block;
+}
+.micbtn.mic-permission-pending::before{
+  background:#fbbf24;
+  border-color:#713f12;
+  box-shadow:0 0 10px rgba(251,191,36,0.6);
+}
+.micbtn.mic-permission-denied::before{
+  background:#ef4444;
+  border-color:#7f1d1d;
+  box-shadow:0 0 10px rgba(239,68,68,0.6);
+}
 .micbtn[data-mic-permission-label]::after{
   content: attr(data-mic-permission-label);
   position:absolute;
-  bottom:-1.35rem;
+  top:calc(100% + 0.35rem);
   left:50%;
   transform:translateX(-50%);
   background:rgba(15,23,42,0.92);
   color:var(--text);
-  font-size:0.6875rem; /* 11px */
-  line-height:1.2;
-  padding:2px 8px;
+  font-size:0.7rem; /* 11px */
+  line-height:1.25;
+  padding:4px 10px;
   border-radius:999px;
-  white-space:nowrap;
+  white-space:normal;
+  word-break:break-word;
+  text-align:center;
+  max-width:min(240px, calc(100vw - 48px));
   pointer-events:none;
   box-shadow:0 4px 10px rgba(15,23,42,0.45);
   border:1px solid rgba(255,255,255,0.08);

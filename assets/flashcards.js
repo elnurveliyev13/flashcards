@@ -2211,7 +2211,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const payload = item.payload || {};
       const frontAudio = payload.audioFront || payload.audio || null;
       const orderFromServer = Array.isArray(payload.order) ? payload.order : [];
-      console.log('[DEBUG normalizeServerCard] cardId:', item.cardId, 'payload.order:', JSON.stringify(payload.order), 'orderFromServer:', JSON.stringify(orderFromServer));
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
@@ -2405,7 +2404,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function storageKey(base){return `${base}:${localStorage.getItem(PROFILE_KEY)||"Guest"}`;}
     const STORAGE_STATE="srs-v6:state", STORAGE_REG="srs-v6:registry";
     const MY_DECK_ID="my-deck";
-    const DEFAULT_ORDER=["audio","transcription","audio_text","text","translation"];
+    // NOTE: "audio" = front text audio (sentence), "audio_text" = focus/baseform audio (word)
+    // UI shows: Audio (text) for "audio", Audio (word) for "audio_text"
+    // Default order: word audio first, then transcription, then sentence audio
+    const DEFAULT_ORDER=["audio_text","transcription","audio","text","translation"];
     let state,registry,queue=[],current=-1,visibleSlots=1,currentItem=null;
     let activeTab='quickInput';
     let tabSwitcher=null;
@@ -2577,10 +2579,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!btn){
           return;
         }
+        if(!btn.dataset.micOriginalAria && btn.hasAttribute('aria-label')){
+          btn.dataset.micOriginalAria = btn.getAttribute('aria-label') || '';
+        }
+        if(!btn.dataset.micOriginalTitle && btn.hasAttribute('title')){
+          btn.dataset.micOriginalTitle = btn.getAttribute('title') || '';
+        }
         if(label){
           btn.dataset.micPermissionLabel = label;
+          const ariaBase = btn.dataset.micOriginalAria || '';
+          const combinedAria = ariaBase ? `${ariaBase}. ${label}` : label;
+          if(combinedAria){
+            btn.setAttribute('aria-label', combinedAria);
+          }
+          const titleBase = btn.dataset.micOriginalTitle || '';
+          const combinedTitle = titleBase ? `${titleBase}. ${label}` : label;
+          if(combinedTitle){
+            btn.title = combinedTitle;
+          }
         }else{
           delete btn.dataset.micPermissionLabel;
+          if(btn.dataset.micOriginalAria){
+            btn.setAttribute('aria-label', btn.dataset.micOriginalAria);
+          }
+          if(Object.prototype.hasOwnProperty.call(btn.dataset, 'micOriginalTitle')){
+            if(btn.dataset.micOriginalTitle){
+              btn.title = btn.dataset.micOriginalTitle;
+            }else{
+              btn.removeAttribute('title');
+            }
+          }
         }
         btn.dataset.micPermissionState = iosMicPermissionState;
         btn.classList.toggle('mic-permission-pending', iosMicPermissionState === 'unknown' || iosMicPermissionState === 'requesting');
@@ -3726,15 +3754,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
 
-      const origOrder = c.order ? JSON.stringify(c.order) : 'undefined';
       if(!Array.isArray(c.order)||!c.order.length){
         c.order=[];
-        if(c.audio||c.audioKey) c.order.push("audio");
-        if(c.transcription) c.order.push("transcription");
+        // Order: word audio first, then transcription, then sentence audio, then text, then translation
         if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
+        if(c.transcription) c.order.push("transcription");
+        if(c.audio||c.audioKey) c.order.push("audio");
         if(c.text) c.order.push("text");
         if(c.translation) c.order.push("translation");
-        console.log('[DEBUG normalizeLessonCard] card.id:', c.id, 'order was empty/invalid, generated:', JSON.stringify(c.order), 'origOrder:', origOrder);
       }
       c.order=uniq(c.order);
       return c;
@@ -3883,7 +3910,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       slotContainer.innerHTML="";
       hidePlayIcons();
       audioURL=null;
-      console.log('[DEBUG renderCard] card.id:', card.id, 'order:', JSON.stringify(card.order), 'audio:', !!card.audio, 'audioKey:', !!card.audioKey, 'focusAudio:', !!card.focusAudio, 'focusAudioKey:', !!card.focusAudioKey);
       const allSlots=[];
       for(const kind of card.order){
         const el=await buildSlot(kind,card);
@@ -5187,9 +5213,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let orderChosen=[];
     function updateOrderPreview(){
       const chipsMap = {
-        audio: t('order_audio_word') || 'audio',
+        audio: t('order_audio_text') || 'Audio (text)',
         transcription: t('transcription') || 'transcription',
-        audio_text: t('order_audio_text') || 'audio_text',
+        audio_text: t('order_audio_word') || 'Audio (word)',
         text: t('front') || 'text',
         translation: t('back') || 'translation',
         image: t('image') || 'image',
@@ -5364,7 +5390,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
       const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
-      console.log('[DEBUG saveCard] id:', id, 'orderChosen:', JSON.stringify(orderChosen), 'payload.order:', JSON.stringify(payload.order));
       const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
       if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
