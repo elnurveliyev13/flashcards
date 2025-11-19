@@ -1130,26 +1130,43 @@ input[type=text]::placeholder {
   align-items:stretch;
   flex-wrap:wrap;
   margin-top:var(--space-2);
+  padding:0.45rem;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(15,23,42,0.35);
 }
 .meta #btnRevealNext{
   flex:2;
+  min-height:56px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .meta #metaRecorder{
   flex:1;
   display:flex;
-  align-items:stretch;
+  align-items:center;
   position:relative;
 }
 .meta #metaRecorder .iconbtn{
   width:100%;
   height:100%;
+  min-height:56px;
   border-radius:16px;
   font-size:1.3rem;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:var(--surface-2);
-  border:1px solid var(--border);
+  background:transparent;
+  border:2px solid rgba(99,102,241,0.45);
+  color:var(--text);
+  box-shadow:0 0 0 1px rgba(99,102,241,0.25);
+}
+.meta #metaRecorder .iconbtn:hover,
+.meta #metaRecorder .iconbtn:focus-visible{
+  border-color:rgba(99,102,241,0.8);
+  box-shadow:0 0 0 2px rgba(99,102,241,0.2);
+  color:var(--primary);
 }
 .meta #metaRecorder .rec-timer{
   position:absolute;
