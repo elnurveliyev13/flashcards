@@ -5434,7 +5434,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="\u00D7";
+        del.textContent="🗑";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;
