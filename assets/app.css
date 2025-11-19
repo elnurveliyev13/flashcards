@@ -1091,42 +1091,26 @@ input[type=text]::placeholder {
 #mod_flashcards_container .playRow{
   display:flex;
 }
-.floating-recorder{
-  position:fixed;
-  bottom:calc(env(safe-area-inset-bottom, 0px) + 55px);
-  right:16px;
-  transform:none;
-  z-index:1100;
+.bottom-actions .bottom-recorder{
   display:flex;
   align-items:center;
-  justify-content:center;
-  pointer-events:none;
-}
-.floating-recorder .rec-control{
+  gap:0.5rem;
+  margin-left:auto;
   position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  pointer-events:auto;
 }
-.floating-recorder .iconbtn#btnRecordStudy{
-  width:72px;
-  height:72px;
+.bottom-actions .bottom-recorder .iconbtn#btnRecordStudy{
+  width:64px;
+  height:64px;
   border-radius:999px;
-  font-size:1.6rem;
+  font-size:1.4rem;
 }
-.floating-recorder .rec-timer{
+.bottom-actions .bottom-recorder .rec-timer{
   position:absolute;
-  top:-1.6rem;
-  left:50%;
-  transform:translateX(-50%);
+  transform:none;
+  left:auto;
+  right:auto;
+  top:-1.5rem;
   box-shadow:0 4px 10px rgba(15,23,42,0.35);
-}
-#mod_flashcards_container:not([data-bottom-visible="1"]) ~ #floatingRecorder{
-  display:none;
-}
-#mod_flashcards_container:not([data-bottom-visible="1"]) ~ #floatingRecorder{
-  display:none;
 }
 .meta{display:flex;gap:var(--space-1);color:var(--muted);font-size:0.8125rem;align-items:center;flex-wrap:wrap;margin-top:var(--space-2)} /* 13px */
 .row2{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-2)}

@@ -3538,28 +3538,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnEdit){ btnEdit.classList.remove('hidden'); btnEdit.disabled = !hasCard; }
       if(btnDel){ btnDel.classList.remove('hidden'); btnDel.disabled = !hasCard; }
     }
-    function syncFloatingRecorderPosition(){
-      const recorderDock = document.getElementById('floatingRecorder');
-      const bar = $("#bottomActions");
-      if(!recorderDock || recorderDock.classList.contains('hidden') || !bar || bar.classList.contains('hidden')){
-        return;
-      }
-      const hardBtn = $("#btnHardBottom");
-      const targetRect = hardBtn ? hardBtn.getBoundingClientRect() : bar.getBoundingClientRect();
-      const barRect = bar.getBoundingClientRect();
-      const gap = 55;
-      const bottomOffset = (barRect.height || 0) + gap;
-      recorderDock.style.bottom = `${Math.round(bottomOffset)}px`;
-      recorderDock.style.left = `${Math.round(targetRect.left + (targetRect.width / 2))}px`;
-      recorderDock.style.right = 'auto';
-      recorderDock.style.transform = 'translate(-50%, 0)';
-    }
     function hidePlayIcons(){
       if(btnPlayBtn) btnPlayBtn.classList.add('hidden');
       if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden');
       const btnRecordStudy = $("#btnRecordStudy");
       if(btnRecordStudy) btnRecordStudy.classList.add('hidden');
-      const recorderDock = document.getElementById('floatingRecorder');
+      const recorderDock = document.getElementById('bottomRecorder');
       if(recorderDock) recorderDock.classList.add('hidden');
       // Clear pronunciation practice audio
       if(window.setStudyRecorderAudio){
@@ -3595,10 +3579,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnRecordStudy){
         btnRecordStudy.classList.remove("hidden");
       }
-      const recorderDock = document.getElementById('floatingRecorder');
+      const recorderDock = document.getElementById('bottomRecorder');
       if(recorderDock){
         recorderDock.classList.remove('hidden');
-        syncFloatingRecorderPosition();
+        recorderDock.classList.remove('hidden');
       }
 
       if(btnPlayBtn){
@@ -3978,7 +3962,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       bar.style.left = rect.left + 'px';
       bar.style.right = 'auto';
       bar.style.transform = 'none';
-      syncFloatingRecorderPosition();
     }
     // Initial and reactive alignment
     try{

@@ -606,18 +606,15 @@
     <div class="mono" id="debug"></div>
   </div>
   
-  <div id="floatingRecorder" class="floating-recorder hidden">
-    <div class="rec-control rec-control-inline">
-      <span id="recTimerStudy" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
-      <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-    </div>
-  </div>
-
   <!-- Fixed bottom action bar (feature-flagged via data-ux-bottom="1") -->
   <div id="bottomActions" class="bottom-actions hidden" role="toolbar" aria-label="{{#str}} rating_actions, mod_flashcards {{/str}}">
     <button id="btnEasyBottom" class="ok" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</button>
     <button id="btnNormalBottom" class="mid" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</button>
     <button id="btnHardBottom" class="hard" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</button>
+    <div id="bottomRecorder" class="bottom-recorder rec-control rec-control-inline hidden">
+      <span id="recTimerStudy" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
+      <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+    </div>
   </div>
   <div id="ocrCropModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ocrCropTitle">
     <div class="box ocr-crop-box">
