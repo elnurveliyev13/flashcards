@@ -8,6 +8,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     if(!root) return;
     const $ = s => root.querySelector(s);
     const $$ = s => Array.from(root.querySelectorAll(s));
+    const getModString = key => {
+      try{
+        return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[key]) || '';
+      }catch(_e){
+        return '';
+      }
+    };
     const uniq = a => [...new Set(a.filter(Boolean))];
     const formatActiveVocab = value => {
       const numeric = Math.round(Number(value) || 0);
@@ -2533,6 +2540,90 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
     let useIOSRecorderGlobal = false;
+    const IOS_MIC_PERMISSION_KEY = 'flashcards-ios-mic-permission';
+    function readIOSPermissionState(){
+      if(!IS_IOS){
+        return 'granted';
+      }
+      try{
+        const stored = localStorage.getItem(IOS_MIC_PERMISSION_KEY);
+        if(stored === 'granted' || stored === 'denied'){
+          return stored;
+        }
+      }catch(_e){}
+      return 'unknown';
+    }
+    let iosMicPermissionState = readIOSPermissionState();
+    function getIOSMicPermissionLabel(state){
+      switch(state){
+        case 'unknown':
+          return getModString('mic_permission_pending') || 'Allow microphone access before recording';
+        case 'requesting':
+          return getModString('mic_permission_requesting') || 'Waiting for microphone permission...';
+        case 'denied':
+          return getModString('mic_permission_denied') || 'Microphone access blocked. Check Safari settings.';
+        default:
+          return '';
+      }
+    }
+    function updateIOSMicPermissionIndicators(){
+      if(!IS_IOS){
+        return;
+      }
+      const label = getIOSMicPermissionLabel(iosMicPermissionState);
+      $$('.micbtn').forEach(btn=>{
+        if(!btn){
+          return;
+        }
+        if(label){
+          btn.dataset.micPermissionLabel = label;
+        }else{
+          delete btn.dataset.micPermissionLabel;
+        }
+        btn.dataset.micPermissionState = iosMicPermissionState;
+        btn.classList.toggle('mic-permission-pending', iosMicPermissionState === 'unknown' || iosMicPermissionState === 'requesting');
+        btn.classList.toggle('mic-permission-denied', iosMicPermissionState === 'denied');
+      });
+    }
+    function setIOSMicPermissionState(state, opts){
+      if(!IS_IOS){
+        return;
+      }
+      const persist = !opts || opts.persist !== false;
+      iosMicPermissionState = state;
+      if(persist){
+        try{
+          if(state === 'granted' || state === 'denied'){
+            localStorage.setItem(IOS_MIC_PERMISSION_KEY, state);
+          }else{
+            localStorage.removeItem(IOS_MIC_PERMISSION_KEY);
+          }
+        }catch(_e){}
+      }
+      updateIOSMicPermissionIndicators();
+    }
+    function markIOSMicPermissionRequesting(){
+      if(!IS_IOS || iosMicPermissionState === 'granted'){
+        return;
+      }
+      setIOSMicPermissionState('requesting', {persist:false});
+    }
+    function handleIOSMicPermissionError(err){
+      if(!IS_IOS){
+        return;
+      }
+      const code = (err && (err.name || err.code)) ? (err.name || err.code) : '';
+      if(typeof code === 'string' && /notallowed|permission|security/i.test(code)){
+        setIOSMicPermissionState('denied');
+        return;
+      }
+      if(iosMicPermissionState === 'granted' || iosMicPermissionState === 'denied'){
+        updateIOSMicPermissionIndicators();
+        return;
+      }
+      setIOSMicPermissionState('unknown');
+    }
+    updateIOSMicPermissionIndicators();
 
     // Keep reference to active mic stream and current preview URL to ensure proper cleanup (iOS)
     let micStream=null, previewAudioURL=null;
@@ -4365,7 +4456,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           iosStartPromise = (async()=>{
             try{
               recorderLog('iOS recorder start()');
+              markIOSMicPermissionRequesting();
               await iosRecorderInstance.start();
+              setIOSMicPermissionState('granted');
               isRecording = true;
               recBtn.classList.add("recording");
               timerStart();
@@ -4374,6 +4467,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }catch(err){
               isRecording = false;
               recorderLog('iOS start failed: '+(err?.message||err));
+              handleIOSMicPermissionError(err);
               try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
               fallbackCapture();
               throw err;
@@ -4834,13 +4928,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{
             await waitForIOSRelease();
             console.log('[PronunciationPractice] Starting iOS recorder');
+            markIOSMicPermissionRequesting();
             await iosRecorderInstance.start();
+            setIOSMicPermissionState('granted');
             isRecording = true;
             btnRecordStudy.classList.add("recording");
             startTimer();
             autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
           }catch(err){
             console.log('[PronunciationPractice] iOS start failed: '+(err?.message||err));
+            handleIOSMicPermissionError(err);
             isRecording = false;
             try{ await iosRecorderInstance.releaseMic(); }catch(_e){}
           }

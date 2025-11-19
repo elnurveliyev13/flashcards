@@ -930,7 +930,38 @@ button[data-role="update"]:disabled::before {
   align-items:center;
   gap:0.35rem;
 }
-.micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center} /* 32px */
+.micbtn{font-size:2rem;display:inline-flex;align-items:center;justify-content:center;position:relative;overflow:visible} /* 32px */
+.micbtn[data-mic-permission-label]::after{
+  content: attr(data-mic-permission-label);
+  position:absolute;
+  bottom:-1.35rem;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(15,23,42,0.92);
+  color:var(--text);
+  font-size:0.6875rem; /* 11px */
+  line-height:1.2;
+  padding:2px 8px;
+  border-radius:999px;
+  white-space:nowrap;
+  pointer-events:none;
+  box-shadow:0 4px 10px rgba(15,23,42,0.45);
+  border:1px solid rgba(255,255,255,0.08);
+  z-index:5;
+}
+.micbtn.mic-permission-denied[data-mic-permission-label]::after{
+  background:rgba(239,68,68,0.92);
+  border-color:rgba(254,226,226,0.6);
+  color:#fff;
+}
+.micbtn.mic-permission-pending:not(.recording){
+  border-color:rgba(251,191,36,0.85);
+  box-shadow:0 0 0 2px rgba(251,191,36,0.35);
+}
+.micbtn.mic-permission-denied{
+  border-color:rgba(248,113,113,0.85);
+  box-shadow:0 0 0 2px rgba(248,113,113,0.25);
+}
 .rec-hint{ color:var(--muted); font-size:0.8125rem } /* 13px */
 .stt-status-wrap{ display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center }
 .stt-status-wrap.stt-status-block{
@@ -1152,9 +1183,11 @@ input[type=text]::placeholder {
 .audio-control-button{
   flex:1;
   border-radius:14px;
-  padding:0.15rem 0;
+  padding:0.35rem 0.25rem;
+  min-height:64px;
   display:flex;
   flex-direction:column;
+  gap:0.2rem;
   align-items:center;
   justify-content:center;
   border:1px solid var(--border);
@@ -1165,13 +1198,17 @@ input[type=text]::placeholder {
 }
 .audio-control-button .icon{
   font-size:1.4rem;
-  line-height:1.2;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
 }
 .audio-control-button .slow-label{
-  font-size:0.75rem;
+  font-size:0.78rem;
   font-weight:600;
   color:var(--muted);
-  margin-bottom:0.1rem;
+  line-height:1;
 }
 .audio-control-button:hover{
   border-color:var(--primary);
