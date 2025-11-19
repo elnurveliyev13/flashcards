@@ -3543,7 +3543,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden');
       const btnRecordStudy = $("#btnRecordStudy");
       if(btnRecordStudy) btnRecordStudy.classList.add('hidden');
-      const recorderDock = document.getElementById('bottomRecorder');
+      const recorderDock = document.getElementById('metaRecorder');
       if(recorderDock) recorderDock.classList.add('hidden');
       // Clear pronunciation practice audio
       if(window.setStudyRecorderAudio){
@@ -3579,9 +3579,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnRecordStudy){
         btnRecordStudy.classList.remove("hidden");
       }
-      const recorderDock = document.getElementById('bottomRecorder');
+      const recorderDock = document.getElementById('metaRecorder');
       if(recorderDock){
-        recorderDock.classList.remove('hidden');
         recorderDock.classList.remove('hidden');
       }
 
