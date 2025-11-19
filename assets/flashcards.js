@@ -3543,6 +3543,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden');
       const btnRecordStudy = $("#btnRecordStudy");
       if(btnRecordStudy) btnRecordStudy.classList.add('hidden');
+      const recorderDock = document.getElementById('floatingRecorder');
+      if(recorderDock) recorderDock.classList.add('hidden');
       // Clear pronunciation practice audio
       if(window.setStudyRecorderAudio){
         window.setStudyRecorderAudio(null);
@@ -3575,6 +3577,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Show pronunciation practice button
       const btnRecordStudy = $("#btnRecordStudy");
       if(btnRecordStudy) btnRecordStudy.classList.remove("hidden");
+      const recorderDock = document.getElementById('floatingRecorder');
+      if(recorderDock) recorderDock.classList.remove('hidden');
 
       if(btnPlayBtn){
         btnPlayBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,1); };
@@ -3639,88 +3643,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return null;
     }
-    window.flashcardsPendingRecorderButtons = window.flashcardsPendingRecorderButtons || [];
-    function registerTrackRecorderButton(btn, getUrl){
-      if(!btn) return;
-      const binder = window.flashcardsAttachStudyRecorderButton;
-      if(typeof binder === 'function'){
-        btn.disabled = false;
-        binder(btn, getUrl);
-        return;
-      }
-      btn.disabled = true;
-      const pending = window.flashcardsPendingRecorderButtons || [];
-      pending.push({btn, getUrl});
-      window.flashcardsPendingRecorderButtons = pending;
-    }
-    function createAudioTrackElement(track){
-      const trackEl = document.createElement("div");
-      trackEl.className = "audio-track";
-      if(track.autoplay){
-        trackEl.dataset.autoplayUrl = track.url;
-      }
-      if(track.label){
-        const header = document.createElement("div");
-        header.className = "audio-track-header";
-        const tag = document.createElement("span");
-        tag.className = "tag audio-track-label";
-        tag.textContent = track.label;
-        header.appendChild(tag);
-        trackEl.appendChild(header);
-      }
-      const controls = document.createElement("div");
-      controls.className = "audio-track-controls";
-      const labelText = track.label || (track.type === 'focus' ? aiStrings.focusAudio : aiStrings.frontAudio) || t('order_audio_word');
-      const playTitle = `${t('title_play')} ${labelText}`.trim();
-      const slowTitle = `${t('title_slow')} ${labelText}`.trim();
-      const recordTitle = `${t('title_record_practice')} ${labelText}`.trim();
-      const playBtn = document.createElement("button");
-      playBtn.type = "button";
-      playBtn.className = "iconbtn audio-track-play";
-      playBtn.title = playTitle;
-      playBtn.setAttribute('aria-label', playTitle);
-      playBtn.innerHTML = "&#128266;";
-      playBtn.addEventListener("click", () => {
-        attachAudio(track.url);
-        playAudioFromUrl(track.url, 1);
-      });
-      const slowBtn = document.createElement("button");
-      slowBtn.type = "button";
-      slowBtn.className = "iconbtn audio-track-slow";
-      slowBtn.title = slowTitle;
-      slowBtn.setAttribute('aria-label', slowTitle);
-      slowBtn.innerHTML = "&#128034;";
-      slowBtn.addEventListener("click", () => {
-        attachAudio(track.url);
-        playAudioFromUrl(track.url, 0.67);
-      });
-      const recordBtn = document.createElement("button");
-      recordBtn.type = "button";
-      recordBtn.className = "iconbtn micbtn audio-track-record";
-      recordBtn.title = recordTitle;
-      recordBtn.setAttribute('aria-label', recordTitle);
-      recordBtn.innerHTML = "&#127897;&#65039;";
-      registerTrackRecorderButton(recordBtn, () => track.url);
-      controls.append(playBtn, slowBtn, recordBtn);
-      trackEl.appendChild(controls);
-      const timerEl = $("#recTimerStudy");
-      if(timerEl && !timerEl.dataset.flashcardsTimerAttached){
-        const timerWrap = document.createElement("div");
-        timerWrap.className = "audio-track-timer";
-        timerWrap.appendChild(timerEl);
-        trackEl.appendChild(timerWrap);
-        timerEl.dataset.flashcardsTimerAttached = "1";
-      }
-      return trackEl;
-    }
-    function renderAudioControls(el, tracks){
+    function renderAudioButtons(el, tracks, options = {}){
       if(!Array.isArray(tracks) || !tracks.length){
         return el;
       }
-      tracks.forEach(track=>{
-        const trackEl = createAudioTrackElement(track);
-        el.appendChild(trackEl);
+      const row = document.createElement("div");
+      row.className = "audio-chip-row";
+      const { attachFront=false } = options;
+      tracks.forEach((track, idx)=>{
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "pill" + (track.type === 'focus' ? ' pill-focus' : '');
+        btn.textContent = track.type === 'focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
+        btn.addEventListener("click", ()=> playAudioFromUrl(track.url, 1));
+        row.appendChild(btn);
+        if(track.type === 'front' && attachFront){
+          attachAudio(track.url);
+        }
+        if(!el.dataset.autoplay && (track.type === 'front' || idx === 0)){
+          el.dataset.autoplay = track.url;
+        }
       });
+      el.appendChild(row);
       return el;
     }
     async function buildSlot(kind, card){
@@ -3764,18 +3708,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         const tracks=[];
         if(frontUrl){
-          tracks.push({url:frontUrl,type:'front',label:aiStrings.frontAudio});
+          tracks.push({url:frontUrl,type:'front'});
         }
         if(includeFocus && focusUrl){
-          tracks.push({url:focusUrl,type:'focus',label:aiStrings.focusAudio});
+          tracks.push({url:focusUrl,type:'focus'});
         }
         if(!tracks.length){
           return null;
         }
-        if(!tracks[0].autoplay){
-          tracks[0].autoplay = true;
-        }
-        renderAudioControls(el, tracks);
+        renderAudioButtons(el, tracks, {attachFront:true});
         return el;
       }
       if(kind==="audio_text"){
@@ -3783,23 +3724,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!focusUrl){
           return null;
         }
-        const track = {url:focusUrl,type:'focus',label:aiStrings.focusAudio,autoplay:true};
-        renderAudioControls(el, [track]);
+        renderAudioButtons(el, [{url:focusUrl,type:'focus'}]);
         return el;
       }
       return null;
     }
     function initialVisibleSlots(card){
       return 1;
-    }
-    function autoPlaySlotAudio(slot){
-      if(!slot) return;
-      const trackEl = slot.querySelector('[data-autoplay-url]');
-      if(!trackEl) return;
-      const url = trackEl.dataset.autoplayUrl;
-      if(!url) return;
-      attachAudio(url);
-      playAudioFromUrl(url, 1);
     }
     async function renderCard(card, count){
       slotContainer.innerHTML="";
@@ -3818,9 +3749,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         items.push(d);
       }
       items.forEach(x=>slotContainer.appendChild(x));
-      const lastIndex = Math.min(items.length, count) - 1;
-      if(lastIndex >= 0){
-        autoPlaySlotAudio(items[lastIndex]);
+      if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
+        player.src=items[0].dataset.autoplay;
+        player.playbackRate=1;
+        player.currentTime=0;
+        player.play().catch(()=>{});
       }
       card._availableSlots=allSlots.length;
     }
@@ -4582,15 +4515,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let studentAudioUrl = null;
       let studyAudioContext = null;
       let studyBufferSource = null;
-      let studyRecorderTriggerButton = null;
-
-      function toggleRecorderVisuals(active){
-        const buttons = [btnRecordStudy, studyRecorderTriggerButton].filter(Boolean);
-        buttons.forEach(btn => btn.classList.toggle('recording', active));
-        if(!active){
-          studyRecorderTriggerButton = null;
-        }
-      }
 
       // Reuse iOS recorder if available
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
@@ -4874,7 +4798,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             console.log('[PronunciationPractice] Starting iOS recorder');
             await iosRecorderInstance.start();
             isRecording = true;
-            toggleRecorderVisuals(true);
+            btnRecordStudy.classList.add("recording");
             startTimer();
             autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
           }catch(err){
@@ -4956,7 +4880,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{ studyRecorder.start(1000); }catch(_e){ studyRecorder.start(); }
 
           isRecording = true;
-          toggleRecorderVisuals(true);
+          btnRecordStudy.classList.add("recording");
           startTimer();
           autoStopTimer = setTimeout(()=>{
             if(studyRecorder && isRecording){
@@ -4980,7 +4904,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(useIOSRecorder){
           if(!isRecording){
             await releaseIOSMic();
-            toggleRecorderVisuals(false);
+            btnRecordStudy.classList.remove("recording");
             stopTimer();
             return;
           }
@@ -4995,7 +4919,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
           await releaseIOSMic();
           isRecording = false;
-          toggleRecorderVisuals(false);
+          btnRecordStudy.classList.remove("recording");
           stopTimer();
 
           if(exportedBlob){
@@ -5018,7 +4942,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.log('[PronunciationPractice] Stop error: '+(_e?.message||_e));
         }
         isRecording = false;
-        toggleRecorderVisuals(false);
+        btnRecordStudy.classList.remove("recording");
         stopTimer();
       }
 
@@ -5075,37 +4999,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         window.addEventListener("touchcancel", onceUp);
       }
 
-      function attachRecorderButton(btn, getUrl){
-        if(!btn) return;
-        btn.disabled = false;
-        const handler = e => {
-          studyRecorderTriggerButton = btn;
-          if(typeof getUrl === 'function'){
-            const url = getUrl();
-            if(url){
-              window.setStudyRecorderAudio(url);
-            }
-          }
-          onDown(e);
-        };
-        btn.addEventListener("pointerdown", handler);
-        btn.addEventListener("mousedown", handler);
-        btn.addEventListener("touchstart", handler, {passive:false});
+      if(btnRecordStudy){
+        btnRecordStudy.disabled = false;
+        btnRecordStudy.addEventListener("pointerdown", onDown);
+        btnRecordStudy.addEventListener("mousedown", onDown);
+        btnRecordStudy.addEventListener("touchstart", onDown, {passive:false});
         try{
-          btn.addEventListener("click", function(e){
+          btnRecordStudy.addEventListener("click", function(e){
             try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){}
           }, true);
         }catch(_e){}
-      }
-      window.flashcardsAttachStudyRecorderButton = attachRecorderButton;
-      attachRecorderButton(btnRecordStudy, () => audioURL);
-      const pendingRecorder = window.flashcardsPendingRecorderButtons || [];
-      if(pendingRecorder.length){
-        window.flashcardsPendingRecorderButtons = [];
-        pendingRecorder.forEach(entry=>{
-          entry.btn.disabled = false;
-          attachRecorderButton(entry.btn, entry.getUrl);
-        });
       }
 
       // Public function to set current audio URL

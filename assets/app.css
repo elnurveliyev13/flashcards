@@ -1088,80 +1088,49 @@ input[type=text]::placeholder {
   border-radius:999px;
   font-size:1.35rem;
 }
-#mod_flashcards_container .playRow .iconbtn#btnRecordStudy{
-  width:72px;
-  height:72px;
-  border-radius:999px;
-  font-size:1.35rem;
-}
 #mod_flashcards_container .playRow{
-  display:none;
-}
-.audio-track{
   display:flex;
-  flex-direction:column;
-  gap:0.35rem;
-  margin-bottom:var(--space-2);
 }
-.audio-track-header{
+.floating-recorder{
+  position:fixed;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 110px);
+  left:50%;
+  transform:translateX(-50%);
+  z-index:1100;
+  background:rgba(15,23,42,0.9);
+  border:1px solid rgba(148,163,184,0.4);
+  border-radius:999px;
+  padding:12px 18px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
   display:flex;
-  justify-content:space-between;
   align-items:center;
+  justify-content:center;
+  min-width:96px;
+  gap:0.75rem;
+  pointer-events:none;
 }
-.audio-track-label{
-  font-size:var(--font-size-xs);
-  font-weight:600;
-  color:var(--text-muted);
-  letter-spacing:0.04em;
-  display:inline-flex;
-}
-.audio-track-controls{
+.floating-recorder .rec-control{
+  position:relative;
   display:flex;
-  gap:0.35rem;
   align-items:center;
+  justify-content:center;
+  pointer-events:auto;
 }
-.audio-track-controls .iconbtn{
+.floating-recorder .iconbtn#btnRecordStudy{
   width:72px;
   height:72px;
   border-radius:999px;
-  padding:0;
-  font-size:1.4rem;
-  flex:1 1 0;
-  min-width:56px;
-  max-width:72px;
+  font-size:1.6rem;
 }
-.audio-track-controls .iconbtn.audio-track-play{
-  background:var(--surface-2);
-  border:1px solid var(--border);
-}
-.audio-track-record{
-  box-shadow:none;
-}
-.audio-track .rec-timer{
-  position:static;
-  transform:none;
-  margin:0;
+.floating-recorder .rec-timer{
+  position:absolute;
+  top:-1.6rem;
+  left:50%;
+  transform:translateX(-50%);
   box-shadow:0 4px 10px rgba(15,23,42,0.35);
-  background:rgba(15,23,42,0.9);
-  top:auto;
-  left:auto;
 }
-.audio-track-timer{
-  display:flex;
-  justify-content:flex-end;
-}
-@media (max-width: 640px){
-  .audio-track-controls .iconbtn{
-    flex-basis: calc((100% - (0.35rem * 2)) / 3);
-    max-width:none;
-  }
-}
-.audio-track-controls .iconbtn.recording,
-.audio-track-record.recording{
-  background:#7f1d1d;
-  border-color:#ef4444;
-  color:#fee2e2;
-  box-shadow:0 0 0 3px rgba(239,68,68,.25) inset, 0 0 8px rgba(239,68,68,.6);
+#mod_flashcards_container:not([data-bottom-visible="1"]) ~ #floatingRecorder{
+  display:none;
 }
 .meta{display:flex;gap:var(--space-1);color:var(--muted);font-size:0.8125rem;align-items:center;flex-wrap:wrap;margin-top:var(--space-2)} /* 13px */
 .row2{display:flex;gap:var(--space-2);align-items:center;margin-top:var(--space-2)}
