@@ -3641,25 +3641,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function renderAudioButtons(el, tracks, options={}){
       const { attachFront=false, allowAutoplay=false } = options;
-      const row=document.createElement("div");
-      row.className="audio-chip-row";
+      let autoplayAssigned = false;
       tracks.forEach(track=>{
-        const btn=document.createElement("button");
-        btn.type="button";
-        btn.className="pill"+(track.type==='focus'?' pill-focus':'');
-        btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
-        btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
-        row.appendChild(btn);
         if(attachFront && track.type==='front'){
           attachAudio(track.url);
         }
         if(allowAutoplay){
           if(track.type==='front'){
             el.dataset.autoplay = track.url;
-          }else if(!el.dataset.autoplay){
+            autoplayAssigned = true;
+          }else if(!autoplayAssigned){
             el.dataset.autoplay = track.url;
+            autoplayAssigned = true;
           }
         }
+      });
+      const focusTracks = tracks.filter(track => track.type !== 'front');
+      if(!focusTracks.length){
+        return el;
+      }
+      const row=document.createElement("div");
+      row.className="audio-chip-row";
+      focusTracks.forEach(track=>{
+        const btn=document.createElement("button");
+        btn.type="button";
+        btn.className="pill"+(track.type==='focus'?' pill-focus':'');
+        btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
+        btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
+        row.appendChild(btn);
       });
       el.appendChild(row);
       return el;
@@ -3727,12 +3736,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return null;
     }
     function initialVisibleSlots(card){
-      if(!card || !Array.isArray(card.order) || !card.order.length) return 1;
-      const audioIndex = card.order.indexOf('audio');
-      const textIndex = card.order.indexOf('text');
-      if(audioIndex !== -1 && textIndex !== -1){
-        return Math.min(card.order.length, Math.max(audioIndex, textIndex) + 1);
-      }
       return 1;
     }
     async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
