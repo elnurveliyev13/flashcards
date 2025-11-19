@@ -3285,3 +3285,118 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 #ttsVoiceStatus[data-state="success"] {
   color:var(--success);
 }
+
+/* ========== INLINE FIELD PROMPT ========== */
+.inline-field-prompt {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.inline-prompt-header {
+  margin-bottom: 12px;
+}
+
+.inline-prompt-header .tag {
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.inline-prompt-input {
+  margin-bottom: 12px;
+}
+
+.inline-prompt-field {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.inline-prompt-field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.inline-prompt-field::placeholder {
+  color: var(--fg-muted);
+  opacity: 0.6;
+}
+
+textarea.inline-prompt-field {
+  min-height: 80px;
+  resize: vertical;
+}
+
+select.inline-prompt-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.inline-prompt-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-prompt-buttons button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inline-prompt-buttons .ok {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+
+.inline-prompt-buttons .ok:hover {
+  background: var(--accent-hover, #2563eb);
+  transform: translateY(-1px);
+}
+
+.inline-prompt-buttons .mid {
+  background: transparent;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+}
+
+.inline-prompt-buttons .mid:hover {
+  background: var(--bg-hover);
+  color: var(--fg);
+}
+
+/* Small label for noun forms grid */
+.inline-field-prompt .small {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+}

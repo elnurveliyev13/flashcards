@@ -3956,7 +3956,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function initialVisibleSlots(card){
       return 1;
     }
-    async function renderCard(card, count){
+    async function renderCard(card, count, prevCount=0){
       slotContainer.innerHTML="";
       hidePlayIcons();
       audioURL=null;
@@ -3973,13 +3973,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         items.push(d);
       }
       items.forEach(x=>slotContainer.appendChild(x));
+      // Autoplay audio: first slot when opening card, or newly revealed slot when clicking Show More
+      let autoplayUrl = null;
       if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
-        player.src=items[0].dataset.autoplay;
+        // First opening - play first slot's audio
+        autoplayUrl = items[0].dataset.autoplay;
+      } else if(prevCount > 0 && count > prevCount){
+        // Show More clicked - play newly revealed slot's audio if it has one
+        const newSlot = items[count - 1];
+        if(newSlot && newSlot.dataset && newSlot.dataset.autoplay){
+          autoplayUrl = newSlot.dataset.autoplay;
+        }
+      }
+      if(autoplayUrl){
+        player.src=autoplayUrl;
         player.playbackRate=1;
         player.currentTime=0;
         player.play().catch(()=>{});
       }
       card._availableSlots=allSlots.length;
+
+      // Show inline field prompt when all slots are revealed
+      const allRevealed = count >= allSlots.length;
+      if(allRevealed && currentItem){
+        showInlineFieldPrompt();
+      } else {
+        hideInlineFieldPrompt();
+      }
     }
 
     function buildQueue(){
@@ -4060,7 +4080,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return true;
     }
     function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
-    async function showCurrent(forceRender=false){
+    async function showCurrent(forceRender=false, prevSlots=0){
       if(!currentItem){
         pendingStudyRender=false;
         updateRevealButton();
@@ -4074,10 +4094,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       pendingStudyRender=false;
       setStage(currentItem.rec.step||0);
-      await renderCard(currentItem.card, visibleSlots);
+      await renderCard(currentItem.card, visibleSlots, prevSlots);
       setIconVisibility(true);
       updateRevealButton();
-      try{ maybePromptForStage(); }catch(_e){}
+      // Note: maybePromptForStage() replaced by inline prompt in renderCard
     }
 
     async function syncProgressToServer(deckId, cardId, rec){
@@ -4160,7 +4180,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setDue(queue.length);
     }
 
-    $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(); });
+    $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; const prevSlots=visibleSlots; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(false, prevSlots); });
 
     // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
     const _btnEasyBottom = $("#btnEasyBottom");
@@ -4667,7 +4687,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(startPromise && typeof startPromise.then === 'function'){
             startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
           }
-        }, 300);
+        }, 150);
         function onceUp(ev){
           if(activePointerToken !== null){
             if(typeof activePointerToken === 'number'){
@@ -5193,7 +5213,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(startPromise && typeof startPromise.then === 'function'){
             startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
           }
-        }, 200);
+        }, 150);
 
         function onceUp(ev){
           if(activePointerToken !== null){
@@ -5872,6 +5892,205 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // Stage-based prompts: ask to fill missing fields per step
     const shownPrompts = new Set();
     function promptKey(deckId, cardId, step){ return `${deckId}::${cardId}::${step}`; }
+
+    // Inline field prompt (embedded in card instead of popup)
+    function hideInlineFieldPrompt(){
+      const existing = slotContainer.querySelector('.inline-field-prompt');
+      if(existing) existing.remove();
+    }
+
+    function showInlineFieldPrompt(){
+      if(!currentItem) return;
+      if(activeTab !== 'study') return;
+      if(currentItem.card && currentItem.card.scope !== 'private') return;
+
+      const step = currentItem.rec?.step || 0;
+      const pkey = promptKey(currentItem.deckId, currentItem.card.id, step);
+      if(shownPrompts.has(pkey)) return;
+
+      const field = firstMissingForStep(currentItem.card);
+      if(!field) return;
+
+      shownPrompts.add(pkey);
+
+      // Remove existing inline prompt if any
+      hideInlineFieldPrompt();
+
+      // Create inline prompt element
+      const wrap = document.createElement('div');
+      wrap.className = 'slot inline-field-prompt';
+
+      const labelMap = {
+        transcription: t('transcription'),
+        pos: t('pos'),
+        gender: t('gender'),
+        nounForms: t('noun_forms'),
+        examples: t('examples'),
+        collocations: t('collocations'),
+        antonyms: t('antonyms'),
+        cognates: t('cognates') || 'Cognates',
+        sayings: t('sayings') || 'Common sayings'
+      };
+
+      // Header
+      const header = document.createElement('div');
+      header.className = 'inline-prompt-header';
+      header.innerHTML = `<span class="tag">${t('fill_field').replace('{$a}', labelMap[field] || field)}</span>`;
+      wrap.appendChild(header);
+
+      // Input area
+      const inputWrap = document.createElement('div');
+      inputWrap.className = 'inline-prompt-input';
+      let editor = null;
+
+      function inputEl(type='text'){
+        const i = document.createElement('input');
+        i.type = type;
+        i.className = 'inline-prompt-field';
+        return i;
+      }
+
+      function textareaEl(){
+        const t = document.createElement('textarea');
+        t.className = 'autogrow inline-prompt-field';
+        t.style.lineHeight = '1.5';
+        return t;
+      }
+
+      function selectEl(){
+        const s = document.createElement('select');
+        s.className = 'inline-prompt-field';
+        return s;
+      }
+
+      if(field === 'transcription'){
+        editor = inputEl('text');
+        editor.value = currentItem.card.transcription || '';
+        editor.placeholder = '[transkrɪpʃən]';
+        inputWrap.appendChild(editor);
+      } else if(field === 'pos'){
+        editor = selectEl();
+        editor.innerHTML = `
+          <option value="">-</option>
+          <option value="substantiv">Substantiv</option>
+          <option value="verb">${M?.str?.mod_flashcards?.pos_verb||'Verb'}</option>
+          <option value="adj">${M?.str?.mod_flashcards?.pos_adj||'Adjective'}</option>
+          <option value="adv">${M?.str?.mod_flashcards?.pos_adv||'Adverb'}</option>
+          <option value="other">${M?.str?.mod_flashcards?.pos_other||'Other'}</option>`;
+        editor.value = currentItem.card.pos || '';
+        inputWrap.appendChild(editor);
+      } else if(field === 'gender'){
+        editor = selectEl();
+        editor.innerHTML = `
+          <option value="">-</option>
+          <option value="intetkjonn">${M?.str?.mod_flashcards?.gender_neuter||'Neuter'}</option>
+          <option value="hankjonn">${M?.str?.mod_flashcards?.gender_masculine||'Masculine'}</option>
+          <option value="hunkjonn">${M?.str?.mod_flashcards?.gender_feminine||'Feminine'}</option>`;
+        editor.value = currentItem.card.gender || '';
+        inputWrap.appendChild(editor);
+      } else if(field === 'nounForms'){
+        const grid = document.createElement('div');
+        grid.style.display = 'grid';
+        grid.style.gap = '8px';
+
+        function formRow(lbl, id, val){
+          const r = document.createElement('div');
+          const label = document.createElement('div');
+          label.className = 'small';
+          label.textContent = lbl;
+          r.appendChild(label);
+          const inp = inputEl('text');
+          inp.id = id;
+          inp.value = val || '';
+          r.appendChild(inp);
+          return r;
+        }
+
+        const nf = (currentItem.card.forms && currentItem.card.forms.noun) || {};
+        grid.appendChild(formRow(M?.str?.mod_flashcards?.indef_sg||'Indefinite singular', 'inlineNfIndefSg', nf.indef_sg));
+        grid.appendChild(formRow(M?.str?.mod_flashcards?.def_sg||'Definite singular', 'inlineNfDefSg', nf.def_sg));
+        grid.appendChild(formRow(M?.str?.mod_flashcards?.indef_pl||'Indefinite plural', 'inlineNfIndefPl', nf.indef_pl));
+        grid.appendChild(formRow(M?.str?.mod_flashcards?.def_pl||'Definite plural', 'inlineNfDefPl', nf.def_pl));
+        editor = grid;
+        inputWrap.appendChild(grid);
+      } else {
+        // Array fields: examples, collocations, antonyms, cognates, sayings
+        editor = textareaEl();
+        const arr = Array.isArray(currentItem.card[field]) ? currentItem.card[field] : [];
+        editor.value = arr.join('\n');
+        editor.placeholder = t(field + '_placeholder') || 'One per line...';
+        inputWrap.appendChild(editor);
+      }
+
+      wrap.appendChild(inputWrap);
+
+      // Buttons
+      const btnRow = document.createElement('div');
+      btnRow.className = 'inline-prompt-buttons';
+
+      const btnSave = document.createElement('button');
+      btnSave.className = 'ok';
+      btnSave.textContent = t('save');
+      btnSave.addEventListener('click', async () => {
+        let updated = false;
+
+        if(field === 'transcription'){
+          const v = editor.value.trim();
+          if(v){ currentItem.card.transcription = v; updated = true; }
+        } else if(field === 'pos'){
+          currentItem.card.pos = editor.value;
+          updated = true;
+        } else if(field === 'gender'){
+          currentItem.card.gender = editor.value;
+          updated = true;
+        } else if(field === 'nounForms'){
+          const nf = {
+            indef_sg: document.getElementById('inlineNfIndefSg')?.value.trim() || '',
+            def_sg: document.getElementById('inlineNfDefSg')?.value.trim() || '',
+            indef_pl: document.getElementById('inlineNfIndefPl')?.value.trim() || '',
+            def_pl: document.getElementById('inlineNfDefPl')?.value.trim() || ''
+          };
+          currentItem.card.forms = currentItem.card.forms || {};
+          currentItem.card.forms.noun = nf;
+          updated = true;
+        } else {
+          const lines = editor.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+          currentItem.card[field] = lines;
+          updated = true;
+        }
+
+        if(updated){
+          try{
+            const payload = buildPayloadFromCard(currentItem.card);
+            await api('upsert_card', {}, 'POST', { deckId: currentItem.deckId, cardId: currentItem.card.id, scope: currentItem.card.scope||'private', payload });
+          }catch(_e){}
+        }
+
+        hideInlineFieldPrompt();
+      });
+
+      const btnSkip = document.createElement('button');
+      btnSkip.className = 'mid';
+      btnSkip.textContent = t('skip');
+      btnSkip.addEventListener('click', () => {
+        hideInlineFieldPrompt();
+      });
+
+      btnRow.appendChild(btnSave);
+      btnRow.appendChild(btnSkip);
+      wrap.appendChild(btnRow);
+
+      // Add to slot container
+      slotContainer.appendChild(wrap);
+      initAutogrow();
+
+      // Focus on first input
+      setTimeout(() => {
+        const firstInput = wrap.querySelector('input, textarea, select');
+        if(firstInput) firstInput.focus();
+      }, 100);
+    }
+
     function firstMissingForStep(card){
       const order = ['transcription','pos','gender_or_forms','examples','collocations','antonyms','cognates','sayings'];
       for(const key of order){
