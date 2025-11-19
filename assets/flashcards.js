@@ -3639,38 +3639,80 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return null;
     }
-    function renderAudioButtons(el, tracks, options={}){
-      const { attachFront=false, allowAutoplay=false } = options;
-      let autoplayAssigned = false;
-      tracks.forEach(track=>{
-        if(attachFront && track.type==='front'){
-          attachAudio(track.url);
-        }
-        if(allowAutoplay){
-          if(track.type==='front'){
-            el.dataset.autoplay = track.url;
-            autoplayAssigned = true;
-          }else if(!autoplayAssigned){
-            el.dataset.autoplay = track.url;
-            autoplayAssigned = true;
-          }
-        }
+    window.flashcardsPendingRecorderButtons = window.flashcardsPendingRecorderButtons || [];
+    function registerTrackRecorderButton(btn, getUrl){
+      if(!btn) return;
+      const binder = window.flashcardsAttachStudyRecorderButton;
+      if(typeof binder === 'function'){
+        btn.disabled = false;
+        binder(btn, getUrl);
+        return;
+      }
+      btn.disabled = true;
+      const pending = window.flashcardsPendingRecorderButtons || [];
+      pending.push({btn, getUrl});
+      window.flashcardsPendingRecorderButtons = pending;
+    }
+    function createAudioTrackElement(track){
+      const trackEl = document.createElement("div");
+      trackEl.className = "audio-track";
+      if(track.autoplay){
+        trackEl.dataset.autoplayUrl = track.url;
+      }
+      if(track.label){
+        const header = document.createElement("div");
+        header.className = "audio-track-header";
+        const tag = document.createElement("span");
+        tag.className = "tag audio-track-label";
+        tag.textContent = track.label;
+        header.appendChild(tag);
+        trackEl.appendChild(header);
+      }
+      const controls = document.createElement("div");
+      controls.className = "audio-track-controls";
+      const labelText = track.label || (track.type === 'focus' ? aiStrings.focusAudio : aiStrings.frontAudio) || t('order_audio_word');
+      const playTitle = `${t('title_play')} ${labelText}`.trim();
+      const slowTitle = `${t('title_slow')} ${labelText}`.trim();
+      const recordTitle = `${t('title_record_practice')} ${labelText}`.trim();
+      const playBtn = document.createElement("button");
+      playBtn.type = "button";
+      playBtn.className = "iconbtn audio-track-play";
+      playBtn.title = playTitle;
+      playBtn.setAttribute('aria-label', playTitle);
+      playBtn.innerHTML = "&#128266;";
+      playBtn.addEventListener("click", () => {
+        attachAudio(track.url);
+        playAudioFromUrl(track.url, 1);
       });
-      const focusTracks = tracks.filter(track => track.type !== 'front');
-      if(!focusTracks.length){
+      const slowBtn = document.createElement("button");
+      slowBtn.type = "button";
+      slowBtn.className = "iconbtn audio-track-slow";
+      slowBtn.title = slowTitle;
+      slowBtn.setAttribute('aria-label', slowTitle);
+      slowBtn.innerHTML = "&#128034;";
+      slowBtn.addEventListener("click", () => {
+        attachAudio(track.url);
+        playAudioFromUrl(track.url, 0.67);
+      });
+      const recordBtn = document.createElement("button");
+      recordBtn.type = "button";
+      recordBtn.className = "iconbtn micbtn audio-track-record";
+      recordBtn.title = recordTitle;
+      recordBtn.setAttribute('aria-label', recordTitle);
+      recordBtn.innerHTML = "&#127897;&#65039;";
+      registerTrackRecorderButton(recordBtn, () => track.url);
+      controls.append(playBtn, slowBtn, recordBtn);
+      trackEl.appendChild(controls);
+      return trackEl;
+    }
+    function renderAudioControls(el, tracks){
+      if(!Array.isArray(tracks) || !tracks.length){
         return el;
       }
-      const row=document.createElement("div");
-      row.className="audio-chip-row";
-      focusTracks.forEach(track=>{
-        const btn=document.createElement("button");
-        btn.type="button";
-        btn.className="pill"+(track.type==='focus'?' pill-focus':'');
-        btn.textContent = track.type==='focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
-        btn.addEventListener("click", ()=>playAudioFromUrl(track.url,1));
-        row.appendChild(btn);
+      tracks.forEach(track=>{
+        const trackEl = createAudioTrackElement(track);
+        el.appendChild(trackEl);
       });
-      el.appendChild(row);
       return el;
     }
     async function buildSlot(kind, card){
@@ -3714,15 +3756,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         const tracks=[];
         if(frontUrl){
-          tracks.push({url:frontUrl,type:'front'});
+          tracks.push({url:frontUrl,type:'front',label:aiStrings.frontAudio});
         }
-        if(focusUrl){
-          tracks.push({url:focusUrl,type:'focus'});
+        if(includeFocus && focusUrl){
+          tracks.push({url:focusUrl,type:'focus',label:aiStrings.focusAudio});
         }
         if(!tracks.length){
           return null;
         }
-        renderAudioButtons(el, tracks, {attachFront:true, allowAutoplay:true});
+        if(!tracks[0].autoplay){
+          tracks[0].autoplay = true;
+        }
+        renderAudioControls(el, tracks);
         return el;
       }
       if(kind==="audio_text"){
@@ -3730,7 +3775,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!focusUrl){
           return null;
         }
-        renderAudioButtons(el, [{url:focusUrl,type:'focus'}], {allowAutoplay:false});
+        const track = {url:focusUrl,type:'focus',label:aiStrings.focusAudio,autoplay:true};
+        renderAudioControls(el, [track]);
         return el;
       }
       return null;
@@ -3738,7 +3784,38 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function initialVisibleSlots(card){
       return 1;
     }
-    async function renderCard(card, count){ slotContainer.innerHTML=""; hidePlayIcons(); audioURL=null; const allSlots=[]; for(const kind of card.order){ const el=await buildSlot(kind,card); if(el) allSlots.push(el); } const items=allSlots.slice(0,count); if(!items.length){ const d=document.createElement("div"); d.className="front"; d.textContent="-"; items.push(d); } items.forEach(x=>slotContainer.appendChild(x)); if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){ player.src=items[0].dataset.autoplay; player.playbackRate=1; player.currentTime=0; player.play().catch(()=>{}); } card._availableSlots=allSlots.length; }
+    function autoPlaySlotAudio(slot){
+      if(!slot) return;
+      const trackEl = slot.querySelector('[data-autoplay-url]');
+      if(!trackEl) return;
+      const url = trackEl.dataset.autoplayUrl;
+      if(!url) return;
+      attachAudio(url);
+      playAudioFromUrl(url, 1);
+    }
+    async function renderCard(card, count){
+      slotContainer.innerHTML="";
+      hidePlayIcons();
+      audioURL=null;
+      const allSlots=[];
+      for(const kind of card.order){
+        const el=await buildSlot(kind,card);
+        if(el) allSlots.push(el);
+      }
+      const items=allSlots.slice(0,count);
+      if(!items.length){
+        const d=document.createElement("div");
+        d.className="front";
+        d.textContent="-";
+        items.push(d);
+      }
+      items.forEach(x=>slotContainer.appendChild(x));
+      const lastIndex = Math.min(items.length, count) - 1;
+      if(lastIndex >= 0){
+        autoPlaySlotAudio(items[lastIndex]);
+      }
+      card._availableSlots=allSlots.length;
+    }
 
     function buildQueue(){
       const now=today0();
@@ -4981,17 +5058,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         window.addEventListener("touchcancel", onceUp);
       }
 
-      // Attach event listeners
-      btnRecordStudy.addEventListener("pointerdown", onDown);
-      btnRecordStudy.addEventListener("mousedown", onDown);
-      btnRecordStudy.addEventListener("touchstart", onDown, {passive:false});
-
-      // Prevent click propagation
-      try{
-        btnRecordStudy.addEventListener("click", function(e){
-          try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){}
-        }, true);
-      }catch(_e){}
+      function attachRecorderButton(btn, getUrl){
+        if(!btn) return;
+        btn.disabled = false;
+        const handler = e => {
+          if(typeof getUrl === 'function'){
+            const url = getUrl();
+            if(url){
+              window.setStudyRecorderAudio(url);
+            }
+          }
+          onDown(e);
+        };
+        btn.addEventListener("pointerdown", handler);
+        btn.addEventListener("mousedown", handler);
+        btn.addEventListener("touchstart", handler, {passive:false});
+        try{
+          btn.addEventListener("click", function(e){
+            try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){}
+          }, true);
+        }catch(_e){}
+      }
+      window.flashcardsAttachStudyRecorderButton = attachRecorderButton;
+      attachRecorderButton(btnRecordStudy, () => audioURL);
+      const pendingRecorder = window.flashcardsPendingRecorderButtons || [];
+      if(pendingRecorder.length){
+        window.flashcardsPendingRecorderButtons = [];
+        pendingRecorder.forEach(entry=>{
+          entry.btn.disabled = false;
+          attachRecorderButton(entry.btn, entry.getUrl);
+        });
+      }
 
       // Public function to set current audio URL
       window.setStudyRecorderAudio = function(url){
