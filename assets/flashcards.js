@@ -3703,6 +3703,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       registerTrackRecorderButton(recordBtn, () => track.url);
       controls.append(playBtn, slowBtn, recordBtn);
       trackEl.appendChild(controls);
+      const timerEl = $("#recTimerStudy");
+      if(timerEl && !timerEl.dataset.flashcardsTimerAttached){
+        const timerWrap = document.createElement("div");
+        timerWrap.className = "audio-track-timer";
+        timerWrap.appendChild(timerEl);
+        trackEl.appendChild(timerWrap);
+        timerEl.dataset.flashcardsTimerAttached = "1";
+      }
       return trackEl;
     }
     function renderAudioControls(el, tracks){
@@ -4574,6 +4582,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let studentAudioUrl = null;
       let studyAudioContext = null;
       let studyBufferSource = null;
+      let studyRecorderTriggerButton = null;
+
+      function toggleRecorderVisuals(active){
+        const buttons = [btnRecordStudy, studyRecorderTriggerButton].filter(Boolean);
+        buttons.forEach(btn => btn.classList.toggle('recording', active));
+        if(!active){
+          studyRecorderTriggerButton = null;
+        }
+      }
 
       // Reuse iOS recorder if available
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
@@ -4857,7 +4874,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             console.log('[PronunciationPractice] Starting iOS recorder');
             await iosRecorderInstance.start();
             isRecording = true;
-            btnRecordStudy.classList.add("recording");
+            toggleRecorderVisuals(true);
             startTimer();
             autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
           }catch(err){
@@ -4939,7 +4956,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{ studyRecorder.start(1000); }catch(_e){ studyRecorder.start(); }
 
           isRecording = true;
-          btnRecordStudy.classList.add("recording");
+          toggleRecorderVisuals(true);
           startTimer();
           autoStopTimer = setTimeout(()=>{
             if(studyRecorder && isRecording){
@@ -4963,7 +4980,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(useIOSRecorder){
           if(!isRecording){
             await releaseIOSMic();
-            btnRecordStudy.classList.remove("recording");
+            toggleRecorderVisuals(false);
             stopTimer();
             return;
           }
@@ -4978,7 +4995,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
           await releaseIOSMic();
           isRecording = false;
-          btnRecordStudy.classList.remove("recording");
+          toggleRecorderVisuals(false);
           stopTimer();
 
           if(exportedBlob){
@@ -5001,7 +5018,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.log('[PronunciationPractice] Stop error: '+(_e?.message||_e));
         }
         isRecording = false;
-        btnRecordStudy.classList.remove("recording");
+        toggleRecorderVisuals(false);
         stopTimer();
       }
 
@@ -5062,6 +5079,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!btn) return;
         btn.disabled = false;
         const handler = e => {
+          studyRecorderTriggerButton = btn;
           if(typeof getUrl === 'function'){
             const url = getUrl();
             if(url){
