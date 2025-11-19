@@ -1093,20 +1093,13 @@ input[type=text]::placeholder {
 }
 .floating-recorder{
   position:fixed;
-  bottom:calc(env(safe-area-inset-bottom, 0px) + 110px);
-  left:50%;
-  transform:translateX(-50%);
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 55px);
+  right:16px;
+  transform:none;
   z-index:1100;
-  background:rgba(15,23,42,0.9);
-  border:1px solid rgba(148,163,184,0.4);
-  border-radius:999px;
-  padding:12px 18px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.45);
   display:flex;
   align-items:center;
   justify-content:center;
-  min-width:96px;
-  gap:0.75rem;
   pointer-events:none;
 }
 .floating-recorder .rec-control{
@@ -1128,6 +1121,9 @@ input[type=text]::placeholder {
   left:50%;
   transform:translateX(-50%);
   box-shadow:0 4px 10px rgba(15,23,42,0.35);
+}
+#mod_flashcards_container:not([data-bottom-visible="1"]) ~ #floatingRecorder{
+  display:none;
 }
 #mod_flashcards_container:not([data-bottom-visible="1"]) ~ #floatingRecorder{
   display:none;

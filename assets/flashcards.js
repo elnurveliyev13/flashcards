@@ -3538,6 +3538,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(btnEdit){ btnEdit.classList.remove('hidden'); btnEdit.disabled = !hasCard; }
       if(btnDel){ btnDel.classList.remove('hidden'); btnDel.disabled = !hasCard; }
     }
+    function syncFloatingRecorderPosition(){
+      const recorderDock = document.getElementById('floatingRecorder');
+      const bar = $("#bottomActions");
+      if(!recorderDock || recorderDock.classList.contains('hidden') || !bar || bar.classList.contains('hidden')){
+        return;
+      }
+      const hardBtn = $("#btnHardBottom");
+      const targetRect = hardBtn ? hardBtn.getBoundingClientRect() : bar.getBoundingClientRect();
+      const barRect = bar.getBoundingClientRect();
+      const gap = 55;
+      const bottomOffset = (barRect.height || 0) + gap;
+      recorderDock.style.bottom = `${Math.round(bottomOffset)}px`;
+      recorderDock.style.left = `${Math.round(targetRect.left + (targetRect.width / 2))}px`;
+      recorderDock.style.right = 'auto';
+      recorderDock.style.transform = 'translate(-50%, 0)';
+    }
     function hidePlayIcons(){
       if(btnPlayBtn) btnPlayBtn.classList.add('hidden');
       if(btnPlaySlowBtn) btnPlaySlowBtn.classList.add('hidden');
@@ -3576,9 +3592,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Show pronunciation practice button
       const btnRecordStudy = $("#btnRecordStudy");
-      if(btnRecordStudy) btnRecordStudy.classList.remove("hidden");
+      if(btnRecordStudy){
+        btnRecordStudy.classList.remove("hidden");
+      }
       const recorderDock = document.getElementById('floatingRecorder');
-      if(recorderDock) recorderDock.classList.remove('hidden');
+      if(recorderDock){
+        recorderDock.classList.remove('hidden');
+        syncFloatingRecorderPosition();
+      }
 
       if(btnPlayBtn){
         btnPlayBtn.onclick=()=>{ if(!audioURL)return; playAudioFromUrl(audioURL,1); };
@@ -3957,6 +3978,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       bar.style.left = rect.left + 'px';
       bar.style.right = 'auto';
       bar.style.transform = 'none';
+      syncFloatingRecorderPosition();
     }
     // Initial and reactive alignment
     try{
@@ -4957,13 +4979,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         try{ e.preventDefault(); }catch(_e){}
         ensureStudyAudioContextUnlocked().catch(()=>{});
 
-        // 0.5s delay before recording starts
+        // Short delay before recording starts to avoid accidental taps
         holdTimeout = setTimeout(() => {
           const startPromise = startStudyRecording();
           if(startPromise && typeof startPromise.then === 'function'){
             startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
           }
-        }, 500);
+        }, 200);
 
         function onceUp(ev){
           if(activePointerToken !== null){
