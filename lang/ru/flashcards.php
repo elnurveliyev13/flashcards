@@ -154,7 +154,7 @@ $string['mic_permission_requesting'] = 'Ожидаем разрешение на
 $string['mic_permission_denied'] = 'Доступ к микрофону заблокирован. Проверьте настройки Safari.';
 
 // List table
-$string['list_front'] = 'Лицевая сторона';
+$string['list_front'] = 'Фокусное слово/фраза';
 $string['list_deck'] = 'Колода';
 $string['list_stage'] = 'Этап';
 $string['list_added'] = 'Добавлено';

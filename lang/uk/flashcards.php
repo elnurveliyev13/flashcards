@@ -151,7 +151,7 @@ $string['press_hold_to_record'] = 'Натисніть і утримуйте дл
 $string['release_when_finished'] = 'Відпустіть, коли закінчите';
 
 // List table
-$string['list_front'] = 'Лицьова сторона';
+$string['list_front'] = 'Фокусне слово/фраза';
 $string['list_deck'] = 'Колода';
 $string['list_stage'] = 'Етап';
 $string['list_added'] = 'Додано';

@@ -151,7 +151,7 @@ $string['press_hold_to_record'] = 'Naciśnij i przytrzymaj, aby nagrać';
 $string['release_when_finished'] = 'Puść, gdy skończysz';
 
 // List table
-$string['list_front'] = 'Przód';
+$string['list_front'] = 'Słowo/fraza fokusowa';
 $string['list_deck'] = 'Talia';
 $string['list_stage'] = 'Etap';
 $string['list_added'] = 'Dodano';

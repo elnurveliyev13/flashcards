@@ -1157,16 +1157,23 @@ input[type=text]::placeholder {
   display:flex;
   align-items:center;
   justify-content:center;
-  background:transparent;
-  border:2px solid rgba(99,102,241,0.45);
+  background:linear-gradient(145deg, rgba(29,40,70,0.95), rgba(20,25,45,0.95));
+  border:2px solid rgba(147,197,253,0.35);
   color:var(--text);
-  box-shadow:0 0 0 1px rgba(99,102,241,0.25);
+  box-shadow:0 6px 20px rgba(13,23,45,0.65), inset 0 0 0 1px rgba(255,255,255,0.05);
+  transition:border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 .meta #metaRecorder .iconbtn:hover,
 .meta #metaRecorder .iconbtn:focus-visible{
-  border-color:rgba(99,102,241,0.8);
-  box-shadow:0 0 0 2px rgba(99,102,241,0.2);
+  border-color:rgba(99,102,241,0.9);
+  box-shadow:0 6px 22px rgba(13,23,45,0.75), 0 0 0 3px rgba(99,102,241,0.25), inset 0 0 0 1px rgba(255,255,255,0.1);
   color:var(--primary);
+}
+.meta #metaRecorder .iconbtn.recording{
+  background:linear-gradient(145deg, rgba(127,29,29,0.95), rgba(88,18,18,0.95));
+  border-color:rgba(239,68,68,0.85);
+  box-shadow:0 8px 24px rgba(127,29,29,0.65), 0 0 0 3px rgba(239,68,68,0.25), inset 0 0 0 1px rgba(255,255,255,0.08);
+  color:#fee2e2;
 }
 .meta #metaRecorder .rec-timer{
   position:absolute;

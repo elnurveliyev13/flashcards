@@ -151,7 +151,7 @@ $string['press_hold_to_record'] = 'Drücken und halten zum Aufnehmen';
 $string['release_when_finished'] = 'Loslassen, wenn fertig';
 
 // List table
-$string['list_front'] = 'Vorderseite';
+$string['list_front'] = 'Fokuswort/-phrase';
 $string['list_deck'] = 'Stapel';
 $string['list_stage'] = 'Stufe';
 $string['list_added'] = 'Hinzugefügt';

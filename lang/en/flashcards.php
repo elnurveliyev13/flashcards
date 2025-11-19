@@ -187,7 +187,7 @@ $string['mic_permission_requesting'] = 'Waiting for microphone permission...';
 $string['mic_permission_denied'] = 'Microphone access blocked. Check Safari settings.';
 
 // List table
-$string['list_front'] = 'Front';
+$string['list_front'] = 'Focus word/phrase';
 $string['list_deck'] = 'Deck';
 $string['list_stage'] = 'Stage';
 $string['list_added'] = 'Added';

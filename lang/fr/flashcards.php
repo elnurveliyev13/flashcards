@@ -151,7 +151,7 @@ $string['press_hold_to_record'] = 'Appuyez et maintenez pour enregistrer';
 $string['release_when_finished'] = 'Relâchez quand vous avez terminé';
 
 // List table
-$string['list_front'] = 'Recto';
+$string['list_front'] = 'Mot/phrase focal';
 $string['list_deck'] = 'Paquet';
 $string['list_stage'] = 'Étape';
 $string['list_added'] = 'Ajouté';

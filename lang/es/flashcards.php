@@ -151,7 +151,7 @@ $string['press_hold_to_record'] = 'Presiona y mantén para grabar';
 $string['release_when_finished'] = 'Suelta cuando termines';
 
 // List table
-$string['list_front'] = 'Anverso';
+$string['list_front'] = 'Palabra/frase focal';
 $string['list_deck'] = 'Mazo';
 $string['list_stage'] = 'Etapa';
 $string['list_added'] = 'Añadido';

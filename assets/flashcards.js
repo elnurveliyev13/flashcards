@@ -5524,13 +5524,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ensureDeckProgress(d.id,d.cards);
         (d.cards||[]).forEach(c=>{
           const rec=state.decks[d.id][c.id];
-          rows.push({deckTitle:d.title, deckId:d.id, id:c.id, card:c, front:c.text||c.front||"", stage:rec.step||0, added:rec.addedAt||null, due:rec.due||null});
+          rows.push({deckTitle:d.title, deckId:d.id, id:c.id, card:c, fokus:c.fokus||"", stage:rec.step||0, added:rec.addedAt||null, due:rec.due||null});
         });
       });
 
       // Apply search filter
       const q=$("#listSearch").value.toLowerCase();
-      let filtered=rows.filter(r=>!q || r.front.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
+      let filtered=rows.filter(r=>!q || r.fokus.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
 
       // Apply due date filter
       const dueFilter=$("#listFilterDue").value;
@@ -5568,7 +5568,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
         const langs = Object.keys(r.card?.translations||{});
-        tr.innerHTML=`<td>${r.front||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
+        tr.innerHTML=`<td>${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
         // Audio buttons removed per new UX
         const edit=document.createElement("button");
