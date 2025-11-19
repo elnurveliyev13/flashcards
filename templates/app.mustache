@@ -175,7 +175,7 @@
                     </div>
                   </div>
                   <div class="slot-head-extra">
-                    <button id="btnQuickFormReset" class="mid ghost translation-reset" data-i18n="resetform">{{#str}} resetform, mod_flashcards {{/str}}</button>
+                    <button id="btnQuickFormReset" class="ghost icon-only translation-reset" aria-label="{{#str}} resetform, mod_flashcards {{/str}}"><span aria-hidden="true">&#8634;</span></button>
                   </div>
                 </div>
               </div>
@@ -371,13 +371,14 @@
               <div class="slot">
                 <span class="tag" id="t_order" data-i18n="order">{{#str}} order, mod_flashcards {{/str}}</span>
                 <div id="orderChips" class="chips">
-                  <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
-                  <button class="chip" data-kind="transcription" id="chip_transcription" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</button>
                   <button class="chip" data-kind="audio_text"   id="chip_audio_text" data-i18n="order_audio_word">{{#str}} order_audio_word, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="transcription" id="chip_transcription" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</button>
+                  <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
                   <button class="chip" data-kind="text"         id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
                   <button class="chip" data-kind="translation"  id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
+                  <button class="chip chip-reset" id="chip_reset" title="Reset order">&#8634;</button>
                 </div>
-                <div class="small" id="orderPreview">{{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
+                <div class="small" id="orderPreview">{{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
               </div>
             </div>
 
@@ -594,13 +595,14 @@
         <div class="slot">
           <span class="tag" id="t_order" data-i18n="order">{{#str}} order, mod_flashcards {{/str}}</span>
           <div id="orderChips" class="chips">
-            <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
-            <button class="chip" data-kind="transcription" id="chip_transcription" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="audio_text"   id="chip_audio_text" data-i18n="order_audio_word">{{#str}} order_audio_word, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="transcription" id="chip_transcription" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</button>
+            <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="text"         id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="translation"  id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
+            <button class="chip chip-reset" id="chip_reset" title="Reset order">&#8634;</button>
           </div>
-          <div class="small" id="orderPreview">{{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
+          <div class="small" id="orderPreview">{{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
         </div>
         <div class="mono" id="status"></div>
         <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>

@@ -110,6 +110,45 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     initAutogrow();
 
+    // Initialize textarea clear buttons
+    function initTextareaClearButtons(){
+      $$('.autogrow').forEach(el=>{
+        if(!el || el.dataset.clearBound) return;
+        // Skip if already wrapped
+        if(el.parentElement && el.parentElement.classList.contains('textarea-wrap')) return;
+
+        // Create wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'textarea-wrap';
+
+        // Create clear button
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'textarea-clear';
+        clearBtn.innerHTML = '×';
+        clearBtn.title = 'Clear';
+        clearBtn.setAttribute('aria-label', 'Clear field');
+
+        // Wrap textarea
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+        wrapper.appendChild(clearBtn);
+
+        // Handle click
+        clearBtn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          el.value = '';
+          el.dispatchEvent(new Event('input', {bubbles: true}));
+          el.dispatchEvent(new Event('autogrow:refresh'));
+          el.focus();
+        });
+
+        el.dataset.clearBound = '1';
+      });
+    }
+
+    initTextareaClearButtons();
+
     // Re-run autogrow on window resize and orientation change (for mobile devices)
     let resizeTimeout;
     window.addEventListener('resize', () => {
@@ -4353,7 +4392,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       updateOrderPreview();
       openEditor();
       // Re-initialize autogrow for textareas after populating form
-      setTimeout(() => initAutogrow(), 50);
+      setTimeout(() => { initAutogrow(); initTextareaClearButtons(); }, 50);
     const _btnAddNew = $("#btnAddNew");
     if(_btnAddNew && !_btnAddNew.dataset.bound){
       _btnAddNew.dataset.bound = "1";
@@ -5298,7 +5337,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const prevEl = document.getElementById('orderPreview');
       if(prevEl) prevEl.textContent = pretty;
     }
-    $("#orderChips").addEventListener("click",e=>{const btn=e.target.closest(".chip"); if(!btn)return; const k=btn.dataset.kind; const i=orderChosen.indexOf(k); if(i===-1) orderChosen.push(k); else orderChosen.splice(i,1); updateOrderPreview();});
+    $("#orderChips").addEventListener("click",e=>{
+      const btn=e.target.closest(".chip");
+      if(!btn)return;
+      // Handle reset button
+      if(btn.id === 'chip_reset'){
+        orderChosen=[];
+        updateOrderPreview();
+        return;
+      }
+      const k=btn.dataset.kind;
+      const i=orderChosen.indexOf(k);
+      if(i===-1) orderChosen.push(k);
+      else orderChosen.splice(i,1);
+      updateOrderPreview();
+    });
     function resetForm(){
       $("#uFront").value="";
       $("#uFokus").value="";
@@ -5362,7 +5415,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setTranslationPreview('', aiStrings.translationIdle);
        }
        // Re-initialize autogrow for textareas after reset
-       setTimeout(() => initAutogrow(), 50);
+       setTimeout(() => { initAutogrow(); initTextareaClearButtons(); }, 50);
      }
     $("#btnFormReset").addEventListener("click", resetForm);
     const quickResetBtn = $("#btnQuickFormReset");
@@ -6083,6 +6136,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Add to slot container
       slotContainer.appendChild(wrap);
       initAutogrow();
+      initTextareaClearButtons();
 
       // Focus on first input
       setTimeout(() => {
@@ -6170,6 +6224,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         editor = textareaEl(); const arr = Array.isArray(card[field]) ? card[field] : []; editor.value = arr.join('\n'); body.appendChild(editor);
       }
       initAutogrow();
+      initTextareaClearButtons();
       fp.style.display='flex';
       const close=()=>closeFieldPrompt();
       const btnClose = document.getElementById('fpClose'); if(btnClose){ btnClose.onclick = close; }
@@ -6418,7 +6473,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const frontInput = $('#uFront');
           if (frontInput) setTimeout(() => frontInput.focus(), 100);
           // Re-initialize autogrow for textareas
-          setTimeout(() => initAutogrow(), 50);
+          setTimeout(() => { initAutogrow(); initTextareaClearButtons(); }, 50);
         } else if (tabName === 'study' && studySection) {
           studySection.classList.add('fc-tab-active');
           tabStudy.classList.add('fc-tab-active');
@@ -6426,7 +6481,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.log('[Tabs] Activated Study');
           // Study view will auto-refresh from existing queue
           // Re-initialize autogrow for textareas
-          setTimeout(() => initAutogrow(), 50);
+          setTimeout(() => { initAutogrow(); initTextareaClearButtons(); }, 50);
           // Initialize pronunciation practice recorder with retry
           let retryCount = 0;
           const maxRetries = 5;
