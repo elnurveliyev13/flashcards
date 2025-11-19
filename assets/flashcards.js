@@ -3651,24 +3651,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!Array.isArray(tracks) || !tracks.length){
         return el;
       }
-      const row = document.createElement("div");
-      row.className = "audio-chip-row";
+      const wrap = document.createElement("div");
+      wrap.className = "audio-slot-controls";
       const { attachFront=false } = options;
       tracks.forEach((track, idx)=>{
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "pill" + (track.type === 'focus' ? ' pill-focus' : '');
-        btn.textContent = track.type === 'focus' ? aiStrings.focusAudio : aiStrings.frontAudio;
-        btn.addEventListener("click", ()=> playAudioFromUrl(track.url, 1));
-        row.appendChild(btn);
-        if(track.type === 'front' && attachFront){
+        const block = document.createElement("div");
+        block.className = "audio-control-block";
+        const header = document.createElement("div");
+        header.className = "audio-control-header";
+        header.textContent = track.type === 'focus' ? (aiStrings.focusAudio || 'Focus audio') : (aiStrings.frontAudio || 'Audio');
+        block.appendChild(header);
+        const row = document.createElement("div");
+        row.className = "audio-control-row";
+        const playBtn = document.createElement("button");
+        playBtn.type = "button";
+        playBtn.className = "audio-control-button";
+        playBtn.title = t('title_play') || 'Play';
+        playBtn.innerHTML = '<span class="icon">&#128266;</span>';
+        playBtn.addEventListener("click", ()=>{
+          attachAudio(track.url);
+          playAudioFromUrl(track.url, 1);
+        });
+        const slow85 = document.createElement("button");
+        slow85.type = "button";
+        slow85.className = "audio-control-button";
+        slow85.title = '0.85x';
+        slow85.innerHTML = '<span class="slow-label">0.85</span><span class="icon">&#128034;</span>';
+        slow85.addEventListener("click", ()=>{
+          attachAudio(track.url);
+          playAudioFromUrl(track.url, 0.85);
+        });
+        const slow70 = document.createElement("button");
+        slow70.type = "button";
+        slow70.className = "audio-control-button";
+        slow70.title = '0.7x';
+        slow70.innerHTML = '<span class="slow-label">0.7</span><span class="icon">&#128034;</span>';
+        slow70.addEventListener("click", ()=>{
+          attachAudio(track.url);
+          playAudioFromUrl(track.url, 0.7);
+        });
+        row.appendChild(playBtn);
+        row.appendChild(slow85);
+        row.appendChild(slow70);
+        block.appendChild(row);
+        wrap.appendChild(block);
+        if(attachFront && track.type==='front'){
           attachAudio(track.url);
         }
         if(!el.dataset.autoplay && (track.type === 'front' || idx === 0)){
           el.dataset.autoplay = track.url;
         }
       });
-      el.appendChild(row);
+      el.appendChild(wrap);
       return el;
     }
     async function buildSlot(kind, card){
@@ -4444,7 +4478,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(startPromise && typeof startPromise.then === 'function'){
             startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
           }
-        }, 500);
+        }, 300);
         function onceUp(ev){
           if(activePointerToken !== null){
             if(typeof activePointerToken === 'number'){
