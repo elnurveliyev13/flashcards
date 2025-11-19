@@ -2899,9 +2899,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(cropDragMode && !force){
         return;
       }
-      const padding = Math.max(8, Math.min(24, cropCanvas.width * 0.02));
-      const zoomX = (cropCanvas.width - padding) / cropRect.width;
-      const zoomY = (cropCanvas.height - padding) / cropRect.height;
+      const paddingX = Math.max(8, Math.min(24, cropCanvas.width * 0.02));
+      const paddingY = Math.max(8, Math.min(24, cropCanvas.height * 0.02));
+      const zoomX = (cropCanvas.width - paddingX * 2) / cropRect.width;
+      const zoomY = (cropCanvas.height - paddingY * 2) / cropRect.height;
       const targetZoom = Math.min(8, Math.max(baseZoom, Math.min(zoomX, zoomY)));
       viewZoom = targetZoom;
       const viewWidth = cropCanvas.width / viewZoom;
