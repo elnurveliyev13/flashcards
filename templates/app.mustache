@@ -239,12 +239,24 @@
             </div>
             <div class="translation-media-tts">
               <div class="fc-media-badges">
-                <span id="audBadge" class="media-pill hidden">
+                <span id="audBadge" class="media-pill hidden"
+                      role="button"
+                      tabindex="0"
+                      aria-pressed="false"
+                      aria-label="{{#str}} front_audio_badge, mod_flashcards {{/str}}"
+                      data-media-target="audPrev"
+                      data-media-kind="front">
                   <span class="icon">&#127897;&#65039;</span>
                   <span id="audName" class="media-name"></span>
                   <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
                 </span>
-                <span id="focusAudBadge" class="media-pill hidden">
+                <span id="focusAudBadge" class="media-pill hidden"
+                      role="button"
+                      tabindex="0"
+                      aria-pressed="false"
+                      aria-label="{{#str}} focus_audio_badge, mod_flashcards {{/str}}"
+                      data-media-target="focusAudPrev"
+                      data-media-kind="focus">
                   <span class="icon">&#128266;</span>
                   <span id="focusAudName" class="media-name"></span>
                   <button id="btnClearFocusAud" class="iconbtn" title="Clear">&times;</button>
@@ -256,8 +268,8 @@
                 </span>
               </div>
               <div class="translation-audio-previews">
-                <audio id="audPrev" class="hidden" controls preload="metadata"></audio>
-                <audio id="focusAudPrev" class="hidden" controls preload="metadata"></audio>
+                <audio id="audPrev" class="hidden" preload="metadata" aria-hidden="true"></audio>
+                <audio id="focusAudPrev" class="hidden" preload="metadata" aria-hidden="true"></audio>
               </div>
             </div>
             <div class="focus-translation-pill" id="focusTranslationPreview" aria-label="{{#str}} focus_translation_label, mod_flashcards {{/str}}">
@@ -402,12 +414,9 @@
       <div class="card">
         <div class="actionTop card-toolbar">
           <div class="card-toolbar-info">
-            <div id="stageBadge" class="card-stage-chip hidden" role="status" aria-live="polite">
-              <span class="card-stage-label">{{#str}} list_stage, mod_flashcards {{/str}}</span>
-              <span class="card-stage-value">
-                <span id="stageEmoji" aria-hidden="true"></span>
-                <span id="stageText">0</span>
-              </span>
+            <div id="stageBadge" class="card-stage-chip hidden" role="status" aria-live="polite" aria-label="{{#str}} list_stage, mod_flashcards {{/str}}">
+              <span id="stageEmoji" aria-hidden="true"></span>
+              <span id="stageText">0</span>
             </div>
             <div id="createdBadge" class="card-created-chip hidden" role="status" aria-live="polite">
               <span class="card-created-label">{{#str}} list_added, mod_flashcards {{/str}}</span>
@@ -417,7 +426,7 @@
           <div class="card-toolbar-actions">
             <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">&#128220;</button>
             <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
-            <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}" aria-label="{{#str}} title_del, mod_flashcards {{/str}}">???</button>
+            <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}" aria-label="{{#str}} title_del, mod_flashcards {{/str}}">&#128465;</button>
           </div>
         </div>
         <video id="cam" class="hidden capture-video" autoplay playsinline muted></video>

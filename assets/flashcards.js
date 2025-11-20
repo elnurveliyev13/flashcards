@@ -438,6 +438,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       addPart('EL STT', usage.elevenlabsSttTokens, 's');
       return parts.join(' · ');
     }
+    function updateUsageFromResponse(data){
+      if(data && data.usage && typeof data.usage === 'object'){
+        mediaUsageSummary = buildMediaUsageSummary(data.usage);
+        // Refresh status display with new usage
+        if(mediaStatusIndicator){
+          const currentText = mediaStatusIndicator.textContent.split(' · ')[0] || aiStrings.translationIdle;
+          mediaStatusIndicator.textContent = mediaUsageSummary ? `${currentText} · ${mediaUsageSummary}` : currentText;
+        }
+      }
+    }
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
     const cropStageContainer = root.querySelector('.ocr-crop-body');
@@ -570,6 +580,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'AI focus helper',
         ai_click_hint: 'Tap any word above to detect a fixed expression',
         ai_no_text: 'Type a sentence to enable the helper',
+        choose_focus_word: 'Choose focus word',
         ai_question_label: 'Ask the AI',
         ai_question_placeholder: 'Type a question about this sentence...',
         ai_question_button: 'Ask',
@@ -652,7 +663,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Вибрати аудіофайл',
         tts_voice: 'Голос',
         tts_voice_hint: 'Виберіть голос перед тим, як попросити AI помічника згенерувати аудіо.',
-        front: 'Лицьова сторона картки',
+        front: 'Текст',
         front_translation_toggle_show: 'Показати переклад',
         front_translation_toggle_hide: 'Сховати переклад',
         front_translation_mode_label: 'Напрямок перекладу',
@@ -666,6 +677,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'AI помічник фокусу',
         ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
         ai_no_text: 'Введіть речення, щоб увімкнути помічника',
+        choose_focus_word: 'Оберіть фокус-слово',
         ai_question_label: 'Запитати AI',
         ai_question_placeholder: 'Введіть Ваше запитання…',
         ai_question_button: 'Запитати',
@@ -748,7 +760,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Выбрать аудиофайл',
         tts_voice: 'Голос',
         tts_voice_hint: 'Выберите голос перед тем, как попросить AI помощника сгенерировать аудио.',
-        front: 'Лицевая сторона карточки',
+        front: 'Текст',
         front_translation_toggle_show: 'Показать перевод',
         front_translation_toggle_hide: 'Скрыть перевод',
         front_translation_mode_label: 'Направление перевода',
@@ -762,6 +774,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'AI помощник фокуса',
         ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
         ai_no_text: 'Введите предложение, чтобы включить помощника',
+        choose_focus_word: 'Выберите фокус-слово',
         ai_question_label: 'Спросить ИИ',
         ai_question_placeholder: 'Введите Ваш вопрос...',
         ai_question_button: 'Спросить',
@@ -844,7 +857,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Choisir un fichier audio',
         tts_voice: 'Voix',
         tts_voice_hint: 'Sélectionnez une voix avant de demander à l\'assistant IA de générer l\'audio.',
-        front: 'Recto de la carte',
+        front: 'Texte',
         front_translation_toggle_show: 'Afficher la traduction',
         front_translation_toggle_hide: 'Masquer la traduction',
         front_translation_mode_label: 'Direction de traduction',
@@ -858,6 +871,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'Assistant IA focal',
         ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée',
         ai_no_text: 'Saisissez une phrase pour activer l\'assistant',
+        choose_focus_word: 'Choisissez le mot focal',
         ai_question_label: 'Demander à l\'IA',
         ai_question_placeholder: 'Tapez une question sur cette phrase...',
         ai_question_button: 'Demander',
@@ -940,7 +954,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Elegir archivo de audio',
         tts_voice: 'Voz',
         tts_voice_hint: 'Selecciona una voz antes de pedir al asistente IA que genere audio.',
-        front: 'Anverso de la tarjeta',
+        front: 'Texto',
         front_translation_toggle_show: 'Mostrar traducción',
         front_translation_toggle_hide: 'Ocultar traducción',
         front_translation_mode_label: 'Dirección de traducción',
@@ -954,6 +968,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'Asistente IA focal',
         ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija',
         ai_no_text: 'Escribe una oración para activar el asistente',
+        choose_focus_word: 'Elige la palabra focal',
         ai_question_label: 'Preguntar a la IA',
         ai_question_placeholder: 'Escribe una pregunta sobre esta frase...',
         ai_question_button: 'Preguntar',
@@ -1036,7 +1051,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Wybierz plik audio',
         tts_voice: 'Głos',
         tts_voice_hint: 'Wybierz głos przed poproszeniem asystenta AI o wygenerowanie audio.',
-        front: 'Przód karty',
+        front: 'Tekst',
         front_translation_toggle_show: 'Pokaż tłumaczenie',
         front_translation_toggle_hide: 'Ukryj tłumaczenie',
         front_translation_mode_label: 'Kierunek tłumaczenia',
@@ -1050,6 +1065,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'Asystent AI fokusa',
         ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie',
         ai_no_text: 'Wpisz zdanie, aby włączyć asystenta',
+        choose_focus_word: 'Wybierz słowo fokusowe',
         ai_question_label: 'Zapytaj AI',
         ai_question_placeholder: 'Wpisz pytanie dotyczące tego zdania...',
         ai_question_button: 'Zapytaj',
@@ -1132,7 +1148,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Scegli file audio',
         tts_voice: 'Voce',
         tts_voice_hint: 'Seleziona una voce prima di chiedere all\'assistente IA di generare l\'audio.',
-        front: 'Fronte della scheda',
+        front: 'Testo',
         front_translation_toggle_show: 'Mostra traduzione',
         front_translation_toggle_hide: 'Nascondi traduzione',
         front_translation_mode_label: 'Direzione di traduzione',
@@ -1146,6 +1162,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'Assistente IA focale',
         ai_click_hint: 'Tocca qualsiasi parola sopra per rilevare un\'espressione fissa',
         ai_no_text: 'Digita una frase per attivare l\'assistente',
+        choose_focus_word: 'Scegli la parola focale',
         ai_question_label: 'Chiedi all\'AI',
         ai_question_placeholder: 'Digita una domanda su questa frase...',
         ai_question_button: 'Chiedi',
@@ -1228,7 +1245,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chooseaudiofile: 'Audiodatei auswählen',
         tts_voice: 'Stimme',
         tts_voice_hint: 'Wählen Sie eine Stimme aus, bevor Sie den KI-Assistenten bitten, Audio zu generieren.',
-        front: 'Vorderseite der Karte',
+        front: 'Text',
         front_translation_toggle_show: 'Übersetzung anzeigen',
         front_translation_toggle_hide: 'Übersetzung ausblenden',
         front_translation_mode_label: 'Übersetzungsrichtung',
@@ -1242,6 +1259,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'KI-Fokus-Assistent',
         ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen',
         ai_no_text: 'Geben Sie einen Satz ein, um den Assistenten zu aktivieren',
+        choose_focus_word: 'Fokuswort auswählen',
         ai_question_label: 'KI fragen',
         ai_question_placeholder: 'Stellen Sie eine Frage zu diesem Satz...',
         ai_question_button: 'Fragen',
@@ -1634,6 +1652,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       };
       try{
         const data = await api('ai_translate', {}, 'POST', payload, {signal: controller.signal});
+        updateUsageFromResponse(data);
         if(seq !== translationRequestSeq){
           return;
         }
@@ -1652,6 +1671,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
                 direction: 'no-en'
               };
               const enData = await api('ai_translate', {}, 'POST', enPayload);
+              updateUsageFromResponse(enData);
               const enTranslated = (enData.translation || '').trim();
               translationInputEn.value = enTranslated;
             }catch(enErr){
@@ -2087,6 +2107,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           payload.voiceId = selectedVoice;
         }
         const data = await api('ai_focus_helper', {}, 'POST', payload, {signal: controller.signal});
+        updateUsageFromResponse(data);
         const correctionMsg = applyAiPayload(data);
         if(correctionMsg){
           setFocusStatus('correction', correctionMsg);
@@ -2183,6 +2204,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           language: userLang2
         };
         const result = await api('ai_question', {}, 'POST', payload);
+        updateUsageFromResponse(result);
         const answer = result && result.answer ? result.answer.trim() : '';
         const response = {
           role: 'assistant',
@@ -2511,24 +2533,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       return Math.max(1, capped);
     }
+    const ratingHintLocaleMap = {
+      en:{one:'day', other:'days'},
+      nb:{one:'dag', other:'dager'},
+      no:{one:'dag', other:'dager'},
+      nn:{one:'dag', other:'dager'},
+      ru:{one:'день', few:'дня', many:'дней', other:'дней'},
+      uk:{one:'день', few:'дні', many:'днів', other:'днів'},
+      de:{one:'Tag', other:'Tage'},
+      fr:{one:'jour', other:'jours'},
+      es:{one:'día', other:'días'},
+      it:{one:'giorno', other:'giorni'},
+      pl:{one:'dzień', few:'dni', many:'dni', other:'dni'}
+    };
+    const pluralRulesCache = {};
+    function getInterfaceLanguage(){
+      const html = document.documentElement || null;
+      const langAttr = (html && (html.lang || (html.getAttribute ? html.getAttribute('lang') : ''))) || '';
+      const normalized = langAttr.trim().toLowerCase();
+      const base = normalized.split('-')[0] || 'en';
+      return {base, locale: normalized || base || 'en'};
+    }
     function formatIntervalDaysLabel(value){
       if(!Number.isFinite(value)){
         return '';
       }
       const days = Math.max(1, Math.round(value));
-      const html = document.documentElement || null;
-      const lang = (html && (html.lang || (html.getAttribute ? html.getAttribute('lang') : ''))) || '';
-      if(lang.toLowerCase().startsWith('ru')){
-        return `${days} ${ruDaysPlural(days)}`;
-      }
-      return `${days} ${days === 1 ? 'day' : 'days'}`;
-    }
-    function ruDaysPlural(value){
-      const mod10 = value % 10;
-      const mod100 = value % 100;
-      if(mod10 === 1 && mod100 !== 11) return 'день';
-      if(mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня';
-      return 'дней';
+      const {base, locale} = getInterfaceLanguage();
+      const labels = ratingHintLocaleMap[base] || ratingHintLocaleMap.en;
+      let form = 'other';
+      try{
+        pluralRulesCache[locale] = pluralRulesCache[locale] || new Intl.PluralRules(locale);
+        form = pluralRulesCache[locale].select(days);
+      }catch(_e){}
+      const word = labels[form] || labels.other || labels.one || ratingHintLocaleMap.en.other;
+      return `${days} ${word}`;
     }
     function updateRatingActionHints(rec){
       const mappings = [
@@ -3559,15 +3598,81 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         label.textContent = advancedVisible ? t('hide_advanced') : t('show_advanced');
       }
     }
+    const mediaPillRegistry = [];
+    let mediaPillsInitialized = false;
+    function updateMediaPillPlayingState(badge, playing){
+      if(!badge){
+        return;
+      }
+      badge.classList.toggle('media-pill-playing', !!playing);
+      badge.setAttribute('aria-pressed', playing ? 'true' : 'false');
+    }
+    function pauseOtherMediaPills(exceptAudio){
+      mediaPillRegistry.forEach(entry=>{
+        const otherAudio = entry.audio;
+        if(otherAudio && otherAudio !== exceptAudio){
+          try{ otherAudio.pause(); }catch(_e){}
+        }
+      });
+    }
+    function registerMediaPill(badgeId, audioId){
+      const badge = document.getElementById(badgeId);
+      const audio = document.getElementById(audioId);
+      if(!badge || !audio){
+        return;
+      }
+      function togglePlayback(){
+        if(audio.paused){
+          pauseOtherMediaPills(audio);
+          const playPromise = audio.play();
+          if(playPromise && typeof playPromise.catch === 'function'){
+            playPromise.catch(()=>{});
+          }
+        } else {
+          audio.pause();
+        }
+      }
+      badge.addEventListener('click', event=>{
+        if(event.target?.closest('.iconbtn')){
+          return;
+        }
+        togglePlayback();
+      });
+      badge.addEventListener('keydown', event=>{
+        if(event.key === 'Enter' || event.key === ' '){
+          event.preventDefault();
+          togglePlayback();
+        }
+      });
+      audio.addEventListener('play', ()=>updateMediaPillPlayingState(badge, true));
+      audio.addEventListener('pause', ()=>updateMediaPillPlayingState(badge, false));
+      audio.addEventListener('ended', ()=>updateMediaPillPlayingState(badge, false));
+      audio.addEventListener('error', ()=>updateMediaPillPlayingState(badge, false));
+      mediaPillRegistry.push({badge, audio});
+    }
+    function initMediaPillPlayback(){
+      if(mediaPillsInitialized){
+        return;
+      }
+      mediaPillsInitialized = true;
+      registerMediaPill('audBadge', 'audPrev');
+      registerMediaPill('focusAudBadge', 'focusAudPrev');
+    }
+    initMediaPillPlayback();
     function showAudioBadge(label){
       const badge=document.getElementById('audBadge');
       const nameEl=document.getElementById('audName');
       if(nameEl) nameEl.textContent = label || '';
-      if(badge) badge.classList.remove('hidden');
+      if(badge){
+        badge.classList.remove('hidden');
+      }
     }
     function hideAudioBadge(){
       const badge=document.getElementById('audBadge');
-      if(badge) badge.classList.add('hidden');
+      if(badge){
+        badge.classList.add('hidden');
+        updateMediaPillPlayingState(badge, false);
+      }
       const nameEl=document.getElementById('audName');
       if(nameEl) nameEl.textContent = '';
     }
@@ -3718,6 +3823,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!text){
           throw new Error('Empty transcription');
         }
+        updateUsageFromResponse(payload.data);
         lastAudioDurationSec = Math.min(duration, sttClipLimit || duration);
         applyTranscriptionResult(text);
         setSttStatus('success');
@@ -3806,11 +3912,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const badge=document.getElementById('focusAudBadge');
       const nameEl=document.getElementById('focusAudName');
       if(nameEl) nameEl.textContent = label || aiStrings.focusAudio;
-      if(badge) badge.classList.remove('hidden');
+      if(badge){
+        badge.classList.remove('hidden');
+      }
     }
     function hideFocusAudioBadge(){
       const badge=document.getElementById('focusAudBadge');
-      if(badge) badge.classList.add('hidden');
+      if(badge){
+        badge.classList.add('hidden');
+        updateMediaPillPlayingState(badge, false);
+      }
       const nameEl=document.getElementById('focusAudName');
       if(nameEl) nameEl.textContent = '';
     }
@@ -4061,6 +4172,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const cardOrder = Array.isArray(card.order) ? card.order : [];
       if(kind==="transcription" && card.transcription){
         el.innerHTML=`<div class="transcription-text">${card.transcription}</div>`;
+        el.dataset.slotType = 'transcription';
         return el;
       }
       if(kind==="text" && card.text){
@@ -4139,19 +4251,29 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       items.forEach(x=>slotContainer.appendChild(x));
       // Autoplay audio: first slot when opening card, or newly revealed slot when clicking Show More
       let autoplayUrl = null;
+      let autoplayRate = 1;
       if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
         // First opening - play first slot's audio
         autoplayUrl = items[0].dataset.autoplay;
       } else if(prevCount > 0 && count > prevCount){
-        // Show More clicked - play newly revealed slot's audio if it has one
+        // Show More clicked
         const newSlot = items[count - 1];
-        if(newSlot && newSlot.dataset && newSlot.dataset.autoplay){
+        // Check if new slot is transcription - play previous slot's audio at 0.7 speed
+        if(newSlot && newSlot.dataset && newSlot.dataset.slotType === 'transcription'){
+          // Find previous slot's audio
+          const prevSlot = items[count - 2];
+          if(prevSlot && prevSlot.dataset && prevSlot.dataset.autoplay){
+            autoplayUrl = prevSlot.dataset.autoplay;
+            autoplayRate = 0.7;
+          }
+        } else if(newSlot && newSlot.dataset && newSlot.dataset.autoplay){
+          // Play newly revealed slot's audio if it has one
           autoplayUrl = newSlot.dataset.autoplay;
         }
       }
       if(autoplayUrl){
         player.src=autoplayUrl;
-        player.playbackRate=1;
+        player.playbackRate=autoplayRate;
         player.currentTime=0;
         player.play().catch(()=>{});
       }
