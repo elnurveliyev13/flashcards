@@ -197,7 +197,10 @@ switch ($action) {
                 $duration,
                 $language !== '' ? $language : null
             );
-            $response = ['ok' => true, 'data' => ['text' => $text]];
+            $response = ['ok' => true, 'data' => [
+                'text' => $text,
+                'usage' => mod_flashcards_get_usage_snapshot($userid),
+            ]];
             http_response_code(200);
         } catch (\moodle_exception $ex) {
             http_response_code(400);
