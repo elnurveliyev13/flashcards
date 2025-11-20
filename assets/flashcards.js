@@ -414,6 +414,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       retry: dataset.ocrRetry || 'Retry',
       undo: dataset.ocrUndo || 'Undo replace'
     };
+    let mediaUsageSummary = buildMediaUsageSummary(runtimeConfig.usage);
+
+    function buildMediaUsageSummary(usage){
+      if(!usage || typeof usage !== 'object'){
+        return '';
+      }
+      const parts = [];
+      const addPart = (label, rawValue, unit)=>{
+        if(rawValue === undefined || rawValue === null){
+          return;
+        }
+        const value = Number(rawValue);
+        if(!Number.isFinite(value)){
+          return;
+        }
+        const suffix = unit ? ` ${unit}` : '';
+        parts.push(`${label} ${value}${suffix}`);
+      };
+      addPart('OA', usage.openaiTokens, 'tok');
+      addPart('OCR', usage.ocrTokens, 'img');
+      addPart('EL TTS', usage.elevenlabsTtsTokens, 'tok');
+      addPart('EL STT', usage.elevenlabsSttTokens, 's');
+      return parts.join(' · ');
+    }
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
     const cropStageContainer = root.querySelector('.ocr-crop-body');
@@ -442,7 +466,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       translationLoading: dataset.translationLoading || 'Translating…',
       translationError: dataset.translationError || 'Translation failed',
       translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.',
-      aiChatEmpty: dataset.aiChatEmpty || 'Ask the AI a question about this sentence.',
+      aiChatEmpty: dataset.aiChatEmpty || 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
       aiChatUser: dataset.aiChatUser || 'You',
       aiChatAssistant: dataset.aiChatAssistant || 'AI',
       aiChatError: dataset.aiChatError || 'AI could not answer that question.',
@@ -549,7 +573,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Ask the AI',
         ai_question_placeholder: 'Type a question about this sentence...',
         ai_question_button: 'Ask',
-        ai_chat_empty: 'Ask the AI a question to keep the explanation context.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'You',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'The AI could not answer that question.',
@@ -645,7 +669,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Запитати AI',
         ai_question_placeholder: 'Введіть Ваше запитання…',
         ai_question_button: 'Запитати',
-        ai_chat_empty: 'Поставте запитання AI, щоб зберегти контекст пояснення.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Ви',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'AI не зміг відповісти на це запитання.',
@@ -741,7 +765,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Спросить ИИ',
         ai_question_placeholder: 'Введите Ваш вопрос...',
         ai_question_button: 'Спросить',
-        ai_chat_empty: 'Задайте вопрос ИИ, чтобы сохранить контекст объяснения.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Вы',
         ai_chat_assistant: 'ИИ',
         ai_chat_error: 'ИИ не смог ответить на этот вопрос.',
@@ -837,7 +861,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Demander à l\'IA',
         ai_question_placeholder: 'Tapez une question sur cette phrase...',
         ai_question_button: 'Demander',
-        ai_chat_empty: 'Posez une question à l\'IA pour conserver le contexte de l\'explication.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Vous',
         ai_chat_assistant: 'IA',
         ai_chat_error: 'L\'IA n\'a pas pu répondre à cette question.',
@@ -933,7 +957,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Preguntar a la IA',
         ai_question_placeholder: 'Escribe una pregunta sobre esta frase...',
         ai_question_button: 'Preguntar',
-        ai_chat_empty: 'Haz una pregunta a la IA para mantener el contexto de la explicación.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Tú',
         ai_chat_assistant: 'IA',
         ai_chat_error: 'La IA no pudo responder a esa pregunta.',
@@ -1029,7 +1053,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Zapytaj AI',
         ai_question_placeholder: 'Wpisz pytanie dotyczące tego zdania...',
         ai_question_button: 'Zapytaj',
-        ai_chat_empty: 'Zadaj pytanie AI, aby zachować kontekst wyjaśnienia.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Ty',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'AI nie mogła odpowiedzieć na to pytanie.',
@@ -1125,7 +1149,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Chiedi all\'AI',
         ai_question_placeholder: 'Digita una domanda su questa frase...',
         ai_question_button: 'Chiedi',
-        ai_chat_empty: 'Fai una domanda all\'AI per mantenere il contesto della spiegazione.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Tu',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'L\'AI non ha potuto rispondere a quella domanda.',
@@ -1221,7 +1245,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'KI fragen',
         ai_question_placeholder: 'Stellen Sie eine Frage zu diesem Satz...',
         ai_question_button: 'Fragen',
-        ai_chat_empty: 'Stellen Sie der KI eine Frage, um den Erklärungskontext beizubehalten.',
+        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
         ai_chat_user: 'Sie',
         ai_chat_assistant: 'KI',
         ai_chat_error: 'Die KI konnte diese Frage nicht beantworten.',
@@ -1537,7 +1561,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const text = label || aiStrings.translationIdle;
-      mediaStatusIndicator.textContent = text;
+      const summary = mediaUsageSummary;
+      mediaStatusIndicator.textContent = summary ? `${text} · ${summary}` : text;
       mediaStatusIndicator.dataset.state = state || '';
       mediaStatusIndicator.classList.remove('error','success');
       if(state === 'error'){
@@ -1834,6 +1859,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           scheduleTranslationRefresh();
         }
       });
+      frontInput.addEventListener('focus', ()=>{
+        if(translationDirection !== 'no-user' && !frontInput.value.trim()){
+          applyTranslationDirection('no-user');
+        }
+      });
     }
     if(translationInputLocal){
       translationInputLocal.addEventListener('input', ()=>{
@@ -1860,9 +1890,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function extractFocusTokens(text){
       if(!text) return [];
-      const matches = text.match(wordRegex);
-      if(!matches) return [];
-      return matches.map((token, index)=>({ text: token, index }));
+      // Split text into words and non-words (punctuation, spaces)
+      const parts = [];
+      let lastIndex = 0;
+      let wordIndex = 0;
+      text.replace(wordRegex, (match, offset) => {
+        // Add punctuation/spaces before this word
+        if(offset > lastIndex){
+          parts.push({ text: text.slice(lastIndex, offset), isWord: false, index: -1 });
+        }
+        // Add the word itself
+        parts.push({ text: match, isWord: true, index: wordIndex++ });
+        lastIndex = offset + match.length;
+        return match;
+      });
+      // Add any remaining punctuation/spaces after the last word
+      if(lastIndex < text.length){
+        parts.push({ text: text.slice(lastIndex), isWord: false, index: -1 });
+      }
+      return parts;
     }
 
     function updateChipActiveState(){
@@ -1877,33 +1923,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!focusWordList) return;
       const text = frontInput ? frontInput.value : '';
       const tokens = extractFocusTokens(text);
-      focusHelperState.tokens = tokens;
+      // Store only word tokens for focusHelperState
+      focusHelperState.tokens = tokens.filter(t => t.isWord);
       focusWordList.innerHTML = '';
       if(!text || !text.trim()){
         setFocusStatus('', '');
       }
-      if(!tokens.length){
+      const wordTokens = tokens.filter(t => t.isWord);
+      if(!wordTokens.length){
         const span=document.createElement('span');
         span.className='focus-helper-empty';
         span.textContent = aiStrings.notext;
         focusWordList.appendChild(span);
         return;
       }
-      tokens.forEach((token, idx)=>{
-        const btn=document.createElement('button');
-        btn.type='button';
-        btn.className='focus-chip';
-        btn.textContent = token.text;
-        btn.dataset.index = String(idx);
-        if(!aiEnabled){
-          btn.disabled = true;
-        }else{
-          btn.addEventListener('click', ()=> triggerFocusHelper(token, idx));
+      tokens.forEach((token)=>{
+        if(token.isWord){
+          const btn=document.createElement('button');
+          btn.type='button';
+          btn.className='focus-chip';
+          btn.textContent = token.text;
+          btn.dataset.index = String(token.index);
+          if(!aiEnabled){
+            btn.disabled = true;
+          }else{
+            btn.addEventListener('click', ()=> triggerFocusHelper(token, token.index));
+          }
+          if(token.index === focusHelperState.activeIndex){
+            btn.classList.add('active');
+          }
+          focusWordList.appendChild(btn);
+        } else {
+          // Punctuation/spaces - display as non-clickable text
+          const span = document.createElement('span');
+          span.className = 'focus-punctuation';
+          span.textContent = token.text;
+          focusWordList.appendChild(span);
         }
-        if(idx === focusHelperState.activeIndex){
-          btn.classList.add('active');
-        }
-        focusWordList.appendChild(btn);
       });
     }
 
@@ -2442,6 +2498,55 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const actualInterval = easy ? daysInterval : Math.max(1, daysInterval / 2);
       return currentTime + (actualInterval * 60 * 1000); // Convert to milliseconds
     }
+    function ratingIntervalDays(step, mode){
+      const safeStep = Math.max(0, Number(step) || 0);
+      if(mode === 'hard'){
+        return 1;
+      }
+      const nextStep = Math.min(11, safeStep + 1);
+      const baseInterval = Math.pow(2, Math.max(0, nextStep - 1));
+      const capped = Math.min(512, baseInterval);
+      if(mode === 'normal'){
+        return Math.max(1, capped / 2);
+      }
+      return Math.max(1, capped);
+    }
+    function formatIntervalDaysLabel(value){
+      if(!Number.isFinite(value)){
+        return '';
+      }
+      const days = Math.max(1, Math.round(value));
+      const html = document.documentElement || null;
+      const lang = (html && (html.lang || (html.getAttribute ? html.getAttribute('lang') : ''))) || '';
+      if(lang.toLowerCase().startsWith('ru')){
+        return `${days} ${ruDaysPlural(days)}`;
+      }
+      return `${days} ${days === 1 ? 'day' : 'days'}`;
+    }
+    function ruDaysPlural(value){
+      const mod10 = value % 10;
+      const mod100 = value % 100;
+      if(mod10 === 1 && mod100 !== 11) return 'день';
+      if(mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня';
+      return 'дней';
+    }
+    function updateRatingActionHints(rec){
+      const mappings = [
+        {id:'btnEasyHint', mode:'easy'},
+        {id:'btnNormalHint', mode:'normal'},
+        {id:'btnHardHint', mode:'hard'}
+      ];
+      mappings.forEach(cfg=>{
+        const target = document.getElementById(cfg.id);
+        if(!target) return;
+        if(!rec){
+          target.textContent='';
+          return;
+        }
+        const days = ratingIntervalDays(rec.step || 0, cfg.mode);
+        target.textContent = formatIntervalDaysLabel(days);
+      });
+    }
 
     // Storage
     const PROFILE_KEY="srs-profile";
@@ -2492,6 +2597,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       stageBadge.style.background = `linear-gradient(90deg, #2196f3 ${fillPercent}%, #e0e0e0 ${fillPercent}%)`;
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
       stageBadge.style.justifyContent = "center";
+    }
+    function setCreatedMeta(ts){
+      const badge = $("#createdBadge");
+      const value = $("#createdValue");
+      if(!badge || !value) return;
+      if(!ts){
+        badge.classList.add("hidden");
+        value.textContent = "--";
+        try{ value.removeAttribute("datetime"); }catch(_e){}
+        return;
+      }
+      badge.classList.remove("hidden");
+      const dt = new Date(ts);
+      value.textContent = fmtDateTime(ts);
+      try{ value.setAttribute("datetime", dt.toISOString()); }catch(_e){}
     }
     function setDue(n){
       const el=$("#due");
@@ -4081,9 +4201,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(queue.length===0){
         slotContainer.innerHTML="";
         const sb=$("#stageBadge"); if(sb) sb.classList.add("hidden");
+        setCreatedMeta(null);
         emptyState.classList.remove("hidden");
         const br=$("#btnRevealNext"); if(br){ br.disabled=true; br.classList.remove("primary"); }
         setIconVisibility(false); hidePlayIcons();
+        updateRatingActionHints(null);
         return;
       }
         emptyState.classList.add("hidden");
@@ -4130,6 +4252,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         updateRevealButton();
         setIconVisibility(false);
         hidePlayIcons();
+        setCreatedMeta(null);
+        updateRatingActionHints(null);
         return;
       }
       if(!forceRender && activeTab!=='study'){
@@ -4138,9 +4262,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       pendingStudyRender=false;
       setStage(currentItem.rec.step||0);
+      setCreatedMeta(currentItem.rec?.addedAt || 0);
       await renderCard(currentItem.card, visibleSlots, prevSlots);
       setIconVisibility(true);
       updateRevealButton();
+      updateRatingActionHints(currentItem.rec || null);
       // Note: maybePromptForStage() replaced by inline prompt in renderCard
     }
 

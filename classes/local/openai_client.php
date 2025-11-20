@@ -70,13 +70,14 @@ class openai_client {
     /**
      * Ask ChatGPT to extract and explain the clicked word/expression.
      *
+     * @param int $userid
      * @param string $fronttext
      * @param string $clickedword
      * @param array $options ['language' => string, 'level' => string]
      * @return array
      * @throws moodle_exception
      */
-    public function detect_focus_data(string $fronttext, string $clickedword, array $options = []): array {
+    public function detect_focus_data(int $userid, string $fronttext, string $clickedword, array $options = []): array {
         if (!$this->is_enabled()) {
             throw new coding_exception('openai client is not configured');
         }
@@ -185,6 +186,7 @@ PROMPT;
         ];
 
         $response = $this->request($payload);
+        $this->record_usage($userid, $response->usage ?? null);
         $content = $response->choices[0]->message->content ?? '';
         if ($content === '') {
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
@@ -214,6 +216,7 @@ PROMPT;
     /**
      * Translate arbitrary learner text using ChatGPT.
      *
+     * @param int $userid
      * @param string $text
      * @param string $source
      * @param string $target
@@ -221,7 +224,7 @@ PROMPT;
      * @return array
      * @throws moodle_exception
      */
-    public function translate_text(string $text, string $source, string $target, array $options = []): array {
+    public function translate_text(int $userid, string $text, string $source, string $target, array $options = []): array {
         if (!$this->is_enabled()) {
             throw new coding_exception('openai client is not configured');
         }
@@ -258,6 +261,7 @@ PROMPT;
         ];
 
         $response = $this->request($payload);
+        $this->record_usage($userid, $response->usage ?? null);
         $content = trim($response->choices[0]->message->content ?? '');
         if ($content === '') {
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
@@ -270,7 +274,7 @@ PROMPT;
         ];
     }
 
-    public function answer_question(string $context, string $question, string $language, array $options = []): array {
+    public function answer_question(int $userid, string $context, string $question, string $language, array $options = []): array {
         if (!$this->is_enabled()) {
             throw new coding_exception('openai client is not configured');
         }
@@ -307,6 +311,7 @@ PROMPT;
         ];
 
         $response = $this->request($payload);
+        $this->record_usage($userid, $response->usage ?? null);
         $content = trim($response->choices[0]->message->content ?? '');
         if ($content === '') {
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
@@ -538,5 +543,37 @@ PROMPT;
             throw new moodle_exception('ai_invalid_json', 'mod_flashcards');
         }
         return $json;
+    }
+
+    protected function record_usage(int $userid, $usage): void {
+        if ($userid <= 0 || empty($usage)) {
+            return;
+        }
+        $tokens = $this->extract_total_tokens($usage);
+        if ($tokens <= 0) {
+            return;
+        }
+        $prefname = 'mod_flashcards_openai_tokens_' . date('Ym');
+        $used = (int)get_user_preferences($prefname, 0, $userid);
+        $newvalue = $used + $tokens;
+        set_user_preference($prefname, $newvalue, $userid);
+    }
+
+    protected function extract_total_tokens($usage): int {
+        if (is_object($usage)) {
+            $usage = (array)$usage;
+        }
+        if (!is_array($usage)) {
+            return 0;
+        }
+        if (isset($usage['total_tokens'])) {
+            return max(0, (int)$usage['total_tokens']);
+        }
+        $prompt = (int)($usage['prompt_tokens'] ?? 0);
+        $completion = (int)($usage['completion_tokens'] ?? 0);
+        if ($prompt > 0 || $completion > 0) {
+            return max(0, $prompt + $completion);
+        }
+        return 0;
     }
 }

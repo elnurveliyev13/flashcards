@@ -403,7 +403,7 @@ switch ($action) {
         }
         $language = clean_param($payload['language'] ?? 'uk', PARAM_ALPHANUMEXT);
         $helper = new \mod_flashcards\local\ai_helper();
-        $data = $helper->answer_question($fronttext, $question, ['language' => $language]);
+        $data = $helper->answer_question($userid, $fronttext, $question, ['language' => $language]);
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 

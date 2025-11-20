@@ -40,7 +40,7 @@ class ai_helper {
 
         $language = trim($options['language'] ?? '') ?: 'uk';
         $level = trim($options['level'] ?? '');
-        $focusdata = $this->openai->detect_focus_data($fronttext, $clickedword, [
+        $focusdata = $this->openai->detect_focus_data($userid, $fronttext, $clickedword, [
             'language' => $language,
             'level' => $level,
         ]);
@@ -156,7 +156,7 @@ class ai_helper {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
-        $translation = $this->openai->translate_text($text, $source, $target, $options);
+        $translation = $this->openai->translate_text($userid, $text, $source, $target, $options);
         return [
             'translation' => $translation['translation'] ?? '',
             'sourceLang' => $translation['source'] ?? $source,
@@ -164,7 +164,7 @@ class ai_helper {
         ];
     }
 
-    public function answer_question(string $fronttext, string $question, array $options = []): array {
+    public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
@@ -176,7 +176,7 @@ class ai_helper {
         }
 
         $language = clean_param($options['language'] ?? 'uk', PARAM_ALPHANUMEXT);
-        return $this->openai->answer_question($fronttext, $question, $language);
+        return $this->openai->answer_question($userid, $fronttext, $question, $language);
     }
 
     protected function enforce_clicked_focus(string $focus, string $clicked): string {

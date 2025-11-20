@@ -143,7 +143,35 @@ function mod_flashcards_pluginfile($course, $cm, $context, $filearea, $args, $fo
  */
 defined('FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES') || define('FLASHCARDS_OCR_UPLOAD_LIMIT_BYTES', 6 * 1024 * 1024);
 
+function mod_flashcards_get_usage_snapshot(?int $userid = null): array {
+    global $USER;
+    $targetid = $userid ?? ($USER->id ?? 0);
+    if ($targetid <= 0) {
+        return [
+            'openaiTokens' => 0,
+            'ocrTokens' => 0,
+            'elevenlabsTtsTokens' => 0,
+            'elevenlabsSttTokens' => 0,
+            'whisperSttTokens' => 0,
+        ];
+    }
+
+    $suffix = date('Ym');
+    $fetch = function(string $name) use ($targetid): int {
+        return max(0, (int)get_user_preferences($name, 0, $targetid));
+    };
+
+    return [
+        'openaiTokens' => $fetch('mod_flashcards_openai_tokens_' . $suffix),
+        'ocrTokens' => $fetch('mod_flashcards_googlevision_' . $suffix),
+        'elevenlabsTtsTokens' => $fetch('mod_flashcards_elevenlabs_tts_' . $suffix),
+        'elevenlabsSttTokens' => $fetch('mod_flashcards_elevenlabs_stt_' . $suffix),
+        'whisperSttTokens' => $fetch('mod_flashcards_whisper_' . $suffix),
+    ];
+}
+
 function mod_flashcards_get_runtime_config(): array {
+    global $USER;
     $config = get_config('mod_flashcards');
     $elevenenabled = !empty($config->elevenlabs_apikey);
     $pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: '';
@@ -247,5 +275,6 @@ function mod_flashcards_get_runtime_config(): array {
             'timeout' => $googlevisionTimeout,
             'monthlyLimit' => $googlevisionMonthly,
         ],
+        'usage' => mod_flashcards_get_usage_snapshot($USER->id ?? null),
     ];
 }

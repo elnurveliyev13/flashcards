@@ -1059,10 +1059,71 @@ select:focus-visible{
 }
 .capture-video{width:100%;border-radius:12px;display:block}
 .actionTop{position:absolute;top:var(--space-1);right:var(--space-1);display:flex;gap:var(--space-1)}
+.actionTop.card-toolbar{
+  position:relative;
+  top:auto;
+  right:auto;
+  margin-bottom:var(--space-2);
+  justify-content:space-between;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:var(--space-2);
+}
+.card-toolbar-info{
+  display:flex;
+  flex-wrap:wrap;
+  gap:var(--space-1);
+}
+.card-toolbar-actions{
+  display:flex;
+  gap:var(--space-1);
+}
+.card-stage-chip,
+.card-created-chip{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  padding:8px 12px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  min-width:120px;
+}
+.card-stage-chip.hidden,
+.card-created-chip.hidden{
+  display:none;
+}
+.card-stage-label,
+.card-created-label{
+  font-size:0.75rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  color:var(--text-muted);
+}
+.card-stage-value{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:600;
+}
+.card-stage-value #stageText{
+  font-size:1rem;
+}
+.card-created-chip time{
+  font-size:0.875rem;
+  color:var(--text);
+  white-space:nowrap;
+}
 .front{font-size:1.5rem;margin-bottom:var(--space-2);} /* 24px */
 .back{color:var(--muted);margin-bottom:var(--space-2);min-height:2.2em}
 /* improve contrast */
 .back{color:#e2e8f0}
+/* Translation text styling - distinct font for translations */
+.back{font-family:Georgia, 'Times New Roman', serif;font-style:italic}
+/* Translation input fields - distinct font from Norwegian text */
+#uTransLocal, #uTransEn{font-family:Georgia, 'Times New Roman', serif;font-style:italic}
 .table td{color:#e5e7eb}
 .table th{color:#f1f5f9}
 textarea, input[type=search]{color:#f1f5f9}
@@ -1787,7 +1848,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .front{font-size:2rem !important;font-weight:500;line-height:1.3;color:#f1f5f9} /* 32px */
 .back{font-size:1.125rem !important;line-height:1.5} /* 18px */
 .bottom-actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,1000px);background:linear-gradient(180deg, transparent 0%, rgba(15,23,42,0.92) 12%, rgba(15,23,42,1) 100%);backdrop-filter:blur(12px);padding:10px 14px;padding-bottom:max(10px, env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;align-items:stretch;z-index:1000;border-top:1px solid rgba(55,65,81,0.5);box-shadow:0 -6px 24px rgba(0,0,0,0.4);box-sizing:border-box}
-.bottom-actions button{flex:1;max-width:140px;font-size:1rem;font-weight:700;padding:16px 20px;border-radius:16px;transition:all 0.15s ease;text-align:center;display:flex;align-items:center;justify-content:center} /* 16px */
+.bottom-actions button{flex:1 1 0;min-width:0;max-width:none;font-size:1rem;font-weight:700;padding:16px 20px;border-radius:16px;transition:all 0.15s ease;text-align:center;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px} /* 16px */
+.bottom-actions .rating-label{display:block;font-size:1rem;line-height:1.1}
+.bottom-actions .rating-hint{display:block;font-size:0.75rem;font-weight:500;line-height:1.2;opacity:0.9;color:rgba(226,232,240,0.85)}
+.bottom-actions .rating-hint:empty{display:none}
 .bottom-actions button:active{transform:scale(0.92)}
 .bottom-actions .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
 .bottom-actions .mid{background:rgba(48,92,255,0.26);border:2px solid rgba(48,92,255,0.6);color:#aac4ff}
@@ -1828,7 +1892,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   .bottom-actions button {
     padding: 12px 16px;
     font-size: 0.875rem; /* 14px */
-    max-width: 120px;
+    min-width: 0;
+    max-width: none;
+    gap: 4px;
   }
   /* Reduce header padding in landscape */
   .tabs-toolbar {
@@ -3151,6 +3217,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   text-align:left;
   color:var(--text);
   word-break:break-word;
+  font-family:Georgia, 'Times New Roman', serif;
+  font-style:italic;
 }
 
 /* Responsive adjustments */
@@ -3250,6 +3318,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .focus-chip:disabled {
   opacity:0.45;
   cursor:not-allowed;
+}
+.focus-punctuation {
+  color:var(--text-subtle);
+  font-size:0.85rem;
+  user-select:none;
+  pointer-events:none;
 }
 .focus-helper-status {
   min-height:1rem;

@@ -158,6 +158,7 @@ class tts_service {
         }
 
         $file = $this->store_audio_file($context, $userid, $filename, $response);
+        $this->record_tts_usage($userid, $text);
         return $this->format_file_response($context, $userid, $file->get_filename(), $voice, self::PROVIDER_ELEVENLABS);
     }
 
@@ -287,6 +288,29 @@ class tts_service {
         }
 
         throw new coding_exception('No TTS providers are configured');
+    }
+
+    protected function record_tts_usage(int $userid, string $text): void {
+        if ($userid <= 0) {
+            return;
+        }
+        $tokens = $this->estimate_tts_tokens($text);
+        if ($tokens <= 0) {
+            return;
+        }
+        $prefname = 'mod_flashcards_elevenlabs_tts_' . date('Ym');
+        $used = (int)get_user_preferences($prefname, 0, $userid);
+        $newvalue = $used + $tokens;
+        set_user_preference($prefname, $newvalue, $userid);
+    }
+
+    protected function estimate_tts_tokens(string $text): int {
+        $clean = trim(preg_replace('/\s+/u', ' ', $text));
+        if ($clean === '') {
+            return 0;
+        }
+        $length = mb_strlen($clean, 'UTF-8');
+        return max(1, (int)ceil($length / 4));
     }
 
     protected function count_words(string $text): int {
