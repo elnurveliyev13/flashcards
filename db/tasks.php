@@ -27,5 +27,14 @@ $tasks = [
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
+    ],
+    [
+        'classname' => 'mod_flashcards\task\send_push_notifications',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '9',    // Run at 9:00 AM daily (morning reminder)
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
     ]
 ];

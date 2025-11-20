@@ -437,3 +437,18 @@ $string['error_elevenlabs_stt_api'] = 'ElevenLabs speech-to-text failed: {$a}';
 $string['error_stt_disabled'] = 'Speech-to-text is not configured. Please enable Whisper or ElevenLabs STT.';
 $string['error_stt_upload'] = 'Could not process the uploaded audio file.';
 $string['error_stt_api'] = 'Speech-to-text service failed: {$a}';
+
+// Push notifications settings
+$string['settings_push_section'] = 'Push Notifications';
+$string['settings_push_section_desc'] = 'Send daily reminders about due cards. Requires VAPID keys for Web Push.';
+$string['settings_push_enable'] = 'Enable push notifications';
+$string['settings_push_enable_desc'] = 'Allow users to receive push notifications about due cards.';
+$string['settings_vapid_public'] = 'VAPID public key';
+$string['settings_vapid_public_desc'] = 'The public key for Web Push (base64url encoded).';
+$string['settings_vapid_private'] = 'VAPID private key';
+$string['settings_vapid_private_desc'] = 'The private key for Web Push (base64url encoded). Keep this secret!';
+$string['settings_vapid_subject'] = 'VAPID subject';
+$string['settings_vapid_subject_desc'] = 'Contact email for push service (e.g., mailto:admin@example.com).';
+
+// Push notification task
+$string['task_send_push_notifications'] = 'Send push notifications for due cards';

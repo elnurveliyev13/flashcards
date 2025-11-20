@@ -305,12 +305,12 @@ class tts_service {
     }
 
     protected function estimate_tts_tokens(string $text): int {
+        // ElevenLabs charges by character count
         $clean = trim(preg_replace('/\s+/u', ' ', $text));
         if ($clean === '') {
             return 0;
         }
-        $length = mb_strlen($clean, 'UTF-8');
-        return max(1, (int)ceil($length / 4));
+        return mb_strlen($clean, 'UTF-8');
     }
 
     protected function count_words(string $text): int {

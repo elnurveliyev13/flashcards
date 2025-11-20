@@ -197,5 +197,25 @@
         <INDEX NAME="date_idx" UNIQUE="false" FIELDS="log_date"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="flashcards_push_subs" COMMENT="Push notification subscriptions for PWA">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="endpoint" TYPE="text" NOTNULL="true"/>
+        <FIELD NAME="p256dh" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="auth" TYPE="char" LENGTH="255" NOTNULL="true"/>
+        <FIELD NAME="lang" TYPE="char" LENGTH="10" NOTNULL="true" DEFAULT="en"/>
+        <FIELD NAME="enabled" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="enabled_idx" UNIQUE="false" FIELDS="enabled"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

@@ -316,6 +316,41 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    // Push Notifications (VAPID)
+    $settings->add(new admin_setting_heading(
+        'mod_flashcards/push_heading',
+        get_string('settings_push_section', 'mod_flashcards'),
+        get_string('settings_push_section_desc', 'mod_flashcards')
+    ));
+
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_flashcards/push_enabled',
+        get_string('settings_push_enable', 'mod_flashcards'),
+        get_string('settings_push_enable_desc', 'mod_flashcards'),
+        0
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/vapid_public_key',
+        get_string('settings_vapid_public', 'mod_flashcards'),
+        get_string('settings_vapid_public_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configpasswordunmask(
+        'mod_flashcards/vapid_private_key',
+        get_string('settings_vapid_private', 'mod_flashcards'),
+        get_string('settings_vapid_private_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/vapid_subject',
+        get_string('settings_vapid_subject', 'mod_flashcards'),
+        get_string('settings_vapid_subject_desc', 'mod_flashcards'),
+        'mailto:admin@example.com'
+    ));
+
     $ADMIN->add('modsettings', new admin_externalpage(
             'mod_flashcards_mediareport',
             get_string('mediareport_title', 'mod_flashcards'),

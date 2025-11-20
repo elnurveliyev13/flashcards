@@ -434,7 +434,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       };
       addPart('OA', usage.openaiTokens, 'tok');
       addPart('OCR', usage.ocrTokens, 'img');
-      addPart('EL TTS', usage.elevenlabsTtsTokens, 'tok');
+      addPart('EL TTS', usage.elevenlabsTtsTokens, 'chr');
       addPart('EL STT', usage.elevenlabsSttTokens, 's');
       return parts.join(' · ');
     }
@@ -6066,6 +6066,126 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
     try { if (!document.querySelector('link[rel="manifest"]')) { const l=document.createElement('link'); l.rel='manifest'; l.href=baseurl + 'manifest.webmanifest'; document.head.appendChild(l);} } catch(e){}
 
+    // ========== PUSH NOTIFICATIONS ==========
+    const PUSH_SUBSCRIPTION_KEY = 'flashcards_push_subscribed';
+
+    async function initPushNotifications() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        debugLog('[Push] Push notifications not supported');
+        return;
+      }
+
+      // Check if already subscribed
+      const alreadySubscribed = localStorage.getItem(PUSH_SUBSCRIPTION_KEY) === 'true';
+      if (alreadySubscribed) {
+        debugLog('[Push] Already subscribed');
+        return;
+      }
+
+      // Wait a bit before showing permission request (not immediately on load)
+      // Only ask after user has used the app for a while
+      const visitCount = parseInt(localStorage.getItem('flashcards_visit_count') || '0', 10);
+      localStorage.setItem('flashcards_visit_count', String(visitCount + 1));
+
+      // Ask for permission after 3rd visit
+      if (visitCount < 3) {
+        debugLog('[Push] Waiting for more visits before asking for permission');
+        return;
+      }
+
+      // Check current permission state
+      if (Notification.permission === 'denied') {
+        debugLog('[Push] Notification permission denied');
+        return;
+      }
+
+      // If permission not yet granted, we'll need to ask
+      // For now, we auto-subscribe if permission is already granted
+      if (Notification.permission === 'granted') {
+        await subscribeToPush();
+      }
+    }
+
+    async function subscribeToPush() {
+      try {
+        // Get VAPID public key from server
+        const vapidResp = await fetch(baseurl + 'ajax.php?cmid=0&action=get_vapid_key&sesskey=' + M.cfg.sesskey);
+        const vapidData = await vapidResp.json();
+
+        if (!vapidData.ok || !vapidData.data?.publicKey) {
+          debugLog('[Push] VAPID key not available');
+          return;
+        }
+
+        const vapidPublicKey = vapidData.data.publicKey;
+
+        // Get service worker registration
+        const registration = await navigator.serviceWorker.ready;
+
+        // Subscribe to push
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        });
+
+        // Send subscription to server
+        const lang = currentInterfaceLang || 'en';
+        const resp = await fetch(baseurl + 'ajax.php?cmid=0&action=push_subscribe&sesskey=' + M.cfg.sesskey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: subscription.toJSON(),
+            lang: lang
+          })
+        });
+
+        const result = await resp.json();
+        if (result.ok) {
+          localStorage.setItem(PUSH_SUBSCRIPTION_KEY, 'true');
+          debugLog('[Push] Subscribed successfully');
+        } else {
+          debugLog('[Push] Subscription failed:', result);
+        }
+      } catch (err) {
+        debugLog('[Push] Error subscribing:', err);
+      }
+    }
+
+    async function updatePushSubscriptionLang(newLang) {
+      if (localStorage.getItem(PUSH_SUBSCRIPTION_KEY) !== 'true') {
+        return;
+      }
+
+      try {
+        await fetch(baseurl + 'ajax.php?cmid=0&action=push_update_lang&sesskey=' + M.cfg.sesskey, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lang: newLang })
+        });
+        debugLog('[Push] Language updated to:', newLang);
+      } catch (err) {
+        debugLog('[Push] Error updating language:', err);
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    // Initialize push notifications
+    initPushNotifications();
+
+    // Make updatePushSubscriptionLang available for language change handler
+    window.flashcards_updatePushLang = updatePushSubscriptionLang;
+    // ========== END PUSH NOTIFICATIONS ==========
+
     // Add iOS-specific meta tags for PWA
     try {
       if (!document.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
@@ -7045,6 +7165,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           updateInterfaceTexts();
           userLang2 = newLang;
           try{ saveTransLang(newLang); }catch(_e){}
+          // Update push notification language preference
+          if(typeof window.flashcards_updatePushLang === 'function'){
+            window.flashcards_updatePushLang(newLang);
+          }
           if(typeof updateTranslationLangUI === 'function'){
             updateTranslationLangUI();
           }

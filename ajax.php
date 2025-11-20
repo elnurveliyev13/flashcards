@@ -413,6 +413,98 @@ switch ($action) {
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
+    case 'push_subscribe':
+        // Register push notification subscription
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload) || empty($payload['subscription'])) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $sub = $payload['subscription'];
+        if (empty($sub['endpoint']) || empty($sub['keys']['p256dh']) || empty($sub['keys']['auth'])) {
+            throw new invalid_parameter_exception('Invalid subscription format');
+        }
+        $lang = clean_param($payload['lang'] ?? 'en', PARAM_ALPHANUMEXT);
+        $now = time();
+
+        // Check if subscription with same endpoint exists for this user
+        $existing = $DB->get_record('flashcards_push_subs', [
+            'userid' => $userid,
+            'endpoint' => $sub['endpoint']
+        ]);
+
+        if ($existing) {
+            // Update existing subscription
+            $existing->p256dh = $sub['keys']['p256dh'];
+            $existing->auth = $sub['keys']['auth'];
+            $existing->lang = $lang;
+            $existing->enabled = 1;
+            $existing->timemodified = $now;
+            $DB->update_record('flashcards_push_subs', $existing);
+            $subid = $existing->id;
+        } else {
+            // Create new subscription
+            $record = (object)[
+                'userid' => $userid,
+                'endpoint' => $sub['endpoint'],
+                'p256dh' => $sub['keys']['p256dh'],
+                'auth' => $sub['keys']['auth'],
+                'lang' => $lang,
+                'enabled' => 1,
+                'timecreated' => $now,
+                'timemodified' => $now
+            ];
+            $subid = $DB->insert_record('flashcards_push_subs', $record);
+        }
+
+        echo json_encode(['ok' => true, 'data' => ['id' => $subid]]);
+        break;
+
+    case 'push_unsubscribe':
+        // Remove push notification subscription
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload) || empty($payload['endpoint'])) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $endpoint = $payload['endpoint'];
+
+        // Delete subscription for this user with matching endpoint
+        $DB->delete_records('flashcards_push_subs', [
+            'userid' => $userid,
+            'endpoint' => $endpoint
+        ]);
+
+        echo json_encode(['ok' => true]);
+        break;
+
+    case 'push_update_lang':
+        // Update language preference for all user's subscriptions
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload) || empty($payload['lang'])) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $lang = clean_param($payload['lang'], PARAM_ALPHANUMEXT);
+
+        $DB->execute(
+            "UPDATE {flashcards_push_subs} SET lang = ?, timemodified = ? WHERE userid = ?",
+            [$lang, time(), $userid]
+        );
+
+        echo json_encode(['ok' => true]);
+        break;
+
+    case 'get_vapid_key':
+        // Return VAPID public key for push subscription
+        $config = get_config('mod_flashcards');
+        $vapidpublic = trim($config->vapid_public_key ?? '');
+        if ($vapidpublic === '') {
+            throw new moodle_exception('Push notifications not configured');
+        }
+        echo json_encode(['ok' => true, 'data' => ['publicKey' => $vapidpublic]]);
+        break;
+
     default:
         throw new moodle_exception('invalidaction');
 }

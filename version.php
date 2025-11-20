@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025111900; // YYYYMMDDXX. Added ElevenLabs STT as alternative to Whisper
+$plugin->version   = 2025112000; // YYYYMMDDXX. Added push notifications for PWA
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.13.0-elevenlabs-stt'; // Added ElevenLabs Speech-to-Text provider
+$plugin->release   = '0.14.0-push-notifications'; // Added push notifications for due cards reminders
