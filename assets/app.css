@@ -1133,6 +1133,8 @@ select:focus-visible{
 .back{font-family:Georgia, 'Times New Roman', serif;font-style:italic}
 /* Translation input fields - distinct font from Norwegian text */
 #uTransLocal, #uTransEn{font-family:Georgia, 'Times New Roman', serif;font-style:italic;color:#94a3b8}
+/* Norwegian text input - bright and prominent */
+#uFront{color:#ffffff;font-weight:500}
 .table td{color:#e5e7eb}
 .table th{color:#f1f5f9}
 textarea, input[type=search]{color:#f1f5f9}
@@ -1366,7 +1368,7 @@ input[type=text]::placeholder {
   margin-top:8px;
   font-family:inherit;
 } /* Matches primary word styling with purple accent */
-textarea{width:100%;min-height:calc(2 * 1em * var(--line-height-normal) + 24px + 2px);border-radius:10px;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);line-height:var(--line-height-normal);resize:vertical}
+textarea{width:100%;min-height:calc(2 * 1em * var(--line-height-normal) + 24px + 2px);border-radius:10px;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);line-height:var(--line-height-normal);resize:vertical;cursor:text;-webkit-user-select:text;user-select:text;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 textarea.autogrow{overflow-y:hidden}
 label{display:inline-flex;align-items:center;gap:var(--space-1)}
 /* Old stage badge styles (deprecated) */
@@ -1374,11 +1376,12 @@ label{display:inline-flex;align-items:center;gap:var(--space-1)}
 #btnRevealNext.primary{outline:2px solid var(--mid)}
 .chips{display:flex;gap:var(--space-1);flex-wrap:wrap}
 .chip{
-  padding:8px 16px;
+  padding:0.25rem 0.75rem;
   border-radius:999px;
   border:1px solid var(--border);
   background:var(--surface-1);
   color:var(--text);
+  font-size:0.85rem;
   cursor:pointer;
   transition:background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
@@ -3155,13 +3158,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .translation-reset{
   border:1px solid var(--border);
   border-radius:999px;
-  padding:0.2rem 0.65rem;
+  padding:0.24rem 0.78rem;
   background:rgba(15,23,42,0.8);
   color:var(--text-subtle);
-  font-size:0.78rem;
+  font-size:0.936rem;
   font-weight:600;
   cursor:pointer;
-  min-height:30px;
+  min-height:36px;
   transition:all 0.15s ease;
 }
 .translation-reset:hover{

@@ -612,8 +612,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Update',
         createnew: 'Create',
         audio: 'Audio',
-        order_audio_word: 'Audio (word)',
-        order_audio_text: 'Audio (text)',
+        order_audio_word: 'Focus audio',
+        order_audio_text: 'Audio',
         image: 'Image',
         order: 'Order (click in sequence)',
         easy: 'Easy',
@@ -709,8 +709,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Оновити',
         createnew: 'Створити',
         audio: 'Аудіо',
-        order_audio_word: 'Аудіо (слово)',
-        order_audio_text: 'Аудіо (текст)',
+        order_audio_word: 'Фокусне аудіо',
+        order_audio_text: 'Аудіо',
         image: 'Зображення',
         order: 'Порядок (натискайте послідовно)',
         easy: 'Легко',
@@ -806,8 +806,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Обновить',
         createnew: 'Создать',
         audio: 'Аудио',
-        order_audio_word: 'Аудио (слово)',
-        order_audio_text: 'Аудио (текст)',
+        order_audio_word: 'Фокусное аудио',
+        order_audio_text: 'Аудио',
         image: 'Изображение',
         order: 'Порядок (нажимайте последовательно)',
         easy: 'Легко',
@@ -903,8 +903,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Mettre à jour',
         createnew: 'Créer',
         audio: 'Audio',
-        order_audio_word: 'Audio (mot)',
-        order_audio_text: 'Audio (texte)',
+        order_audio_word: 'Audio focal',
+        order_audio_text: 'Audio',
         image: 'Image',
         order: 'Ordre (cliquer en séquence)',
         easy: 'Facile',
@@ -1000,8 +1000,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Actualizar',
         createnew: 'Crear',
         audio: 'Audio',
-        order_audio_word: 'Audio (palabra)',
-        order_audio_text: 'Audio (texto)',
+        order_audio_word: 'Audio focal',
+        order_audio_text: 'Audio',
         image: 'Imagen',
         order: 'Orden (hacer clic en secuencia)',
         easy: 'Fácil',
@@ -1097,8 +1097,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aktualizuj',
         createnew: 'Utwórz',
         audio: 'Audio',
-        order_audio_word: 'Audio (słowo)',
-        order_audio_text: 'Audio (tekst)',
+        order_audio_word: 'Audio fokusowe',
+        order_audio_text: 'Audio',
         image: 'Obraz',
         order: 'Kolejność (klikaj po kolei)',
         easy: 'Łatwe',
@@ -1194,8 +1194,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aggiorna',
         createnew: 'Crea',
         audio: 'Audio',
-        order_audio_word: 'Audio (parola)',
-        order_audio_text: 'Audio (testo)',
+        order_audio_word: 'Audio focale',
+        order_audio_text: 'Audio',
         image: 'Immagine',
         order: 'Ordine (clicca in sequenza)',
         easy: 'Facile',
@@ -1291,8 +1291,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         update: 'Aktualisieren',
         createnew: 'Erstellen',
         audio: 'Audio',
-        order_audio_word: 'Audio (Wort)',
-        order_audio_text: 'Audio (Text)',
+        order_audio_word: 'Fokus-Audio',
+        order_audio_text: 'Audio',
         image: 'Bild',
         order: 'Reihenfolge (in Reihenfolge klicken)',
         easy: 'Einfach',
@@ -1737,7 +1737,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const inputNo = document.createElement('input');
       inputNo.type = 'text';
       inputNo.placeholder = 'Norwegian text...';
-      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; color: #f1f5f9; border: 1px solid #374151; border-radius: 6px;';
+      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; color: #ffffff; font-weight: 500; border: 1px solid #374151; border-radius: 6px;';
       inputNo.value = data.no || '';
       inputNo.addEventListener('input', (e) => {
         if(type === 'Example') examplesData[index].no = e.target.value;
@@ -1751,7 +1751,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const inputTrans = document.createElement('input');
       inputTrans.type = 'text';
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
-      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #f1f5f9; border: 1px solid #374151; border-radius: 6px;';
+      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #94a3b8; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
       inputTrans.value = data.trans || '';
       inputTrans.classList.add('hidden');
       inputTrans.addEventListener('input', (e) => {
