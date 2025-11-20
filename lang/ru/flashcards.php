@@ -150,9 +150,9 @@ $string['title_stop'] = 'Остановить';
 $string['title_record_practice'] = 'Записать произношение';
 $string['press_hold_to_record'] = 'Нажмите и удерживайте для записи';
 $string['release_when_finished'] = 'Отпустите, когда закончите';
-$string['mic_permission_pending'] = 'Разрешите доступ к микрофону, чтобы начать запись';
-$string['mic_permission_requesting'] = 'Ожидаем разрешение на доступ к микрофону...';
-$string['mic_permission_denied'] = 'Доступ к микрофону заблокирован. Проверьте настройки Safari.';
+$string['mic_permission_pending'] = 'Сначала разрешите микрофон';
+$string['mic_permission_requesting'] = 'Запрашиваем доступ к микрофону...';
+$string['mic_permission_denied'] = 'Микрофон заблокирован в Safari';
 
 // List table
 $string['list_front'] = 'Фокусное слово/фраза';

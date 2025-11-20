@@ -967,14 +967,13 @@ button[data-role="update"]:disabled::before {
   transform:translateX(-50%);
   background:rgba(15,23,42,0.92);
   color:var(--text);
-  font-size:0.7rem; /* 11px */
-  line-height:1.25;
-  padding:4px 10px;
+  font-size:0.65rem; /* 10px */
+  letter-spacing:0.01em;
+  line-height:1.4;
+  padding:3px 8px;
   border-radius:999px;
-  white-space:normal;
-  word-break:break-word;
+  white-space:nowrap;
   text-align:center;
-  max-width:min(240px, calc(100vw - 48px));
   pointer-events:none;
   box-shadow:0 4px 10px rgba(15,23,42,0.45);
   border:1px solid rgba(255,255,255,0.08);

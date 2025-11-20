@@ -182,9 +182,9 @@ $string['title_stop'] = 'Stop';
 $string['title_record_practice'] = 'Record pronunciation';
 $string['press_hold_to_record'] = 'Press and hold to record';
 $string['release_when_finished'] = 'Release when you finish';
-$string['mic_permission_pending'] = 'Allow microphone access before recording';
-$string['mic_permission_requesting'] = 'Waiting for microphone permission...';
-$string['mic_permission_denied'] = 'Microphone access blocked. Check Safari settings.';
+$string['mic_permission_pending'] = 'Enable mic first';
+$string['mic_permission_requesting'] = 'Requesting mic access...';
+$string['mic_permission_denied'] = 'Mic blocked in Safari';
 
 // List table
 $string['list_front'] = 'Focus word/phrase';
