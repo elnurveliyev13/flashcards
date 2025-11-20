@@ -87,6 +87,9 @@ $string['autosave'] = 'Progression enregistrée';
 $string['easy'] = 'Facile';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Difficile';
+$string['btnHardHint'] = 'Répéter cette carte aujourd\'hui';
+$string['btnNormalHint'] = 'Prochaine révision demain';
+$string['btnEasyHint'] = 'Passer à l\'étape suivante';
 $string['update'] = 'Mettre à jour';
 $string['update_disabled_hint'] = 'Ouvrez d\'abord une carte existante pour activer Mettre à jour.';
 $string['createnew'] = 'Créer';
@@ -150,6 +153,9 @@ $string['title_stop'] = 'Arrêter';
 $string['title_record_practice'] = 'Enregistrer la prononciation';
 $string['press_hold_to_record'] = 'Appuyez et maintenez pour enregistrer';
 $string['release_when_finished'] = 'Relâchez quand vous avez terminé';
+$string['mic_permission_pending'] = 'Demander l’accès';
+$string['mic_permission_requesting'] = 'Demande...';
+$string['mic_permission_denied'] = 'Activer dans Safari';
 
 // List table
 $string['list_front'] = 'Mot/phrase focal';
@@ -306,8 +312,6 @@ $string['ai_http_error'] = 'Le service IA est indisponible. Veuillez réessayer 
 $string['ai_invalid_json'] = 'Réponse inattendue du service IA.';
 $string['ai_disabled'] = 'L\'assistant IA n\'est pas encore configuré.';
 $string['tts_http_error'] = 'La synthèse vocale est temporairement indisponible.';
-n// Whisper STT
-$string[''private_audio_label''] = 'Private audio';
 $string[''whisper_status_idle''] = 'Speech-to-text ready';
 $string[''whisper_status_uploading''] = 'Uploading Private audio...';
 $string[''whisper_status_transcribing''] = 'Transcribing...';

@@ -87,6 +87,9 @@ $string['autosave'] = 'Fortschritt gespeichert';
 $string['easy'] = 'Einfach';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Schwer';
+$string['btnHardHint'] = 'Diese Karte heute wiederholen';
+$string['btnNormalHint'] = 'Nächste Wiederholung morgen';
+$string['btnEasyHint'] = 'Zur nächsten Stufe wechseln';
 $string['update'] = 'Aktualisieren';
 $string['update_disabled_hint'] = 'Öffnen Sie zuerst eine bestehende Karte, um Aktualisieren zu aktivieren.';
 $string['createnew'] = 'Erstellen';
@@ -150,6 +153,9 @@ $string['title_stop'] = 'Stoppen';
 $string['title_record_practice'] = 'Aussprache aufnehmen';
 $string['press_hold_to_record'] = 'Drücken und halten zum Aufnehmen';
 $string['release_when_finished'] = 'Loslassen, wenn fertig';
+$string['mic_permission_pending'] = 'Zugriff anfordern';
+$string['mic_permission_requesting'] = 'Anfrage läuft...';
+$string['mic_permission_denied'] = 'In Safari aktivieren';
 
 // List table
 $string['list_front'] = 'Fokuswort/-phrase';

@@ -85,8 +85,11 @@ $string['chooseaudiofile'] = 'Выбрать аудиофайл';
 $string['showmore'] = 'Показать больше';
 $string['autosave'] = 'Прогресс сохранен';
 $string['easy'] = 'Легко';
-$string['normal'] = 'Нормально';
+$string['normal'] = 'Норм.';
 $string['hard'] = 'Сложно';
+$string['btnHardHint'] = 'Повторить эту карточку сегодня';
+$string['btnNormalHint'] = 'Следующий обзор завтра';
+$string['btnEasyHint'] = 'Перейти к следующему этапу';
 $string['update'] = 'Обновить';
 $string['update_disabled_hint'] = 'Откройте существующую карточку, чтобы активировать кнопку обновления.';
 $string['createnew'] = 'Создать';
@@ -150,9 +153,9 @@ $string['title_stop'] = 'Остановить';
 $string['title_record_practice'] = 'Записать произношение';
 $string['press_hold_to_record'] = 'Нажмите и удерживайте для записи';
 $string['release_when_finished'] = 'Отпустите, когда закончите';
-$string['mic_permission_pending'] = 'Сначала разрешите микрофон';
-$string['mic_permission_requesting'] = 'Запрашиваем доступ к микрофону...';
-$string['mic_permission_denied'] = 'Микрофон заблокирован в Safari';
+$string['mic_permission_pending'] = 'Запросить доступ';
+$string['mic_permission_requesting'] = 'Запрашиваем...';
+$string['mic_permission_denied'] = 'Включите в Safari';
 
 // List table
 $string['list_front'] = 'Фокусное слово/фраза';

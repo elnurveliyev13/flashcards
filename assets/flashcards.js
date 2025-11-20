@@ -480,7 +480,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiChatUser: dataset.aiChatUser || 'You',
       aiChatAssistant: dataset.aiChatAssistant || 'AI',
       aiChatError: dataset.aiChatError || 'AI could not answer that question.',
-      aiChatLoading: dataset.aiChatLoading || 'Thinking…'
+      aiChatLoading: dataset.aiChatLoading || 'Thinking…',
+      // Dictation exercise strings
+      dictationPlaceholder: dataset.dictationPlaceholder || 'Напишите то, что услышали...',
+      dictationCheck: dataset.dictationCheck || 'Проверить',
+      dictationReplay: dataset.dictationReplay || 'Прослушать снова',
+      dictationEmptyInput: dataset.dictationEmptyInput || 'Введите текст',
+      dictationCorrect: dataset.dictationCorrect || 'Правильно!',
+      dictationPerfect: dataset.dictationPerfect || 'Отлично! Всё правильно!',
+      dictationHint: dataset.dictationHint || 'Смотрите правильный ответ ниже',
+      dictationCorrectAnswer: dataset.dictationCorrectAnswer || 'Правильный ответ:',
+      dictationYourAnswer: dataset.dictationYourAnswer || 'Ваш ответ:',
+      dictationShouldBe: dataset.dictationShouldBe || 'Должно быть:',
+      dictationError: dataset.dictationError || 'ошибка',
+      dictationErrors2: dataset.dictationErrors2 || 'ошибки',
+      dictationErrors5: dataset.dictationErrors5 || 'ошибок',
+      dictationMissingWord: dataset.dictationMissingWord || 'Пропущено слово',
+      dictationExtraWord: dataset.dictationExtraWord || 'Лишнее слово'
     };
     let frontTranslationSlot = null;
     // frontTranslationToggle and frontTranslationVisible removed - translation is always visible
@@ -2748,6 +2764,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     let useIOSRecorderGlobal = false;
     const IOS_MIC_PERMISSION_KEY = 'flashcards-ios-mic-permission';
+    const micPermissionChips = new WeakMap();
     function readIOSPermissionState(){
       if(!IS_IOS){
         return 'granted';
@@ -2816,6 +2833,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         btn.dataset.micPermissionState = iosMicPermissionState;
         btn.classList.toggle('mic-permission-pending', iosMicPermissionState === 'unknown' || iosMicPermissionState === 'requesting');
         btn.classList.toggle('mic-permission-denied', iosMicPermissionState === 'denied');
+        ensureMicPermissionChip(btn, label);
       });
     }
     function setIOSMicPermissionState(state, opts){
@@ -2857,6 +2875,68 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setIOSMicPermissionState('unknown');
     }
     updateIOSMicPermissionIndicators();
+    function ensureMicPermissionChip(btn, label){
+      if(!btn){
+        return;
+      }
+      let chip = micPermissionChips.get(btn);
+      if(!label){
+        if(chip){
+          chip.hidden = true;
+        }
+        return;
+      }
+      if(!chip){
+        chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'mic-permission-chip';
+        chip.addEventListener('click', e=>{
+          e.preventDefault();
+          e.stopPropagation();
+          requestIOSMicPermission().catch(()=>{});
+        });
+        micPermissionChips.set(btn, chip);
+        const parent = btn.parentElement || btn;
+        if(btn.nextSibling){
+          parent.insertBefore(chip, btn.nextSibling);
+        }else{
+          parent.appendChild(chip);
+        }
+      }
+      chip.hidden = false;
+      chip.dataset.state = iosMicPermissionState;
+      chip.textContent = label;
+    }
+    async function requestIOSMicPermission(){
+      if(!IS_IOS){
+        return;
+      }
+      markIOSMicPermissionRequesting();
+      updateIOSMicPermissionIndicators();
+      let granted = false;
+      try{
+        if(navigator?.mediaDevices?.getUserMedia){
+          const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+          granted = true;
+          try{
+            stream.getTracks().forEach(track=>{ try{ track.stop(); }catch(_e){}; });
+          }catch(_e){}
+        }else if(iosRecorderGlobal && typeof iosRecorderGlobal.start === 'function'){
+          await iosRecorderGlobal.start();
+          await iosRecorderGlobal.releaseMic();
+          granted = true;
+        }
+      }catch(err){
+        granted = false;
+        handleIOSMicPermissionError(err);
+      }
+      if(granted){
+        setIOSMicPermissionState('granted');
+      }else if(iosMicPermissionState === 'requesting'){
+        setIOSMicPermissionState('unknown', {persist:false});
+      }
+      updateIOSMicPermissionIndicators();
+    }
     async function initIOSMicPermissionWatcher(){
       if(!IS_IOS){
         return;
@@ -4166,6 +4246,232 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       el.appendChild(wrap);
       return el;
     }
+
+    // ========== DICTATION EXERCISE LOGIC ==========
+    async function setupDictationExercise(slotEl, card, dictationId){
+      const exerciseEl = slotEl.querySelector(`[data-dictation-id="${dictationId}"]`);
+      if(!exerciseEl) return;
+
+      const inputEl = exerciseEl.querySelector('.dictation-input');
+      const checkBtn = exerciseEl.querySelector('.dictation-check-btn');
+      const replayBtn = exerciseEl.querySelector('.dictation-replay-btn');
+      const resultEl = exerciseEl.querySelector('.dictation-result');
+      const correctAnswerEl = exerciseEl.querySelector('.dictation-correct-answer');
+
+      if(!inputEl || !checkBtn || !replayBtn || !resultEl || !correctAnswerEl) return;
+
+      const correctText = inputEl.dataset.correctText || card.text;
+      let audioPlayed = false;
+      let checkCount = 0;
+
+      // Auto-play audio at 0.85x speed when text slot is revealed
+      const frontUrl = await resolveAudioUrl(card, 'front');
+      if(frontUrl){
+        setTimeout(() => {
+          playAudioFromUrl(frontUrl, 0.85);
+          audioPlayed = true;
+        }, 300);
+      }
+
+      // Replay button - play audio again at 0.85x
+      replayBtn.addEventListener('click', () => {
+        if(frontUrl){
+          playAudioFromUrl(frontUrl, 0.85);
+        }
+      });
+
+      // Check button - verify user input and show visual feedback
+      checkBtn.addEventListener('click', () => {
+        const userInput = inputEl.value.trim();
+
+        if(!userInput){
+          resultEl.innerHTML = '<div class="dictation-error-msg">⚠️ ' + (aiStrings.dictationEmptyInput || 'Введите текст') + '</div>';
+          resultEl.classList.remove('hidden');
+          return;
+        }
+
+        checkCount++;
+
+        // Compare user input with correct text
+        const comparison = compareTexts(userInput, correctText);
+
+        // Show visual feedback
+        resultEl.innerHTML = renderComparisonResult(comparison);
+        resultEl.classList.remove('hidden');
+
+        // Show correct answer after check
+        correctAnswerEl.classList.remove('hidden');
+
+        // Disable input after successful completion
+        if(comparison.isCorrect){
+          inputEl.disabled = true;
+          inputEl.classList.add('dictation-success');
+          checkBtn.disabled = true;
+          checkBtn.textContent = '✓ ' + (aiStrings.dictationCorrect || 'Правильно!');
+          checkBtn.classList.remove('primary');
+          checkBtn.classList.add('success');
+        } else if(checkCount >= 2){
+          // After 2 attempts, show hint
+          inputEl.placeholder = aiStrings.dictationHint || 'Смотрите правильный ответ ниже';
+        }
+      });
+
+      // Allow Enter key to trigger check
+      inputEl.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' && !e.shiftKey){
+          e.preventDefault();
+          checkBtn.click();
+        }
+      });
+    }
+
+    // Compare two texts character by character and word by word
+    function compareTexts(userInput, correctText){
+      // Normalize: trim, lowercase for comparison (but preserve original case for display)
+      const userNorm = userInput.trim();
+      const correctNorm = correctText.trim();
+
+      // Exact match check
+      if(userNorm === correctNorm){
+        return {
+          isCorrect: true,
+          userInput: userInput,
+          correctText: correctText,
+          differences: []
+        };
+      }
+
+      // Word-by-word comparison
+      const userWords = userNorm.split(/\s+/);
+      const correctWords = correctNorm.split(/\s+/);
+
+      const differences = [];
+      const maxLen = Math.max(userWords.length, correctWords.length);
+
+      for(let i = 0; i < maxLen; i++){
+        const userWord = userWords[i] || '';
+        const correctWord = correctWords[i] || '';
+
+        if(userWord !== correctWord){
+          differences.push({
+            position: i,
+            user: userWord,
+            correct: correctWord,
+            type: !userWord ? 'missing' : !correctWord ? 'extra' : 'wrong'
+          });
+        }
+      }
+
+      return {
+        isCorrect: false,
+        userInput: userInput,
+        correctText: correctText,
+        differences: differences,
+        userWords: userWords,
+        correctWords: correctWords
+      };
+    }
+
+    // Render visual comparison result with highlighted differences
+    function renderComparisonResult(comparison){
+      if(comparison.isCorrect){
+        return `
+          <div class="dictation-success-msg">
+            ✓ ${aiStrings.dictationPerfect || 'Отлично! Всё правильно!'}
+          </div>
+        `;
+      }
+
+      const errorCount = comparison.differences.length;
+      const errorWord = errorCount === 1 ? (aiStrings.dictationError || 'ошибка') :
+                        errorCount < 5 ? (aiStrings.dictationErrors2 || 'ошибки') :
+                        (aiStrings.dictationErrors5 || 'ошибок');
+
+      let html = `<div class="dictation-errors-summary">📝 ${errorCount} ${errorWord}</div>`;
+      html += '<div class="dictation-comparison">';
+
+      // Render user input with highlighted errors
+      html += '<div class="dictation-comparison-row">';
+      html += '<div class="dictation-comparison-label">' + (aiStrings.dictationYourAnswer || 'Ваш ответ:') + '</div>';
+      html += '<div class="dictation-comparison-text">';
+
+      const userWords = comparison.userWords || [];
+      const correctWords = comparison.correctWords || [];
+
+      for(let i = 0; i < Math.max(userWords.length, correctWords.length); i++){
+        const userWord = userWords[i] || '';
+        const correctWord = correctWords[i] || '';
+
+        if(userWord === correctWord){
+          // Correct word - green
+          html += `<span class="dictation-word-correct">${escapeHtml(userWord)}</span> `;
+        } else if(!userWord){
+          // Missing word - show placeholder
+          html += `<span class="dictation-word-missing" title="${aiStrings.dictationMissingWord || 'Пропущено слово'}">[___]</span> `;
+        } else if(!correctWord){
+          // Extra word - red with strikethrough
+          html += `<span class="dictation-word-extra" title="${aiStrings.dictationExtraWord || 'Лишнее слово'}">${escapeHtml(userWord)}</span> `;
+        } else {
+          // Wrong word - show character-level diff
+          const charDiff = getCharacterDiff(userWord, correctWord);
+          html += `<span class="dictation-word-wrong">${charDiff}</span> `;
+        }
+      }
+
+      html += '</div></div>';
+
+      // Render correct text with highlighting
+      html += '<div class="dictation-comparison-row">';
+      html += '<div class="dictation-comparison-label">' + (aiStrings.dictationShouldBe || 'Должно быть:') + '</div>';
+      html += '<div class="dictation-comparison-text dictation-correct-highlight">';
+
+      for(let i = 0; i < correctWords.length; i++){
+        const correctWord = correctWords[i] || '';
+        const userWord = userWords[i] || '';
+
+        if(userWord === correctWord){
+          html += `<span class="dictation-word-ok">${escapeHtml(correctWord)}</span> `;
+        } else {
+          // Highlight words that were wrong/missing
+          html += `<span class="dictation-word-highlight">${escapeHtml(correctWord)}</span> `;
+        }
+      }
+
+      html += '</div></div>';
+      html += '</div>';
+
+      return html;
+    }
+
+    // Character-level diff for a single word
+    function getCharacterDiff(userWord, correctWord){
+      let html = '';
+      const maxLen = Math.max(userWord.length, correctWord.length);
+
+      for(let i = 0; i < maxLen; i++){
+        const userChar = userWord[i] || '';
+        const correctChar = correctWord[i] || '';
+
+        if(userChar === correctChar){
+          html += `<span class="dictation-char-ok">${escapeHtml(userChar)}</span>`;
+        } else if(!userChar){
+          html += `<span class="dictation-char-missing" title="Missing: ${escapeHtml(correctChar)}">[_]</span>`;
+        } else if(!correctChar){
+          html += `<span class="dictation-char-extra" title="Extra character">${escapeHtml(userChar)}</span>`;
+        } else {
+          html += `<span class="dictation-char-wrong" title="Should be: ${escapeHtml(correctChar)}">${escapeHtml(userChar)}</span>`;
+        }
+      }
+
+      return html;
+    }
+
+    function escapeHtml(str){
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
     async function buildSlot(kind, card){
       const el=document.createElement("div");
       el.className="slot";
@@ -4178,7 +4484,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(kind==="text" && card.text){
         const showInlineTranscription = card.transcription && !cardOrder.includes('transcription');
         const tr = showInlineTranscription ? `<div class="transcription-text">${card.transcription}</div>` : "";
-        el.innerHTML=`<div class="front">${card.text}</div>${tr}`;
+
+        // DICTATION EXERCISE: Create interactive text input exercise
+        const dictationId = 'dictation-' + Math.random().toString(36).substr(2, 9);
+
+        el.innerHTML=`
+          <div class="dictation-exercise" data-dictation-id="${dictationId}">
+            <div class="dictation-input-wrapper">
+              <textarea
+                class="dictation-input"
+                placeholder="${aiStrings.dictationPlaceholder || 'Type what you hear...'}"
+                rows="3"
+                data-correct-text="${card.text.replace(/"/g, '&quot;')}"
+              ></textarea>
+            </div>
+            <div class="dictation-controls">
+              <button type="button" class="dictation-check-btn primary">
+                ${aiStrings.dictationCheck || 'Проверить'}
+              </button>
+              <button type="button" class="dictation-replay-btn" title="${aiStrings.dictationReplay || 'Прослушать снова'}">
+                🔊 0.85x
+              </button>
+            </div>
+            <div class="dictation-result hidden"></div>
+            <div class="dictation-correct-answer hidden">
+              <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || 'Правильный ответ:'}</div>
+              <div class="correct-answer-text">${card.text}</div>
+            </div>
+          </div>
+          ${tr}
+        `;
+
+        // Setup dictation exercise behavior
+        setTimeout(() => {
+          setupDictationExercise(el, card, dictationId);
+        }, 100);
+
         return el;
       }
       if(kind==="explanation" && card.explanation){

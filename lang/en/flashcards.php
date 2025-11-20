@@ -112,6 +112,9 @@ $string['autosave'] = 'Progress saved';
 $string['easy'] = 'Easy';
 $string['normal'] = 'Normal';
 $string['hard'] = 'Hard';
+$string['btnHardHint'] = 'Repeat this card today';
+$string['btnNormalHint'] = 'Next review tomorrow';
+$string['btnEasyHint'] = 'Move to the next stage';
 $string['update'] = 'Update';
 $string['update_disabled_hint'] = 'Open an existing card first to enable Update.';
 $string['createnew'] = 'Create';
@@ -182,9 +185,9 @@ $string['title_stop'] = 'Stop';
 $string['title_record_practice'] = 'Record pronunciation';
 $string['press_hold_to_record'] = 'Press and hold to record';
 $string['release_when_finished'] = 'Release when you finish';
-$string['mic_permission_pending'] = 'Enable mic first';
-$string['mic_permission_requesting'] = 'Requesting mic access...';
-$string['mic_permission_denied'] = 'Mic blocked in Safari';
+$string['mic_permission_pending'] = 'Request access';
+$string['mic_permission_requesting'] = 'Requesting...';
+$string['mic_permission_denied'] = 'Enable in Safari';
 
 // List table
 $string['list_front'] = 'Focus word/phrase';

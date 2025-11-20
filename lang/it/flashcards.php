@@ -87,6 +87,9 @@ $string['autosave'] = 'Progresso salvato';
 $string['easy'] = 'Facile';
 $string['normal'] = 'Normale';
 $string['hard'] = 'Difficile';
+$string['btnHardHint'] = 'Ripeti questa scheda oggi';
+$string['btnNormalHint'] = 'Prossima revisione domani';
+$string['btnEasyHint'] = 'Passa alla fase successiva';
 $string['update'] = 'Aggiorna';
 $string['update_disabled_hint'] = 'Apri prima una scheda esistente per abilitare Aggiorna.';
 $string['createnew'] = 'Crea';
@@ -150,6 +153,9 @@ $string['title_stop'] = 'Ferma';
 $string['title_record_practice'] = 'Registra pronuncia';
 $string['press_hold_to_record'] = 'Premi e tieni premuto per registrare';
 $string['release_when_finished'] = 'Rilascia quando hai finito';
+$string['mic_permission_pending'] = 'Richiedi accesso';
+$string['mic_permission_requesting'] = 'Richiesta...';
+$string['mic_permission_denied'] = 'Abilita in Safari';
 
 // List table
 $string['list_front'] = 'Parola/frase focale';
@@ -306,8 +312,6 @@ $string['ai_http_error'] = 'Il servizio AI non è disponibile. Si prega di ripro
 $string['ai_invalid_json'] = 'Risposta imprevista dal servizio AI.';
 $string['ai_disabled'] = 'L\'assistente AI non è ancora configurato.';
 $string['tts_http_error'] = 'La sintesi vocale è temporaneamente non disponibile.';
-n// Whisper STT
-$string[''private_audio_label''] = 'Private audio';
 $string[''whisper_status_idle''] = 'Speech-to-text ready';
 $string[''whisper_status_uploading''] = 'Uploading Private audio...';
 $string[''whisper_status_transcribing''] = 'Transcribing...';
