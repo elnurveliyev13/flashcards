@@ -4348,7 +4348,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const originalTokens = tokenizeText(correctNorm);
 
       const similarity = buildSimilarityMatrix(userTokens, originalTokens);
-      const assignment = alignMonotonic(similarity);
+      // Initial assignment (allows crossings)
+      const rawAssignment = solveMaxAssignment(similarity);
+      // Keep only strong enough matches
+      const filtered = rawAssignment.filter(item => item && item.weight >= MIN_SIMILARITY_SCORE);
+      // Select best non-crossing subset with tie-breaks to keep correct positions
+      const assignment = selectBestMonotone(filtered, userTokens, originalTokens);
       const matches = [];
       const matchedUser = new Set();
       const matchedOrig = new Set();
@@ -4516,55 +4521,123 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return matrix;
     }
 
-    // Order-preserving alignment (weighted LCS) to avoid crossing matches
-    function alignMonotonic(similarity){
-      const m = similarity.length;
-      const n = m ? similarity[0].length : 0;
-      const dp = Array.from({length: m + 1}, () => Array(n + 1).fill(0));
-      const trace = Array.from({length: m + 1}, () => Array(n + 1).fill(''));
-
-      for(let i = 1; i <= m; i++){
-        for(let j = 1; j <= n; j++){
-          const s = similarity[i-1][j-1];
-          const matchScore = s >= MIN_SIMILARITY_SCORE ? dp[i-1][j-1] + s : -Infinity;
-          const up = dp[i-1][j];
-          const left = dp[i][j-1];
-          let best = matchScore;
-          let dir = 'D';
-          if(up > best){
-            best = up;
-            dir = 'U';
-          }
-          if(left > best){
-            best = left;
-            dir = 'L';
-          }
-          // Tie-break: prefer diagonal, then up, then left
-          if(matchScore === best && dir !== 'D'){
-            dir = 'D';
-          }
-          dp[i][j] = best;
-          trace[i][j] = dir;
+    function solveMaxAssignment(weights){
+      const rows = weights.length;
+      const cols = weights[0] ? weights[0].length : 0;
+      const n = Math.max(rows, cols);
+      if(!n) return [];
+      let maxWeight = 0;
+      for(let i = 0; i < rows; i++){
+        for(let j = 0; j < cols; j++){
+          maxWeight = Math.max(maxWeight, weights[i][j]);
         }
       }
-
-      const matches = [];
-      let i = m, j = n;
-      while(i > 0 && j > 0){
-        const dir = trace[i][j];
-        if(dir === 'D'){
-          const s = similarity[i-1][j-1];
-          if(s >= MIN_SIMILARITY_SCORE){
-            matches.push({ row: i - 1, col: j - 1, weight: s });
+      const big = maxWeight + 1;
+      const cost = Array.from({length: n}, (_, i)=>{
+        const row = [];
+        for(let j = 0; j < n; j++){
+          if(i < rows && j < cols){
+            row.push(big - weights[i][j]);
+          } else {
+            row.push(big);
           }
-          i--; j--;
-        } else if(dir === 'U'){
-          i--;
-        } else {
-          j--;
+        }
+        return row;
+      });
+      const u = Array(n + 1).fill(0);
+      const v = Array(n + 1).fill(0);
+      const p = Array(n + 1).fill(0);
+      const way = Array(n + 1).fill(0);
+      for(let i = 1; i <= n; i++){
+        p[0] = i;
+        let j0 = 0;
+        const minv = Array(n + 1).fill(Infinity);
+        const used = Array(n + 1).fill(false);
+        do{
+          used[j0] = true;
+          const i0 = p[j0];
+          let delta = Infinity;
+          let j1 = 0;
+          for(let j = 1; j <= n; j++){
+            if(used[j]) continue;
+            const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+            if(cur < minv[j]){
+              minv[j] = cur;
+              way[j] = j0;
+            }
+            if(minv[j] < delta){
+              delta = minv[j];
+              j1 = j;
+            }
+          }
+          for(let j = 0; j <= n; j++){
+            if(used[j]){
+              u[p[j]] += delta;
+              v[j] -= delta;
+            } else {
+              minv[j] -= delta;
+            }
+          }
+          j0 = j1;
+        } while(p[j0] !== 0);
+        do{
+          const j1 = way[j0];
+          p[j0] = p[j1];
+          j0 = j1;
+        } while(j0 !== 0);
+      }
+      const result = [];
+      for(let j = 1; j <= n; j++){
+        if(p[j] && p[j] - 1 < rows && j - 1 < cols){
+          result.push({ row: p[j] - 1, col: j - 1, weight: weights[p[j] - 1][j - 1] });
         }
       }
-      return matches.reverse();
+      return result;
+    }
+
+    // Select best non-crossing subset of matches (max sum of scores, tie-break keep earliest correct order)
+    function selectBestMonotone(matches, userTokens, originalTokens){
+      const ordered = [...matches].sort((a,b)=>a.row - b.row);
+      const n = ordered.length;
+      const dp = Array(n).fill(0);
+      const prev = Array(n).fill(-1);
+      const scoreList = ordered.map(m=>{
+        const exactPosBonus = (m.row === m.col) ? 0.3 : 0;
+        const exactTokenBonus = (userTokens[m.row]?.raw === originalTokens[m.col]?.raw) ? 0.2 : 0;
+        return m.weight + exactPosBonus + exactTokenBonus;
+      });
+      for(let i=0;i<n;i++){
+        dp[i] = scoreList[i];
+        for(let j=0;j<i;j++){
+          if(ordered[j].col < ordered[i].col){
+            const cand = dp[j] + scoreList[i];
+            const better = cand > dp[i];
+            const tie = cand === dp[i];
+            const betterTie = tie && (prev[i] === -1 || ordered[j].col < ordered[prev[i]].col);
+            if(better || betterTie){
+              dp[i] = cand;
+              prev[i] = j;
+            }
+          }
+        }
+      }
+      let best = 0;
+      for(let i=1;i<n;i++){
+        const better = dp[i] > dp[best];
+        const tie = dp[i] === dp[best] && ordered[i].col < ordered[best].col;
+        if(better || tie){
+          best = i;
+        }
+      }
+      const keep = [];
+      let k = best;
+      while(k !== -1){
+        keep.push(ordered[k]);
+        k = prev[k];
+      }
+      keep.reverse();
+      const keepSet = new Set(keep.map(m=>`${m.row}-${m.col}`));
+      return ordered.map((m,idx)=>({...m, keep: keepSet.has(`${m.row}-${m.col}`)})).filter(m=>m.keep);
     }
 
     // Stable LIS: maximize length, tie-break preferring earlier tokens in user order
