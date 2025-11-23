@@ -4750,6 +4750,26 @@ function simpleStem(value){
       return boundaryCount;
     }
 
+    // Detect geometric crossings: два блока меняют относительный порядок
+    function hasCrossing(moveBlocks, gapMeta){
+      for(let i = 0; i < moveBlocks.length; i++){
+        const a = moveBlocks[i];
+        const aGap = gapMeta[a.targetGapKey];
+        if(!aGap) continue;
+        const aTarget = aGap.beforeUser >= 0 ? aGap.beforeUser + 1 : 0;
+        for(let j = i + 1; j < moveBlocks.length; j++){
+          const b = moveBlocks[j];
+          const bGap = gapMeta[b.targetGapKey];
+          if(!bGap) continue;
+          const bTarget = bGap.beforeUser >= 0 ? bGap.beforeUser + 1 : 0;
+          // Источник по порядку не совпадает с порядком цели => пересечение стрелок
+          if(a.start < b.start && aTarget > bTarget) return true;
+          if(a.start > b.start && aTarget < bTarget) return true;
+        }
+      }
+      return false;
+    }
+
     // Helper: decide if should use rewrite instead of arrows
     function shouldUseRewrite(moveBlocks, gapMeta){
       if(moveBlocks.length === 0) return false;
@@ -4762,6 +4782,9 @@ function simpleStem(value){
           return true;
         }
       }
+
+      // Check for geometric crossings (стрелки накладываются)
+      if(hasCrossing(moveBlocks, gapMeta)) return true;
 
       return false;
     }
