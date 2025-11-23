@@ -4687,31 +4687,35 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens){
       if(moveBlocks.length === 0) return [];
 
-      // Step 1: Find user range from problem blocks
-      const userPositions = new Set();
+      // Step 1: Collect all original indices from move blocks
+      const origIndicesFromBlocks = new Set();
       moveBlocks.forEach(block=>{
         block.tokens.forEach(userIdx=>{
-          userPositions.add(userIdx);
+          const match = orderedMatches.find(m=> m.userIndex === userIdx);
+          if(match){
+            origIndicesFromBlocks.add(match.origIndex);
+          }
         });
+      });
+
+      if(origIndicesFromBlocks.size === 0) return [];
+
+      // Step 2: Find full original range
+      const origMin = Math.min(...origIndicesFromBlocks);
+      const origMax = Math.max(...origIndicesFromBlocks);
+
+      // Step 3: Find ALL user positions that map to this original range
+      const userPositions = new Set();
+      orderedMatches.forEach(m=>{
+        if(m.origIndex >= origMin && m.origIndex <= origMax){
+          userPositions.add(m.userIndex);
+        }
       });
 
       if(userPositions.size === 0) return [];
 
       const userMin = Math.min(...userPositions);
       const userMax = Math.max(...userPositions);
-
-      // Step 2: Find ALL original positions in this user range (INCLUDING words in LIS!)
-      const origPositions = new Set();
-      orderedMatches.forEach(m=>{
-        if(m.userIndex >= userMin && m.userIndex <= userMax){
-          origPositions.add(m.origIndex);
-        }
-      });
-
-      if(origPositions.size === 0) return [];
-
-      const origMin = Math.min(...origPositions);
-      const origMax = Math.max(...origPositions);
 
       // Step 3: Build correct order from ENTIRE original range
       const correctOrder = [];
