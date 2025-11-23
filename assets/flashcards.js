@@ -4751,27 +4751,39 @@ function simpleStem(value){
     }
 
     // Detect geometric crossings: два блока меняют относительный порядок
-    function hasCrossing(moveBlocks, gapMeta){
+    function hasCrossing(moveBlocks, gapMeta, userLen){
+      const targetPos = (gap)=>{
+        if(!gap) return -1;
+        if(gap.beforeUser !== undefined && gap.beforeUser >= 0) return gap.beforeUser + 1;
+        if(gap.afterUser !== undefined && gap.afterUser <= userLen) return gap.afterUser;
+        return -1;
+      };
+
       for(let i = 0; i < moveBlocks.length; i++){
         const a = moveBlocks[i];
         const aGap = gapMeta[a.targetGapKey];
-        if(!aGap) continue;
-        const aTarget = aGap.beforeUser >= 0 ? aGap.beforeUser + 1 : 0;
+        const aTarget = targetPos(aGap);
+        if(aTarget < 0) continue;
         for(let j = i + 1; j < moveBlocks.length; j++){
           const b = moveBlocks[j];
           const bGap = gapMeta[b.targetGapKey];
-          if(!bGap) continue;
-          const bTarget = bGap.beforeUser >= 0 ? bGap.beforeUser + 1 : 0;
+          const bTarget = targetPos(bGap);
+          if(bTarget < 0) continue;
           // Источник по порядку не совпадает с порядком цели => пересечение стрелок
           if(a.start < b.start && aTarget > bTarget) return true;
           if(a.start > b.start && aTarget < bTarget) return true;
+          // Цель внутри диапазона другого блока → визуальное наложение
+          const bRangeEnd = b.end + 1;
+          const aRangeEnd = a.end + 1;
+          if(aTarget >= b.start && aTarget <= bRangeEnd) return true;
+          if(bTarget >= a.start && bTarget <= aRangeEnd) return true;
         }
       }
       return false;
     }
 
     // Helper: decide if should use rewrite instead of arrows
-    function shouldUseRewrite(moveBlocks, gapMeta){
+    function shouldUseRewrite(moveBlocks, gapMeta, userLen){
       if(moveBlocks.length === 0) return false;
 
       const boundaryCount = computeCrossedBoundaries(moveBlocks, gapMeta);
@@ -4784,7 +4796,7 @@ function simpleStem(value){
       }
 
       // Check for geometric crossings (стрелки накладываются)
-      if(hasCrossing(moveBlocks, gapMeta)) return true;
+      if(hasCrossing(moveBlocks, gapMeta, userLen)) return true;
 
       return false;
     }
@@ -4951,7 +4963,7 @@ function simpleStem(value){
       let rewriteGroups = [];
       let finalGapsNeeded = new Set();
 
-      if(shouldUseRewrite(moveBlocks, gapMeta)){
+      if(shouldUseRewrite(moveBlocks, gapMeta, userTokens.length)){
         rewriteGroups = createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens);
 
         // Update metadata for rewrite groups
