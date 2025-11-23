@@ -4481,15 +4481,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(a.type === 'punct' && b.type === 'punct'){
         const normA = normalizePunctuation(a.raw);
         const normB = normalizePunctuation(b.raw);
-        if(normA === normB) return 1.2;
+        if(normA === normB) return 0.8;
         return 0.2;
       }
       if(a.type !== b.type){
         return 0.05;
       }
       if(a.norm === b.norm){
-        // Exact word match: strong weight to keep correct alignment
-        return 2.0;
+        return 1;
       }
       const stemA = simpleStem(a.norm);
       const stemB = simpleStem(b.norm);
@@ -4507,7 +4506,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function buildSimilarityMatrix(userTokens, originalTokens){
       const matrix = [];
       const n = Math.max(userTokens.length, originalTokens.length, 1);
-      const posPenaltyFactor = 0.5; // stronger bias to match nearer positions
+      const posPenaltyFactor = 0.2; // favor nearer positions on equal similarity
       for(let i = 0; i < userTokens.length; i++){
         matrix[i] = [];
         for(let j = 0; j < originalTokens.length; j++){
