@@ -4388,8 +4388,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
 
-      // Монотонные «якоря» для стабильного порядка: максимум веса без пересечений (взвешенный LCS)
-      const anchorMatches = weightedLCS(userTokens, originalTokens);
+      // Монотонные «якоря» для стабильного порядка: динамическое выравнивание с штрафом за разрывы
+      const anchorMatches = monotoneAlignment(userTokens, originalTokens);
       const anchorPairs = new Set(anchorMatches.map(m => `${m.userIndex}-${m.origIndex}`));
       const lisSet = new Set();
       matches.forEach(m=>{
@@ -4605,19 +4605,31 @@ function simpleStem(value){
       return result;
     }
 
-    // Взвешенный LCS: находит максимум суммарной похожести без пересечений (монотонно по порядку)
-    function weightedLCS(userTokens, originalTokens){
+    // Монотонное выравнивание с штрафом за пропуски: приближает классический Needleman–Wunsch
+    function monotoneAlignment(userTokens, originalTokens){
       const n = userTokens.length;
       const m = originalTokens.length;
-      const dp = Array.from({length: n + 1}, ()=> Array(m + 1).fill(0));
+      const gapPenalty = 1.0; // штраф за пропуск токена при выравнивании
+
+      const dp = Array.from({length: n + 1}, ()=> Array(m + 1).fill(-Infinity));
       const dir = Array.from({length: n + 1}, ()=> Array(m + 1).fill(0)); // 0=diag,1=up,2=left
+
+      dp[0][0] = 0;
+      for(let i = 1; i <= n; i++){
+        dp[i][0] = dp[i-1][0] - gapPenalty;
+        dir[i][0] = 1;
+      }
+      for(let j = 1; j <= m; j++){
+        dp[0][j] = dp[0][j-1] - gapPenalty;
+        dir[0][j] = 2;
+      }
 
       for(let i = 1; i <= n; i++){
         for(let j = 1; j <= m; j++){
-          const score = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
-          const diag = score >= MIN_SIMILARITY_SCORE ? dp[i-1][j-1] + score : -Infinity;
-          const up = dp[i-1][j];
-          const left = dp[i][j-1];
+          const sim = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          const diag = dp[i-1][j-1] + sim;
+          const up = dp[i-1][j] - gapPenalty;
+          const left = dp[i][j-1] - gapPenalty;
           const best = Math.max(diag, up, left);
           dp[i][j] = best;
           if(best === diag){
@@ -4635,12 +4647,12 @@ function simpleStem(value){
       while(i > 0 && j > 0){
         const d = dir[i][j];
         if(d === 0){
-          const score = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
-          if(score >= MIN_SIMILARITY_SCORE){
+          const sim = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          if(sim >= MIN_SIMILARITY_SCORE){
             matches.push({
               userIndex: i - 1,
               origIndex: j - 1,
-              score
+              score: sim
             });
           }
           i--; j--;
