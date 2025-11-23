@@ -4687,40 +4687,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens){
       if(moveBlocks.length === 0) return [];
 
-      // Find all original positions involved in problem blocks
-      const origPositions = new Set();
+      // Find all user positions involved in problem blocks
       const userPositions = new Set();
-
       moveBlocks.forEach(block=>{
         block.tokens.forEach(userIdx=>{
           userPositions.add(userIdx);
-          const match = orderedMatches.find(m=> m.userIndex === userIdx);
-          if(match){
-            origPositions.add(match.origIndex);
-          }
         });
+      });
+
+      if(userPositions.size === 0) return [];
+
+      const userMin = Math.min(...userPositions);
+      const userMax = Math.max(...userPositions);
+
+      // Find corresponding original range
+      // Include ALL matches in this user range (even if in LIS!)
+      const origPositions = new Set();
+      orderedMatches.forEach(m=>{
+        if(m.userIndex >= userMin && m.userIndex <= userMax){
+          origPositions.add(m.origIndex);
+        }
       });
 
       if(origPositions.size === 0) return [];
 
-      // Expand to continuous range in original
       const origMin = Math.min(...origPositions);
       const origMax = Math.max(...origPositions);
 
-      // Find all user positions corresponding to orig range
-      const expandedUserPositions = new Set();
-      orderedMatches.forEach(m=>{
-        if(m.origIndex >= origMin && m.origIndex <= origMax){
-          expandedUserPositions.add(m.userIndex);
-        }
-      });
-
-      if(expandedUserPositions.size === 0) return [];
-
-      const userMin = Math.min(...expandedUserPositions);
-      const userMax = Math.max(...expandedUserPositions);
-
-      // Build correct order from original
+      // Build correct order from original (entire range)
       const correctOrder = [];
       for(let origIdx = origMin; origIdx <= origMax; origIdx++){
         const token = originalTokens[origIdx];
