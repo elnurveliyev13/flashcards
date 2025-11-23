@@ -4705,56 +4705,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         moveBlocks.push(current);
       }
 
-      const gapGroups = {};
-      moveBlocks.forEach(block=>{
-        if(!gapGroups[block.targetGapKey]){
-          gapGroups[block.targetGapKey] = [];
-        }
-        gapGroups[block.targetGapKey].push(block);
-      });
-
       const rewriteGroups = [];
-      Object.keys(gapGroups).forEach(key=>{
-        const group = gapGroups[key];
-        if(group.length <= 1){
-          return;
-        }
-        const target = group[0].targetGap;
-        const prevLisIndex = target.before !== -1 && lisOrigToStudent.has(target.before) ? lisOrigToStudent.get(target.before) : -1;
-        const nextLisIndex = target.after !== null && lisOrigToStudent.has(target.after) ? lisOrigToStudent.get(target.after) : userTokens.length;
-        const minBlockStart = Math.min(...group.map(g=>g.start));
-        const maxBlockEnd = Math.max(...group.map(g=>g.end));
-        const rewriteStart = Math.min(minBlockStart, prevLisIndex >= 0 ? prevLisIndex + 1 : minBlockStart);
-        let rewriteEnd = Math.max(maxBlockEnd, nextLisIndex);
-        if(rewriteEnd === userTokens.length - 1 && userTokens[rewriteEnd] && userTokens[rewriteEnd].type === 'punct'){
-          rewriteEnd -= 1;
-        }
-        const origIndexesInRange = orderedMatches
-          .filter(m=>m.userIndex >= rewriteStart && m.userIndex <= rewriteEnd)
-          .map(m=>m.origIndex);
-        const maxOrig = Math.max(...origIndexesInRange, target.after !== null ? target.after - 1 : originalTokens.length - 1);
-        const correctTokens = originalTokens.filter(t=> t.index > target.before && t.index <= maxOrig);
-        const correctText = correctTokens.map(t=>t.raw).join(' ');
-        const rewriteId = `rewrite-${rewriteGroups.length + 1}`;
-        rewriteGroups.push({
-          id: rewriteId,
-          start: rewriteStart,
-          end: rewriteEnd,
-          targetGapKey: key,
-          targetGap: target,
-          correctText
-        });
-        group.forEach(block=>{ block.resolvedByRewrite = true; });
-        for(let i = rewriteStart; i <= rewriteEnd; i++){
-          if(!metaByUser[i]){
-            metaByUser[i] = {};
-          }
-          metaByUser[i].rewriteGroupId = rewriteId;
-          metaByUser[i].targetGapKey = key;
-          metaByUser[i].targetGap = target;
-        }
-      });
-
       moveBlocks.forEach(block=>{
         if(block.resolvedByRewrite) return;
         block.tokens.forEach(idx=>{
