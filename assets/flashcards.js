@@ -4627,140 +4627,126 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return res.reverse();
     }
 
-    // Helper: detect if arrows would intersect
-    function detectArrowIntersections(moveBlocks, gapMeta){
-      let intersections = 0;
-      for(let i = 0; i < moveBlocks.length; i++){
-        for(let j = i + 1; j < moveBlocks.length; j++){
-          const blockA = moveBlocks[i];
-          const blockB = moveBlocks[j];
-          const gapA = gapMeta[blockA.targetGapKey];
-          const gapB = gapMeta[blockB.targetGapKey];
-          if(!gapA || !gapB) continue;
+    // Helper: compute S-boundaries crossed by each block
+    function computeCrossedBoundaries(moveBlocks, gapMeta){
+      const boundaryCount = new Map();
 
-          const aStart = blockA.start;
-          const aTarget = gapA.beforeUser >= 0 ? gapA.beforeUser + 1 : 0;
-          const bStart = blockB.start;
-          const bTarget = gapB.beforeUser >= 0 ? gapB.beforeUser + 1 : 0;
-
-          // Check if arrows cross each other
-          if((aStart < bStart && aTarget > bTarget) || (aStart > bStart && aTarget < bTarget)){
-            intersections++;
-          }
-        }
-      }
-      return intersections;
-    }
-
-    // Helper: detect position conflicts (multiple blocks moving through same position)
-    function detectPositionConflicts(moveBlocks, gapMeta){
-      const positionUsage = new Map();
       moveBlocks.forEach(block=>{
         const gap = gapMeta[block.targetGapKey];
         if(!gap) return;
-        const targetPos = gap.beforeUser >= 0 ? gap.beforeUser + 1 : 0;
 
-        // Track which positions each block crosses
-        const start = Math.min(block.start, targetPos);
-        const end = Math.max(block.end, targetPos);
-        for(let pos = start; pos <= end; pos++){
-          if(!positionUsage.has(pos)){
-            positionUsage.set(pos, []);
+        const targetBoundary = gap.beforeUser >= 0 ? gap.beforeUser + 1 : 0;
+        const startBoundary = block.start;
+        const endBoundary = block.end + 1;
+
+        // Determine crossed boundaries
+        let crossed = [];
+        if(targetBoundary < startBoundary){
+          // Moving left
+          for(let b = targetBoundary; b < startBoundary; b++){
+            crossed.push(b);
           }
-          positionUsage.get(pos).push(block.id);
+        } else if(targetBoundary > endBoundary){
+          // Moving right
+          for(let b = endBoundary; b <= targetBoundary; b++){
+            crossed.push(b);
+          }
         }
+
+        // Count crossings
+        crossed.forEach(boundary=>{
+          if(!boundaryCount.has(boundary)){
+            boundaryCount.set(boundary, 0);
+          }
+          boundaryCount.set(boundary, boundaryCount.get(boundary) + 1);
+        });
+
+        block.crossedBoundaries = crossed;
       });
 
-      // Find positions crossed by multiple blocks
-      const conflicts = [];
-      positionUsage.forEach((blocks, pos)=>{
-        if(blocks.length > 1){
-          conflicts.push({ pos, blocks });
-        }
-      });
-      return conflicts;
+      return boundaryCount;
     }
 
     // Helper: decide if should use rewrite instead of arrows
-    function shouldUseRewrite(moveBlocks, gapMeta, userTokens){
+    function shouldUseRewrite(moveBlocks, gapMeta){
       if(moveBlocks.length === 0) return false;
 
-      // Heuristic 1: Too many moves relative to total tokens
-      if(moveBlocks.length > userTokens.length / 2){
-        return true;
-      }
+      const boundaryCount = computeCrossedBoundaries(moveBlocks, gapMeta);
 
-      // Heuristic 2: Arrow intersections
-      const intersections = detectArrowIntersections(moveBlocks, gapMeta);
-      if(intersections > 1){
-        return true;
-      }
-
-      // Heuristic 3: Position conflicts
-      const conflicts = detectPositionConflicts(moveBlocks, gapMeta);
-      if(conflicts.length > 1){
-        return true;
+      // Check if any boundary is overloaded (count > 1)
+      for(const [boundary, count] of boundaryCount){
+        if(count > 1){
+          return true;
+        }
       }
 
       return false;
     }
 
-    // Helper: create rewrite group from move blocks
-    function createRewriteGroup(moveBlocks, orderedMatches, lisSet, userTokens, originalTokens){
-      const rewriteGroups = [];
+    // Helper: create rewrite group from problem blocks
+    function createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens){
+      if(moveBlocks.length === 0) return [];
 
-      // Find continuous regions that need rewriting
-      const allMoveTokenIndices = new Set();
+      // Find all original positions involved in problem blocks
+      const origPositions = new Set();
+      const userPositions = new Set();
+
       moveBlocks.forEach(block=>{
-        block.tokens.forEach(idx=> allMoveTokenIndices.add(idx));
-      });
-
-      // Find segments between LIS tokens that contain moves
-      const lisUserIndices = orderedMatches.filter(m=>lisSet.has(m.id)).map(m=>m.userIndex).sort((a,b)=>a-b);
-      const segments = [];
-      let segStart = 0;
-
-      lisUserIndices.forEach(lisIdx=>{
-        if(segStart < lisIdx){
-          const hasMoves = Array.from({length: lisIdx - segStart}, (_, i)=> segStart + i)
-            .some(idx=> allMoveTokenIndices.has(idx));
-          if(hasMoves){
-            segments.push({ start: segStart, end: lisIdx - 1 });
+        block.tokens.forEach(userIdx=>{
+          userPositions.add(userIdx);
+          const match = orderedMatches.find(m=> m.userIndex === userIdx);
+          if(match){
+            origPositions.add(match.origIndex);
           }
-        }
-        segStart = lisIdx + 1;
-      });
-
-      if(segStart < userTokens.length){
-        const hasMoves = Array.from({length: userTokens.length - segStart}, (_, i)=> segStart + i)
-          .some(idx=> allMoveTokenIndices.has(idx));
-        if(hasMoves){
-          segments.push({ start: segStart, end: userTokens.length - 1 });
-        }
-      }
-
-      // Create rewrite groups for each segment
-      segments.forEach((seg, idx)=>{
-        const userSegment = userTokens.slice(seg.start, seg.end + 1);
-        const matchesInSegment = orderedMatches.filter(m=> m.userIndex >= seg.start && m.userIndex <= seg.end);
-        const correctOrder = matchesInSegment
-          .sort((a, b)=> a.origIndex - b.origIndex)
-          .map(m=> ({
-            token: m.origToken,
-            userToken: m.userToken,
-            hasError: m.userToken.raw !== m.origToken.raw
-          }));
-
-        rewriteGroups.push({
-          id: `rewrite-${idx + 1}`,
-          start: seg.start,
-          end: seg.end,
-          userTokens: userSegment,
-          correctOrder
         });
       });
 
-      return rewriteGroups;
+      if(origPositions.size === 0) return [];
+
+      // Expand to continuous range in original
+      const origMin = Math.min(...origPositions);
+      const origMax = Math.max(...origPositions);
+
+      // Find all user positions corresponding to orig range
+      const expandedUserPositions = new Set();
+      orderedMatches.forEach(m=>{
+        if(m.origIndex >= origMin && m.origIndex <= origMax){
+          expandedUserPositions.add(m.userIndex);
+        }
+      });
+
+      if(expandedUserPositions.size === 0) return [];
+
+      const userMin = Math.min(...expandedUserPositions);
+      const userMax = Math.max(...expandedUserPositions);
+
+      // Build correct order from original
+      const correctOrder = [];
+      for(let origIdx = origMin; origIdx <= origMax; origIdx++){
+        const token = originalTokens[origIdx];
+        if(token){
+          // Find matching user token (if exists)
+          const match = orderedMatches.find(m=> m.origIndex === origIdx);
+          const userToken = match ? match.userToken : null;
+          const hasError = userToken && userToken.raw !== token.raw;
+
+          correctOrder.push({
+            token,
+            userToken,
+            hasError
+          });
+        }
+      }
+
+      return [{
+        id: 'rewrite-1',
+        start: userMin,
+        end: userMax,
+        origMin,
+        origMax,
+        userTokens: userTokens.slice(userMin, userMax + 1),
+        correctOrder
+      }];
     }
 
     function buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens){
@@ -4842,8 +4828,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let rewriteGroups = [];
       let finalGapsNeeded = new Set();
 
-      if(shouldUseRewrite(moveBlocks, gapMeta, userTokens)){
-        rewriteGroups = createRewriteGroup(moveBlocks, orderedMatches, lisSet, userTokens, originalTokens);
+      if(shouldUseRewrite(moveBlocks, gapMeta)){
+        rewriteGroups = createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens);
 
         // Update metadata for rewrite groups
         rewriteGroups.forEach(group=>{
