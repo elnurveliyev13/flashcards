@@ -4387,9 +4387,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
 
-      const lisIndices = longestIncreasingSubsequence(matches.map(m=>m.origIndex));
-      const lisSet = new Set(lisIndices.map(idx=> matches[idx]?.id).filter(Boolean));
-      const movePlan = buildMovePlan(matches, lisSet, userTokens, originalTokens);
+      const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
+      const lisIndices = longestIncreasingSubsequence(orderedMatches.map(m=>m.origIndex));
+      const lisSet = new Set(lisIndices.map(idx=> orderedMatches[idx]?.id).filter(Boolean));
+      const movePlan = buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens);
       const missingByPosition = buildMissingByPosition(missing, matches, userTokens.length);
       movePlan.missingByPosition = missingByPosition;
 
@@ -4614,8 +4615,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return result.reverse();
     }
 
-    function buildMovePlan(matches, lisSet, userTokens, originalTokens){
-      const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
+    function buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens){
       const lisMatches = orderedMatches.filter(m=>lisSet.has(m.id));
       const lisOrigSorted = lisMatches.map(m=>m.origIndex).sort((a,b)=>a-b);
       const lisOrigToStudent = new Map();
@@ -4646,7 +4646,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const inLis = lisSet.has(m.id);
         const { prev, next } = findNeighbors(m.origIndex);
         const gapKey = `${prev}-${next === null ? 'END' : next}`;
-        gapMeta[gapKey] = { before: prev, after: next };
+        const beforeUser = prev !== -1 && lisOrigToStudent.has(prev) ? lisOrigToStudent.get(prev) : -1;
+        const afterUser = next !== null && lisOrigToStudent.has(next) ? lisOrigToStudent.get(next) : userTokens.length;
+        gapMeta[gapKey] = { before: prev, after: next, beforeUser, afterUser };
         const hasError = m.userToken.raw !== m.origToken.raw;
         metaByUser[m.userIndex] = {
           match: m,
@@ -4839,10 +4841,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-user';
 
+      const gapMeta = comparison.movePlan.gapMeta || {};
+      const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
+      const anchorsByPos = {};
+      gapsNeeded.forEach(key=>{
+        const meta = gapMeta[key];
+        if(!meta) return;
+        const pos = meta.beforeUser >= 0 ? meta.beforeUser + 1 : 0;
+        if(!anchorsByPos[pos]){
+          anchorsByPos[pos] = [];
+        }
+        anchorsByPos[pos].push(key);
+      });
+
+      const insertAnchors = (pos)=>{
+        const list = anchorsByPos[pos] || [];
+        list.forEach(key=>{
+          const anchor = document.createElement('span');
+          anchor.className = 'dictation-gap-anchor';
+          anchor.dataset.gapAnchor = key;
+          const mark = document.createElement('span');
+          mark.className = 'dictation-gap-mark';
+          anchor.appendChild(mark);
+          line.appendChild(anchor);
+        });
+      };
+
       const missingByPos = comparison.movePlan.missingByPosition || {};
       const meta = comparison.movePlan.tokenMeta || [];
       let idx = 0;
       while(idx < comparison.userTokens.length){
+        insertAnchors(idx);
         if(missingByPos[idx]){
           missingByPos[idx].forEach(miss=>{
             const missSpan = document.createElement('span');
@@ -4850,7 +4879,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             missSpan.dataset.gapAnchor = miss.gapKey;
             const caret = document.createElement('span');
             caret.className = 'dictation-missing-caret';
-            caret.textContent = '?';
+            caret.textContent = '^';
             const word = document.createElement('span');
             word.className = 'dictation-missing-word';
             word.textContent = miss.token.raw;
@@ -4903,6 +4932,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         line.appendChild(span);
         idx++;
       }
+      insertAnchors(comparison.userTokens.length);
       if(missingByPos[comparison.userTokens.length]){
         missingByPos[comparison.userTokens.length].forEach(miss=>{
           const missSpan = document.createElement('span');
@@ -4910,7 +4940,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           missSpan.dataset.gapAnchor = miss.gapKey;
           const caret = document.createElement('span');
           caret.className = 'dictation-missing-caret';
-          caret.textContent = '?';
+          caret.textContent = '^';
           const word = document.createElement('span');
           word.className = 'dictation-missing-word';
           word.textContent = miss.token.raw;
@@ -4923,8 +4953,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       row.appendChild(line);
       return row;
     }
-
-    function buildCorrectLine(comparison){
+function buildCorrectLine(comparison){
       const row = document.createElement('div');
       row.className = 'dictation-comparison-row';
       const label = document.createElement('div');
@@ -4933,39 +4962,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-correct';
 
-      const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
-      const gapMeta = comparison.movePlan.gapMeta || {};
-      const gapsByBefore = new Map();
-      gapsNeeded.forEach(key=>{
-        const meta = gapMeta[key];
-        if(!meta) return;
-        const before = meta.before === undefined ? -1 : meta.before;
-        if(!gapsByBefore.has(before)){
-          gapsByBefore.set(before, []);
-        }
-        gapsByBefore.get(before).push(key);
-      });
-
-      const insertAnchors = (beforeIdx)=>{
-        const list = gapsByBefore.get(beforeIdx) || [];
-        list.forEach(key=>{
-          const anchor = document.createElement('span');
-          anchor.className = 'dictation-gap-anchor';
-          anchor.dataset.gapAnchor = key;
-          const mark = document.createElement('span');
-          mark.className = 'dictation-gap-mark';
-          anchor.appendChild(mark);
-          line.appendChild(anchor);
-        });
-      };
-
-      insertAnchors(-1);
-      comparison.originalTokens.forEach((token, idx)=>{
+      comparison.originalTokens.forEach((token)=>{
         const span = document.createElement('span');
         span.className = 'dictation-token dictation-token-ok';
         span.textContent = token.raw;
         line.appendChild(span);
-        insertAnchors(idx);
       });
 
       row.appendChild(label);
