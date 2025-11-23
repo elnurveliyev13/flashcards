@@ -4904,28 +4904,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         const token = comparison.userTokens[idx];
         const metaInfo = meta[idx] || {};
-        if(metaInfo.rewriteGroupId){
-          const group = comparison.movePlan.rewriteGroups.find(r=>r.id === metaInfo.rewriteGroupId);
-          const start = group ? group.start : idx;
-          const end = group ? group.end : idx;
-          const segmentTokens = comparison.userTokens.slice(start, end + 1).map(t=>t.raw).join(' ');
-          const rewriteEl = document.createElement('span');
-          rewriteEl.className = 'dictation-rewrite-block';
-          if(group){
-            rewriteEl.dataset.targetGap = group.targetGapKey;
-          }
-          const corrected = document.createElement('span');
-          corrected.className = 'dictation-rewrite-correct';
-          corrected.textContent = group ? group.correctText : '';
-          const original = document.createElement('span');
-          original.className = 'dictation-rewrite-original';
-          original.textContent = segmentTokens;
-          rewriteEl.appendChild(corrected);
-          rewriteEl.appendChild(original);
-          line.appendChild(rewriteEl);
-          idx = end + 1;
-          continue;
-        }
         if(metaInfo.moveBlockId){
           const block = comparison.movePlan.moveBlocks.find(b=>b.id === metaInfo.moveBlockId);
           const blockEl = document.createElement('span');
