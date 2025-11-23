@@ -4347,19 +4347,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const userTokens = tokenizeText(userNorm);
       const originalTokens = tokenizeText(correctNorm);
 
-      const similarity = buildSimilarityMatrix(userTokens, originalTokens);
-      const assignment = solveMaxAssignment(similarity);
-      const MIN_ACCEPTABLE = 0.35;
-
+      const assignment = alignMonotonic(userTokens, originalTokens);
       const matches = [];
       const matchedUser = new Set();
       const matchedOrig = new Set();
 
       assignment.forEach((item, idx) => {
-        if(!item) return;
         const { row, col, weight } = item;
-        if(row >= userTokens.length || col >= originalTokens.length) return;
-        if(weight < MIN_ACCEPTABLE) return;
         matches.push({
           id: idx,
           userIndex: row,
@@ -4516,6 +4510,60 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       return matrix;
+    }
+
+    // Monotonic alignment (order-preserving) to avoid crossing matches
+    function alignMonotonic(userTokens, originalTokens){
+      const m = userTokens.length;
+      const n = originalTokens.length;
+      const dp = Array.from({length: m + 1}, () => Array(n + 1).fill(0));
+      const trace = Array.from({length: m + 1}, () => Array(n + 1).fill(''));
+      const simCache = Array.from({length: m}, () => Array(n).fill(0));
+
+      for(let i = 1; i <= m; i++){
+        for(let j = 1; j <= n; j++){
+          const s = buildSimilarityMatrix(userTokens.slice(i-1, i), originalTokens.slice(j-1, j))[0][0];
+          simCache[i-1][j-1] = s;
+          const matchScore = s >= MIN_SIMILARITY_SCORE ? dp[i-1][j-1] + s : -Infinity;
+          const up = dp[i-1][j];
+          const left = dp[i][j-1];
+          let best = matchScore;
+          let dir = 'D';
+          if(up > best){
+            best = up;
+            dir = 'U';
+          }
+          if(left > best){
+            best = left;
+            dir = 'L';
+          }
+          // Tie-break: prefer diagonal, then up, then left
+          dp[i][j] = best;
+          trace[i][j] = dir;
+        }
+      }
+
+      const matches = [];
+      let i = m, j = n;
+      while(i > 0 && j > 0){
+        const dir = trace[i][j];
+        if(dir === 'D'){
+          const s = simCache[i-1][j-1];
+          if(s >= MIN_SIMILARITY_SCORE){
+            matches.push({
+              row: i - 1,
+              col: j - 1,
+              weight: s
+            });
+          }
+          i--; j--;
+        } else if(dir === 'U'){
+          i--;
+        } else {
+          j--;
+        }
+      }
+      return matches.reverse();
     }
 
     function solveMaxAssignment(weights){
