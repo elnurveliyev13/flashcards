@@ -4390,6 +4390,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
       const lisIndices = longestIncreasingSubsequence(orderedMatches.map(m=>m.origIndex));
       const lisSet = new Set(lisIndices.map(idx=> orderedMatches[idx]?.id).filter(Boolean));
+      // Force-keep exact tokens that already stand on their place (protects from odd alignments on duplicates)
+      orderedMatches.forEach(m=>{
+        if(m.exact && m.userIndex === m.origIndex){
+          lisSet.add(m.id);
+        }
+      });
       const movePlan = buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens);
       const missingByPosition = buildMissingByPosition(missing, matches, userTokens.length);
       movePlan.missingByPosition = missingByPosition;
