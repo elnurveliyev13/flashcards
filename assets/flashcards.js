@@ -4387,8 +4387,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
 
       const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
-      const lisIndices = longestIncreasingSubsequence(orderedMatches.map(m=>m.origIndex));
-      const lisSet = new Set(lisIndices.map(idx=> orderedMatches[idx]?.id).filter(Boolean));
+
+      // Монотонные «якоря» для стабильного порядка: максимум веса без пересечений (взвешенный LCS)
+      const anchorMatches = weightedLCS(userTokens, originalTokens);
+      const anchorPairs = new Set(anchorMatches.map(m => `${m.userIndex}-${m.origIndex}`));
+      const lisSet = new Set();
+      matches.forEach(m=>{
+        if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
+          lisSet.add(m.id);
+        }
+      });
+
       const movePlan = buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens);
       const missingByPosition = buildMissingByPosition(missing, matches, userTokens.length);
       movePlan.missingByPosition = missingByPosition;
@@ -4444,8 +4453,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         '“': '"',
         '”': '"',
         '„': '"',
-        '’': "'",
-        '‘': "'"
+        '’': ''',
+        '‘': '''
       };
       return map[char] || char;
     }
@@ -4594,6 +4603,54 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       return result;
+    }
+
+    // Взвешенный LCS: находит максимум суммарной похожести без пересечений (монотонно по порядку)
+    function weightedLCS(userTokens, originalTokens){
+      const n = userTokens.length;
+      const m = originalTokens.length;
+      const dp = Array.from({length: n + 1}, ()=> Array(m + 1).fill(0));
+      const dir = Array.from({length: n + 1}, ()=> Array(m + 1).fill(0)); // 0=diag,1=up,2=left
+
+      for(let i = 1; i <= n; i++){
+        for(let j = 1; j <= m; j++){
+          const score = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          const diag = score >= MIN_SIMILARITY_SCORE ? dp[i-1][j-1] + score : -Infinity;
+          const up = dp[i-1][j];
+          const left = dp[i][j-1];
+          const best = Math.max(diag, up, left);
+          dp[i][j] = best;
+          if(best === diag){
+            dir[i][j] = 0;
+          } else if(best === up){
+            dir[i][j] = 1;
+          } else {
+            dir[i][j] = 2;
+          }
+        }
+      }
+
+      const matches = [];
+      let i = n, j = m;
+      while(i > 0 && j > 0){
+        const d = dir[i][j];
+        if(d === 0){
+          const score = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          if(score >= MIN_SIMILARITY_SCORE){
+            matches.push({
+              userIndex: i - 1,
+              origIndex: j - 1,
+              score
+            });
+          }
+          i--; j--;
+        } else if(d === 1){
+          i--;
+        } else {
+          j--;
+        }
+      }
+      return matches.reverse();
     }
 
     // Order-preserving alignment (weighted LCS) to avoid crossing matches
@@ -8412,6 +8469,4 @@ function buildCorrectLine(comparison){
 
   }
 export { flashcardsInit };
-
-
 
