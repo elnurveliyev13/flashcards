@@ -4506,10 +4506,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function buildSimilarityMatrix(userTokens, originalTokens){
       const matrix = [];
+      const maxLen = Math.max(userTokens.length, originalTokens.length) || 1;
       for(let i = 0; i < userTokens.length; i++){
         matrix[i] = [];
         for(let j = 0; j < originalTokens.length; j++){
-          matrix[i][j] = tokenSimilarity(userTokens[i], originalTokens[j]);
+          const base = tokenSimilarity(userTokens[i], originalTokens[j]);
+          // Добавляем позиционный приоритет: ближе к диагонали — выше вес, дальние пары штрафуем, чтобы assignment не рушил порядок.
+          const dist = Math.abs(i - j) / maxLen; // 0 .. 1
+          const proximityBonus = (1 - dist) * 0.35; // prefer ближние по позиции пары
+          const distancePenalty = dist * 0.25; // штраф за дальние/пересекающиеся соответствия
+          const weight = Math.max(0, base - distancePenalty) + proximityBonus;
+          matrix[i][j] = weight;
         }
       }
       return matrix;
@@ -8405,8 +8412,6 @@ function buildCorrectLine(comparison){
 
   }
 export { flashcardsInit };
-
-
 
 
 
