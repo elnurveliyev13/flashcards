@@ -4730,7 +4730,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
 
-      return [{
+      const group = {
         id: 'rewrite-1',
         start: userMin,
         end: userMax,
@@ -4738,7 +4738,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         origMax,
         userTokens: userTokens.slice(userMin, userMax + 1),
         correctOrder
-      }];
+      };
+
+      // Debug logging
+      console.log('=== REWRITE GROUP CREATED ===');
+      console.log('userMin:', userMin, 'userMax:', userMax);
+      console.log('origMin:', origMin, 'origMax:', origMax);
+      console.log('userTokens:', group.userTokens.map(t => t.raw).join(' '));
+      console.log('correctOrder:', correctOrder.map(t => t.token.raw).join(' '));
+      console.log('============================');
+
+      return [group];
     }
 
     function buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens){
