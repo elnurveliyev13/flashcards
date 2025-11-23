@@ -4435,15 +4435,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function normalizePunctuation(char){
       const map = {
-        '': '-',
-        '': '-',
-        '?': '-',
-        '': '...',
-        '': '"',
-        '': '"',
-        '': '"',
-        '': '"',
-        "'": "'"
+        '—': '-',
+        '–': '-',
+        '−': '-',
+        '…': '...',
+        '«': '"',
+        '»': '"',
+        '“': '"',
+        '”': '"',
+        '„': '"',
+        '’': "'",
+        '‘': "'"
       };
       return map[char] || char;
     }
@@ -4595,15 +4597,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const dp = Array(n).fill(1);
       const prev = Array(n).fill(-1);
       const firstIdx = Array(n).fill(0);
+      const breaks = Array(n).fill(0); // number of "jumps" inside LIS, to favor fewer move blocks
       for(let i = 0; i < n; i++){
         firstIdx[i] = i;
         for(let j = 0; j < i; j++){
           if(arr[j] < arr[i]){
             const candLen = dp[j] + 1;
+            const candBreaks = breaks[j] + (arr[i] === arr[j] + 1 ? 0 : 1);
             const betterLen = candLen > dp[i];
-            const sameLenEarlier = candLen === dp[i] && firstIdx[j] < firstIdx[i];
-            if(betterLen || sameLenEarlier){
+            const sameLenBetterBlocks = candLen === dp[i] && candBreaks < breaks[i];
+            const sameLenBlocksEarlier = candLen === dp[i] && candBreaks === breaks[i] && firstIdx[j] < firstIdx[i];
+            if(betterLen || sameLenBetterBlocks || sameLenBlocksEarlier){
               dp[i] = candLen;
+              breaks[i] = candBreaks;
               prev[i] = j;
               firstIdx[i] = firstIdx[j];
             }
@@ -4613,8 +4619,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let best = 0;
       for(let i = 1; i < n; i++){
         const better = dp[i] > dp[best];
-        const sameEarlier = dp[i] === dp[best] && firstIdx[i] < firstIdx[best];
-        if(better || sameEarlier){
+        const sameLenBetterBlocks = dp[i] === dp[best] && breaks[i] < breaks[best];
+        const sameLenBlocksEarlier = dp[i] === dp[best] && breaks[i] === breaks[best] && firstIdx[i] < firstIdx[best];
+        if(better || sameLenBetterBlocks || sameLenBlocksEarlier){
           best = i;
         }
       }
@@ -8398,7 +8405,6 @@ function buildCorrectLine(comparison){
 
   }
 export { flashcardsInit };
-
 
 
 
