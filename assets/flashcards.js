@@ -4348,12 +4348,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const originalTokens = tokenizeText(correctNorm);
 
       const similarity = buildSimilarityMatrix(userTokens, originalTokens);
-      // Initial assignment (allows crossings)
-      const rawAssignment = solveMaxAssignment(similarity);
-      // Keep only strong enough matches
-      const filtered = rawAssignment.filter(item => item && item.weight >= MIN_SIMILARITY_SCORE);
-      // Select best non-crossing subset with tie-breaks to keep correct positions
-      const assignment = selectBestMonotone(filtered, userTokens, originalTokens);
+      // Order-preserving alignment to avoid crossing matches
+      const assignment = alignMonotonic(similarity);
       const matches = [];
       const matchedUser = new Set();
       const matchedOrig = new Set();
@@ -4595,49 +4591,55 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return result;
     }
 
-    // Select best non-crossing subset of matches (max sum of scores, tie-break keep earliest correct order)
-    function selectBestMonotone(matches, userTokens, originalTokens){
-      const ordered = [...matches].sort((a,b)=>a.row - b.row);
-      const n = ordered.length;
-      const dp = Array(n).fill(0);
-      const prev = Array(n).fill(-1);
-      const scoreList = ordered.map(m=>{
-        const exactPosBonus = (m.row === m.col) ? 0.3 : 0;
-        const exactTokenBonus = (userTokens[m.row]?.raw === originalTokens[m.col]?.raw) ? 0.2 : 0;
-        return m.weight + exactPosBonus + exactTokenBonus;
-      });
-      for(let i=0;i<n;i++){
-        dp[i] = scoreList[i];
-        for(let j=0;j<i;j++){
-          if(ordered[j].col < ordered[i].col){
-            const cand = dp[j] + scoreList[i];
-            const better = cand > dp[i];
-            const tie = cand === dp[i];
-            const betterTie = tie && (prev[i] === -1 || ordered[j].col < ordered[prev[i]].col);
-            if(better || betterTie){
-              dp[i] = cand;
-              prev[i] = j;
-            }
+    // Order-preserving alignment (weighted LCS) to avoid crossing matches
+    function alignMonotonic(similarity){
+      const m = similarity.length;
+      const n = m ? similarity[0].length : 0;
+      const dp = Array.from({length: m + 1}, () => Array(n + 1).fill(0));
+      const trace = Array.from({length: m + 1}, () => Array(n + 1).fill(''));
+
+      for(let i = 1; i <= m; i++){
+        for(let j = 1; j <= n; j++){
+          const s = similarity[i-1][j-1];
+          const matchScore = s >= MIN_SIMILARITY_SCORE ? dp[i-1][j-1] + s : -Infinity;
+          const up = dp[i-1][j];
+          const left = dp[i][j-1];
+          let best = matchScore;
+          let dir = 'D';
+          if(up > best){
+            best = up;
+            dir = 'U';
           }
+          if(left > best){
+            best = left;
+            dir = 'L';
+          }
+          // Tie-break: prefer diagonal, then up, then left
+          if(matchScore === best && dir !== 'D'){
+            dir = 'D';
+          }
+          dp[i][j] = best;
+          trace[i][j] = dir;
         }
       }
-      let best = 0;
-      for(let i=1;i<n;i++){
-        const better = dp[i] > dp[best];
-        const tie = dp[i] === dp[best] && ordered[i].col < ordered[best].col;
-        if(better || tie){
-          best = i;
+
+      const matches = [];
+      let i = m, j = n;
+      while(i > 0 && j > 0){
+        const dir = trace[i][j];
+        if(dir === 'D'){
+          const s = similarity[i-1][j-1];
+          if(s >= MIN_SIMILARITY_SCORE){
+            matches.push({ row: i - 1, col: j - 1, weight: s });
+          }
+          i--; j--;
+        } else if(dir === 'U'){
+          i--;
+        } else {
+          j--;
         }
       }
-      const keep = [];
-      let k = best;
-      while(k !== -1){
-        keep.push(ordered[k]);
-        k = prev[k];
-      }
-      keep.reverse();
-      const keepSet = new Set(keep.map(m=>`${m.row}-${m.col}`));
-      return ordered.map((m,idx)=>({...m, keep: keepSet.has(`${m.row}-${m.col}`)})).filter(m=>m.keep);
+      return matches.reverse();
     }
 
     // Stable LIS: maximize length, tie-break preferring earlier tokens in user order
