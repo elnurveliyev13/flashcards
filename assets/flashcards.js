@@ -4700,9 +4700,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       if(origIndicesFromBlocks.size === 0) return [];
 
-      // Step 2: Find full original range
-      const origMin = Math.min(...origIndicesFromBlocks);
-      const origMax = Math.max(...origIndicesFromBlocks);
+      // Step 2: Find initial original range
+      let origMin = Math.min(...origIndicesFromBlocks);
+      let origMax = Math.max(...origIndicesFromBlocks);
 
       // Step 3: Find ALL user positions that map to this original range
       const userPositions = new Set();
@@ -4717,7 +4717,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const userMin = Math.min(...userPositions);
       const userMax = Math.max(...userPositions);
 
-      // Step 3: Build correct order from ENTIRE original range
+      // Step 4: EXPAND original range to include ALL words in user range!
+      const finalOrigPositions = new Set();
+      orderedMatches.forEach(m=>{
+        if(m.userIndex >= userMin && m.userIndex <= userMax){
+          finalOrigPositions.add(m.origIndex);
+        }
+      });
+
+      origMin = Math.min(...finalOrigPositions);
+      origMax = Math.max(...finalOrigPositions);
+
+      // Step 5: Build correct order from ENTIRE original range
       const correctOrder = [];
       for(let origIdx = origMin; origIdx <= origMax; origIdx++){
         const token = originalTokens[origIdx];
