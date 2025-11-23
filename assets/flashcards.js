@@ -4395,7 +4395,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const spellingIssues = matches.filter(m => m.userToken.raw !== m.origToken.raw).length;
       const orderIssues = matches.filter(m => !lisSet.has(m.id)).length;
-      const moveIssues = movePlan.rewriteGroups.length + movePlan.moveBlocks.filter(b=>!b.resolvedByRewrite).length;
+      const moveIssues = movePlan.moveBlocks.length;
       const errorCount = extras.length + missing.length + spellingIssues + orderIssues + moveIssues;
 
       return {
@@ -4689,8 +4689,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               lastOrigIndex: m.origIndex,
               targetGapKey: gapKey,
               targetGap: { before: prev, after: next },
-              hasError,
-              resolvedByRewrite: false
+              hasError
             };
           }
         } else if(current){
@@ -4702,9 +4701,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         moveBlocks.push(current);
       }
 
-      const rewriteGroups = [];
       moveBlocks.forEach(block=>{
-        if(block.resolvedByRewrite) return;
         block.tokens.forEach(idx=>{
           if(!metaByUser[idx]) metaByUser[idx] = {};
           metaByUser[idx].moveBlockId = block.id;
@@ -4715,9 +4712,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const gapsNeeded = new Set();
       moveBlocks.forEach(block=>{ gapsNeeded.add(block.targetGapKey); });
-      rewriteGroups.forEach(group=> gapsNeeded.add(group.targetGapKey));
 
-      return { moveBlocks, rewriteGroups, tokenMeta: metaByUser, gapMeta, gapsNeeded };
+      return { moveBlocks, rewriteGroups: [], tokenMeta: metaByUser, gapMeta, gapsNeeded };
     }
 
     function buildMissingByPosition(missing, matches, userLength){
@@ -8180,5 +8176,6 @@ function buildCorrectLine(comparison){
 
   }
 export { flashcardsInit };
+
 
 
