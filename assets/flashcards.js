@@ -4487,7 +4487,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return 0.05;
       }
       if(a.norm === b.norm){
-        return 1;
+        return 5; // strong exact match to anchor correct positions
       }
       const stemA = simpleStem(a.norm);
       const stemB = simpleStem(b.norm);
@@ -4504,14 +4504,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function buildSimilarityMatrix(userTokens, originalTokens){
       const matrix = [];
-      const n = Math.max(userTokens.length, originalTokens.length, 1);
-      const posPenaltyFactor = 0.2; // favor nearer positions on equal similarity
       for(let i = 0; i < userTokens.length; i++){
         matrix[i] = [];
         for(let j = 0; j < originalTokens.length; j++){
-          const base = tokenSimilarity(userTokens[i], originalTokens[j]);
-          const posPenalty = posPenaltyFactor * (Math.abs(i - j) / n);
-          matrix[i][j] = Math.max(0, base - posPenalty);
+          matrix[i][j] = tokenSimilarity(userTokens[i], originalTokens[j]);
         }
       }
       return matrix;
