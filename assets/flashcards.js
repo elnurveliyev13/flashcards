@@ -4687,23 +4687,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function createRewriteGroup(moveBlocks, orderedMatches, userTokens, originalTokens){
       if(moveBlocks.length === 0) return [];
 
-      // Step 1: Collect all user positions from problem blocks
-      const userPositionsFromBlocks = new Set();
+      // Step 1: Find user range from problem blocks
+      const userPositions = new Set();
       moveBlocks.forEach(block=>{
         block.tokens.forEach(userIdx=>{
-          userPositionsFromBlocks.add(userIdx);
+          userPositions.add(userIdx);
         });
       });
 
-      if(userPositionsFromBlocks.size === 0) return [];
+      if(userPositions.size === 0) return [];
 
-      // Step 2: Find user range [userMin, userMax]
-      let userMin = Math.min(...userPositionsFromBlocks);
-      let userMax = Math.max(...userPositionsFromBlocks);
+      const userMin = Math.min(...userPositions);
+      const userMax = Math.max(...userPositions);
 
-      // Step 3: Find ALL original positions in this user range
-      // (включая слова в LIS!)
-      let origPositions = new Set();
+      // Step 2: Find ALL original positions in this user range (INCLUDING words in LIS!)
+      const origPositions = new Set();
       orderedMatches.forEach(m=>{
         if(m.userIndex >= userMin && m.userIndex <= userMax){
           origPositions.add(m.origIndex);
@@ -4712,22 +4710,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       if(origPositions.size === 0) return [];
 
-      // Step 4: Expand original range and find corresponding user range
-      let origMin = Math.min(...origPositions);
-      let origMax = Math.max(...origPositions);
+      const origMin = Math.min(...origPositions);
+      const origMax = Math.max(...origPositions);
 
-      // Step 5: Expand user range if needed (words in LIS that map to expanded orig range)
-      const finalUserPositions = new Set();
-      orderedMatches.forEach(m=>{
-        if(m.origIndex >= origMin && m.origIndex <= origMax){
-          finalUserPositions.add(m.userIndex);
-        }
-      });
-
-      userMin = Math.min(...finalUserPositions);
-      userMax = Math.max(...finalUserPositions);
-
-      // Step 4: Build correct order from ENTIRE original range
+      // Step 3: Build correct order from ENTIRE original range
       const correctOrder = [];
       for(let origIdx = origMin; origIdx <= origMax; origIdx++){
         const token = originalTokens[origIdx];
