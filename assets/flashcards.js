@@ -4592,31 +4592,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return result;
     }
 
+    // Stable LIS: maximize length, tie-break preferring earlier tokens in user order
     function longestIncreasingSubsequence(arr){
-      const tails = [];
-      const prev = Array(arr.length).fill(-1);
-      const idxs = [];
-      for(let i = 0; i < arr.length; i++){
-        let l = 0, r = tails.length;
-        while(l < r){
-          const m = (l + r) >> 1;
-          if(arr[tails[m]] < arr[i]) l = m + 1; else r = m;
+      const n = arr.length;
+      const dp = Array(n).fill(1);
+      const prev = Array(n).fill(-1);
+      const firstIdx = Array(n).fill(0);
+      for(let i = 0; i < n; i++){
+        firstIdx[i] = i;
+        for(let j = 0; j < i; j++){
+          if(arr[j] < arr[i]){
+            const candLen = dp[j] + 1;
+            const betterLen = candLen > dp[i];
+            const sameLenEarlier = candLen === dp[i] && firstIdx[j] < firstIdx[i];
+            if(betterLen || sameLenEarlier){
+              dp[i] = candLen;
+              prev[i] = j;
+              firstIdx[i] = firstIdx[j];
+            }
+          }
         }
-        if(l === tails.length){
-          tails.push(i);
-        } else {
-          tails[l] = i;
-        }
-        prev[i] = l > 0 ? tails[l - 1] : -1;
-        idxs[l] = i;
       }
-      let k = tails.length ? tails[tails.length - 1] : -1;
-      const result = [];
+      let best = 0;
+      for(let i = 1; i < n; i++){
+        const better = dp[i] > dp[best];
+        const sameEarlier = dp[i] === dp[best] && firstIdx[i] < firstIdx[best];
+        if(better || sameEarlier){
+          best = i;
+        }
+      }
+      const res = [];
+      let k = best;
       while(k !== -1){
-        result.push(k);
+        res.push(k);
         k = prev[k];
       }
-      return result.reverse();
+      return res.reverse();
     }
 
     function buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens){
