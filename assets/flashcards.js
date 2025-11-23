@@ -4627,6 +4627,142 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return res.reverse();
     }
 
+    // Helper: detect if arrows would intersect
+    function detectArrowIntersections(moveBlocks, gapMeta){
+      let intersections = 0;
+      for(let i = 0; i < moveBlocks.length; i++){
+        for(let j = i + 1; j < moveBlocks.length; j++){
+          const blockA = moveBlocks[i];
+          const blockB = moveBlocks[j];
+          const gapA = gapMeta[blockA.targetGapKey];
+          const gapB = gapMeta[blockB.targetGapKey];
+          if(!gapA || !gapB) continue;
+
+          const aStart = blockA.start;
+          const aTarget = gapA.beforeUser >= 0 ? gapA.beforeUser + 1 : 0;
+          const bStart = blockB.start;
+          const bTarget = gapB.beforeUser >= 0 ? gapB.beforeUser + 1 : 0;
+
+          // Check if arrows cross each other
+          if((aStart < bStart && aTarget > bTarget) || (aStart > bStart && aTarget < bTarget)){
+            intersections++;
+          }
+        }
+      }
+      return intersections;
+    }
+
+    // Helper: detect position conflicts (multiple blocks moving through same position)
+    function detectPositionConflicts(moveBlocks, gapMeta){
+      const positionUsage = new Map();
+      moveBlocks.forEach(block=>{
+        const gap = gapMeta[block.targetGapKey];
+        if(!gap) return;
+        const targetPos = gap.beforeUser >= 0 ? gap.beforeUser + 1 : 0;
+
+        // Track which positions each block crosses
+        const start = Math.min(block.start, targetPos);
+        const end = Math.max(block.end, targetPos);
+        for(let pos = start; pos <= end; pos++){
+          if(!positionUsage.has(pos)){
+            positionUsage.set(pos, []);
+          }
+          positionUsage.get(pos).push(block.id);
+        }
+      });
+
+      // Find positions crossed by multiple blocks
+      const conflicts = [];
+      positionUsage.forEach((blocks, pos)=>{
+        if(blocks.length > 1){
+          conflicts.push({ pos, blocks });
+        }
+      });
+      return conflicts;
+    }
+
+    // Helper: decide if should use rewrite instead of arrows
+    function shouldUseRewrite(moveBlocks, gapMeta, userTokens){
+      if(moveBlocks.length === 0) return false;
+
+      // Heuristic 1: Too many moves relative to total tokens
+      if(moveBlocks.length > userTokens.length / 2){
+        return true;
+      }
+
+      // Heuristic 2: Arrow intersections
+      const intersections = detectArrowIntersections(moveBlocks, gapMeta);
+      if(intersections > 1){
+        return true;
+      }
+
+      // Heuristic 3: Position conflicts
+      const conflicts = detectPositionConflicts(moveBlocks, gapMeta);
+      if(conflicts.length > 1){
+        return true;
+      }
+
+      return false;
+    }
+
+    // Helper: create rewrite group from move blocks
+    function createRewriteGroup(moveBlocks, orderedMatches, lisSet, userTokens, originalTokens){
+      const rewriteGroups = [];
+
+      // Find continuous regions that need rewriting
+      const allMoveTokenIndices = new Set();
+      moveBlocks.forEach(block=>{
+        block.tokens.forEach(idx=> allMoveTokenIndices.add(idx));
+      });
+
+      // Find segments between LIS tokens that contain moves
+      const lisUserIndices = orderedMatches.filter(m=>lisSet.has(m.id)).map(m=>m.userIndex).sort((a,b)=>a-b);
+      const segments = [];
+      let segStart = 0;
+
+      lisUserIndices.forEach(lisIdx=>{
+        if(segStart < lisIdx){
+          const hasMoves = Array.from({length: lisIdx - segStart}, (_, i)=> segStart + i)
+            .some(idx=> allMoveTokenIndices.has(idx));
+          if(hasMoves){
+            segments.push({ start: segStart, end: lisIdx - 1 });
+          }
+        }
+        segStart = lisIdx + 1;
+      });
+
+      if(segStart < userTokens.length){
+        const hasMoves = Array.from({length: userTokens.length - segStart}, (_, i)=> segStart + i)
+          .some(idx=> allMoveTokenIndices.has(idx));
+        if(hasMoves){
+          segments.push({ start: segStart, end: userTokens.length - 1 });
+        }
+      }
+
+      // Create rewrite groups for each segment
+      segments.forEach((seg, idx)=>{
+        const userSegment = userTokens.slice(seg.start, seg.end + 1);
+        const matchesInSegment = orderedMatches.filter(m=> m.userIndex >= seg.start && m.userIndex <= seg.end);
+        const correctOrder = matchesInSegment
+          .sort((a, b)=> a.origIndex - b.origIndex)
+          .map(m=> ({
+            token: m.origToken,
+            userToken: m.userToken,
+            hasError: m.userToken.raw !== m.origToken.raw
+          }));
+
+        rewriteGroups.push({
+          id: `rewrite-${idx + 1}`,
+          start: seg.start,
+          end: seg.end,
+          userTokens: userSegment,
+          correctOrder
+        });
+      });
+
+      return rewriteGroups;
+    }
+
     function buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens){
       const lisMatches = orderedMatches.filter(m=>lisSet.has(m.id));
       const lisOrigSorted = lisMatches.map(m=>m.origIndex).sort((a,b)=>a-b);
@@ -4701,19 +4837,45 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         moveBlocks.push(current);
       }
 
-      moveBlocks.forEach(block=>{
-        block.tokens.forEach(idx=>{
-          if(!metaByUser[idx]) metaByUser[idx] = {};
-          metaByUser[idx].moveBlockId = block.id;
-          metaByUser[idx].targetGapKey = block.targetGapKey;
-          metaByUser[idx].targetGap = block.targetGap;
+      // Check if we should use rewrite groups instead of move arrows
+      let finalMoveBlocks = moveBlocks;
+      let rewriteGroups = [];
+      let finalGapsNeeded = new Set();
+
+      if(shouldUseRewrite(moveBlocks, gapMeta, userTokens)){
+        rewriteGroups = createRewriteGroup(moveBlocks, orderedMatches, lisSet, userTokens, originalTokens);
+
+        // Update metadata for rewrite groups
+        rewriteGroups.forEach(group=>{
+          for(let idx = group.start; idx <= group.end; idx++){
+            if(!metaByUser[idx]) metaByUser[idx] = {};
+            metaByUser[idx].rewriteGroupId = group.id;
+            metaByUser[idx].moveBlockId = null; // Clear move block
+          }
         });
-      });
 
-      const gapsNeeded = new Set();
-      moveBlocks.forEach(block=>{ gapsNeeded.add(block.targetGapKey); });
+        finalMoveBlocks = []; // No arrows needed
+      } else {
+        // Original behavior: use move blocks
+        moveBlocks.forEach(block=>{
+          block.tokens.forEach(idx=>{
+            if(!metaByUser[idx]) metaByUser[idx] = {};
+            metaByUser[idx].moveBlockId = block.id;
+            metaByUser[idx].targetGapKey = block.targetGapKey;
+            metaByUser[idx].targetGap = block.targetGap;
+          });
+        });
+        finalGapsNeeded = new Set();
+        moveBlocks.forEach(block=>{ finalGapsNeeded.add(block.targetGapKey); });
+      }
 
-      return { moveBlocks, rewriteGroups: [], tokenMeta: metaByUser, gapMeta, gapsNeeded };
+      return {
+        moveBlocks: finalMoveBlocks,
+        rewriteGroups,
+        tokenMeta: metaByUser,
+        gapMeta,
+        gapsNeeded: finalGapsNeeded
+      };
     }
 
     function buildMissingByPosition(missing, matches, userLength){
@@ -4828,7 +4990,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const missingByPos = comparison.movePlan.missingByPosition || {};
       const meta = comparison.movePlan.tokenMeta || [];
+      const rewriteGroups = comparison.movePlan.rewriteGroups || [];
       let idx = 0;
+
       while(idx < comparison.userTokens.length){
         insertAnchors(idx);
         if(missingByPos[idx]){
@@ -4847,8 +5011,62 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             line.appendChild(missSpan);
           });
         }
+
         const token = comparison.userTokens[idx];
         const metaInfo = meta[idx] || {};
+
+        // Check if this token is part of a rewrite group
+        if(metaInfo.rewriteGroupId){
+          const group = rewriteGroups.find(g=> g.id === metaInfo.rewriteGroupId);
+          if(group && idx === group.start){
+            const rewriteEl = document.createElement('span');
+            rewriteEl.className = 'dictation-rewrite-block';
+
+            // Correct order (shown on top)
+            const correction = document.createElement('span');
+            correction.className = 'dictation-rewrite-correct';
+            group.correctOrder.forEach((item, i)=>{
+              const corrSpan = document.createElement('span');
+              corrSpan.className = 'dictation-token';
+              if(item.hasError){
+                corrSpan.classList.add('dictation-token-corrected');
+              }
+              corrSpan.textContent = item.token.raw;
+              correction.appendChild(corrSpan);
+              if(i < group.correctOrder.length - 1){
+                correction.appendChild(document.createTextNode(' '));
+              }
+            });
+
+            // User's wrong order (shown below, strikethrough)
+            const strikethrough = document.createElement('span');
+            strikethrough.className = 'dictation-rewrite-original';
+            for(let i = group.start; i <= group.end; i++){
+              const t = comparison.userTokens[i];
+              const tMeta = meta[i] || {};
+              const strikeSpan = document.createElement('span');
+              strikeSpan.className = 'dictation-token';
+              if(tMeta.hasError){
+                strikeSpan.classList.add('dictation-token-error-in-rewrite');
+              }
+              strikeSpan.textContent = t.raw;
+              strikethrough.appendChild(strikeSpan);
+              if(i < group.end){
+                strikethrough.appendChild(document.createTextNode(' '));
+              }
+            }
+
+            rewriteEl.appendChild(correction);
+            rewriteEl.appendChild(strikethrough);
+            line.appendChild(rewriteEl);
+
+            // Skip all tokens in this group
+            idx = group.end + 1;
+            continue;
+          }
+        }
+
+        // Check if this token is part of a move block
         if(metaInfo.moveBlockId){
           const block = comparison.movePlan.moveBlocks.find(b=>b.id === metaInfo.moveBlockId);
           const blockEl = document.createElement('span');
@@ -4865,6 +5083,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           idx = block.end + 1;
           continue;
         }
+
         const span = createTokenSpan(token, metaInfo);
         line.appendChild(span);
         idx++;
