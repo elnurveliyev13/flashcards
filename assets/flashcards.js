@@ -4442,24 +4442,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return tokens;
     }
 
+    
     function normalizePunctuation(char){
       const map = {
-        '—': '-',
-        '–': '-',
-        '−': '-',
-        '…': '...',
-        '«': '"',
-        '»': '"',
-        '“': '"',
-        '”': '"',
-        '„': '"',
-        '’': ''',
-        '‘': '''
+        "\u2014": "-",
+        "\u2013": "-",
+        "\u2212": "-",
+        "\u2026": "...",
+        "\u00ab": "\"",
+        "\u00bb": "\"",
+        "\u201c": "\"",
+        "\u201d": "\"",
+        "\u201e": "\"",
+        "\u2019": "'",
+        "\u2018": "'"
       };
       return map[char] || char;
     }
-
-    function simpleStem(value){
+function simpleStem(value){
       if(!value) return '';
       const normalized = value.toLowerCase().replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, '');
       return normalized.replace(/(ene|ane|ene|het|ene|ers|er|en|et|e)$/u, '');
