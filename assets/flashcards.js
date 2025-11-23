@@ -4390,12 +4390,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
       const lisIndices = longestIncreasingSubsequence(orderedMatches.map(m=>m.origIndex));
       const lisSet = new Set(lisIndices.map(idx=> orderedMatches[idx]?.id).filter(Boolean));
-      // Force-keep exact tokens that already stand on their place (protects from odd alignments on duplicates)
-      orderedMatches.forEach(m=>{
-        if(m.exact && m.userIndex === m.origIndex){
-          lisSet.add(m.id);
-        }
-      });
       const movePlan = buildMovePlan(orderedMatches, lisSet, userTokens, originalTokens);
       const missingByPosition = buildMissingByPosition(missing, matches, userTokens.length);
       movePlan.missingByPosition = missingByPosition;
@@ -4511,10 +4505,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function buildSimilarityMatrix(userTokens, originalTokens){
       const matrix = [];
+      const n = Math.max(userTokens.length, originalTokens.length, 1);
+      const posPenaltyFactor = 0.2; // favor nearer positions on equal similarity
       for(let i = 0; i < userTokens.length; i++){
         matrix[i] = [];
         for(let j = 0; j < originalTokens.length; j++){
-          matrix[i][j] = tokenSimilarity(userTokens[i], originalTokens[j]);
+          const base = tokenSimilarity(userTokens[i], originalTokens[j]);
+          const posPenalty = posPenaltyFactor * (Math.abs(i - j) / n);
+          matrix[i][j] = Math.max(0, base - posPenalty);
         }
       }
       return matrix;
