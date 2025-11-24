@@ -2461,10 +2461,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             const existingIdx = registry[deckId].cards.findIndex(c => c.id === card.id);
             if(existingIdx >= 0){
               const existing = registry[deckId].cards[existingIdx];
+              // Server data takes priority. Only use existing.order if server has no order at all (null/undefined)
+              const finalOrder = Array.isArray(card.order) ? card.order : (Array.isArray(existing.order) ? existing.order : null);
               registry[deckId].cards[existingIdx] = {
                 ...existing,
                 ...card,
-                order: card.order.length > 0 ? card.order : existing.order
+                order: finalOrder
               };
             } else {
               registry[deckId].cards.push(card);
