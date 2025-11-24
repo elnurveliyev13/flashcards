@@ -3918,14 +3918,13 @@ select.inline-prompt-field {
   height: fit-content;
 }
 .dictation-move-block .dictation-token {
-  align-items: center;
   padding: 0;
   margin: 0;
   height: auto;
   align-self: auto;
-}
-.dictation-move-block .dictation-token-correction {
-  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
 }
 .dictation-move-block .dictation-token-move {
   border: none;
