@@ -5141,17 +5141,17 @@ function renderComparisonResult(resultEl, comparison){
             const missSpan = document.createElement('span');
             missSpan.className = 'dictation-missing-token';
             missSpan.dataset.gapAnchor = miss.gapKey;
-            const caret = document.createElement('span');
-            caret.className = 'dictation-missing-caret';
-            caret.textContent = '▼';
-            const word = document.createElement('span');
-            word.className = 'dictation-missing-word';
-            word.textContent = miss.token.raw;
-            missSpan.appendChild(word);
-            missSpan.appendChild(caret);
-            line.appendChild(missSpan);
-          });
-        }
+          const word = document.createElement('span');
+          word.className = 'dictation-missing-word';
+          word.textContent = miss.token.raw;
+          const caret = document.createElement('span');
+          caret.className = 'dictation-missing-caret';
+          caret.textContent = '▼';
+          missSpan.appendChild(word);
+          missSpan.appendChild(caret);
+          line.appendChild(missSpan);
+        });
+      }
         const token = comparison.userTokens[idx];
         const metaInfo = meta[idx] || {};
         if(metaInfo.rewriteGroupId){
@@ -5245,6 +5245,7 @@ function renderComparisonResult(resultEl, comparison){
 
       const hasError = meta && meta.hasError;
       if(hasError){
+        wrapper.classList.add('dictation-token-has-correction');
         const correction = document.createElement('span');
         correction.className = 'dictation-token-correction';
         correction.textContent = meta && meta.match ? meta.match.origToken.raw : '';
@@ -5259,8 +5260,8 @@ function renderComparisonResult(resultEl, comparison){
       inner.textContent = token.raw;
 
       // Apply state classes to inner to keep backgrounds on the user row only
-      if(meta && meta.match && meta.inLis){
-        inner.classList.add(hasError ? 'dictation-token-warn' : 'dictation-token-ok');
+      if(meta && meta.match && meta.inLis && !hasError){
+        inner.classList.add('dictation-token-ok');
       }
       if(meta && meta.needsMove){
         inner.classList.add('dictation-token-move');
@@ -5295,12 +5296,12 @@ function renderComparisonResult(resultEl, comparison){
       marker.setAttribute('viewBox', '0 0 12 12');
       marker.setAttribute('markerWidth', '12');
       marker.setAttribute('markerHeight', '12');
-      marker.setAttribute('refX', '12');
+      marker.setAttribute('refX', '0');
       marker.setAttribute('refY', '6');
       marker.setAttribute('orient', 'auto');
       marker.setAttribute('markerUnits', 'userSpaceOnUse');
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L12,6 L0,12 Z');
+      path.setAttribute('d', 'M0,6 L12,12 L12,0 Z');
       path.setAttribute('fill', '#60a5fa');
       marker.appendChild(path);
       defs.appendChild(marker);
