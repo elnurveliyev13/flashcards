@@ -2350,6 +2350,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const frontAudio = payload.audioFront || payload.audio || null;
       // null means "not set" (use auto-build), [] or ["audio"] means "explicitly chosen"
       const orderFromServer = Array.isArray(payload.order) ? payload.order : null;
+      console.log('[DEBUG normalizeServerCard] cardId:', item.cardId, 'payload.order:', payload.order, 'orderFromServer:', orderFromServer);
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
@@ -4083,7 +4084,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Auto-build order ONLY if order was never explicitly set (null/undefined)
       // Empty array [] means user explicitly chose no layers (valid choice)
+      console.log('[DEBUG normalizeLessonCard] BEFORE - id:', c.id, 'order:', c.order, 'isArray:', Array.isArray(c.order));
       if(!Array.isArray(c.order)){
+        console.log('[DEBUG normalizeLessonCard] Auto-building order for card:', c.id);
         c.order=[];
         // Order: word audio first, then transcription, then sentence audio, then text, then translation
         if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
@@ -4093,6 +4096,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(c.translation) c.order.push("translation");
       }
       c.order=uniq(c.order);
+      console.log('[DEBUG normalizeLessonCard] AFTER - id:', c.id, 'order:', c.order);
       return c;
     }
     async function resolveAudioUrl(card, type){
@@ -6624,7 +6628,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(userLang2 !== 'en' && trLocal){ translations[userLang2]=trLocal; }
       if(trEn){ translations['en']=trEn; }
       const translationDisplay = (userLang2 !== 'en' ? (translations[userLang2] || translations['en'] || "") : (translations['en'] || ""));
-      const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:(orderChosen.length?orderChosen:[...DEFAULT_ORDER])};
+      const finalOrder = orderChosen.length ? orderChosen : [...DEFAULT_ORDER];
+      console.log('[DEBUG saveCard] orderChosen:', orderChosen, 'finalOrder:', finalOrder);
+      const payload={id,text,fokus,explanation:expl,translation:translationDisplay,translations,order:finalOrder};
       const focusBase=(document.getElementById('uFocusBase')?.value||'').trim();
       if(focusBase) payload.focusBase = focusBase;
       // Enrichment fields
