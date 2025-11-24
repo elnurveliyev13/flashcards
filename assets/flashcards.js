@@ -5302,7 +5302,7 @@ function renderComparisonResult(resultEl, comparison){
       marker.setAttribute('refX', '10'); // tip aligns with path end
       marker.setAttribute('refY', '5');
       marker.setAttribute('orient', 'auto');
-      marker.setAttribute('markerUnits', 'strokeWidth');
+      marker.setAttribute('markerUnits', 'userSpaceOnUse'); // match line thickness to marker size
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
       path.setAttribute('fill', '#ef4444');
