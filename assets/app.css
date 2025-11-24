@@ -3912,13 +3912,17 @@ select.inline-prompt-field {
   border-radius: 8px;
   border: 2px dashed rgba(239, 68, 68, 0.7);
   background: transparent;
-  vertical-align: baseline;
+  vertical-align: middle;
   flex-wrap: nowrap;
+  align-self: center;
+  height: fit-content;
 }
 .dictation-move-block .dictation-token {
   align-items: center;
   padding: 0;
   margin: 0;
+  height: auto;
+  align-self: auto;
 }
 .dictation-move-block .dictation-token-correction {
   display: none;
