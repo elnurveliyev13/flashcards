@@ -5055,17 +5055,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(kind==="audio"){
         const frontUrl = await resolveAudioUrl(card, 'front');
-        const includeFocus = !cardOrder.includes('audio_text');
-        let focusUrl = null;
-        if(includeFocus){
-          focusUrl = await resolveAudioUrl(card, 'focus');
-        }
+        // ONLY show front audio in this slot, never include focus audio automatically
+        // If user wants focus audio, they should add 'audio_text' to order explicitly
         const tracks=[];
         if(frontUrl){
           tracks.push({url:frontUrl,type:'front'});
-        }
-        if(includeFocus && focusUrl){
-          tracks.push({url:focusUrl,type:'focus'});
         }
         if(!tracks.length){
           return null;
