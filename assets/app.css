@@ -1213,7 +1213,7 @@ input[type=text]::placeholder {
   background:rgba(15,23,42,0.35);
 }
 .meta #btnRevealNext{
-  flex:2;
+  flex:1;
   min-height:56px;
   display:flex;
   align-items:center;
