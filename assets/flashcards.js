@@ -5293,7 +5293,6 @@ function renderComparisonResult(resultEl, comparison){
       svg.setAttribute('width', container.offsetWidth);
       svg.setAttribute('height', container.offsetHeight);
       svg.setAttribute('viewBox', `0 0 ${container.offsetWidth} ${container.offsetHeight}`);
-      const defs = document.createElementNS(svgNS, 'defs');
       const containerRect = container.getBoundingClientRect();
       blocks.forEach(block=>{
         const gapKey = block.dataset.targetGap;
@@ -5317,25 +5316,18 @@ function renderComparisonResult(resultEl, comparison){
         p.setAttribute('stroke-width', '2');
         svg.appendChild(p);
 
-        // Arrowhead integrated as polygon using path tangent at end
-        // Approximate tangent near end of cubic for arrowhead direction
-        const t = 0.99;
-        const oneMinusT = 1 - t;
-        const xAt = oneMinusT*oneMinusT*oneMinusT*startX +
-                    3*oneMinusT*oneMinusT*t*startX +
-                    3*oneMinusT*t*t*endX +
-                    t*t*t*endX;
-        const yAt = oneMinusT*oneMinusT*oneMinusT*startY +
-                    3*oneMinusT*oneMinusT*t*controlY +
-                    3*oneMinusT*t*t*controlY +
-                    t*t*t*endY;
-        const dx = endX - xAt;
-        const dy = endY - yAt;
+        // Arrowhead integrated as polygon using cubic derivative (t=0.9)
+        const t = 0.9;
+        const mt = 1 - t;
+        const cx1 = startX, cy1 = controlY;
+        const cx2 = endX, cy2 = controlY;
+        const dx = 3*mt*mt*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t*t*(endX - cx2);
+        const dy = 3*mt*mt*(cy1 - startY) + 6*mt*t*(cy2 - cy1) + 3*t*t*(endY - cy2);
         const mag = Math.hypot(dx, dy) || 1;
         const ux = dx / mag;
         const uy = dy / mag;
-        const len = 12;
-        const w = 5;
+        const len = 10;
+        const w = 4;
         const tipX = endX;
         const tipY = endY;
         const baseX = tipX - ux * len;

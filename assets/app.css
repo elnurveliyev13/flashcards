@@ -4074,3 +4074,5 @@ select.inline-prompt-field {
 
 .dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.1; display: block; margin-bottom: 2px; }
 .dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
+/* Final overrides: keep move blocks transparent */
+.dictation-move-block { background: transparent !important; }
