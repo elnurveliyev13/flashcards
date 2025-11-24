@@ -5299,7 +5299,7 @@ function renderComparisonResult(resultEl, comparison){
       marker.setAttribute('viewBox', '0 0 10 10');
       marker.setAttribute('markerWidth', '10');
       marker.setAttribute('markerHeight', '10');
-      marker.setAttribute('refX', '0');
+      marker.setAttribute('refX', '10'); // tip aligns with path end
       marker.setAttribute('refY', '5');
       marker.setAttribute('orient', 'auto');
       marker.setAttribute('markerUnits', 'strokeWidth');

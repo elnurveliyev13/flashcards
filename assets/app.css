@@ -4076,3 +4076,16 @@ select.inline-prompt-field {
 .dictation-token-inner.dictation-token-warn { color: #f8fafc; background: transparent; }
 .dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
 
+/* Overrides for student/teacher colors */
+.dictation-token { color: #f8fafc; }
+.dictation-token-inner { color: #f8fafc; background: transparent; }
+.dictation-token-inner.dictation-token-ok,
+.dictation-token-inner.dictation-token-warn,
+.dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
+.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.1; display: block; margin-bottom: 2px; }
+.dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
+.dictation-token-extra { color: #f8fafc; background: transparent; text-decoration: none; }
+.dictation-move-block { border-color: rgba(239,68,68,0.7); background: rgba(239,68,68,0.08); }
+.dictation-rewrite-block { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+.dictation-rewrite-original { color: #ef4444; }
+.dictation-rewrite-correct { color: #ef4444; }
