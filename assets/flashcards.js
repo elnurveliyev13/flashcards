@@ -4378,7 +4378,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         movePlan,
         errorCount,
         orderIssues,
-        moveIssues
+        moveIssues,
+        crossedBoundaries: movePlan.crossedBoundaries || [],
+        overloadedBoundaries: movePlan.overloadedBoundaries || [],
+        boundaryCounts: movePlan.boundaryCounts || []
       };
     }
 
@@ -4840,6 +4843,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gapsNeeded.add(gapKey);
       });
 
+      const crossedBoundaries = boundaryCounts
+        .map((count, idx)=>({boundary: idx, count}))
+        .filter(item=>item.count > 0);
+
       return {
         mode,
         moveBlocks,
@@ -4849,6 +4856,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gapsNeeded,
         missingByPosition,
         boundaryCounts,
+        crossedBoundaries,
         overloadedBoundaries: Array.from(overloadedBoundaries)
       };
     }
@@ -4968,6 +4976,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         id: 'rewrite-1',
         start: userMin,
         end: userMax,
+        origMin,
+        origMax,
         targetGapKey: buildGapKey(origMin - 1, origMax + 1),
         correctText
       };
