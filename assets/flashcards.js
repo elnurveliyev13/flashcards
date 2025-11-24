@@ -4770,22 +4770,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const moveBlocks = buildMoveBlocks(movableMatches, metaByUser, gapMeta, userTokens.length);
 
       const boundaryCounts = Array(userTokens.length + 1).fill(0);
+      const heavyBlocks = new Set();
       moveBlocks.forEach(block=>{
-        collectCrossedBoundaries(block).forEach(idx=>{
+        const crossed = collectCrossedBoundaries(block);
+        block.crossed = crossed;
+        crossed.forEach(idx=>{
           boundaryCounts[idx] = (boundaryCounts[idx] || 0) + 1;
         });
+        if(crossed.length > 1){
+          heavyBlocks.add(block.id);
+        }
       });
       const overloadedBoundaries = new Set(boundaryCounts.map((count, idx)=> ({count, idx})).filter(item=>item.count > 1).map(item=>item.idx));
       const overloadBlocks = new Set();
       moveBlocks.forEach(block=>{
-        const crossed = collectCrossedBoundaries(block);
+        const crossed = block.crossed || collectCrossedBoundaries(block);
         if(crossed.some(idx=>overloadedBoundaries.has(idx))){
           overloadBlocks.add(block.id);
         }
       });
       const crossingBlocks = detectCrossingBlocks(moveBlocks);
-      const mode = (overloadedBoundaries.size || crossingBlocks.size) ? 'rewrite' : 'arrows';
-      const problemIds = new Set([...overloadBlocks, ...crossingBlocks]);
+      const mode = (overloadedBoundaries.size || crossingBlocks.size || heavyBlocks.size) ? 'rewrite' : 'arrows';
+      const problemIds = new Set([...overloadBlocks, ...crossingBlocks, ...heavyBlocks]);
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
         moveBlocks,
         problemIds,
