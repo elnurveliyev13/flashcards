@@ -4296,87 +4296,91 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const userNorm = (userInput || '').trim();
       const correctNorm = (correctText || '').trim();
 
-      if(userNorm === correctNorm){
-        return {
-          isCorrect: true,
-          userTokens: tokenizeText(userInput),
-          originalTokens: tokenizeText(correctText),
-          matches: [],
-          extras: [],
-          missing: [],
-          movePlan: { moveBlocks: [], rewriteGroups: [], tokenMeta: [], gapMeta: {}, gapsNeeded: new Set(), missingByPosition: {} },
-          errorCount: 0
-        };
-      }
-
       const userTokens = tokenizeText(userNorm);
       const originalTokens = tokenizeText(correctNorm);
 
+      const emptyPlan = buildEmptyMovePlan(userTokens.length);
+
+      if(userNorm === correctNorm){
+        return {
+          isCorrect: true,
+          mode: 'arrows',
+          userTokens,
+          originalTokens,
+          matches: [],
+          extras: [],
+          missing: [],
+          movePlan: emptyPlan,
+          errorCount: 0,
+          orderIssues: 0,
+          moveIssues: 0
+        };
+      }
+
       const similarity = buildSimilarityMatrix(userTokens, originalTokens);
       const assignment = solveMaxAssignment(similarity);
-      const MIN_ACCEPTABLE = 0.35;
+      const { matches, matchedUser, matchedOrig } = extractMatches(assignment, userTokens, originalTokens);
 
-      const matches = [];
-      const matchedUser = new Set();
-      const matchedOrig = new Set();
+      const extras = userTokens
+        .map((token, index) => matchedUser.has(index) ? null : { userIndex: index, token })
+        .filter(Boolean);
 
-      assignment.forEach((item, idx) => {
-        if(!item) return;
-        const { row, col, weight } = item;
-        if(row >= userTokens.length || col >= originalTokens.length) return;
-        if(weight < MIN_ACCEPTABLE) return;
-        matches.push({
-          id: idx,
-          userIndex: row,
-          origIndex: col,
-          userToken: userTokens[row],
-          origToken: originalTokens[col],
-          score: weight,
-          exact: userTokens[row].raw === originalTokens[col].raw
-        });
-        matchedUser.add(row);
-        matchedOrig.add(col);
+      const missing = originalTokens
+        .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
+        .filter(Boolean);
+
+      const lisIndices = computeLisWithTies(matches);
+      const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
+
+      const movePlan = buildMovePlan({
+        matches,
+        lisSet,
+        userTokens,
+        originalTokens,
+        missing
       });
 
-      const extras = [];
-      userTokens.forEach((token, index)=>{
-        if(!matchedUser.has(index)){
-          extras.push({ userIndex:index, token });
-        }
-      });
-
-      const missing = [];
-      originalTokens.forEach((token, index)=>{
-        if(!matchedOrig.has(index)){
-          missing.push({ origIndex:index, token });
-        }
-      });
-
-      const lisIndices = longestIncreasingSubsequence(matches.map(m=>m.origIndex));
-      const lisSet = new Set(lisIndices.map(idx=> matches[idx]?.id).filter(Boolean));
-      const movePlan = buildMovePlan(matches, lisSet, userTokens, originalTokens);
-      const missingByPosition = buildMissingByPosition(missing, matches, userTokens.length);
-      movePlan.missingByPosition = missingByPosition;
-
-      const spellingIssues = matches.filter(m => m.userToken.raw !== m.origToken.raw).length;
+      const spellingIssues = matches.filter(m => m.score < 1 || m.userToken.raw !== m.origToken.raw).length;
       const orderIssues = matches.filter(m => !lisSet.has(m.id)).length;
-      const moveIssues = movePlan.rewriteGroups.length + movePlan.moveBlocks.filter(b=>!b.resolvedByRewrite).length;
+      const moveIssues = movePlan.mode === 'rewrite'
+        ? (movePlan.rewriteGroups.length ? 1 : 0)
+        : movePlan.moveBlocks.length;
       const errorCount = extras.length + missing.length + spellingIssues + orderIssues + moveIssues;
+      const isCorrect = errorCount === 0;
 
       return {
-        isCorrect: false,
+        isCorrect,
+        mode: movePlan.mode,
         userTokens,
         originalTokens,
         matches,
         extras,
         missing,
         movePlan,
-        errorCount
+        errorCount,
+        orderIssues,
+        moveIssues
       };
     }
 
     const MIN_SIMILARITY_SCORE = 0.35;
     const STEM_SIMILARITY_SCORE = 0.85;
+    const STRONG_ANCHOR_SCORE = 5;
+    const PUNCT_MATCH_SCORE = 0.8;
+    const PUNCT_MISMATCH_SCORE = 0.2;
+    const TYPE_MISMATCH_SCORE = 0.05;
+
+    function buildEmptyMovePlan(len){
+      return {
+        mode: 'arrows',
+        moveBlocks: [],
+        rewriteGroups: [],
+        tokenMeta: Array(len).fill(null),
+        gapMeta: {},
+        gapsNeeded: new Set(),
+        missingByPosition: {}
+      };
+    }
 
     function tokenizeText(text){
       const tokens = [];
@@ -4400,15 +4404,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function normalizePunctuation(char){
       const map = {
-        '—': '-',
-        '–': '-',
-        '?': '-',
-        '…': '...',
-        '“': '"',
-        '”': '"',
-        '«': '"',
-        '»': '"',
-        "'": "'"
+        '\u2013': '-',
+        '\u2014': '-',
+        '\u2011': '-',
+        '\u2026': '...',
+        '\u00ab': '\"',
+        '\u00bb': '\"',
+        '\u201c': '\"',
+        '\u201d': '\"',
+        '\u201e': '\"',
+        '\u2019': '\'',
+        '\u2018': '\'',
+        '`': '\'',
+        '\u00b4': '\''
       };
       return map[char] || char;
     }
@@ -4416,7 +4424,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function simpleStem(value){
       if(!value) return '';
       const normalized = value.toLowerCase().replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, '');
-      return normalized.replace(/(ene|ane|ene|het|ene|ers|er|en|et|e)$/u, '');
+      return normalized.replace(/(ene|ane|het|ers|ene|er|en|et|e)$/u, '');
     }
 
     function levenshtein(a,b){
@@ -4442,17 +4450,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function tokenSimilarity(a, b){
       if(!a || !b) return 0;
-      if(a.type === 'punct' && b.type === 'punct'){
+      if(a.type !== b.type){
+        return TYPE_MISMATCH_SCORE;
+      }
+      if(a.type === 'punct'){
         const normA = normalizePunctuation(a.raw);
         const normB = normalizePunctuation(b.raw);
-        if(normA === normB) return 0.8;
-        return 0.2;
-      }
-      if(a.type !== b.type){
-        return 0.05;
+        return normA === normB ? PUNCT_MATCH_SCORE : PUNCT_MISMATCH_SCORE;
       }
       if(a.norm === b.norm){
-        return 1;
+        return STRONG_ANCHOR_SCORE;
       }
       const stemA = simpleStem(a.norm);
       const stemB = simpleStem(b.norm);
@@ -4462,17 +4469,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const distance = levenshtein(a.norm, b.norm);
       const maxLen = Math.max(a.norm.length, b.norm.length) || 1;
       const closeness = Math.max(0, 1 - (distance / maxLen));
-      if(closeness >= 0.8) return 0.6 + (closeness * 0.25);
-      if(closeness >= 0.6) return 0.5 + (closeness * 0.2);
+      if(closeness >= 0.8) return 0.6 + (closeness * 0.2);
+      if(closeness >= 0.6) return 0.5 + (closeness * 0.1);
       return closeness * 0.5;
     }
 
     function buildSimilarityMatrix(userTokens, originalTokens){
       const matrix = [];
+      const maxLen = Math.max(userTokens.length, originalTokens.length, 1);
       for(let i = 0; i < userTokens.length; i++){
         matrix[i] = [];
         for(let j = 0; j < originalTokens.length; j++){
-          matrix[i][j] = tokenSimilarity(userTokens[i], originalTokens[j]);
+          const base = tokenSimilarity(userTokens[i], originalTokens[j]);
+          const dist = Math.abs(i - j) / maxLen;
+          const proximityBonus = (1 - dist) * 0.35;
+          const distancePenalty = dist * 0.25;
+          const weight = base + proximityBonus - distancePenalty;
+          matrix[i][j] = weight;
         }
       }
       return matrix;
@@ -4552,26 +4565,60 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return result;
     }
 
-    function longestIncreasingSubsequence(arr){
-      const tails = [];
-      const prev = Array(arr.length).fill(-1);
-      const idxs = [];
-      for(let i = 0; i < arr.length; i++){
-        let l = 0, r = tails.length;
-        while(l < r){
-          const m = (l + r) >> 1;
-          if(arr[tails[m]] < arr[i]) l = m + 1; else r = m;
+    function extractMatches(assignment, userTokens, originalTokens){
+      const matches = [];
+      const matchedUser = new Set();
+      const matchedOrig = new Set();
+      assignment.forEach((item, idx) => {
+        if(!item) return;
+        const { row, col, weight } = item;
+        if(row >= userTokens.length || col >= originalTokens.length) return;
+        if(weight < MIN_SIMILARITY_SCORE) return;
+        matches.push({
+          id: idx,
+          userIndex: row,
+          origIndex: col,
+          userToken: userTokens[row],
+          origToken: originalTokens[col],
+          score: weight
+        });
+        matchedUser.add(row);
+        matchedOrig.add(col);
+      });
+      matches.sort((a,b)=> a.userIndex - b.userIndex);
+      matches.forEach((m, index)=>{ m.id = index; });
+      return { matches, matchedUser, matchedOrig };
+    }
+
+    function computeLisWithTies(matches){
+      if(!matches.length) return [];
+      const values = matches.map(m => m.origIndex);
+      const dp = [];
+      const prev = Array(values.length).fill(-1);
+      for(let i = 0; i < values.length; i++){
+        dp[i] = { len: 1, breaks: 0, start: i };
+        for(let j = 0; j < i; j++){
+          if(values[j] < values[i]){
+            const candidate = {
+              len: dp[j].len + 1,
+              breaks: dp[j].breaks + (values[i] === values[j] + 1 ? 0 : 1),
+              start: dp[j].start
+            };
+            if(isBetterLis(candidate, dp[i])){
+              dp[i] = candidate;
+              prev[i] = j;
+            }
+          }
         }
-        if(l === tails.length){
-          tails.push(i);
-        } else {
-          tails[l] = i;
-        }
-        prev[i] = l > 0 ? tails[l - 1] : -1;
-        idxs[l] = i;
       }
-      let k = tails.length ? tails[tails.length - 1] : -1;
+      let bestIdx = 0;
+      for(let i = 1; i < dp.length; i++){
+        if(isBetterLis(dp[i], dp[bestIdx])){
+          bestIdx = i;
+        }
+      }
       const result = [];
+      let k = bestIdx;
       while(k !== -1){
         result.push(k);
         k = prev[k];
@@ -4579,14 +4626,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return result.reverse();
     }
 
-    function buildMovePlan(matches, lisSet, userTokens, originalTokens){
-      const orderedMatches = [...matches].sort((a,b)=>a.userIndex - b.userIndex);
+    function isBetterLis(a, b){
+      if(!b) return true;
+      if(a.len !== b.len) return a.len > b.len;
+      if(a.breaks !== b.breaks) return a.breaks < b.breaks;
+      return a.start < b.start;
+    }
+
+    function buildGapKey(before, after){
+      const left = before === undefined ? -1 : before;
+      const right = after === null || after === undefined ? 'END' : after;
+      return `${left}-${right}`;
+    }
+
+    function buildMovePlan({ matches, lisSet, userTokens, originalTokens, missing }){ // eslint-disable-line max-params
+      const missingTokens = Array.isArray(missing) ? missing : [];
+      const orderedMatches = [...matches];
       const lisMatches = orderedMatches.filter(m=>lisSet.has(m.id));
       const lisOrigSorted = lisMatches.map(m=>m.origIndex).sort((a,b)=>a-b);
-      const lisOrigToStudent = new Map();
-      lisMatches.forEach(m=>{
-        lisOrigToStudent.set(m.origIndex, m.userIndex);
-      });
+      const lisOrigToUser = new Map();
+      lisMatches.forEach(m=> lisOrigToUser.set(m.origIndex, m.userIndex));
 
       const findNeighbors = (value)=>{
         let prev = -1;
@@ -4603,16 +4662,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       };
 
       const metaByUser = Array(userTokens.length).fill(null);
-      const moveBlocks = [];
       const gapMeta = {};
-      let current = null;
 
       orderedMatches.forEach((m)=>{
         const inLis = lisSet.has(m.id);
         const { prev, next } = findNeighbors(m.origIndex);
-        const gapKey = `${prev}-${next === null ? 'END' : next}`;
-        gapMeta[gapKey] = { before: prev, after: next };
-        const hasError = m.userToken.raw !== m.origToken.raw;
+        const gapKey = buildGapKey(prev, next);
+        const beforeUser = prev !== -1 && lisOrigToUser.has(prev) ? lisOrigToUser.get(prev) : -1;
+        const afterUser = next !== null && lisOrigToUser.has(next) ? lisOrigToUser.get(next) : userTokens.length;
+        gapMeta[gapKey] = gapMeta[gapKey] || {
+          before: prev,
+          after: next,
+          beforeUser,
+          afterUser,
+          targetBoundary: beforeUser + 1
+        };
+        const hasError = m.score < 1 || m.userToken.raw !== m.origToken.raw;
         metaByUser[m.userIndex] = {
           match: m,
           inLis,
@@ -4621,87 +4686,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           hasError,
           needsMove: !inLis
         };
-        if(!inLis){
-          const canJoin = current && current.targetGapKey === gapKey && m.userIndex === current.end + 1 && m.origIndex > current.lastOrigIndex;
-          if(canJoin){
-            current.tokens.push(m.userIndex);
-            current.end = m.userIndex;
-            current.lastOrigIndex = m.origIndex;
-            current.hasError = current.hasError || hasError;
-          } else {
-            if(current){
-              moveBlocks.push(current);
-            }
-            current = {
-              id: `move-${moveBlocks.length + 1}`,
-              tokens: [m.userIndex],
-              start: m.userIndex,
-              end: m.userIndex,
-              lastOrigIndex: m.origIndex,
-              targetGapKey: gapKey,
-              targetGap: { before: prev, after: next },
-              hasError,
-              resolvedByRewrite: false
-            };
-          }
-        } else if(current){
-          moveBlocks.push(current);
-          current = null;
-        }
       });
-      if(current){
-        moveBlocks.push(current);
-      }
 
-      const gapGroups = {};
+      const movableMatches = orderedMatches.filter(m=>!lisSet.has(m.id));
+      const moveBlocks = buildMoveBlocks(movableMatches, metaByUser, gapMeta, userTokens.length);
+
+      const boundaryCounts = Array(userTokens.length + 1).fill(0);
       moveBlocks.forEach(block=>{
-        if(!gapGroups[block.targetGapKey]){
-          gapGroups[block.targetGapKey] = [];
-        }
-        gapGroups[block.targetGapKey].push(block);
-      });
-
-      const rewriteGroups = [];
-      Object.keys(gapGroups).forEach(key=>{
-        const group = gapGroups[key];
-        if(group.length <= 1){
-          return;
-        }
-        const target = group[0].targetGap;
-        const prevLisIndex = target.before !== -1 && lisOrigToStudent.has(target.before) ? lisOrigToStudent.get(target.before) : -1;
-        const nextLisIndex = target.after !== null && lisOrigToStudent.has(target.after) ? lisOrigToStudent.get(target.after) : userTokens.length;
-        const minBlockStart = Math.min(...group.map(g=>g.start));
-        const maxBlockEnd = Math.max(...group.map(g=>g.end));
-        const rewriteStart = Math.min(minBlockStart, prevLisIndex >= 0 ? prevLisIndex + 1 : minBlockStart);
-        let rewriteEnd = Math.max(maxBlockEnd, nextLisIndex);
-        if(rewriteEnd === userTokens.length - 1 && userTokens[rewriteEnd] && userTokens[rewriteEnd].type === 'punct'){
-          rewriteEnd -= 1;
-        }
-        const origIndexesInRange = orderedMatches
-          .filter(m=>m.userIndex >= rewriteStart && m.userIndex <= rewriteEnd)
-          .map(m=>m.origIndex);
-        const maxOrig = Math.max(...origIndexesInRange, target.after !== null ? target.after - 1 : originalTokens.length - 1);
-        const correctTokens = originalTokens.filter(t=> t.index > target.before && t.index <= maxOrig);
-        const correctText = correctTokens.map(t=>t.raw).join(' ');
-        const rewriteId = `rewrite-${rewriteGroups.length + 1}`;
-        rewriteGroups.push({
-          id: rewriteId,
-          start: rewriteStart,
-          end: rewriteEnd,
-          targetGapKey: key,
-          targetGap: target,
-          correctText
+        collectCrossedBoundaries(block).forEach(idx=>{
+          boundaryCounts[idx] = (boundaryCounts[idx] || 0) + 1;
         });
-        group.forEach(block=>{ block.resolvedByRewrite = true; });
-        for(let i = rewriteStart; i <= rewriteEnd; i++){
-          if(!metaByUser[i]){
-            metaByUser[i] = {};
-          }
-          metaByUser[i].rewriteGroupId = rewriteId;
-          metaByUser[i].targetGapKey = key;
-          metaByUser[i].targetGap = target;
+      });
+      const overloadedBoundaries = new Set(boundaryCounts.map((count, idx)=> ({count, idx})).filter(item=>item.count > 1).map(item=>item.idx));
+      const overloadBlocks = new Set();
+      moveBlocks.forEach(block=>{
+        const crossed = collectCrossedBoundaries(block);
+        if(crossed.some(idx=>overloadedBoundaries.has(idx))){
+          overloadBlocks.add(block.id);
         }
       });
+      const crossingBlocks = detectCrossingBlocks(moveBlocks);
+      const mode = (overloadedBoundaries.size || crossingBlocks.size) ? 'rewrite' : 'arrows';
+      const problemIds = new Set([...overloadBlocks, ...crossingBlocks]);
+      const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
+        moveBlocks,
+        problemIds,
+        matches: orderedMatches,
+        userTokens,
+        originalTokens,
+        metaByUser
+      }) : [];
 
       moveBlocks.forEach(block=>{
         if(block.resolvedByRewrite) return;
@@ -4714,10 +4728,175 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
 
       const gapsNeeded = new Set();
-      moveBlocks.forEach(block=>{ gapsNeeded.add(block.targetGapKey); });
-      rewriteGroups.forEach(group=> gapsNeeded.add(group.targetGapKey));
+      if(mode === 'arrows'){
+        moveBlocks.forEach(block=> gapsNeeded.add(block.targetGapKey));
+      }
 
-      return { moveBlocks, rewriteGroups, tokenMeta: metaByUser, gapMeta, gapsNeeded };
+      const matchedByOrig = new Map();
+      orderedMatches.forEach(m=> matchedByOrig.set(m.origIndex, m.userIndex));
+      const missingByPosition = buildMissingByPosition(missingTokens, orderedMatches, userTokens.length);
+      missingTokens.forEach(item=>{
+        let prevOrig = -1;
+        let prevUser = -1;
+        let nextOrig = null;
+        let nextUser = userTokens.length;
+        matchedByOrig.forEach((userIdx, origIdx)=>{
+          if(origIdx < item.origIndex && origIdx > prevOrig){
+            prevOrig = origIdx;
+            prevUser = userIdx;
+          }
+          if(origIdx > item.origIndex && (nextOrig === null || origIdx < nextOrig)){
+            nextOrig = origIdx;
+            nextUser = userIdx;
+          }
+        });
+        const gapKey = buildGapKey(prevOrig, nextOrig);
+        const beforeUser = prevUser;
+        const afterUser = nextUser ?? userTokens.length;
+        if(!gapMeta[gapKey]){
+          gapMeta[gapKey] = {
+            before: prevOrig,
+            after: nextOrig,
+            beforeUser,
+            afterUser,
+            targetBoundary: beforeUser + 1
+          };
+        }
+        gapsNeeded.add(gapKey);
+      });
+
+      return { mode, moveBlocks, rewriteGroups, tokenMeta: metaByUser, gapMeta, gapsNeeded, missingByPosition };
+    }
+
+    function buildMoveBlocks(movableMatches, metaByUser, gapMeta, userLength){
+      const blocks = [];
+      let current = null;
+      movableMatches.forEach(m=>{
+        const meta = metaByUser[m.userIndex] || {};
+        const gapKey = meta.targetGapKey || buildGapKey(-1, null);
+        const gap = gapMeta[gapKey] || { before: -1, after: null, beforeUser: -1, afterUser: userLength, targetBoundary: 0 };
+        const adjacent = current && current.targetGapKey === gapKey && m.userIndex === current.end + 1;
+        if(adjacent){
+          current.tokens.push(m.userIndex);
+          current.origIndices.push(m.origIndex);
+          current.end = m.userIndex;
+          current.hasError = current.hasError || !!meta.hasError;
+        } else {
+          if(current){
+            blocks.push(current);
+          }
+          current = {
+            id: `move-${blocks.length + 1}`,
+            tokens: [m.userIndex],
+            origIndices: [m.origIndex],
+            start: m.userIndex,
+            end: m.userIndex,
+            targetGapKey: gapKey,
+            targetGap: meta.targetGap || { before: -1, after: null },
+            beforeUser: gap.beforeUser ?? -1,
+            afterUser: gap.afterUser ?? userLength,
+            targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
+            hasError: !!meta.hasError,
+            resolvedByRewrite: false
+          };
+        }
+      });
+      if(current){
+        blocks.push(current);
+      }
+      return blocks;
+    }
+
+    function collectCrossedBoundaries(block){
+      const crossed = [];
+      if(block.targetBoundary < block.start){
+        for(let b = block.targetBoundary; b < block.start; b++){
+          crossed.push(b);
+        }
+      } else if(block.targetBoundary > block.end + 1){
+        for(let b = block.end + 1; b < block.targetBoundary; b++){
+          crossed.push(b);
+        }
+      }
+      return crossed;
+    }
+
+    function detectCrossingBlocks(blocks){
+      const set = new Set();
+      for(let i = 0; i < blocks.length; i++){
+        for(let j = i + 1; j < blocks.length; j++){
+          const a = blocks[i];
+          const b = blocks[j];
+          const orderInverts = (a.start < b.start && a.targetBoundary > b.targetBoundary) ||
+                               (a.start > b.start && a.targetBoundary < b.targetBoundary);
+          const targetInside = (a.targetBoundary > b.start && a.targetBoundary < b.end + 1) ||
+                               (b.targetBoundary > a.start && b.targetBoundary < a.end + 1);
+          if(orderInverts || targetInside){
+            set.add(a.id);
+            set.add(b.id);
+          }
+        }
+      }
+      return set;
+    }
+
+    function buildRewriteGroups({ moveBlocks, problemIds, matches, userTokens, originalTokens, metaByUser }){ // eslint-disable-line max-params
+      if(!problemIds.size || !moveBlocks.length){
+        return [];
+      }
+      const problemBlocks = moveBlocks.filter(b=>problemIds.has(b.id));
+      if(!problemBlocks.length){
+        return [];
+      }
+      let origMin = Infinity;
+      let origMax = -Infinity;
+      problemBlocks.forEach(block=>{
+        block.origIndices.forEach(idx=>{
+          origMin = Math.min(origMin, idx);
+          origMax = Math.max(origMax, idx);
+        });
+      });
+      if(!Number.isFinite(origMin) || !Number.isFinite(origMax)){
+        return [];
+      }
+      let userMin = Infinity;
+      let userMax = -Infinity;
+      matches.forEach(m=>{
+        if(m.origIndex >= origMin && m.origIndex <= origMax){
+          userMin = Math.min(userMin, m.userIndex);
+          userMax = Math.max(userMax, m.userIndex);
+        }
+      });
+      if(!Number.isFinite(userMin)){
+        userMin = 0;
+        userMax = userTokens.length ? userTokens.length - 1 : 0;
+      }
+      matches.forEach(m=>{
+        if(m.userIndex >= userMin && m.userIndex <= userMax){
+          origMin = Math.min(origMin, m.origIndex);
+          origMax = Math.max(origMax, m.origIndex);
+        }
+      });
+      const correctTokens = originalTokens.filter(t=>t.index >= origMin && t.index <= origMax);
+      const correctText = correctTokens.map(t=>t.raw).join(' ');
+      const group = {
+        id: 'rewrite-1',
+        start: userMin,
+        end: userMax,
+        targetGapKey: buildGapKey(origMin - 1, origMax + 1),
+        correctText
+      };
+      for(let i = group.start; i <= group.end; i++){
+        metaByUser[i] = metaByUser[i] || {};
+        metaByUser[i].rewriteGroupId = group.id;
+        metaByUser[i].targetGapKey = group.targetGapKey;
+      }
+      moveBlocks.forEach(block=>{
+        if(problemIds.has(block.id)){
+          block.resolvedByRewrite = true;
+        }
+      });
+      return [group];
     }
 
     function buildMissingByPosition(missing, matches, userLength){
@@ -4745,12 +4924,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }
           }
         });
-        const gapKey = `${prevOrig}-${nextOrig === null ? 'END' : nextOrig}`;
+        const gapKey = buildGapKey(prevOrig, nextOrig);
         const pos = Math.max(0, prevUser + 1);
         if(!map[pos]){
           map[pos] = [];
         }
         map[pos].push({ token: item.token, gapKey });
+      });
+      Object.keys(map).forEach(key=>{
+        map[key] = map[key].sort((a,b)=>a.token.index - b.token.index);
       });
       if(map[userLength]){
         map[userLength] = map[userLength].sort((a,b)=>a.token.index - b.token.index);
@@ -4758,7 +4940,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return map;
     }
 
-    function renderComparisonResult(resultEl, comparison){
+function renderComparisonResult(resultEl, comparison){
       resultEl.innerHTML = '';
       const wrapper = document.createElement('div');
       wrapper.className = 'dictation-comparison';
