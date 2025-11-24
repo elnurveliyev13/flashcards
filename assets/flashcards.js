@@ -5296,15 +5296,15 @@ function renderComparisonResult(resultEl, comparison){
       const defs = document.createElementNS(svgNS, 'defs');
       const marker = document.createElementNS(svgNS, 'marker');
       marker.setAttribute('id', 'dictation-arrowhead');
-      marker.setAttribute('viewBox', '0 0 10 10');
-      marker.setAttribute('markerWidth', '10');
-      marker.setAttribute('markerHeight', '10');
-      marker.setAttribute('refX', '10'); // tip aligns with path end
-      marker.setAttribute('refY', '5');
+      marker.setAttribute('viewBox', '0 0 12 12');
+      marker.setAttribute('markerWidth', '12');
+      marker.setAttribute('markerHeight', '12');
+      marker.setAttribute('refX', '12'); // tip aligns with path end
+      marker.setAttribute('refY', '6');
       marker.setAttribute('orient', 'auto');
-      marker.setAttribute('markerUnits', 'userSpaceOnUse'); // match line thickness to marker size
+      marker.setAttribute('markerUnits', 'userSpaceOnUse'); // anchor in user space for consistent size
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
+      path.setAttribute('d', 'M0,0 L12,6 L0,12 Z');
       path.setAttribute('fill', '#ef4444');
       marker.appendChild(path);
       defs.appendChild(marker);

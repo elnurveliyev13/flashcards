@@ -3948,20 +3948,21 @@ select.inline-prompt-field {
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  color: #f59e0b;
+  color: #ef4444;
   font-weight: 700;
 }
 
 .dictation-missing-word {
-  background: rgba(245, 158, 11, 0.15);
+  background: transparent;
   padding: 2px 6px;
   border-radius: 6px;
+  color: #ef4444;
 }
 
 .dictation-missing-caret {
   font-size: 0.9rem;
   line-height: 1;
-  color: #f59e0b;
+  color: #ef4444;
 }
 
 .dictation-gap-anchor {
