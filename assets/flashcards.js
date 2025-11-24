@@ -4864,42 +4864,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function buildMoveBlocks(movableMatches, metaByUser, gapMeta, userLength){
-      const blocks = [];
-      let current = null;
-      movableMatches.forEach(m=>{
+      // Conservative: do not merge multiple tokens into a single move block
+      return movableMatches.map((m, idx)=>{
         const meta = metaByUser[m.userIndex] || {};
         const gapKey = meta.targetGapKey || buildGapKey(-1, null);
         const gap = gapMeta[gapKey] || { before: -1, after: null, beforeUser: -1, afterUser: userLength, targetBoundary: 0 };
-        const adjacent = current && current.targetGapKey === gapKey && m.userIndex === current.end + 1;
-        if(adjacent){
-          current.tokens.push(m.userIndex);
-          current.origIndices.push(m.origIndex);
-          current.end = m.userIndex;
-          current.hasError = current.hasError || !!meta.hasError;
-        } else {
-          if(current){
-            blocks.push(current);
-          }
-          current = {
-            id: `move-${blocks.length + 1}`,
-            tokens: [m.userIndex],
-            origIndices: [m.origIndex],
-            start: m.userIndex,
-            end: m.userIndex,
-            targetGapKey: gapKey,
-            targetGap: meta.targetGap || { before: -1, after: null },
-            beforeUser: gap.beforeUser ?? -1,
-            afterUser: gap.afterUser ?? userLength,
-            targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
-            hasError: !!meta.hasError,
-            resolvedByRewrite: false
-          };
-        }
+        return {
+          id: `move-${idx + 1}`,
+          tokens: [m.userIndex],
+          origIndices: [m.origIndex],
+          start: m.userIndex,
+          end: m.userIndex,
+          targetGapKey: gapKey,
+          targetGap: meta.targetGap || { before: -1, after: null },
+          beforeUser: gap.beforeUser ?? -1,
+          afterUser: gap.afterUser ?? userLength,
+          targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
+          hasError: !!meta.hasError,
+          resolvedByRewrite: false
+        };
       });
-      if(current){
-        blocks.push(current);
-      }
-      return blocks;
     }
 
     function collectCrossedBoundaries(block){
