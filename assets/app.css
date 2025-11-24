@@ -1218,6 +1218,7 @@ input[type=text]::placeholder {
   display:flex;
   align-items:center;
   justify-content:center;
+  padding:0;
 }
 .meta #metaRecorder{
   flex:1;
