@@ -5309,7 +5309,7 @@ function renderComparisonResult(resultEl, comparison){
       marker.setAttribute('markerUnits', 'strokeWidth');
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
-      path.setAttribute('fill', '#60a5fa');
+      path.setAttribute('fill', '#ef4444');
       marker.appendChild(path);
       defs.appendChild(marker);
       svg.appendChild(defs);
@@ -5331,7 +5331,7 @@ function renderComparisonResult(resultEl, comparison){
         const p = document.createElementNS(svgNS, 'path');
         p.setAttribute('d', `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`);
         p.setAttribute('fill', 'none');
-        p.setAttribute('stroke', '#60a5fa');
+        p.setAttribute('stroke', '#ef4444');
         p.setAttribute('stroke-width', '2');
         p.setAttribute('marker-end', 'url(#dictation-arrowhead)');
         svg.appendChild(p);

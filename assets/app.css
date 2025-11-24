@@ -3889,7 +3889,7 @@ select.inline-prompt-field {
   color: #f8fafc;
 }
 .dictation-token-correction {
-  color: #22c55e;
+  color: #ef4444;
   font-weight: 700;
   line-height: 1.1;
   display: block;
@@ -3903,14 +3903,14 @@ select.inline-prompt-field {
 }
 
 .dictation-token-move {
-  border: 1px dashed #60a5fa;
-  background: rgba(96, 165, 250, 0.15);
+  border: 1px dashed #ef4444;
+  background: rgba(239, 68, 68, 0.15);
 }
 
 .dictation-token-extra {
-  color: #f87171;
-  background: rgba(248, 113, 113, 0.15);
-  text-decoration: line-through;
+  color: #f8fafc;
+  background: rgba(148, 163, 184, 0.08);
+  text-decoration: none;
 }
 
 .dictation-move-block {
@@ -3936,17 +3936,17 @@ select.inline-prompt-field {
   gap: 2px;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px dashed #f97316;
-  background: rgba(249, 115, 22, 0.08);
+  border: 1px dashed #ef4444;
+  background: rgba(239, 68, 68, 0.08);
 }
 
 .dictation-rewrite-original {
-  color: #f97316;
+  color: #ef4444;
   text-decoration: line-through;
 }
 
 .dictation-rewrite-correct {
-  color: #22c55e;
+  color: #ef4444;
   font-weight: 700;
 }
 .dictation-token-correction {
@@ -4059,9 +4059,9 @@ select.inline-prompt-field {
   font-weight: inherit;
   line-height: 1.2;
 }
-.dictation-token-inner.dictation-token-ok { color: #22c55e; background: rgba(34, 197, 94, 0.1); }
-.dictation-token-inner.dictation-token-warn { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
-.dictation-token-inner.dictation-token-extra { color: #cbd5e1; background: rgba(148, 163, 184, 0.08); }
+.dictation-token-inner.dictation-token-ok { color: #f8fafc; background: rgba(148, 163, 184, 0.08); }
+.dictation-token-inner.dictation-token-warn { color: #f8fafc; background: rgba(148, 163, 184, 0.12); }
+.dictation-token-inner.dictation-token-extra { color: #f8fafc; background: rgba(148, 163, 184, 0.08); }
 
 .dictation-token-inner {
   padding: 4px 8px;
