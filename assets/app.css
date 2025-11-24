@@ -3863,6 +3863,7 @@ select.inline-prompt-field {
   color: #e2e8f0;
   font-weight: 500;
   line-height: 1.2;
+  vertical-align: baseline;
 }
 .dictation-token-has-correction {
   flex-direction: column;
@@ -3906,15 +3907,14 @@ select.inline-prompt-field {
 
 .dictation-move-block {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 0.35rem;
   padding: 4px 8px;
   border-radius: 8px;
   border: 2px dashed rgba(239, 68, 68, 0.7);
   background: transparent;
-  vertical-align: middle;
+  vertical-align: baseline;
   flex-wrap: nowrap;
-  align-self: center;
   height: fit-content;
 }
 .dictation-move-block .dictation-token {
