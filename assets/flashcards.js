@@ -5254,9 +5254,6 @@ function renderComparisonResult(resultEl, comparison){
 
       const inner = document.createElement('span');
       inner.className = 'dictation-token-inner';
-      if(hasError){
-        inner.classList.add('dictation-token-wrong-text');
-      }
       inner.textContent = token.raw;
 
       // Apply state classes to inner to keep backgrounds on the user row only
@@ -5268,6 +5265,16 @@ function renderComparisonResult(resultEl, comparison){
       }
       if(!meta || (!meta.match && !meta.hasError && !meta.moveBlockId && !meta.rewriteGroupId)){
         inner.classList.add('dictation-token-extra');
+      }
+
+      // Colors: user text white, corrections red
+      inner.classList.add('dictation-token-user');
+      if(hasError){
+        const wrong = document.createElement('span');
+        wrong.className = 'dictation-token-wrong-text';
+        wrong.textContent = token.raw;
+        inner.textContent = '';
+        inner.appendChild(wrong);
       }
 
       wrapper.appendChild(inner);
@@ -5293,15 +5300,15 @@ function renderComparisonResult(resultEl, comparison){
       const defs = document.createElementNS(svgNS, 'defs');
       const marker = document.createElementNS(svgNS, 'marker');
       marker.setAttribute('id', 'dictation-arrowhead');
-      marker.setAttribute('viewBox', '0 0 12 12');
-      marker.setAttribute('markerWidth', '12');
-      marker.setAttribute('markerHeight', '12');
-      marker.setAttribute('refX', '12'); // anchor at tip so base sits on curve
-      marker.setAttribute('refY', '6');
+      marker.setAttribute('viewBox', '0 0 10 10');
+      marker.setAttribute('markerWidth', '10');
+      marker.setAttribute('markerHeight', '10');
+      marker.setAttribute('refX', '0');
+      marker.setAttribute('refY', '5');
       marker.setAttribute('orient', 'auto');
-      marker.setAttribute('markerUnits', 'userSpaceOnUse');
+      marker.setAttribute('markerUnits', 'strokeWidth');
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L12,6 L0,12 Z');
+      path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
       path.setAttribute('fill', '#60a5fa');
       marker.appendChild(path);
       defs.appendChild(marker);

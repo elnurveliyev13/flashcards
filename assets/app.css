@@ -3885,6 +3885,9 @@ select.inline-prompt-field {
   background: transparent;
   text-decoration: none;
 }
+.dictation-token-user {
+  color: #f8fafc;
+}
 .dictation-token-correction {
   color: #22c55e;
   font-weight: 700;
@@ -3895,7 +3898,7 @@ select.inline-prompt-field {
 .dictation-token-wrong-text {
   color: #ef4444;
   text-decoration: line-through;
-  display: block;
+  display: inline;
   line-height: 1.2;
 }
 
