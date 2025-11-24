@@ -635,6 +635,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Easy',
         normal: 'Normal',
         hard: 'Hard',
+        btnHardHint: 'Repeat this card today',
+        btnNormalHint: 'Next review tomorrow',
+        btnEasyHint: 'Move to the next stage',
         dashboard_total_cards: 'Total Cards Created',
         dashboard_active_vocab: 'Active vocabulary',
         dashboard_streak: 'Current Streak (days)',
@@ -732,6 +735,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Легко',
         normal: 'Нормально',
         hard: 'Важко',
+        btnHardHint: 'Повторити цю картку сьогодні',
+        btnNormalHint: 'Наступний огляд завтра',
+        btnEasyHint: 'Перейти до наступного етапу',
         dashboard_total_cards: 'Всього створено карток',
         dashboard_active_vocab: 'Активний словник',
         dashboard_streak: 'Поточна серія (днів)',
@@ -829,6 +835,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Легко',
         normal: 'Нормально',
         hard: 'Сложно',
+        btnHardHint: 'Повторить эту карточку сегодня',
+        btnNormalHint: 'Следующий обзор завтра',
+        btnEasyHint: 'Перейти к следующему этапу',
         dashboard_total_cards: 'Всего создано карточек',
         dashboard_active_vocab: 'Активный словарь',
         dashboard_streak: 'Текущая серия (дней)',
@@ -926,6 +935,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Facile',
         normal: 'Normal',
         hard: 'Difficile',
+        btnHardHint: 'Répéter cette carte aujourd\'hui',
+        btnNormalHint: 'Prochaine révision demain',
+        btnEasyHint: 'Passer à l\'étape suivante',
         dashboard_total_cards: 'Total de cartes créées',
         dashboard_active_vocab: 'Vocabulaire actif',
         dashboard_streak: 'Série actuelle (jours)',
@@ -1023,6 +1035,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Fácil',
         normal: 'Normal',
         hard: 'Difícil',
+        btnHardHint: 'Repetir esta tarjeta hoy',
+        btnNormalHint: 'Próxima revisión mañana',
+        btnEasyHint: 'Pasar a la siguiente etapa',
         dashboard_total_cards: 'Total de tarjetas creadas',
         dashboard_active_vocab: 'Vocabulario activo',
         dashboard_streak: 'Racha actual (días)',
@@ -1120,6 +1135,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Łatwe',
         normal: 'Normalne',
         hard: 'Trudne',
+        btnHardHint: 'Powtórz tę fiszkę dzisiaj',
+        btnNormalHint: 'Następny przegląd jutro',
+        btnEasyHint: 'Przejdź do następnego etapu',
         dashboard_total_cards: 'Łączna liczba utworzonych fiszek',
         dashboard_active_vocab: 'Aktywne słownictwo',
         dashboard_streak: 'Obecna seria (dni)',
@@ -1217,6 +1235,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Facile',
         normal: 'Normale',
         hard: 'Difficile',
+        btnHardHint: 'Ripeti questa scheda oggi',
+        btnNormalHint: 'Prossima revisione domani',
+        btnEasyHint: 'Passa alla fase successiva',
         dashboard_total_cards: 'Totale schede create',
         dashboard_active_vocab: 'Vocabolario attivo',
         dashboard_streak: 'Serie attuale (giorni)',
@@ -1314,6 +1335,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         easy: 'Einfach',
         normal: 'Normal',
         hard: 'Schwer',
+        btnHardHint: 'Diese Karte heute wiederholen',
+        btnNormalHint: 'Nächste Wiederholung morgen',
+        btnEasyHint: 'Zur nächsten Stufe wechseln',
         dashboard_total_cards: 'Gesamt erstellte Karten',
         dashboard_active_vocab: 'Aktiver Wortschatz',
         dashboard_streak: 'Aktuelle Serie (Tage)',
@@ -2591,19 +2615,36 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function updateRatingActionHints(rec){
       const mappings = [
-        {id:'btnEasyHint', mode:'easy'},
-        {id:'btnNormalHint', mode:'normal'},
-        {id:'btnHardHint', mode:'hard'}
+        {id:'btnEasyHint', mode:'easy', key:'btnEasyHint'},
+        {id:'btnNormalHint', mode:'normal', key:'btnNormalHint'},
+        {id:'btnHardHint', mode:'hard', key:'btnHardHint'}
       ];
       mappings.forEach(cfg=>{
         const target = document.getElementById(cfg.id);
         if(!target) return;
+        const translation = t(cfg.key);
         if(!rec){
-          target.textContent='';
+          if(translation && translation !== cfg.key){
+            target.textContent = translation;
+          }else{
+            target.textContent = '';
+          }
+          target.removeAttribute('title');
           return;
         }
         const days = ratingIntervalDays(rec.step || 0, cfg.mode);
-        target.textContent = formatIntervalDaysLabel(days);
+        const intervalLabel = formatIntervalDaysLabel(days);
+        if(translation && translation !== cfg.key){
+          target.textContent = translation;
+          if(intervalLabel){
+            target.setAttribute('title', intervalLabel);
+          }else{
+            target.removeAttribute('title');
+          }
+        }else{
+          target.textContent = intervalLabel;
+          target.removeAttribute('title');
+        }
       });
     }
 
