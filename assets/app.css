@@ -3908,10 +3908,12 @@ select.inline-prompt-field {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
   border: 2px dashed rgba(239, 68, 68, 0.7);
   background: transparent;
+  vertical-align: baseline;
+  flex-wrap: nowrap;
 }
 .dictation-move-block .dictation-token-move {
   border: none;
@@ -3969,17 +3971,21 @@ select.inline-prompt-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 12px;
-  height: 18px;
-  margin: 0 2px;
+  width: 8px;
+  height: 30px;
+  margin: 0 1px;
+  vertical-align: middle;
+  position: relative;
 }
 
 .dictation-gap-mark {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #60a5fa;
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: #3b82f6;
   opacity: 0;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .dictation-arrow-layer {

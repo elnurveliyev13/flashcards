@@ -5307,10 +5307,10 @@ function renderComparisonResult(resultEl, comparison){
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
 
-        // End: точка в строке на уровне БАЗОВОЙ ЛИНИИ текста (gap-anchor)
+        // End: точка на уровне СЕРЕДИНЫ ТЕКСТА в строке (gap-anchor)
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        // Опускаем стрелку к НИЖНЕЙ части строки (базовая линия текста)
-        const endY = targetRect.top - containerRect.top + targetRect.height;
+        // Опускаем стрелку к СЕРЕДИНЕ высоты gap-anchor (уровень текста)
+        const endY = targetRect.top - containerRect.top + (targetRect.height / 2);
 
         // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
