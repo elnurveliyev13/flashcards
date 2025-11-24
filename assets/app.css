@@ -3855,7 +3855,7 @@ select.inline-prompt-field {
 .dictation-token {
   position: relative;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: 4px 8px;
   border-radius: 6px;
@@ -3896,6 +3896,7 @@ select.inline-prompt-field {
   color: #ef4444;
   text-decoration: line-through;
   display: block;
+  line-height: 1.2;
 }
 
 .dictation-token-move {

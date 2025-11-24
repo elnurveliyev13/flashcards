@@ -5296,12 +5296,12 @@ function renderComparisonResult(resultEl, comparison){
       marker.setAttribute('viewBox', '0 0 12 12');
       marker.setAttribute('markerWidth', '12');
       marker.setAttribute('markerHeight', '12');
-      marker.setAttribute('refX', '0');
+      marker.setAttribute('refX', '12'); // anchor at tip so base sits on curve
       marker.setAttribute('refY', '6');
       marker.setAttribute('orient', 'auto');
       marker.setAttribute('markerUnits', 'userSpaceOnUse');
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,6 L12,12 L12,0 Z');
+      path.setAttribute('d', 'M0,0 L12,6 L0,12 Z');
       path.setAttribute('fill', '#60a5fa');
       marker.appendChild(path);
       defs.appendChild(marker);
