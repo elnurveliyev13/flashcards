@@ -4329,8 +4329,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      const lisIndices = computeLisWithTies(matches);
-      const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
+      // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
+      const anchorMatches = monotoneAlignment(userTokens, originalTokens);
+      const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
+      let lisSet = new Set();
+      matches.forEach(m=>{
+        if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
+          lisSet.add(m.id);
+        }
+      });
+      // Fallback to LIS if anchors are insufficient
+      if(!lisSet.size){
+        const lisIndices = computeLisWithTies(matches);
+        lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
+      }
 
       const movePlan = buildMovePlan({
         matches,
@@ -4376,6 +4388,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const PUNCT_MATCH_SCORE = 0.8;
     const PUNCT_MISMATCH_SCORE = 0.2;
     const TYPE_MISMATCH_SCORE = 0.05;
+    const GAP_PENALTY = 1.0;
 
     function buildEmptyMovePlan(len){
       return {
@@ -4640,6 +4653,61 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return a.start < b.start;
     }
 
+    // Monotone alignment (Needleman–Wunsch) to derive non-crossing anchors
+    function monotoneAlignment(userTokens, originalTokens){
+      const n = userTokens.length;
+      const m = originalTokens.length;
+      const dp = Array.from({length: n + 1}, () => Array(m + 1).fill(-Infinity));
+      const dir = Array.from({length: n + 1}, () => Array(m + 1).fill(0)); // 0=diag,1=up,2=left
+      dp[0][0] = 0;
+      for(let i = 1; i <= n; i++){
+        dp[i][0] = dp[i-1][0] - GAP_PENALTY;
+        dir[i][0] = 1;
+      }
+      for(let j = 1; j <= m; j++){
+        dp[0][j] = dp[0][j-1] - GAP_PENALTY;
+        dir[0][j] = 2;
+      }
+      for(let i = 1; i <= n; i++){
+        for(let j = 1; j <= m; j++){
+          const sim = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          const diag = dp[i-1][j-1] + sim;
+          const up = dp[i-1][j] - GAP_PENALTY;
+          const left = dp[i][j-1] - GAP_PENALTY;
+          const best = Math.max(diag, up, left);
+          dp[i][j] = best;
+          if(best === diag){
+            dir[i][j] = 0;
+          } else if(best === up){
+            dir[i][j] = 1;
+          } else {
+            dir[i][j] = 2;
+          }
+        }
+      }
+      const matches = [];
+      let i = n, j = m;
+      while(i > 0 && j > 0){
+        const d = dir[i][j];
+        if(d === 0){
+          const sim = tokenSimilarity(userTokens[i-1], originalTokens[j-1]);
+          if(sim >= MIN_SIMILARITY_SCORE){
+            matches.push({
+              userIndex: i - 1,
+              origIndex: j - 1,
+              score: sim
+            });
+          }
+          i--; j--;
+        } else if(d === 1){
+          i--;
+        } else {
+          j--;
+        }
+      }
+      return matches.reverse();
+    }
+
     function buildGapKey(before, after){
       const left = before === undefined ? -1 : before;
       const right = after === null || after === undefined ? 'END' : after;
@@ -4772,7 +4840,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gapsNeeded.add(gapKey);
       });
 
-      return { mode, moveBlocks, rewriteGroups, tokenMeta: metaByUser, gapMeta, gapsNeeded, missingByPosition };
+      return {
+        mode,
+        moveBlocks,
+        rewriteGroups,
+        tokenMeta: metaByUser,
+        gapMeta,
+        gapsNeeded,
+        missingByPosition,
+        boundaryCounts,
+        overloadedBoundaries: Array.from(overloadedBoundaries)
+      };
     }
 
     function buildMoveBlocks(movableMatches, metaByUser, gapMeta, userLength){
