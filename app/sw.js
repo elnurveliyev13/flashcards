@@ -1,4 +1,4 @@
-const CACHE = "srs-cache-v5";
+const CACHE = "srs-cache-v6";
 const ASSETS = [
   // Empty cache - Service Worker will be registered but won't cache anything
   // This is minimal config just to enable PWA install prompt

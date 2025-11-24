@@ -5315,24 +5315,22 @@ function renderComparisonResult(resultEl, comparison){
         // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
 
-        // Arc rises above the text to clear all words
-        const minArcHeight = 40;
-        const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.3);
-        const arcHeight = Math.min(dynamicArcHeight, 90);
+        // ПОЛОГАЯ дуга - низкая, параллельная тексту (15-25px над текстом)
+        const arcHeight = 20; // Фиксированная невысокая дуга
 
-        // Control points for smooth curve with steep vertical descent
-        // Первая контрольная точка - высокий подъём над текстом
+        // Первая контрольная точка - небольшой подъём над текстом
         const controlY1 = startY - arcHeight;
 
-        // Вторая контрольная точка - СТРОГО НАД целевой точкой для ВЕРТИКАЛЬНОГО падения вниз
-        // Размещаем её НА ТОМ ЖЕ уровне что и controlY1 для плавной дуги
-        const controlY2 = controlY1; // На той же высоте - создаёт симметричную дугу
+        // Вторая контрольная точка - НА ТОМ ЖЕ уровне для пологой дуги,
+        // но далеко от конца по горизонтали (70% пути) для резкого падения в конце
+        const controlY2 = startY - arcHeight; // Та же высота - дуга идёт параллельно
 
         // Horizontal control points
-        const controlDist = horizontalDist * 0.45;
-        const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.35);
-        // Вторую контрольную точку размещаем СТРОГО НАД endX для вертикального падения
-        const cx2 = endX; // Прямо над целевой точкой - стрелка упадёт вертикально вниз
+        const direction = Math.sign(endX - startX);
+        // Первая контрольная точка на 40% пути
+        const cx1 = startX + direction * horizontalDist * 0.4;
+        // Вторая контрольная точка на 70% пути - после неё стрелка резко падает вниз
+        const cx2 = startX + direction * horizontalDist * 0.7;
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
