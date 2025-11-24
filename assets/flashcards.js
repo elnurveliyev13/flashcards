@@ -5315,22 +5315,23 @@ function renderComparisonResult(resultEl, comparison){
         // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
 
-        // ПОЛОГАЯ дуга - низкая, параллельная тексту (15-25px над текстом)
+        // ПОЛОГАЯ дуга - низкая, параллельная тексту (20px над текстом)
         const arcHeight = 20; // Фиксированная невысокая дуга
 
         // Первая контрольная точка - небольшой подъём над текстом
         const controlY1 = startY - arcHeight;
 
-        // Вторая контрольная точка - НА ТОМ ЖЕ уровне для пологой дуги,
-        // но далеко от конца по горизонтали (70% пути) для резкого падения в конце
-        const controlY2 = startY - arcHeight; // Та же высота - дуга идёт параллельно
+        // Вторая контрольная точка - СТРОГО НАД endX на той же высоте
+        // Это создаст вертикальное падение под 90° вниз
+        const controlY2 = startY - arcHeight; // Та же высота - дуга параллельна тексту
 
         // Horizontal control points
         const direction = Math.sign(endX - startX);
         // Первая контрольная точка на 40% пути
         const cx1 = startX + direction * horizontalDist * 0.4;
-        // Вторая контрольная точка на 70% пути - после неё стрелка резко падает вниз
-        const cx2 = startX + direction * horizontalDist * 0.7;
+        // Вторая контрольная точка СТРОГО НАД endX (та же X-координата!)
+        // Это заставит стрелку падать вертикально вниз под 90°
+        const cx2 = endX;
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
