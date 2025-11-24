@@ -4185,14 +4185,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let audioPlayed = false;
       let checkCount = 0;
 
-      // Auto-play audio at 0.85x speed when text slot is revealed
+      // Get audio URL for replay button (but don't auto-play here - handled by showCurrent autoplay logic)
       const frontUrl = await resolveAudioUrl(card, 'front');
-      if(frontUrl){
-        setTimeout(() => {
-          playAudioFromUrl(frontUrl, 0.85);
-          audioPlayed = true;
-        }, 300);
-      }
 
       // Replay button - play audio again at 0.85x
       replayBtn.addEventListener('click', () => {
