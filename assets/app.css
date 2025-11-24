@@ -3900,7 +3900,7 @@ select.inline-prompt-field {
 
 .dictation-token-extra {
   color: #f8fafc;
-  background: rgba(148, 163, 184, 0.08);
+  background: transparent;
   text-decoration: none;
 }
 
@@ -3910,8 +3910,8 @@ select.inline-prompt-field {
   gap: 0.35rem;
   padding: 8px 10px;
   border-radius: 10px;
-  border: 2px dashed rgba(96, 165, 250, 0.7);
-  background: rgba(96, 165, 250, 0.1);
+  border: 2px dashed rgba(239, 68, 68, 0.7);
+  background: transparent;
 }
 .dictation-move-block .dictation-token-move {
   border: none;
@@ -3928,7 +3928,7 @@ select.inline-prompt-field {
   padding: 8px 10px;
   border-radius: 10px;
   border: 1px dashed #ef4444;
-  background: rgba(239, 68, 68, 0.08);
+  background: transparent;
 }
 
 .dictation-rewrite-original {
