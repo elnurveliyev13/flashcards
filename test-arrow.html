@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Arrow Visualization</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .dictation-visual {
+            position: relative;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 4px;
+        }
+        .dictation-comparison-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        .dictation-comparison-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 120px;
+            padding-top: 8px;
+        }
+        .dictation-line {
+            flex: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            padding: 8px;
+            background: #fafafa;
+            border-radius: 4px;
+            min-height: 40px;
+        }
+        .dictation-line-user {
+            background: #1e293b;
+            color: white;
+            padding: 12px;
+        }
+        .dictation-line-correct {
+            background: #f0fdf4;
+        }
+        .dictation-token {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+        }
+        .dictation-token-inner {
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+        .dictation-token-ok .dictation-token-inner {
+            background: #10b981;
+            color: white;
+        }
+        .dictation-token-extra .dictation-token-inner {
+            background: #dc2626;
+            color: white;
+        }
+        .dictation-move-block {
+            display: inline-flex;
+            gap: 4px;
+            background: #fef3c7;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 2px solid #f59e0b;
+        }
+        .dictation-move-block .dictation-token-inner {
+            background: #fbbf24;
+            color: #78350f;
+        }
+        .dictation-gap-anchor {
+            display: inline-block;
+            position: relative;
+            width: 2px;
+            height: 30px;
+        }
+        .dictation-gap-mark {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background: #3b82f6;
+            transform: translateX(-50%);
+        }
+        .dictation-arrow-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .test-case {
+            margin-bottom: 50px;
+        }
+        .test-case h3 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e5e5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Тест визуализации стрелок переноса слов</h1>
+
+        <div class="test-case">
+            <h3>Тест 1: Перенос одного слова влево</h3>
+            <div class="dictation-visual" id="test1">
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">ВАШ ОТВЕТ:</div>
+                    <div class="dictation-line dictation-line-user">
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">Det</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">er</span>
+                        </span>
+                        <span class="dictation-gap-anchor" data-gap-anchor="gap-1">
+                            <span class="dictation-gap-mark"></span>
+                        </span>
+                        <span class="dictation-move-block" data-target-gap="gap-1">
+                            <span class="dictation-token">
+                                <span class="dictation-token-inner">egentlig</span>
+                            </span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">ikke</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">så</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">.</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">Должно быть:</div>
+                    <div class="dictation-line dictation-line-correct">
+                        <span class="dictation-token dictation-token-ok">Det</span>
+                        <span class="dictation-token dictation-token-ok">er</span>
+                        <span class="dictation-token dictation-token-ok">egentlig</span>
+                        <span class="dictation-token dictation-token-ok">ikke</span>
+                        <span class="dictation-token dictation-token-ok">så</span>
+                        <span class="dictation-token dictation-token-ok">.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Тест 2: Перенос слова вправо</h3>
+            <div class="dictation-visual" id="test2">
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">ВАШ ОТВЕТ:</div>
+                    <div class="dictation-line dictation-line-user">
+                        <span class="dictation-move-block" data-target-gap="gap-2">
+                            <span class="dictation-token">
+                                <span class="dictation-token-inner">vanskelig</span>
+                            </span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">Det</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">er</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">ikke</span>
+                        </span>
+                        <span class="dictation-gap-anchor" data-gap-anchor="gap-2">
+                            <span class="dictation-gap-mark"></span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">.</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">Должно быть:</div>
+                    <div class="dictation-line dictation-line-correct">
+                        <span class="dictation-token dictation-token-ok">Det</span>
+                        <span class="dictation-token dictation-token-ok">er</span>
+                        <span class="dictation-token dictation-token-ok">ikke</span>
+                        <span class="dictation-token dictation-token-ok">vanskelig</span>
+                        <span class="dictation-token dictation-token-ok">.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-case">
+            <h3>Тест 3: Длинный перенос через много слов</h3>
+            <div class="dictation-visual" id="test3">
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">ВАШ ОТВЕТ:</div>
+                    <div class="dictation-line dictation-line-user">
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">Jeg</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">skal</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">reise</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">til</span>
+                        </span>
+                        <span class="dictation-move-block" data-target-gap="gap-3">
+                            <span class="dictation-token">
+                                <span class="dictation-token-inner">Norge</span>
+                            </span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">i</span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">morgen</span>
+                        </span>
+                        <span class="dictation-gap-anchor" data-gap-anchor="gap-3">
+                            <span class="dictation-gap-mark"></span>
+                        </span>
+                        <span class="dictation-token">
+                            <span class="dictation-token-inner dictation-token-ok">.</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="dictation-comparison-row">
+                    <div class="dictation-comparison-label">Должно быть:</div>
+                    <div class="dictation-line dictation-line-correct">
+                        <span class="dictation-token dictation-token-ok">Jeg</span>
+                        <span class="dictation-token dictation-token-ok">skal</span>
+                        <span class="dictation-token dictation-token-ok">reise</span>
+                        <span class="dictation-token dictation-token-ok">til</span>
+                        <span class="dictation-token dictation-token-ok">i</span>
+                        <span class="dictation-token dictation-token-ok">morgen</span>
+                        <span class="dictation-token dictation-token-ok">Norge</span>
+                        <span class="dictation-token dictation-token-ok">.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Improved arrow drawing function
+        function drawDictationArrows(container){
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const old = container.querySelector('.dictation-arrow-layer');
+            if(old){
+                old.remove();
+            }
+            const blocks = container.querySelectorAll('[data-target-gap]');
+            const anchors = container.querySelectorAll('[data-gap-anchor]');
+            if(!blocks.length || !anchors.length){
+                return;
+            }
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.classList.add('dictation-arrow-layer');
+            svg.setAttribute('width', container.offsetWidth);
+            svg.setAttribute('height', container.offsetHeight);
+            svg.setAttribute('viewBox', `0 0 ${container.offsetWidth} ${container.offsetHeight}`);
+            const containerRect = container.getBoundingClientRect();
+            blocks.forEach(block=>{
+                const gapKey = block.dataset.targetGap;
+                const target = container.querySelector(`[data-gap-anchor="${gapKey}"]`);
+                if(!target){
+                    return;
+                }
+                const blockRect = block.getBoundingClientRect();
+                const targetRect = target.getBoundingClientRect();
+
+                // Start: top center of the block that needs to move
+                const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
+                const startY = blockRect.top - containerRect.top;
+
+                // End: precise position at the gap-anchor (vertical line position)
+                const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
+                const endY = targetRect.top - containerRect.top + targetRect.height;
+
+                // Calculate optimal arc height based on horizontal distance and vertical gap
+                const horizontalDist = Math.abs(endX - startX);
+                const verticalDist = endY - startY;
+
+                // Arc should rise above the text by at least 35px, more if horizontal distance is large
+                const minArcHeight = 35;
+                const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.25);
+                const arcHeight = Math.min(dynamicArcHeight, 80); // Cap at 80px to avoid excessive curves
+
+                // Control points for smooth cubic Bezier curve
+                // First control point rises from start
+                const controlY1 = startY - arcHeight;
+                // Second control point descends to end
+                const controlY2 = Math.max(controlY1, endY - arcHeight * 0.6);
+
+                // Horizontal control points create smooth S-curve
+                const controlDist = horizontalDist * 0.4;
+                const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
+                const cx2 = endX - Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
+
+                // Draw smooth curved path
+                const p = document.createElementNS(svgNS, 'path');
+                const d = `M ${startX} ${startY} C ${cx1} ${controlY1}, ${cx2} ${controlY2}, ${endX} ${endY}`;
+                p.setAttribute('d', d);
+                p.setAttribute('fill', 'none');
+                p.setAttribute('stroke', '#ef4444');
+                p.setAttribute('stroke-width', '2.5');
+                p.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(p);
+
+                // Professional arrowhead using cubic Bezier derivative at t=0.95 (closer to endpoint for precise landing)
+                const t = 0.95;
+                const mt = 1 - t;
+                const mt2 = mt * mt;
+
+                // Cubic Bezier derivative: B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+                const dx = 3*mt2*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t*t*(endX - cx2);
+                const dy = 3*mt2*(controlY1 - startY) + 6*mt*t*(controlY2 - controlY1) + 3*t*t*(endY - controlY2);
+
+                const mag = Math.hypot(dx, dy) || 1;
+                const ux = dx / mag;
+                const uy = dy / mag;
+
+                // Larger, more visible arrowhead
+                const arrowLength = 12;
+                const arrowWidth = 5;
+
+                const tipX = endX;
+                const tipY = endY;
+                const baseX = tipX - ux * arrowLength;
+                const baseY = tipY - uy * arrowLength;
+
+                // Perpendicular vector for arrow wings
+                const perpX = -uy;
+                const perpY = ux;
+
+                const leftX = baseX + perpX * arrowWidth;
+                const leftY = baseY + perpY * arrowWidth;
+                const rightX = baseX - perpX * arrowWidth;
+                const rightY = baseY - perpY * arrowWidth;
+
+                const poly = document.createElementNS(svgNS, 'polygon');
+                poly.setAttribute('points', `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`);
+                poly.setAttribute('fill', '#ef4444');
+                poly.setAttribute('stroke', 'none');
+                svg.appendChild(poly);
+            });
+            container.appendChild(svg);
+        }
+
+        // Draw arrows for all test cases
+        document.addEventListener('DOMContentLoaded', () => {
+            ['test1', 'test2', 'test3'].forEach(id => {
+                const container = document.getElementById(id);
+                if(container){
+                    requestAnimationFrame(() => drawDictationArrows(container));
+                }
+            });
+        });
+
+        // Redraw on window resize
+        window.addEventListener('resize', () => {
+            ['test1', 'test2', 'test3'].forEach(id => {
+                const container = document.getElementById(id);
+                if(container){
+                    requestAnimationFrame(() => drawDictationArrows(container));
+                }
+            });
+        });
+    </script>
+</body>
+</html>

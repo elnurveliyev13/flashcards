@@ -5302,42 +5302,79 @@ function renderComparisonResult(resultEl, comparison){
         }
         const blockRect = block.getBoundingClientRect();
         const targetRect = target.getBoundingClientRect();
+
+        // Start: top center of the block that needs to move
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
+
+        // End: precise position at the gap-anchor (vertical line position)
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        const endY = targetRect.top - containerRect.top + targetRect.height * 0.2;
-        const controlY = Math.min(startY, endY) - 28;
-        // Draw single path
+        const endY = targetRect.top - containerRect.top + targetRect.height;
+
+        // Calculate optimal arc height based on horizontal distance and vertical gap
+        const horizontalDist = Math.abs(endX - startX);
+        const verticalDist = endY - startY;
+
+        // Arc should rise above the text by at least 35px, more if horizontal distance is large
+        const minArcHeight = 35;
+        const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.25);
+        const arcHeight = Math.min(dynamicArcHeight, 80); // Cap at 80px to avoid excessive curves
+
+        // Control points for smooth cubic Bezier curve
+        // First control point rises from start
+        const controlY1 = startY - arcHeight;
+        // Second control point descends to end
+        const controlY2 = Math.max(controlY1, endY - arcHeight * 0.6);
+
+        // Horizontal control points create smooth S-curve
+        const controlDist = horizontalDist * 0.4;
+        const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
+        const cx2 = endX - Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
+
+        // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
-        const d = `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`;
+        const d = `M ${startX} ${startY} C ${cx1} ${controlY1}, ${cx2} ${controlY2}, ${endX} ${endY}`;
         p.setAttribute('d', d);
         p.setAttribute('fill', 'none');
         p.setAttribute('stroke', '#ef4444');
-        p.setAttribute('stroke-width', '2');
+        p.setAttribute('stroke-width', '2.5');
+        p.setAttribute('stroke-linecap', 'round');
         svg.appendChild(p);
 
-        // Arrowhead integrated as polygon using cubic derivative (t=0.9)
-        const t = 0.9;
+        // Professional arrowhead using cubic Bezier derivative at t=0.95 (closer to endpoint for precise landing)
+        const t = 0.95;
         const mt = 1 - t;
-        const cx1 = startX, cy1 = controlY;
-        const cx2 = endX, cy2 = controlY;
-        const dx = 3*mt*mt*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t*t*(endX - cx2);
-        const dy = 3*mt*mt*(cy1 - startY) + 6*mt*t*(cy2 - cy1) + 3*t*t*(endY - cy2);
+        const mt2 = mt * mt;
+        const mt3 = mt2 * mt;
+        const t2 = t * t;
+        const t3 = t2 * t;
+
+        // Cubic Bezier derivative: B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+        const dx = 3*mt2*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t2*(endX - cx2);
+        const dy = 3*mt2*(controlY1 - startY) + 6*mt*t*(controlY2 - controlY1) + 3*t2*(endY - controlY2);
+
         const mag = Math.hypot(dx, dy) || 1;
         const ux = dx / mag;
         const uy = dy / mag;
-        const len = 10;
-        const w = 4;
+
+        // Larger, more visible arrowhead
+        const arrowLength = 12;
+        const arrowWidth = 5;
+
         const tipX = endX;
         const tipY = endY;
-        const baseX = tipX - ux * len;
-        const baseY = tipY - uy * len;
+        const baseX = tipX - ux * arrowLength;
+        const baseY = tipY - uy * arrowLength;
+
+        // Perpendicular vector for arrow wings
         const perpX = -uy;
         const perpY = ux;
-        const leftX = baseX + perpX * w;
-        const leftY = baseY + perpY * w;
-        const rightX = baseX - perpX * w;
-        const rightY = baseY - perpY * w;
+
+        const leftX = baseX + perpX * arrowWidth;
+        const leftY = baseY + perpY * arrowWidth;
+        const rightX = baseX - perpX * arrowWidth;
+        const rightY = baseY - perpY * arrowWidth;
+
         const poly = document.createElementNS(svgNS, 'polygon');
         poly.setAttribute('points', `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`);
         poly.setAttribute('fill', '#ef4444');
