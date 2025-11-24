@@ -3896,8 +3896,9 @@ select.inline-prompt-field {
   margin-bottom: 2px;
 }
 .dictation-token-wrong-text {
-  color: #ef4444;
+  color: #f8fafc;
   text-decoration: line-through;
+  text-decoration-color: #ef4444;
   display: inline;
   line-height: 1.2;
 }
@@ -4059,9 +4060,9 @@ select.inline-prompt-field {
   font-weight: inherit;
   line-height: 1.2;
 }
-.dictation-token-inner.dictation-token-ok { color: #f8fafc; background: rgba(148, 163, 184, 0.08); }
-.dictation-token-inner.dictation-token-warn { color: #f8fafc; background: rgba(148, 163, 184, 0.12); }
-.dictation-token-inner.dictation-token-extra { color: #f8fafc; background: rgba(148, 163, 184, 0.08); }
+.dictation-token-inner.dictation-token-ok { color: #f8fafc; background: transparent; }
+.dictation-token-inner.dictation-token-warn { color: #f8fafc; background: transparent; }
+.dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
 
 .dictation-token-inner {
   padding: 4px 8px;
@@ -4071,7 +4072,7 @@ select.inline-prompt-field {
   font-weight: inherit;
   line-height: 1.2;
 }
-.dictation-token-inner.dictation-token-ok { color: #22c55e; background: rgba(34, 197, 94, 0.1); }
-.dictation-token-inner.dictation-token-warn { color: #f59e0b; background: rgba(245, 158, 11, 0.15); }
-.dictation-token-inner.dictation-token-extra { color: #cbd5e1; background: rgba(148, 163, 184, 0.08); }
+.dictation-token-inner.dictation-token-ok { color: #f8fafc; background: transparent; }
+.dictation-token-inner.dictation-token-warn { color: #f8fafc; background: transparent; }
+.dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
 
