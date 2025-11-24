@@ -5307,29 +5307,33 @@ function renderComparisonResult(resultEl, comparison){
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
 
-        // End: precise position at the gap-anchor (vertical line position)
+        // End: точка В СТРОКЕ между словами (где синяя линия gap-anchor)
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        const endY = targetRect.top - containerRect.top + targetRect.height;
+        // Опускаем конец стрелки НА СЕРЕДИНУ высоты строки, а не наверх
+        const targetLineY = targetRect.top - containerRect.top + targetRect.height * 0.5;
+        const endY = targetLineY;
 
-        // Calculate optimal arc height based on horizontal distance and vertical gap
+        // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
-        const verticalDist = endY - startY;
 
-        // Arc should rise above the text by at least 35px, more if horizontal distance is large
-        const minArcHeight = 35;
-        const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.25);
-        const arcHeight = Math.min(dynamicArcHeight, 80); // Cap at 80px to avoid excessive curves
+        // Arc rises above the text to clear all words
+        const minArcHeight = 40;
+        const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.3);
+        const arcHeight = Math.min(dynamicArcHeight, 90);
 
-        // Control points for smooth cubic Bezier curve
-        // First control point rises from start
+        // Control points for smooth curve with steep descent
+        // Первая контрольная точка - высокий подъём над текстом
         const controlY1 = startY - arcHeight;
-        // Second control point descends to end
-        const controlY2 = Math.max(controlY1, endY - arcHeight * 0.6);
 
-        // Horizontal control points create smooth S-curve
-        const controlDist = horizontalDist * 0.4;
-        const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
-        const cx2 = endX - Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.3);
+        // Вторая контрольная точка - РЕЗКОЕ ПАДЕНИЕ вниз к строке
+        // Располагаем её гораздо ниже, почти на уровне целевой строки
+        const controlY2 = endY - 10; // Всего 10px над финальной точкой для крутого спуска
+
+        // Horizontal control points
+        const controlDist = horizontalDist * 0.45;
+        const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.35);
+        // Вторую контрольную точку размещаем ОЧЕНЬ БЛИЗКО к endX для крутого падения
+        const cx2 = endX - Math.sign(endX - startX) * Math.min(20, horizontalDist * 0.1);
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
