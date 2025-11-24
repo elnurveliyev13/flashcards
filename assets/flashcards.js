@@ -5087,13 +5087,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return 1;
     }
     async function renderCard(card, count, prevCount=0){
+      console.log('[DEBUG renderCard] card.id:', card.id, 'card.order:', JSON.stringify(card.order));
       slotContainer.innerHTML="";
       hidePlayIcons();
       audioURL=null;
       const allSlots=[];
       for(const kind of card.order){
+        console.log('[DEBUG renderCard] Building slot for kind:', kind);
         const el=await buildSlot(kind,card);
-        if(el) allSlots.push(el);
+        if(el) {
+          console.log('[DEBUG renderCard] Slot created for kind:', kind);
+          allSlots.push(el);
+        }
       }
       const items=allSlots.slice(0,count);
       if(!items.length){
