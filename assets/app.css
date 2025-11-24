@@ -4083,7 +4083,13 @@ select.inline-prompt-field {
 .dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
 
 
-.dictation-token-extra { color: #f8fafc; background: transparent; text-decoration: none; }
+.dictation-token-extra {
+  color: #f8fafc;
+  background: transparent;
+  text-decoration: line-through;
+  text-decoration-color: #ef4444;
+  opacity: 0.7;
+}
 .dictation-move-block { border-color: rgba(239,68,68,0.7); background: rgba(239,68,68,0.08); }
 .dictation-rewrite-block { border-color: #ef4444; background: rgba(239,68,68,0.08); }
 .dictation-rewrite-original { color: #ef4444; }
