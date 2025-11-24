@@ -4340,7 +4340,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         missing
       });
 
-      const spellingIssues = matches.filter(m => m.score < 1 || m.userToken.raw !== m.origToken.raw).length;
+      // Count only real spelling/punctuation mismatches: for words, raw diff or low score; for punct, only raw diff (not score bias < 1)
+      const spellingIssues = matches.filter(m => {
+        const rawDiffers = m.userToken.raw !== m.origToken.raw;
+        if(m.userToken.type === 'punct'){
+          return rawDiffers;
+        }
+        return rawDiffers || m.score < 1;
+      }).length;
       const orderIssues = matches.filter(m => !lisSet.has(m.id)).length;
       const moveIssues = movePlan.mode === 'rewrite'
         ? (movePlan.rewriteGroups.length ? 1 : 0)
