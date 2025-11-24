@@ -4785,9 +4785,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           overloadBlocks.add(block.id);
         }
       });
-      const crossingBlocks = detectCrossingBlocks(moveBlocks);
-      const mode = (overloadedBoundaries.size || crossingBlocks.size) ? 'rewrite' : 'arrows';
-      const problemIds = new Set([...overloadBlocks, ...crossingBlocks]);
+      // Use rewrite only when a boundary is overloaded (2+ blocks through same boundary)
+      const crossingBlocks = new Set(); // crossings no longer trigger rewrite alone
+      const mode = (overloadedBoundaries.size) ? 'rewrite' : 'arrows';
+      const problemIds = new Set([...overloadBlocks]);
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
         moveBlocks,
         problemIds,
@@ -4864,26 +4865,47 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function buildMoveBlocks(movableMatches, metaByUser, gapMeta, userLength){
-      // Conservative: do not merge multiple tokens into a single move block
-      return movableMatches.map((m, idx)=>{
+      const blocks = [];
+      let current = null;
+      movableMatches.forEach(m=>{
         const meta = metaByUser[m.userIndex] || {};
         const gapKey = meta.targetGapKey || buildGapKey(-1, null);
         const gap = gapMeta[gapKey] || { before: -1, after: null, beforeUser: -1, afterUser: userLength, targetBoundary: 0 };
-        return {
-          id: `move-${idx + 1}`,
-          tokens: [m.userIndex],
-          origIndices: [m.origIndex],
-          start: m.userIndex,
-          end: m.userIndex,
-          targetGapKey: gapKey,
-          targetGap: meta.targetGap || { before: -1, after: null },
-          beforeUser: gap.beforeUser ?? -1,
-          afterUser: gap.afterUser ?? userLength,
-          targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
-          hasError: !!meta.hasError,
-          resolvedByRewrite: false
-        };
+        const lastOrig = current && current.origIndices.length ? current.origIndices[current.origIndices.length - 1] : -Infinity;
+        const expectedNextOrig = current ? lastOrig + 1 : null;
+        const adjacent = current
+          && current.targetGapKey === gapKey
+          && m.userIndex === current.end + 1
+          && m.origIndex === expectedNextOrig; // merge only if user-adjacent AND orig-adjacent
+        if(adjacent){
+          current.tokens.push(m.userIndex);
+          current.origIndices.push(m.origIndex);
+          current.end = m.userIndex;
+          current.hasError = current.hasError || !!meta.hasError;
+        } else {
+          if(current){
+            blocks.push(current);
+          }
+          current = {
+            id: `move-${blocks.length + 1}`,
+            tokens: [m.userIndex],
+            origIndices: [m.origIndex],
+            start: m.userIndex,
+            end: m.userIndex,
+            targetGapKey: gapKey,
+            targetGap: meta.targetGap || { before: -1, after: null },
+            beforeUser: gap.beforeUser ?? -1,
+            afterUser: gap.afterUser ?? userLength,
+            targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
+            hasError: !!meta.hasError,
+            resolvedByRewrite: false
+          };
+        }
       });
+      if(current){
+        blocks.push(current);
+      }
+      return blocks;
     }
 
     function collectCrossedBoundaries(block){
