@@ -3915,6 +3915,14 @@ select.inline-prompt-field {
   vertical-align: baseline;
   flex-wrap: nowrap;
 }
+.dictation-move-block .dictation-token {
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+.dictation-move-block .dictation-token-correction {
+  display: none;
+}
 .dictation-move-block .dictation-token-move {
   border: none;
   box-shadow: none;

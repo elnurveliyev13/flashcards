@@ -5307,10 +5307,10 @@ function renderComparisonResult(resultEl, comparison){
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
 
-        // End: точка на уровне СЕРЕДИНЫ ТЕКСТА в строке (gap-anchor)
+        // End: точка на уровне ТЕКСТА в строке (на уровне startY или чуть ниже)
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        // Опускаем стрелку к СЕРЕДИНЕ высоты gap-anchor (уровень текста)
-        const endY = targetRect.top - containerRect.top + (targetRect.height / 2);
+        // Опускаем стрелку к тому же уровню, где находится блок (или чуть ниже для видимости)
+        const endY = startY + blockRect.height * 0.5; // Центр блока - уровень текста
 
         // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
@@ -5324,15 +5324,15 @@ function renderComparisonResult(resultEl, comparison){
         // Первая контрольная точка - высокий подъём над текстом
         const controlY1 = startY - arcHeight;
 
-        // Вторая контрольная точка - СТРОГО НАД целевой точкой для ВЕРТИКАЛЬНОГО падения
-        // Размещаем её чуть выше endY для крутого вертикального спуска
-        const controlY2 = endY - 15; // 15px над финалом для вертикального падения
+        // Вторая контрольная точка - СТРОГО НАД целевой точкой для ВЕРТИКАЛЬНОГО падения вниз
+        // Размещаем её НА ТОМ ЖЕ уровне что и controlY1 для плавной дуги
+        const controlY2 = controlY1; // На той же высоте - создаёт симметричную дугу
 
         // Horizontal control points
         const controlDist = horizontalDist * 0.45;
         const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.35);
         // Вторую контрольную точку размещаем СТРОГО НАД endX для вертикального падения
-        const cx2 = endX; // Прямо над целевой точкой - стрелка упадёт вертикально
+        const cx2 = endX; // Прямо над целевой точкой - стрелка упадёт вертикально вниз
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
