@@ -959,34 +959,6 @@ button[data-role="update"]:disabled::before {
   border-color:#7f1d1d;
   box-shadow:0 0 10px rgba(239,68,68,0.6);
 }
-.mic-permission-chip{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  margin:0.35rem auto 0;
-  background:rgba(15,23,42,0.92);
-  border:1px solid rgba(255,255,255,0.08);
-  border-radius:999px;
-  padding:3px 12px;
-  color:var(--text);
-  font-size:0.65rem; /* 10px */
-  letter-spacing:0.01em;
-  line-height:1.35;
-  max-width:min(180px, calc(100vw - 56px));
-  width:max-content;
-  text-align:center;
-  word-break:break-word;
-  cursor:pointer;
-  box-shadow:0 4px 10px rgba(15,23,42,0.45);
-}
-.mic-permission-chip[data-state="denied"]{
-  background:rgba(239,68,68,0.92);
-  border-color:rgba(254,226,226,0.5);
-  color:#fff;
-}
-.mic-permission-chip[data-state="requesting"]{
-  opacity:0.85;
-}
 .micbtn.mic-permission-pending:not(.recording){
   border-color:rgba(251,191,36,0.85);
   box-shadow:0 0 0 2px rgba(251,191,36,0.35);

@@ -2764,7 +2764,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     let useIOSRecorderGlobal = false;
     const IOS_MIC_PERMISSION_KEY = 'flashcards-ios-mic-permission';
-    const micPermissionChips = new WeakMap();
     function readIOSPermissionState(){
       if(!IS_IOS){
         return 'granted';
@@ -2778,62 +2777,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return 'unknown';
     }
     let iosMicPermissionState = readIOSPermissionState();
-    function getIOSMicPermissionLabel(state){
-      switch(state){
-        case 'unknown':
-          return getModString('mic_permission_pending') || 'Allow microphone access before recording';
-        case 'requesting':
-          return getModString('mic_permission_requesting') || 'Waiting for microphone permission...';
-        case 'denied':
-          return getModString('mic_permission_denied') || 'Microphone access blocked. Check Safari settings.';
-        default:
-          return '';
-      }
-    }
     function updateIOSMicPermissionIndicators(){
       if(!IS_IOS){
         return;
       }
-      const label = getIOSMicPermissionLabel(iosMicPermissionState);
       $$('.micbtn').forEach(btn=>{
         if(!btn){
           return;
         }
-        if(!btn.dataset.micOriginalAria && btn.hasAttribute('aria-label')){
-          btn.dataset.micOriginalAria = btn.getAttribute('aria-label') || '';
-        }
-        if(!btn.dataset.micOriginalTitle && btn.hasAttribute('title')){
-          btn.dataset.micOriginalTitle = btn.getAttribute('title') || '';
-        }
-        if(label){
-          btn.dataset.micPermissionLabel = label;
-          const ariaBase = btn.dataset.micOriginalAria || '';
-          const combinedAria = ariaBase ? `${ariaBase}. ${label}` : label;
-          if(combinedAria){
-            btn.setAttribute('aria-label', combinedAria);
-          }
-          const titleBase = btn.dataset.micOriginalTitle || '';
-          const combinedTitle = titleBase ? `${titleBase}. ${label}` : label;
-          if(combinedTitle){
-            btn.title = combinedTitle;
-          }
-        }else{
-          delete btn.dataset.micPermissionLabel;
-          if(btn.dataset.micOriginalAria){
-            btn.setAttribute('aria-label', btn.dataset.micOriginalAria);
-          }
-          if(Object.prototype.hasOwnProperty.call(btn.dataset, 'micOriginalTitle')){
-            if(btn.dataset.micOriginalTitle){
-              btn.title = btn.dataset.micOriginalTitle;
-            }else{
-              btn.removeAttribute('title');
-            }
-          }
-        }
-        btn.dataset.micPermissionState = iosMicPermissionState;
         btn.classList.toggle('mic-permission-pending', iosMicPermissionState === 'unknown' || iosMicPermissionState === 'requesting');
         btn.classList.toggle('mic-permission-denied', iosMicPermissionState === 'denied');
-        ensureMicPermissionChip(btn, label);
       });
     }
     function setIOSMicPermissionState(state, opts){
@@ -2875,38 +2828,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setIOSMicPermissionState('unknown');
     }
     updateIOSMicPermissionIndicators();
-    function ensureMicPermissionChip(btn, label){
-      if(!btn){
-        return;
-      }
-      let chip = micPermissionChips.get(btn);
-      if(!label){
-        if(chip){
-          chip.hidden = true;
-        }
-        return;
-      }
-      if(!chip){
-        chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'mic-permission-chip';
-        chip.addEventListener('click', e=>{
-          e.preventDefault();
-          e.stopPropagation();
-          requestIOSMicPermission().catch(()=>{});
-        });
-        micPermissionChips.set(btn, chip);
-        const parent = btn.parentElement || btn;
-        if(btn.nextSibling){
-          parent.insertBefore(chip, btn.nextSibling);
-        }else{
-          parent.appendChild(chip);
-        }
-      }
-      chip.hidden = false;
-      chip.dataset.state = iosMicPermissionState;
-      chip.textContent = label;
-    }
     async function requestIOSMicPermission(){
       if(!IS_IOS){
         return;
@@ -5903,13 +5824,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         holdActive = true;
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
-        // Add 0.5-second delay before starting recording to prevent accidental permission requests
-        holdTimeout = setTimeout(() => {
-          const startPromise = startRecording();
-          if(startPromise && typeof startPromise.then === 'function'){
-            startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
-          }
-        }, 150);
+        const iosPermissionPending = IS_IOS && iosMicPermissionState !== 'granted';
+        if(iosPermissionPending){
+          markIOSMicPermissionRequesting();
+          requestIOSMicPermission().catch(()=>{});
+        }else{
+          // Short delay (150ms) before starting recording to prevent accidental taps
+          holdTimeout = setTimeout(() => {
+            const startPromise = startRecording();
+            if(startPromise && typeof startPromise.then === 'function'){
+              startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
+            }
+          }, 150);
+        }
         function onceUp(ev){
           if(activePointerToken !== null){
             if(typeof activePointerToken === 'number'){
@@ -6428,14 +6355,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
         ensureStudyAudioContextUnlocked().catch(()=>{});
-
-        // Short delay before recording starts to avoid accidental taps
-        holdTimeout = setTimeout(() => {
-          const startPromise = startStudyRecording();
-          if(startPromise && typeof startPromise.then === 'function'){
-            startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
-          }
-        }, 150);
+        const iosPermissionPending = IS_IOS && iosMicPermissionState !== 'granted';
+        if(iosPermissionPending){
+          markIOSMicPermissionRequesting();
+          requestIOSMicPermission().catch(()=>{});
+        }else{
+          // Short delay (150ms) before recording starts to avoid accidental taps
+          holdTimeout = setTimeout(() => {
+            const startPromise = startStudyRecording();
+            if(startPromise && typeof startPromise.then === 'function'){
+              startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
+            }
+          }, 150);
+        }
 
         function onceUp(ev){
           if(activePointerToken !== null){
