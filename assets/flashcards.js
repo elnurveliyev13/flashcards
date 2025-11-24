@@ -5289,12 +5289,13 @@ function renderComparisonResult(resultEl, comparison){
       const defs = document.createElementNS(svgNS, 'defs');
       const marker = document.createElementNS(svgNS, 'marker');
       marker.setAttribute('id', 'dictation-arrowhead');
+      marker.setAttribute('viewBox', '0 0 12 12');
       marker.setAttribute('markerWidth', '12');
       marker.setAttribute('markerHeight', '12');
-      marker.setAttribute('refX', '10');
+      marker.setAttribute('refX', '12');
       marker.setAttribute('refY', '6');
       marker.setAttribute('orient', 'auto');
-      marker.setAttribute('markerUnits', 'strokeWidth');
+      marker.setAttribute('markerUnits', 'userSpaceOnUse');
       const path = document.createElementNS(svgNS, 'path');
       path.setAttribute('d', 'M0,0 L12,6 L0,12 Z');
       path.setAttribute('fill', '#60a5fa');
