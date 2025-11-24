@@ -5307,11 +5307,10 @@ function renderComparisonResult(resultEl, comparison){
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
 
-        // End: точка В СТРОКЕ между словами (где синяя линия gap-anchor)
+        // End: точка в строке на уровне БАЗОВОЙ ЛИНИИ текста (gap-anchor)
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        // Опускаем конец стрелки НА СЕРЕДИНУ высоты строки, а не наверх
-        const targetLineY = targetRect.top - containerRect.top + targetRect.height * 0.5;
-        const endY = targetLineY;
+        // Опускаем стрелку к НИЖНЕЙ части строки (базовая линия текста)
+        const endY = targetRect.top - containerRect.top + targetRect.height;
 
         // Calculate optimal arc height based on horizontal distance
         const horizontalDist = Math.abs(endX - startX);
@@ -5321,19 +5320,19 @@ function renderComparisonResult(resultEl, comparison){
         const dynamicArcHeight = Math.max(minArcHeight, horizontalDist * 0.3);
         const arcHeight = Math.min(dynamicArcHeight, 90);
 
-        // Control points for smooth curve with steep descent
+        // Control points for smooth curve with steep vertical descent
         // Первая контрольная точка - высокий подъём над текстом
         const controlY1 = startY - arcHeight;
 
-        // Вторая контрольная точка - РЕЗКОЕ ПАДЕНИЕ вниз к строке
-        // Располагаем её гораздо ниже, почти на уровне целевой строки
-        const controlY2 = endY - 10; // Всего 10px над финальной точкой для крутого спуска
+        // Вторая контрольная точка - СТРОГО НАД целевой точкой для ВЕРТИКАЛЬНОГО падения
+        // Размещаем её чуть выше endY для крутого вертикального спуска
+        const controlY2 = endY - 15; // 15px над финалом для вертикального падения
 
         // Horizontal control points
         const controlDist = horizontalDist * 0.45;
         const cx1 = startX + Math.sign(endX - startX) * Math.min(controlDist, horizontalDist * 0.35);
-        // Вторую контрольную точку размещаем ОЧЕНЬ БЛИЗКО к endX для крутого падения
-        const cx2 = endX - Math.sign(endX - startX) * Math.min(20, horizontalDist * 0.1);
+        // Вторую контрольную точку размещаем СТРОГО НАД endX для вертикального падения
+        const cx2 = endX; // Прямо над целевой точкой - стрелка упадёт вертикально
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
