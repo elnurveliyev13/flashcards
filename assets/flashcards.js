@@ -5267,14 +5267,10 @@ function renderComparisonResult(resultEl, comparison){
         inner.classList.add('dictation-token-extra');
       }
 
-      // Colors: user text white, corrections red
+      // Colors: user text always white; corrections are red; strikethrough is red over white text
       inner.classList.add('dictation-token-user');
       if(hasError){
-        const wrong = document.createElement('span');
-        wrong.className = 'dictation-token-wrong-text';
-        wrong.textContent = token.raw;
-        inner.textContent = '';
-        inner.appendChild(wrong);
+        inner.classList.add('dictation-token-wrong-text');
       }
 
       wrapper.appendChild(inner);
