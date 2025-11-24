@@ -1,4 +1,4 @@
-/* global M */
+﻿/* global M */
 import { log as baseDebugLog } from './modules/debug.js';
 import { idbPut, idbGet, urlFor } from './modules/storage.js';
 import { createIOSRecorder } from './modules/recorder.js';
@@ -5143,7 +5143,7 @@ function renderComparisonResult(resultEl, comparison){
             missSpan.dataset.gapAnchor = miss.gapKey;
             const caret = document.createElement('span');
             caret.className = 'dictation-missing-caret';
-            caret.textContent = '^';
+            caret.textContent = '▼';
             const word = document.createElement('span');
             word.className = 'dictation-missing-word';
             word.textContent = miss.token.raw;
@@ -5207,7 +5207,7 @@ function renderComparisonResult(resultEl, comparison){
           word.textContent = miss.token.raw;
           const caret = document.createElement('span');
           caret.className = 'dictation-missing-caret';
-          caret.textContent = '∨';
+          caret.textContent = '▼';
           missSpan.appendChild(word);
           missSpan.appendChild(caret);
           line.appendChild(missSpan);
@@ -5240,34 +5240,37 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     function createTokenSpan(token, meta){
-      const span = document.createElement('span');
-      span.className = 'dictation-token';
+      const wrapper = document.createElement('span');
+      wrapper.className = 'dictation-token';
+
       const hasError = meta && meta.hasError;
       if(hasError){
-        span.classList.add('dictation-token-error');
         const correction = document.createElement('span');
         correction.className = 'dictation-token-correction';
         correction.textContent = meta && meta.match ? meta.match.origToken.raw : '';
-        const wrong = document.createElement('span');
-        wrong.className = 'dictation-token-wrong-text';
-        wrong.textContent = token.raw;
-        span.appendChild(correction);
-        span.appendChild(wrong);
-      } else {
-        span.textContent = token.raw;
+        wrapper.appendChild(correction);
       }
-      if(meta && meta.match){
-        if(meta.inLis){
-          span.classList.add(meta.hasError ? 'dictation-token-warn' : 'dictation-token-ok');
-        }
+
+      const inner = document.createElement('span');
+      inner.className = 'dictation-token-inner';
+      if(hasError){
+        inner.classList.add('dictation-token-wrong-text');
+      }
+      inner.textContent = token.raw;
+
+      // Apply state classes to inner to keep backgrounds on the user row only
+      if(meta && meta.match && meta.inLis){
+        inner.classList.add(hasError ? 'dictation-token-warn' : 'dictation-token-ok');
       }
       if(meta && meta.needsMove){
-        span.classList.add('dictation-token-move');
+        inner.classList.add('dictation-token-move');
       }
       if(!meta || (!meta.match && !meta.hasError && !meta.moveBlockId && !meta.rewriteGroupId)){
-        span.classList.add('dictation-token-extra');
+        inner.classList.add('dictation-token-extra');
       }
-      return span;
+
+      wrapper.appendChild(inner);
+      return wrapper;
     }
 
     function drawDictationArrows(container){
@@ -8524,3 +8527,5 @@ function renderComparisonResult(resultEl, comparison){
 
   }
 export { flashcardsInit };
+
+
