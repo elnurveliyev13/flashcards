@@ -5294,22 +5294,6 @@ function renderComparisonResult(resultEl, comparison){
       svg.setAttribute('height', container.offsetHeight);
       svg.setAttribute('viewBox', `0 0 ${container.offsetWidth} ${container.offsetHeight}`);
       const defs = document.createElementNS(svgNS, 'defs');
-      const marker = document.createElementNS(svgNS, 'marker');
-      marker.setAttribute('id', 'dictation-arrowhead');
-      marker.setAttribute('viewBox', '0 0 8 8');
-      marker.setAttribute('markerWidth', '8');
-      marker.setAttribute('markerHeight', '8');
-      marker.setAttribute('refX', '8'); // tip aligns with path end
-      marker.setAttribute('refY', '4');
-      marker.setAttribute('orient', 'auto');
-      marker.setAttribute('markerUnits', 'strokeWidth');
-      const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L8,4 L0,8 Z');
-      path.setAttribute('fill', '#ef4444');
-      marker.appendChild(path);
-      defs.appendChild(marker);
-      svg.appendChild(defs);
-
       const containerRect = container.getBoundingClientRect();
       blocks.forEach(block=>{
         const gapKey = block.dataset.targetGap;
@@ -5324,13 +5308,49 @@ function renderComparisonResult(resultEl, comparison){
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
         const endY = targetRect.top - containerRect.top + targetRect.height * 0.2;
         const controlY = Math.min(startY, endY) - 28;
+        // Draw single path
         const p = document.createElementNS(svgNS, 'path');
-        p.setAttribute('d', `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`);
+        const d = `M ${startX} ${startY} C ${startX} ${controlY}, ${endX} ${controlY}, ${endX} ${endY}`;
+        p.setAttribute('d', d);
         p.setAttribute('fill', 'none');
         p.setAttribute('stroke', '#ef4444');
         p.setAttribute('stroke-width', '2');
-        p.setAttribute('marker-end', 'url(#dictation-arrowhead)');
         svg.appendChild(p);
+
+        // Arrowhead integrated as polygon using path tangent at end
+        // Approximate tangent near end of cubic for arrowhead direction
+        const t = 0.99;
+        const oneMinusT = 1 - t;
+        const xAt = oneMinusT*oneMinusT*oneMinusT*startX +
+                    3*oneMinusT*oneMinusT*t*startX +
+                    3*oneMinusT*t*t*endX +
+                    t*t*t*endX;
+        const yAt = oneMinusT*oneMinusT*oneMinusT*startY +
+                    3*oneMinusT*oneMinusT*t*controlY +
+                    3*oneMinusT*t*t*controlY +
+                    t*t*t*endY;
+        const dx = endX - xAt;
+        const dy = endY - yAt;
+        const mag = Math.hypot(dx, dy) || 1;
+        const ux = dx / mag;
+        const uy = dy / mag;
+        const len = 12;
+        const w = 5;
+        const tipX = endX;
+        const tipY = endY;
+        const baseX = tipX - ux * len;
+        const baseY = tipY - uy * len;
+        const perpX = -uy;
+        const perpY = ux;
+        const leftX = baseX + perpX * w;
+        const leftY = baseY + perpY * w;
+        const rightX = baseX - perpX * w;
+        const rightY = baseY - perpY * w;
+        const poly = document.createElementNS(svgNS, 'polygon');
+        poly.setAttribute('points', `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`);
+        poly.setAttribute('fill', '#ef4444');
+        poly.setAttribute('stroke', 'none');
+        svg.appendChild(poly);
       });
       container.appendChild(svg);
     }
