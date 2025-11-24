@@ -4941,6 +4941,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!problemBlocks.length){
         return [];
       }
+      // Start with coverage based on sources/targets to include all crossed boundaries
+      let coverUserMin = Infinity;
+      let coverUserMax = -Infinity;
+      problemBlocks.forEach(block=>{
+        const coverStart = Math.min(block.start, block.targetBoundary);
+        const coverEnd = Math.max(block.end, block.targetBoundary - 1);
+        coverUserMin = Math.min(coverUserMin, coverStart);
+        coverUserMax = Math.max(coverUserMax, coverEnd);
+      });
       let origMin = Infinity;
       let origMax = -Infinity;
       problemBlocks.forEach(block=>{
@@ -4952,8 +4961,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!Number.isFinite(origMin) || !Number.isFinite(origMax)){
         return [];
       }
-      let userMin = Infinity;
-      let userMax = -Infinity;
+      let userMin = Number.isFinite(coverUserMin) ? coverUserMin : Infinity;
+      let userMax = Number.isFinite(coverUserMax) ? coverUserMax : -Infinity;
       matches.forEach(m=>{
         if(m.origIndex >= origMin && m.origIndex <= origMax){
           userMin = Math.min(userMin, m.userIndex);
