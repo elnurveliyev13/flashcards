@@ -3882,6 +3882,7 @@ select.inline-prompt-field {
   font-weight: 700;
   line-height: 1.2;
   display: block;
+  margin-bottom: 2px;
 }
 .dictation-token-wrong-text {
   color: #ef4444;
@@ -3955,6 +3956,9 @@ select.inline-prompt-field {
   gap: 2px;
   color: #f59e0b;
   font-weight: 700;
+  vertical-align: top;
+  position: relative;
+  top: -4px;
 }
 
 .dictation-missing-word {

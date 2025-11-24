@@ -5289,14 +5289,14 @@ function renderComparisonResult(resultEl, comparison){
       const defs = document.createElementNS(svgNS, 'defs');
       const marker = document.createElementNS(svgNS, 'marker');
       marker.setAttribute('id', 'dictation-arrowhead');
-      marker.setAttribute('markerWidth', '8');
-      marker.setAttribute('markerHeight', '8');
+      marker.setAttribute('markerWidth', '10');
+      marker.setAttribute('markerHeight', '10');
       marker.setAttribute('refX', '8');
-      marker.setAttribute('refY', '4');
+      marker.setAttribute('refY', '5');
       marker.setAttribute('orient', 'auto');
       marker.setAttribute('markerUnits', 'strokeWidth');
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L8,4 L0,8 Z');
+      path.setAttribute('d', 'M0,0 L10,5 L0,10 Z');
       path.setAttribute('fill', '#60a5fa');
       marker.appendChild(path);
       defs.appendChild(marker);
