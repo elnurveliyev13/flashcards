@@ -2348,7 +2348,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!item) return null;
       const payload = item.payload || {};
       const frontAudio = payload.audioFront || payload.audio || null;
-      const orderFromServer = Array.isArray(payload.order) ? payload.order : [];
+      // null means "not set" (use auto-build), [] or ["audio"] means "explicitly chosen"
+      const orderFromServer = Array.isArray(payload.order) ? payload.order : null;
       return {
         id: item.cardId,
         text: payload.text || payload.front || "",
@@ -4080,7 +4081,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
 
-      if(!Array.isArray(c.order)||!c.order.length){
+      // Auto-build order ONLY if order was never explicitly set (null/undefined)
+      // Empty array [] means user explicitly chose no layers (valid choice)
+      if(!Array.isArray(c.order)){
         c.order=[];
         // Order: word audio first, then transcription, then sentence audio, then text, then translation
         if(c.focusAudio||c.focusAudioKey) c.order.push("audio_text");
