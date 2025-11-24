@@ -5242,13 +5242,19 @@ function renderComparisonResult(resultEl, comparison){
     function createTokenSpan(token, meta){
       const span = document.createElement('span');
       span.className = 'dictation-token';
-      span.textContent = token.raw;
-      if(meta && meta.hasError){
+      const hasError = meta && meta.hasError;
+      if(hasError){
         span.classList.add('dictation-token-error');
-        const fix = document.createElement('span');
-        fix.className = 'dictation-token-correction';
-        fix.textContent = meta.match ? meta.match.origToken.raw : '';
-        span.appendChild(fix);
+        const correction = document.createElement('span');
+        correction.className = 'dictation-token-correction';
+        correction.textContent = meta && meta.match ? meta.match.origToken.raw : '';
+        const wrong = document.createElement('span');
+        wrong.className = 'dictation-token-wrong-text';
+        wrong.textContent = token.raw;
+        span.appendChild(correction);
+        span.appendChild(wrong);
+      } else {
+        span.textContent = token.raw;
       }
       if(meta && meta.match){
         if(meta.inLis){
@@ -5283,13 +5289,14 @@ function renderComparisonResult(resultEl, comparison){
       const defs = document.createElementNS(svgNS, 'defs');
       const marker = document.createElementNS(svgNS, 'marker');
       marker.setAttribute('id', 'dictation-arrowhead');
-      marker.setAttribute('markerWidth', '10');
-      marker.setAttribute('markerHeight', '7');
-      marker.setAttribute('refX', '10');
-      marker.setAttribute('refY', '3.5');
+      marker.setAttribute('markerWidth', '8');
+      marker.setAttribute('markerHeight', '8');
+      marker.setAttribute('refX', '8');
+      marker.setAttribute('refY', '4');
       marker.setAttribute('orient', 'auto');
+      marker.setAttribute('markerUnits', 'strokeWidth');
       const path = document.createElementNS(svgNS, 'path');
-      path.setAttribute('d', 'M0,0 L10,3.5 L0,7 Z');
+      path.setAttribute('d', 'M0,0 L8,4 L0,8 Z');
       path.setAttribute('fill', '#60a5fa');
       marker.appendChild(path);
       defs.appendChild(marker);

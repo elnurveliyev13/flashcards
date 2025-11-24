@@ -3873,18 +3873,20 @@ select.inline-prompt-field {
 }
 
 .dictation-token-error {
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.15);
-  text-decoration: line-through;
+  color: inherit;
+  background: transparent;
+  text-decoration: none;
 }
-
 .dictation-token-correction {
-  position: absolute;
-  top: -0.95em;
-  left: 0;
-  font-size: 0.75rem;
+  color: #22c55e;
   font-weight: 700;
+  line-height: 1.2;
+  display: block;
+}
+.dictation-token-wrong-text {
   color: #ef4444;
+  text-decoration: line-through;
+  display: block;
 }
 
 .dictation-token-move {
@@ -3901,11 +3903,18 @@ select.inline-prompt-field {
 .dictation-move-block {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 6px 8px;
+  gap: 0.35rem;
+  padding: 8px 10px;
   border-radius: 10px;
-  border: 1px dashed #60a5fa;
-  background: rgba(96, 165, 250, 0.08);
+  border: 2px dashed rgba(96, 165, 250, 0.7);
+  background: rgba(96, 165, 250, 0.1);
+}
+.dictation-move-block .dictation-token-move {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 0;
+  margin: 0 2px;
 }
 
 .dictation-rewrite-block {
@@ -3927,10 +3936,21 @@ select.inline-prompt-field {
   color: #22c55e;
   font-weight: 700;
 }
+.dictation-token-correction {
+  color: #22c55e;
+  font-weight: 700;
+  line-height: 1.2;
+  display: block;
+}
+.dictation-token-wrong-text {
+  color: #ef4444;
+  text-decoration: line-through;
+  display: block;
+}
 
 .dictation-missing-token {
   display: inline-flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   align-items: center;
   gap: 2px;
   color: #f59e0b;
