@@ -4323,6 +4323,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           lisSet.add(m.id);
         }
       });
+      console.log('[DEBUG] Anchors found:', anchorMatches.length, 'LIS size after anchors:', lisSet.size);
+      console.log('[DEBUG] Matches in LIS:', matches.filter(m => lisSet.has(m.id)).map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex})`));
+      console.log('[DEBUG] Matches NOT in LIS:', matches.filter(m => !lisSet.has(m.id)).map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex}, score=${m.score.toFixed(2)})`));
       // Fallback to LIS if anchors are insufficient
       if(!lisSet.size){
         const lisIndices = computeLisWithTies(matches);
