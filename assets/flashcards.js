@@ -4314,23 +4314,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
-      const anchorMatches = monotoneAlignment(userTokens, originalTokens);
-      const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
-      let lisSet = new Set();
-      matches.forEach(m=>{
-        if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
-          lisSet.add(m.id);
-        }
-      });
-      console.log('[DEBUG] Anchors found:', anchorMatches.length, 'LIS size after anchors:', lisSet.size);
-      console.log('[DEBUG] Matches in LIS:', matches.filter(m => lisSet.has(m.id)).map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex})`));
-      console.log('[DEBUG] Matches NOT in LIS:', matches.filter(m => !lisSet.has(m.id)).map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex}, score=${m.score.toFixed(2)})`));
-      // Fallback to LIS if anchors are insufficient
-      if(!lisSet.size){
-        const lisIndices = computeLisWithTies(matches);
-        lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
-      }
+      // Compute LIS directly from matches (by origIndex order)
+      const lisIndices = computeLisWithTies(matches);
+      const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
 
       const movePlan = buildMovePlan({
         matches,
