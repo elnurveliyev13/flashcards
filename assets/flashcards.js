@@ -4905,12 +4905,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Filter out blocks that don't actually need to move
       // A block doesn't need to move if it's already in the target position
-      return blocks.filter(block => {
+      const filtered = blocks.filter(block => {
         // Check if the block is already in the correct position
         // Block is at correct position if targetBoundary is between start and end+1
         const alreadyInPlace = block.targetBoundary >= block.start && block.targetBoundary <= block.end + 1;
+        if(alreadyInPlace){
+          console.log('[DEBUG] Filtering out block:', block.id, 'tokens:', block.tokens, 'targetBoundary:', block.targetBoundary, 'start:', block.start, 'end:', block.end);
+        }
         return !alreadyInPlace;
       });
+      console.log('[DEBUG] Blocks before filter:', blocks.length, 'after filter:', filtered.length);
+      return filtered;
     }
 
     function collectCrossedBoundaries(block){
