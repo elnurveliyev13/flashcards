@@ -4725,6 +4725,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const lisOrigToUser = new Map();
       lisMatches.forEach(m=> lisOrigToUser.set(m.origIndex, m.userIndex));
 
+      // Create a map of ALL matched words (not just LIS) for better gap calculation
+      const allOrigToUser = new Map();
+      orderedMatches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
+
       const findNeighbors = (value)=>{
         let prev = -1;
         let next = null;
@@ -4746,8 +4750,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const inLis = lisSet.has(m.id);
         const { prev, next } = findNeighbors(m.origIndex);
         const gapKey = buildGapKey(prev, next);
-        const beforeUser = prev !== -1 && lisOrigToUser.has(prev) ? lisOrigToUser.get(prev) : -1;
-        const afterUser = next !== null && lisOrigToUser.has(next) ? lisOrigToUser.get(next) : userTokens.length;
+
+        // Use LIS for anchor positions, but fall back to ALL matches if LIS neighbor is missing
+        let beforeUser = -1;
+        let afterUser = userTokens.length;
+
+        if(prev !== -1){
+          if(lisOrigToUser.has(prev)){
+            beforeUser = lisOrigToUser.get(prev);
+          } else if(allOrigToUser.has(prev)){
+            beforeUser = allOrigToUser.get(prev);
+          }
+        }
+
+        if(next !== null){
+          if(lisOrigToUser.has(next)){
+            afterUser = lisOrigToUser.get(next);
+          } else if(allOrigToUser.has(next)){
+            afterUser = allOrigToUser.get(next);
+          }
+        }
+
         gapMeta[gapKey] = gapMeta[gapKey] || {
           before: prev,
           after: next,

@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Word Order Fix</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-case {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-case h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .answer {
+            padding: 10px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-left: 3px solid #4CAF50;
+        }
+        .user-answer {
+            border-left-color: #2196F3;
+        }
+        .correct-answer {
+            border-left-color: #4CAF50;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test: Word Order Fix для Missing Words</h1>
+
+    <div class="test-case">
+        <h3>Test Case 1: så с ошибкой + missing word "ikke"</h3>
+        <div class="answer correct-answer">
+            <strong>Правильный ответ:</strong><br>
+            Det er egentlig ikke så vanskelig .
+        </div>
+        <div class="answer user-answer">
+            <strong>Ваш ответ:</strong><br>
+            Det er egentlig <strong style="color: red;">så</strong> vanskelig .
+            <br><small>(пропущено "ikke", "så" написано с ошибкой)</small>
+        </div>
+        <div class="result" id="result1">
+            <strong>Результат:</strong> Загрузка...
+        </div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 2: så правильно + missing word "ikke"</h3>
+        <div class="answer correct-answer">
+            <strong>Правильный ответ:</strong><br>
+            Det er egentlig ikke så vanskelig .
+        </div>
+        <div class="answer user-answer">
+            <strong>Ваш ответ:</strong><br>
+            Det er egentlig så vanskelig .
+            <br><small>(пропущено "ikke", "så" написано правильно)</small>
+        </div>
+        <div class="result" id="result2">
+            <strong>Результат:</strong> Загрузка...
+        </div>
+    </div>
+
+    <script type="module">
+        // Simplified version of the comparison logic for testing
+
+        const MIN_SIMILARITY_SCORE = 0.35;
+        const STEM_SIMILARITY_SCORE = 0.85;
+        const STRONG_ANCHOR_SCORE = 5;
+        const PUNCT_MATCH_SCORE = 0.8;
+        const PUNCT_MISMATCH_SCORE = 0.2;
+        const TYPE_MISMATCH_SCORE = 0.05;
+
+        function tokenizeText(text){
+            const tokens = [];
+            if(!text) return tokens;
+            const pattern = /[\p{L}\p{M}]+|\d+|[^\s\p{L}\p{M}\d]/gu;
+            let match;
+            let idx = 0;
+            while((match = pattern.exec(text)) !== null){
+                const raw = match[0];
+                tokens.push({
+                    raw,
+                    norm: raw.toLowerCase(),
+                    type: /^[\p{L}\p{M}\d]+$/u.test(raw) ? 'word' : 'punct',
+                    index: idx++
+                });
+            }
+            return tokens;
+        }
+
+        function levenshtein(a,b){
+            if(a === b) return 0;
+            if(!a.length) return b.length;
+            if(!b.length) return a.length;
+            const dp = Array.from({length: a.length + 1}, (_, i) => i);
+            for(let j = 1; j <= b.length; j++){
+                let prev = j - 1;
+                dp[0] = j;
+                for(let i = 1; i <= a.length; i++){
+                    const temp = dp[i];
+                    if(a[i-1] === b[j-1]){
+                        dp[i] = prev;
+                    } else {
+                        dp[i] = 1 + Math.min(prev, dp[i-1], dp[i]);
+                    }
+                    prev = temp;
+                }
+            }
+            return dp[a.length];
+        }
+
+        function simpleStem(value){
+            if(!value) return '';
+            const normalized = value.toLowerCase().replace(/^[^\p{L}\p{M}]+|[^\p{L}\p{M}]+$/gu, '');
+            return normalized.replace(/(ene|ane|het|ers|ene|er|en|et|e)$/u, '');
+        }
+
+        function tokenSimilarity(a, b){
+            if(!a || !b) return 0;
+            if(a.type !== b.type) return TYPE_MISMATCH_SCORE;
+            if(a.type === 'punct'){
+                return a.raw === b.raw ? PUNCT_MATCH_SCORE : PUNCT_MISMATCH_SCORE;
+            }
+            if(a.norm === b.norm) return STRONG_ANCHOR_SCORE;
+            const stemA = simpleStem(a.norm);
+            const stemB = simpleStem(b.norm);
+            if(stemA && stemA === stemB) return STEM_SIMILARITY_SCORE;
+            const distance = levenshtein(a.norm, b.norm);
+            const maxLen = Math.max(a.norm.length, b.norm.length) || 1;
+            const closeness = Math.max(0, 1 - (distance / maxLen));
+            if(closeness >= 0.8) return 0.6 + (closeness * 0.2);
+            if(closeness >= 0.6) return 0.5 + (closeness * 0.1);
+            return closeness * 0.5;
+        }
+
+        function testCase(userText, correctText, resultId){
+            const userTokens = tokenizeText(userText);
+            const correctTokens = tokenizeText(correctText);
+
+            console.log(`\n=== ${resultId} ===`);
+            console.log('User tokens:', userTokens.map(t => t.raw));
+            console.log('Correct tokens:', correctTokens.map(t => t.raw));
+
+            // Build similarity matrix and find matches
+            const matches = [];
+            const matchedUser = new Set();
+            const matchedOrig = new Set();
+
+            // Simple greedy matching for testing
+            for(let i = 0; i < userTokens.length; i++){
+                let bestJ = -1;
+                let bestScore = MIN_SIMILARITY_SCORE;
+                for(let j = 0; j < correctTokens.length; j++){
+                    if(matchedOrig.has(j)) continue;
+                    const score = tokenSimilarity(userTokens[i], correctTokens[j]);
+                    if(score > bestScore){
+                        bestScore = score;
+                        bestJ = j;
+                    }
+                }
+                if(bestJ !== -1){
+                    matches.push({
+                        id: matches.length,
+                        userIndex: i,
+                        origIndex: bestJ,
+                        userToken: userTokens[i],
+                        origToken: correctTokens[bestJ],
+                        score: bestScore
+                    });
+                    matchedUser.add(i);
+                    matchedOrig.add(bestJ);
+                }
+            }
+
+            console.log('Matches:', matches.map(m =>
+                `${m.userToken.raw}(u${m.userIndex}) -> ${m.origToken.raw}(o${m.origIndex}) [score: ${m.score.toFixed(2)}]`
+            ));
+
+            // Find missing words
+            const missing = [];
+            for(let j = 0; j < correctTokens.length; j++){
+                if(!matchedOrig.has(j)){
+                    missing.push({
+                        origIndex: j,
+                        token: correctTokens[j]
+                    });
+                }
+            }
+
+            console.log('Missing:', missing.map(m => `${m.token.raw}(o${m.origIndex})`));
+
+            // Build LIS
+            const lisSet = new Set();
+            matches.forEach(m => {
+                // Simple: if in order, add to LIS
+                let isInOrder = true;
+                matches.forEach(other => {
+                    if(other.userIndex < m.userIndex && other.origIndex > m.origIndex){
+                        isInOrder = false;
+                    }
+                    if(other.userIndex > m.userIndex && other.origIndex < m.origIndex){
+                        isInOrder = false;
+                    }
+                });
+                if(isInOrder) lisSet.add(m.id);
+            });
+
+            console.log('LIS:', [...lisSet].map(id => matches.find(m => m.id === id)?.userToken.raw));
+
+            // OLD WAY: only use LIS for gap calculation
+            const lisOrigToUser = new Map();
+            matches.filter(m => lisSet.has(m.id)).forEach(m =>
+                lisOrigToUser.set(m.origIndex, m.userIndex)
+            );
+
+            // NEW WAY: use ALL matches
+            const allOrigToUser = new Map();
+            matches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
+
+            console.log('lisOrigToUser:', [...lisOrigToUser.entries()]);
+            console.log('allOrigToUser:', [...allOrigToUser.entries()]);
+
+            // Test missing word "ikke" (should be at origIndex 3)
+            const ikkeMissing = missing.find(m => m.token.raw === 'ikke');
+            if(ikkeMissing){
+                console.log('\nAnalyzing missing word "ikke":');
+
+                // Find neighbors in correct answer
+                let prevOrig = -1, nextOrig = null;
+                for(let j = 0; j < ikkeMissing.origIndex; j++){
+                    if(matchedOrig.has(j)) prevOrig = j;
+                }
+                for(let j = ikkeMissing.origIndex + 1; j < correctTokens.length; j++){
+                    if(matchedOrig.has(j)){
+                        nextOrig = j;
+                        break;
+                    }
+                }
+
+                console.log(`Neighbors in correct: prev=${prevOrig} (${correctTokens[prevOrig]?.raw}), next=${nextOrig} (${correctTokens[nextOrig]?.raw})`);
+
+                // OLD WAY
+                const beforeUserOld = prevOrig !== -1 && lisOrigToUser.has(prevOrig) ?
+                    lisOrigToUser.get(prevOrig) : -1;
+                const afterUserOld = nextOrig !== null && lisOrigToUser.has(nextOrig) ?
+                    lisOrigToUser.get(nextOrig) : userTokens.length;
+
+                console.log(`OLD WAY: beforeUser=${beforeUserOld}, afterUser=${afterUserOld}`);
+                console.log(`  -> Should insert between user positions ${beforeUserOld} and ${afterUserOld}`);
+                if(beforeUserOld !== -1){
+                    console.log(`  -> After word: "${userTokens[beforeUserOld]?.raw}"`);
+                }
+                if(afterUserOld < userTokens.length){
+                    console.log(`  -> Before word: "${userTokens[afterUserOld]?.raw}"`);
+                }
+
+                // NEW WAY
+                let beforeUserNew = -1, afterUserNew = userTokens.length;
+                if(prevOrig !== -1){
+                    if(lisOrigToUser.has(prevOrig)){
+                        beforeUserNew = lisOrigToUser.get(prevOrig);
+                    } else if(allOrigToUser.has(prevOrig)){
+                        beforeUserNew = allOrigToUser.get(prevOrig);
+                    }
+                }
+                if(nextOrig !== null){
+                    if(lisOrigToUser.has(nextOrig)){
+                        afterUserNew = lisOrigToUser.get(nextOrig);
+                    } else if(allOrigToUser.has(nextOrig)){
+                        afterUserNew = allOrigToUser.get(nextOrig);
+                    }
+                }
+
+                console.log(`NEW WAY: beforeUser=${beforeUserNew}, afterUser=${afterUserNew}`);
+                console.log(`  -> Should insert between user positions ${beforeUserNew} and ${afterUserNew}`);
+                if(beforeUserNew !== -1){
+                    console.log(`  -> After word: "${userTokens[beforeUserNew]?.raw}"`);
+                }
+                if(afterUserNew < userTokens.length){
+                    console.log(`  -> Before word: "${userTokens[afterUserNew]?.raw}"`);
+                }
+            }
+
+            // Display result
+            const resultEl = document.getElementById(resultId);
+            resultEl.innerHTML = `
+                <strong>Результат:</strong><br>
+                <code>Matches: ${matches.length}</code><br>
+                <code>Missing: ${missing.map(m => m.token.raw).join(', ')}</code><br>
+                <code>LIS: ${[...lisSet].map(id => matches.find(m => m.id === id)?.userToken.raw).join(', ')}</code><br>
+                <br>
+                ${ikkeMissing ? `
+                    <strong>Missing word "ikke" должно быть вставлено:</strong><br>
+                    OLD: между позициями пользователя (проверьте консоль)<br>
+                    NEW: между позициями пользователя (проверьте консоль)<br>
+                    <br>
+                    <em>Смотрите детали в консоли браузера (F12)</em>
+                ` : ''}
+            `;
+        }
+
+        // Run tests
+        testCase(
+            'Det er egentlig så vanskelig .',
+            'Det er egentlig ikke så vanskelig .',
+            'result1'
+        );
+
+        testCase(
+            'Det er egentlig så vanskelig .',
+            'Det er egentlig ikke så vanskelig .',
+            'result2'
+        );
+    </script>
+</body>
+</html>
