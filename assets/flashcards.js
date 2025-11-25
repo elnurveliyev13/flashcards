@@ -5183,6 +5183,14 @@ function renderComparisonResult(resultEl, comparison){
         }
         if(metaInfo.moveBlockId){
           const block = comparison.movePlan.moveBlocks.find(b=>b.id === metaInfo.moveBlockId);
+          // Skip if block was filtered out (doesn't actually need to move)
+          if(!block){
+            const span = createTokenSpan(token, metaInfo);
+            line.appendChild(span);
+            idx++;
+            insertAnchors(idx);
+            continue;
+          }
           const blockEl = document.createElement('span');
           blockEl.className = 'dictation-move-block';
           blockEl.dataset.targetGap = metaInfo.targetGapKey;
