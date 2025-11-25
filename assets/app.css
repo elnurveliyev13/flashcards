@@ -1432,7 +1432,7 @@ audio{max-width:260px}
 .slot{
   --slot-horizontal-gutter: 0.75rem;
   margin: var(--space-2) 0;
-  padding: 0 var(--slot-horizontal-gutter);
+  padding: 0;
   box-sizing: border-box;
 }
 .slot .tag{
