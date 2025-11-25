@@ -4915,10 +4915,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
 
       // Filter out blocks where word is already in correct position
-      return blocks.filter(block => {
+      console.log(`[buildMoveBlocks] Total blocks before filter: ${blocks.length}`);
+      const filtered = blocks.filter(block => {
         const alreadyInPlace = block.targetBoundary >= block.start && block.targetBoundary <= block.end + 1;
+        console.log(`  Block ${block.id}: start=${block.start}, end=${block.end}, targetBoundary=${block.targetBoundary}, alreadyInPlace=${alreadyInPlace}, tokens=${JSON.stringify(block.tokens)}`);
         return !alreadyInPlace;
       });
+      console.log(`[buildMoveBlocks] Blocks after filter: ${filtered.length}`);
+      return filtered;
     }
 
     function collectCrossedBoundaries(block){
