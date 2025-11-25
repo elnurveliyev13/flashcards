@@ -2615,36 +2615,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function updateRatingActionHints(rec){
       const mappings = [
-        {id:'btnEasyHint', mode:'easy', key:'btnEasyHint'},
-        {id:'btnNormalHint', mode:'normal', key:'btnNormalHint'},
-        {id:'btnHardHint', mode:'hard', key:'btnHardHint'}
+        {id:'btnEasyHint', mode:'easy'},
+        {id:'btnNormalHint', mode:'normal'},
+        {id:'btnHardHint', mode:'hard'}
       ];
       mappings.forEach(cfg=>{
         const target = document.getElementById(cfg.id);
         if(!target) return;
-        const translation = t(cfg.key);
         if(!rec){
-          if(translation && translation !== cfg.key){
-            target.textContent = translation;
-          }else{
-            target.textContent = '';
-          }
-          target.removeAttribute('title');
+          target.textContent='';
           return;
         }
         const days = ratingIntervalDays(rec.step || 0, cfg.mode);
-        const intervalLabel = formatIntervalDaysLabel(days);
-        if(translation && translation !== cfg.key){
-          target.textContent = translation;
-          if(intervalLabel){
-            target.setAttribute('title', intervalLabel);
-          }else{
-            target.removeAttribute('title');
-          }
-        }else{
-          target.textContent = intervalLabel;
-          target.removeAttribute('title');
-        }
+        target.textContent = formatIntervalDaysLabel(days);
       });
     }
 
@@ -8605,7 +8588,6 @@ function renderComparisonResult(resultEl, comparison){
 
   }
 export { flashcardsInit };
-
 
 
 
