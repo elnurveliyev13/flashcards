@@ -4314,16 +4314,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      // Use LIS directly - words with spelling errors should still be in correct order
-      console.log(`[compareTexts] Computing LIS from matches`);
-      const lisIndices = computeLisWithTies(matches);
-      const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
-      matches.forEach(m => {
-        if(lisSet.has(m.id)){
-          console.log(`[compareTexts] In LIS: ${m.userToken.raw} (userIdx=${m.userIndex}, origIdx=${m.origIndex}, score=${m.score.toFixed(2)})`);
-        }
-      });
-      console.log(`[compareTexts] Final LIS size: ${lisSet.size}`);
+      const anchors = monotoneAlignment(matches);
+      const anchorMatchIds = new Set(anchors.map(a => matches[a].id));
+      const lisIndices = computeLisWithTies(anchors.map(idx => matches[idx]));
+      const lisSet = new Set(lisIndices.map(idx => matches[anchors[idx]]?.id).filter(Boolean));
 
       const movePlan = buildMovePlan({
         matches,
@@ -4910,9 +4904,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         blocks.push(current);
       }
 
-      // DON'T filter - rewrite mode needs all blocks for boundary calculations
-      // The real issue is in how targetBoundary is calculated, not in filtering
-      return blocks;
+      // Filter out blocks that don't actually need to move
+      // A block doesn't need to move if it's already in the target position
+      return blocks.filter(block => {
+        // Check if the block is already in the correct position
+        // Block is at correct position if targetBoundary is between start and end+1
+        const alreadyInPlace = block.targetBoundary >= block.start && block.targetBoundary <= block.end + 1;
+        return !alreadyInPlace;
+      });
     }
 
     function collectCrossedBoundaries(block){
