@@ -4795,14 +4795,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         metaByUser
       }) : [];
 
+      // Create a set of token indices that are in moveBlocks
+      const tokensInMoveBlocks = new Set();
       moveBlocks.forEach(block=>{
         if(block.resolvedByRewrite) return;
         block.tokens.forEach(idx=>{
+          tokensInMoveBlocks.add(idx);
           if(!metaByUser[idx]) metaByUser[idx] = {};
           metaByUser[idx].moveBlockId = block.id;
           metaByUser[idx].targetGapKey = block.targetGapKey;
           metaByUser[idx].targetGap = block.targetGap;
         });
+      });
+
+      // Clear needsMove for tokens that were filtered out (not in any move block)
+      metaByUser.forEach((meta, idx) => {
+        if(meta && meta.needsMove && !tokensInMoveBlocks.has(idx)){
+          meta.needsMove = false;
+        }
       });
 
       const gapsNeeded = new Set();
