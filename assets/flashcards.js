@@ -1370,6 +1370,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         one_per_line_placeholder: '_ _ _',
       }
     };
+    let currentInterfaceLang = null;
 
     // Get interface string in current interface language
     
@@ -1482,7 +1483,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let userLang2 = userLang.split(/[\-_]/)[0] || fallbackLang;
 
     // Initialize interface language (use saved interface lang or fallback to computed language)
-    let currentInterfaceLang = savedInterfaceLang || userLang2;
+    currentInterfaceLang = savedInterfaceLang || userLang2;
 
     const voiceSelectEl = document.getElementById('ttsVoice');
     const voiceSlotEl = document.getElementById('slot_ttsVoice');
@@ -2593,8 +2594,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const pluralRulesCache = {};
     function getInterfaceLanguage(){
       const html = document.documentElement || null;
-      const langAttr = (html && (html.lang || (html.getAttribute ? html.getAttribute('lang') : ''))) || '';
-      const normalized = langAttr.trim().toLowerCase();
+      const attrLang = (html && (html.lang || (html.getAttribute ? html.getAttribute('lang') : ''))) || '';
+      const preferred = currentInterfaceLang || attrLang;
+      const normalized = (preferred || attrLang || '').trim().toLowerCase();
       const base = normalized.split('-')[0] || 'en';
       return {base, locale: normalized || base || 'en'};
     }
@@ -4911,7 +4913,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(current){
         blocks.push(current);
       }
-      return blocks;
+
+      // Filter out blocks where word is already in correct position
+      return blocks.filter(block => {
+        const alreadyInPlace = block.targetBoundary >= block.start && block.targetBoundary <= block.end + 1;
+        return !alreadyInPlace;
+      });
     }
 
     function collectCrossedBoundaries(block){
@@ -8588,6 +8595,4 @@ function renderComparisonResult(resultEl, comparison){
 
   }
 export { flashcardsInit };
-
-
 
