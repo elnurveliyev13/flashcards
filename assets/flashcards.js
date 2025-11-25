@@ -4317,17 +4317,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
       const anchorMatches = monotoneAlignment(userTokens, originalTokens);
       const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
+      console.log(`[compareTexts] Anchor pairs from monotoneAlignment:`, Array.from(anchorPairs));
       let lisSet = new Set();
       matches.forEach(m=>{
         if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
           lisSet.add(m.id);
+          console.log(`[compareTexts] Added to LIS via anchors: ${m.userToken.raw} (userIdx=${m.userIndex}, origIdx=${m.origIndex})`);
         }
       });
       // Fallback to LIS if anchors are insufficient
       if(!lisSet.size){
+        console.log(`[compareTexts] No anchors found, falling back to LIS`);
         const lisIndices = computeLisWithTies(matches);
         lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
       }
+      console.log(`[compareTexts] Final LIS size: ${lisSet.size}`);
 
       const movePlan = buildMovePlan({
         matches,
@@ -4914,15 +4918,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         blocks.push(current);
       }
 
-      // Filter out blocks where word is already in correct position
-      console.log(`[buildMoveBlocks] Total blocks before filter: ${blocks.length}`);
-      const filtered = blocks.filter(block => {
-        const alreadyInPlace = block.targetBoundary >= block.start && block.targetBoundary <= block.end + 1;
-        console.log(`  Block ${block.id}: start=${block.start}, end=${block.end}, targetBoundary=${block.targetBoundary}, alreadyInPlace=${alreadyInPlace}, tokens=${JSON.stringify(block.tokens)}`);
-        return !alreadyInPlace;
-      });
-      console.log(`[buildMoveBlocks] Blocks after filter: ${filtered.length}`);
-      return filtered;
+      // DON'T filter - rewrite mode needs all blocks for boundary calculations
+      // The real issue is in how targetBoundary is calculated, not in filtering
+      return blocks;
     }
 
     function collectCrossedBoundaries(block){
