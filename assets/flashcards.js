@@ -4314,23 +4314,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
-      const anchorMatches = monotoneAlignment(userTokens, originalTokens);
-      const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
-      console.log(`[compareTexts] Anchor pairs from monotoneAlignment:`, Array.from(anchorPairs));
-      let lisSet = new Set();
-      matches.forEach(m=>{
-        if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
-          lisSet.add(m.id);
-          console.log(`[compareTexts] Added to LIS via anchors: ${m.userToken.raw} (userIdx=${m.userIndex}, origIdx=${m.origIndex})`);
+      // Use LIS directly - words with spelling errors should still be in correct order
+      console.log(`[compareTexts] Computing LIS from matches`);
+      const lisIndices = computeLisWithTies(matches);
+      const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
+      matches.forEach(m => {
+        if(lisSet.has(m.id)){
+          console.log(`[compareTexts] In LIS: ${m.userToken.raw} (userIdx=${m.userIndex}, origIdx=${m.origIndex}, score=${m.score.toFixed(2)})`);
         }
       });
-      // Fallback to LIS if anchors are insufficient
-      if(!lisSet.size){
-        console.log(`[compareTexts] No anchors found, falling back to LIS`);
-        const lisIndices = computeLisWithTies(matches);
-        lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
-      }
       console.log(`[compareTexts] Final LIS size: ${lisSet.size}`);
 
       const movePlan = buildMovePlan({
