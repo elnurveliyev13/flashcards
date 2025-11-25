@@ -4314,7 +4314,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      const anchors = monotoneAlignment(matches);
+      const anchors = monotoneAlignment(userTokens, originalTokens);
       const anchorMatchIds = new Set(anchors.map(a => matches[a].id));
       const lisIndices = computeLisWithTies(anchors.map(idx => matches[idx]));
       const lisSet = new Set(lisIndices.map(idx => matches[anchors[idx]]?.id).filter(Boolean));
