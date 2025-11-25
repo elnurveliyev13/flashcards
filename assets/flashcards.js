@@ -4314,10 +4314,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         .map((token, index) => matchedOrig.has(index) ? null : { origIndex: index, token })
         .filter(Boolean);
 
-      const anchors = monotoneAlignment(userTokens, originalTokens);
-      const anchorMatchIds = new Set(anchors.map(a => matches[a].id));
-      const lisIndices = computeLisWithTies(anchors.map(idx => matches[idx]));
-      const lisSet = new Set(lisIndices.map(idx => matches[anchors[idx]]?.id).filter(Boolean));
+      // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
+      const anchorMatches = monotoneAlignment(userTokens, originalTokens);
+      const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
+      const anchorMatchIds = new Set();
+      matches.forEach(m=>{
+        if(anchorPairs.has(`${m.userIndex}-${m.origIndex}`)){
+          anchorMatchIds.add(m.id);
+        }
+      });
+      const anchors = matches.filter(m => anchorMatchIds.has(m.id));
+      const lisIndices = computeLisWithTies(anchors);
+      const lisSet = new Set(lisIndices.map(idx => anchors[idx]?.id).filter(Boolean));
 
       const movePlan = buildMovePlan({
         matches,
