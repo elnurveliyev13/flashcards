@@ -4316,6 +4316,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // Monotone anchors (Needleman–Wunsch) to enforce non-crossing base
       const anchorMatches = monotoneAlignment(userTokens, originalTokens);
+      console.log('[DEBUG] anchorMatches from monotoneAlignment:', anchorMatches.map(p => `u${p.userIndex}→o${p.origIndex}`));
+
       const anchorPairs = new Set(anchorMatches.map(p => `${p.userIndex}-${p.origIndex}`));
       const anchorMatchIds = new Set();
       matches.forEach(m=>{
@@ -4324,6 +4326,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
       const anchors = matches.filter(m => anchorMatchIds.has(m.id));
+      console.log('[DEBUG] anchors (filtered matches):', anchors.map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex})`));
+
       const lisIndices = computeLisWithTies(anchors);
       const lisSet = new Set(lisIndices.map(idx => anchors[idx]?.id).filter(Boolean));
 
