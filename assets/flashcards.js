@@ -4327,6 +4327,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const lisIndices = computeLisWithTies(anchors);
       const lisSet = new Set(lisIndices.map(idx => anchors[idx]?.id).filter(Boolean));
 
+      console.log('[DEBUG] All matches:', matches.map(m => `${m.userToken.raw}(u${m.userIndex}→o${m.origIndex}, score=${m.score.toFixed(2)}, inLIS=${lisSet.has(m.id)})`));
+      console.log('[DEBUG] LIS size:', lisSet.size);
+
       const movePlan = buildMovePlan({
         matches,
         lisSet,
