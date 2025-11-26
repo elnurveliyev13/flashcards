@@ -407,9 +407,21 @@ switch ($action) {
                 $debug['fullform_count_error'] = $dbgex->getMessage();
             }
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
+            // Ensure baseform is present if we have lemma_id but baseform is empty.
+            if (!empty($data['selected']['lemma_id']) && empty($data['selected']['baseform'])) {
+                $lemma = $DB->get_record('ordbank_lemma', ['lemma_id' => $data['selected']['lemma_id']]);
+                if ($lemma && !empty($lemma->grunnform)) {
+                    $data['selected']['baseform'] = $lemma->grunnform;
+                }
+            }
             if (!$data && !empty($debug['fullform_sample'])) {
                 // Fallback: return first sample as a minimal candidate to unblock UI
                 $first = $debug['fullform_sample'][0];
+                $baseform = null;
+                if (!empty($first->lemma_id)) {
+                    $lemma = $DB->get_record('ordbank_lemma', ['lemma_id' => $first->lemma_id]);
+                    $baseform = $lemma->grunnform ?? null;
+                }
                 $data = [
                     'token' => $word,
                     'selected' => [
@@ -419,10 +431,11 @@ switch ($action) {
                         'paradigme_id' => null,
                         'boy_nummer' => 0,
                         'ipa' => null,
+                        'baseform' => $baseform,
                     ],
                     'candidates' => [$first],
                     'paradigm' => [],
-                    'parts' => [$first->oppslag ?? $word],
+                    'parts' => [$baseform ?? $first->oppslag ?? $word],
                 ];
             }
             if (!$data) {

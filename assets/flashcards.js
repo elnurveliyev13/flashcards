@@ -5227,7 +5227,6 @@ function renderComparisonResult(resultEl, comparison){
           word.textContent = miss.token.raw;
           const caret = document.createElement('span');
           caret.className = 'dictation-missing-caret';
-          caret.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>';
           missSpan.appendChild(word);
           missSpan.appendChild(caret);
           line.appendChild(missSpan);
@@ -5296,7 +5295,6 @@ function renderComparisonResult(resultEl, comparison){
           word.textContent = miss.token.raw;
           const caret = document.createElement('span');
           caret.className = 'dictation-missing-caret';
-          caret.innerHTML = '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>';
           missSpan.appendChild(word);
           missSpan.appendChild(caret);
           line.appendChild(missSpan);

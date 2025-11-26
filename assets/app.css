@@ -3983,20 +3983,18 @@ select.inline-prompt-field {
 }
 
 .dictation-missing-caret {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  margin-left: 2px;
-  vertical-align: baseline;
-  position: relative;
-  top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+  margin-left: 4px;
+  margin-right: 4px;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 10px solid #ef4444;
+  vertical-align: middle;
   animation: caret-bounce 1s ease-in-out infinite;
-}
-
-.dictation-missing-caret svg {
-  width: 100%;
-  height: 100%;
-  fill: #ef4444;
 }
 
 @keyframes caret-bounce {
@@ -4004,7 +4002,7 @@ select.inline-prompt-field {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
   }
 }
 
