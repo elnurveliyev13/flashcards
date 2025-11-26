@@ -3952,11 +3952,15 @@ select.inline-prompt-field {
   color: #ffffff;
   text-decoration: line-through;
   text-decoration-color: #ef4444;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 .dictation-rewrite-correct {
   color: #ef4444;
   font-weight: 700;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 
@@ -3977,12 +3981,15 @@ select.inline-prompt-field {
   padding: 2px 6px;
   border-radius: 6px;
   color: #ef4444;
+  line-height: 1.2;
+  min-height: 1.2em;
 }
 
 .dictation-missing-caret {
   font-size: 0.9rem;
-  line-height: 1;
+  line-height: 1.2;
   color: #ef4444;
+  min-height: 1.2em;
 }
 
 .dictation-gap-anchor {
@@ -4102,7 +4109,7 @@ select.inline-prompt-field {
 .dictation-rewrite-original { color: #f8fafc; text-decoration-color: #ef4444; }
 .dictation-rewrite-correct { color: #ef4444; }
 
-.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.1; display: block; margin-bottom: 0; }
+.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 0; min-height: 1.2em; }
 .dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
 /* Final overrides: keep move blocks transparent */
 .dictation-move-block { background: transparent !important; }
