@@ -5390,148 +5390,162 @@ function renderComparisonResult(resultEl, comparison){
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-user';
 
-      const missingByPos = comparison.movePlan.missingByPosition || {};
-      const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
-      const gapMeta = comparison.movePlan.gapMeta || {};
+      // Build final sequence based on ORIGINAL (correct) order
+      const finalSequence = buildFinalSequence(comparison);
+      console.log('[DEBUG] Final sequence:', finalSequence);
 
-      // Build missingByGapKey map for inserting missing tokens at correct gaps
-      const missingByGapKey = new Map();
-      Object.values(missingByPos).flat().forEach(miss => {
-        if(!missingByGapKey.has(miss.gapKey)){
-          missingByGapKey.set(miss.gapKey, []);
-        }
-        missingByGapKey.get(miss.gapKey).push(miss);
-      });
-
-      // Calculate adjusted boundaries accounting for moveBlocks
-      // moveBlocks will be skipped, so gaps after them need to shift left
-      const moveBlockIndices = new Set();
-      comparison.movePlan.moveBlocks.forEach(block => {
-        for(let i = block.start; i <= block.end; i++){
-          moveBlockIndices.add(i);
-        }
-      });
-
-      const gapsByBoundary = new Map();
-      gapsNeeded.forEach(key=>{
-        const meta = gapMeta[key];
-        if(!meta) return;
-        let boundary = Number.isFinite(meta.targetBoundary) ? meta.targetBoundary : (meta.beforeUser ?? -1) + 1;
-
-        // Adjust boundary: subtract number of moveBlock tokens before this boundary
-        let adjustment = 0;
-        for(let i = 0; i < boundary; i++){
-          if(moveBlockIndices.has(i)){
-            adjustment++;
-          }
-        }
-        boundary -= adjustment;
-
-        const clamped = Math.max(0, Math.min(boundary, comparison.userTokens.length));
-        console.log(`[DEBUG] Gap ${key}: original boundary=${meta.targetBoundary}, adjustment=${adjustment}, final boundary=${boundary}`);
-        if(!gapsByBoundary.has(clamped)){
-          gapsByBoundary.set(clamped, []);
-        }
-        gapsByBoundary.get(clamped).push(key);
-      });
-      const insertAnchors = (boundaryIdx)=>{
-        const list = gapsByBoundary.get(boundaryIdx) || [];
-        list.forEach(key=>{
-          // Insert missing tokens FIRST
-          const missingForGap = missingByGapKey.get(key) || [];
-          missingForGap.forEach(miss=>{
-            const missSpan = document.createElement('span');
-            missSpan.className = 'dictation-missing-token';
-            const word = document.createElement('span');
-            word.className = 'dictation-missing-word';
-            word.textContent = miss.token.raw;
-            const caret = document.createElement('span');
-            caret.className = 'dictation-missing-caret';
-            missSpan.appendChild(word);
-            missSpan.appendChild(caret);
-            line.appendChild(missSpan);
-          });
-
-          // Then insert anchor for move blocks (after missing tokens)
+      // Render the sequence
+      finalSequence.forEach(item => {
+        if(item.type === 'missing'){
+          // Render missing token
+          const missSpan = document.createElement('span');
+          missSpan.className = 'dictation-missing-token';
+          const word = document.createElement('span');
+          word.className = 'dictation-missing-word';
+          word.textContent = item.token.raw;
+          const caret = document.createElement('span');
+          caret.className = 'dictation-missing-caret';
+          missSpan.appendChild(word);
+          missSpan.appendChild(caret);
+          line.appendChild(missSpan);
+        } else if(item.type === 'moveBlock'){
+          // Render gap anchor for move block
           const anchor = document.createElement('span');
           anchor.className = 'dictation-gap-anchor';
-          anchor.dataset.gapAnchor = key;
+          anchor.dataset.gapAnchor = item.gapKey;
           const mark = document.createElement('span');
           mark.className = 'dictation-gap-mark';
           anchor.appendChild(mark);
           line.appendChild(anchor);
-        });
-      };
 
-      insertAnchors(0);
-      const meta = comparison.movePlan.tokenMeta || [];
-      let idx = 0;
-      let renderedPos = 0; // Track actual rendered position (excluding moved blocks)
-      while(idx < comparison.userTokens.length){
-        const token = comparison.userTokens[idx];
-        const metaInfo = meta[idx] || {};
-        if(metaInfo.rewriteGroupId){
-          const group = comparison.movePlan.rewriteGroups.find(r=>r.id === metaInfo.rewriteGroupId);
-          const start = group ? group.start : idx;
-          const end = group ? group.end : idx;
-          const segmentTokens = comparison.userTokens.slice(start, end + 1).map(t=>t.raw).join(' ');
-          const rewriteEl = document.createElement('span');
-          rewriteEl.className = 'dictation-rewrite-block';
-          if(group){
-            rewriteEl.dataset.targetGap = group.targetGapKey;
-          }
-          const corrected = document.createElement('span');
-          corrected.className = 'dictation-rewrite-correct';
-          corrected.textContent = group ? group.correctText : '';
-          const original = document.createElement('span');
-          original.className = 'dictation-rewrite-original';
-          original.textContent = segmentTokens;
-          rewriteEl.appendChild(corrected);
-          rewriteEl.appendChild(original);
-          line.appendChild(rewriteEl);
-          idx = end + 1;
-          renderedPos++; // Rewrite block counts as one position
-          insertAnchors(renderedPos);
-          continue;
-        }
-        if(metaInfo.moveBlockId){
-          const block = comparison.movePlan.moveBlocks.find(b=>b.id === metaInfo.moveBlockId);
-          // Skip if block was filtered out (doesn't actually need to move)
-          if(!block){
-            const span = createTokenSpan(token, metaInfo);
-            line.appendChild(span);
-            idx++;
-            renderedPos++;
-            insertAnchors(renderedPos);
-            continue;
-          }
+          // Render move block
           const blockEl = document.createElement('span');
           blockEl.className = 'dictation-move-block';
-          blockEl.dataset.targetGap = metaInfo.targetGapKey;
-          block.tokens.forEach(tIdx=>{
-            const tMeta = meta[tIdx] || {};
-            const t = comparison.userTokens[tIdx];
-            const span = createTokenSpan(t, tMeta);
+          blockEl.dataset.targetGap = item.gapKey;
+          item.tokens.forEach(userIdx => {
+            const token = comparison.userTokens[userIdx];
+            const meta = comparison.movePlan.tokenMeta[userIdx] || {};
+            const span = createTokenSpan(token, meta);
             span.classList.add('dictation-token-move');
             blockEl.appendChild(span);
           });
           line.appendChild(blockEl);
-          idx = block.end + 1;
-          // Move blocks don't add to renderedPos - they're moved elsewhere
-          continue;
+        } else if(item.type === 'rewrite'){
+          // Render rewrite block
+          const rewriteEl = document.createElement('span');
+          rewriteEl.className = 'dictation-rewrite-block';
+          rewriteEl.dataset.targetGap = item.targetGapKey;
+          const corrected = document.createElement('span');
+          corrected.className = 'dictation-rewrite-correct';
+          corrected.textContent = item.correctText;
+          const original = document.createElement('span');
+          original.className = 'dictation-rewrite-original';
+          original.textContent = item.originalText;
+          rewriteEl.appendChild(corrected);
+          rewriteEl.appendChild(original);
+          line.appendChild(rewriteEl);
+        } else if(item.type === 'normal'){
+          // Render normal token (in correct position or in LIS)
+          const token = comparison.userTokens[item.userIndex];
+          const meta = comparison.movePlan.tokenMeta[item.userIndex] || {};
+          const span = createTokenSpan(token, meta);
+          line.appendChild(span);
         }
-        const span = createTokenSpan(token, metaInfo);
-        line.appendChild(span);
-        idx++;
-        renderedPos++;
-        insertAnchors(renderedPos);
-      }
-      // Insert final anchors at the actual rendered position
-      insertAnchors(renderedPos);
+      });
+
       row.appendChild(label);
       row.appendChild(line);
       return row;
     }
+
+    // Helper function to build final sequence based on correct order
+    function buildFinalSequence(comparison){
+      const sequence = [];
+      const meta = comparison.movePlan.tokenMeta || [];
+      const mode = comparison.movePlan.mode;
+
+      // Create maps for quick lookups
+      const origToUser = new Map();
+      comparison.matches.forEach(m => {
+        origToUser.set(m.origIndex, m.userIndex);
+      });
+
+      const missingByOrig = new Map();
+      (comparison.missing || []).forEach(miss => {
+        missingByOrig.set(miss.origIndex, miss);
+      });
+
+      const processedUserIndices = new Set();
+
+      // Go through original tokens in correct order
+      for(let origIdx = 0; origIdx < comparison.originalTokens.length; origIdx++){
+        // Check if this token is missing
+        if(missingByOrig.has(origIdx)){
+          sequence.push({
+            type: 'missing',
+            token: missingByOrig.get(origIdx).token,
+            origIndex: origIdx
+          });
+          continue;
+        }
+
+        // Check if this token exists in user input
+        if(!origToUser.has(origIdx)){
+          continue; // Extra token or not matched
+        }
+
+        const userIdx = origToUser.get(origIdx);
+        const tokenMeta = meta[userIdx];
+
+        // Check if part of rewrite group
+        if(mode === 'rewrite' && tokenMeta && tokenMeta.rewriteGroupId){
+          const group = comparison.movePlan.rewriteGroups.find(r => r.id === tokenMeta.rewriteGroupId);
+          if(group && !processedUserIndices.has(userIdx)){
+            // Add all tokens in this rewrite group
+            for(let i = group.start; i <= group.end; i++){
+              processedUserIndices.add(i);
+            }
+            sequence.push({
+              type: 'rewrite',
+              group: group,
+              targetGapKey: group.targetGapKey,
+              correctText: group.correctText,
+              originalText: comparison.userTokens.slice(group.start, group.end + 1).map(t => t.raw).join(' ')
+            });
+          }
+          continue;
+        }
+
+        // Check if part of move block
+        if(tokenMeta && tokenMeta.moveBlockId){
+          const block = comparison.movePlan.moveBlocks.find(b => b.id === tokenMeta.moveBlockId);
+          if(block && !processedUserIndices.has(userIdx)){
+            // Add all tokens in this move block
+            block.tokens.forEach(idx => processedUserIndices.add(idx));
+            sequence.push({
+              type: 'moveBlock',
+              block: block,
+              gapKey: block.targetGapKey,
+              tokens: block.tokens
+            });
+          }
+          continue;
+        }
+
+        // Normal token (correct position or in LIS)
+        if(!processedUserIndices.has(userIdx)){
+          processedUserIndices.add(userIdx);
+          sequence.push({
+            type: 'normal',
+            userIndex: userIdx,
+            origIndex: origIdx
+          });
+        }
+      }
+
+      return sequence;
+    }
+
 
     function buildCorrectLine(comparison){
       const row = document.createElement('div');
