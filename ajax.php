@@ -407,6 +407,24 @@ switch ($action) {
                 $debug['fullform_count_error'] = $dbgex->getMessage();
             }
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
+            if (!$data && !empty($debug['fullform_sample'])) {
+                // Fallback: return first sample as a minimal candidate to unblock UI
+                $first = $debug['fullform_sample'][0];
+                $data = [
+                    'token' => $word,
+                    'selected' => [
+                        'lemma_id' => (int)($first->lemma_id ?? 0),
+                        'wordform' => $first->oppslag ?? $word,
+                        'tag' => $first->tag ?? '',
+                        'paradigme_id' => null,
+                        'boy_nummer' => 0,
+                        'ipa' => null,
+                    ],
+                    'candidates' => [$first],
+                    'paradigm' => [],
+                    'parts' => [$first->oppslag ?? $word],
+                ];
+            }
             if (!$data) {
                 echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
             } else {
