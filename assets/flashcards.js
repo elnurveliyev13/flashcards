@@ -2035,7 +2035,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         correctionMessage = data.correction.trim();
       }
       if(data.focusWord && fokusInput){
-        fokusInput.value = data.focusWord;
+        const posVal = resolvePosFromTag(data.pos || '');
+        let focusVal = data.focusWord;
+        if(posVal === 'verb'){
+          focusVal = `(å) ${focusVal}`;
+        } else if(posVal === 'substantiv' && data.gender){
+          focusVal = `(${data.gender}) ${focusVal}`;
+        }
+        fokusInput.value = focusVal;
         try{
           fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
         }catch(_e){}
@@ -2063,6 +2070,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(trEl && !trEl.value.trim()){
           trEl.value = data.transcription;
         }
+      }
+      // Populate forms from ordbank (when present)
+      const posVal = resolvePosFromTag(data.pos || '');
+      if(posVal === 'verb' && data.forms && data.forms.verb){
+        const vf = data.forms.verb;
+        const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = vf.infinitiv || '';
+        const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = vf.presens || '';
+        const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = vf.preteritum || '';
+        const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = vf.perfektum_partisipp || '';
+        const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = vf.imperativ || '';
+      } else if(posVal === 'substantiv' && data.forms && data.forms.noun){
+        const nf = data.forms.noun;
+        const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = nf.indef_sg || '';
+        const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = nf.def_sg || '';
+        const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = nf.indef_pl || '';
+        const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = nf.def_pl || '';
       }
       if(Array.isArray(data.collocations) && data.collocations.length){
         const collEl = document.getElementById('uCollocations');
