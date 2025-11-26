@@ -5292,6 +5292,16 @@ function renderComparisonResult(resultEl, comparison){
       const missingByPos = comparison.movePlan.missingByPosition || {};
       const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
       const gapMeta = comparison.movePlan.gapMeta || {};
+
+      // Build missingByGapKey map for inserting missing tokens at correct gaps
+      const missingByGapKey = new Map();
+      Object.values(missingByPos).flat().forEach(miss => {
+        if(!missingByGapKey.has(miss.gapKey)){
+          missingByGapKey.set(miss.gapKey, []);
+        }
+        missingByGapKey.get(miss.gapKey).push(miss);
+      });
+
       const gapsByBoundary = new Map();
       gapsNeeded.forEach(key=>{
         const meta = gapMeta[key];
@@ -5306,6 +5316,23 @@ function renderComparisonResult(resultEl, comparison){
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
         list.forEach(key=>{
+          // Insert missing tokens for this gap
+          const missingForGap = missingByGapKey.get(key) || [];
+          missingForGap.forEach(miss=>{
+            const missSpan = document.createElement('span');
+            missSpan.className = 'dictation-missing-token';
+            missSpan.dataset.gapAnchor = miss.gapKey;
+            const word = document.createElement('span');
+            word.className = 'dictation-missing-word';
+            word.textContent = miss.token.raw;
+            const caret = document.createElement('span');
+            caret.className = 'dictation-missing-caret';
+            missSpan.appendChild(word);
+            missSpan.appendChild(caret);
+            line.appendChild(missSpan);
+          });
+
+          // Insert anchor
           const anchor = document.createElement('span');
           anchor.className = 'dictation-gap-anchor';
           anchor.dataset.gapAnchor = key;
@@ -5320,21 +5347,6 @@ function renderComparisonResult(resultEl, comparison){
       const meta = comparison.movePlan.tokenMeta || [];
       let idx = 0;
       while(idx < comparison.userTokens.length){
-        if(missingByPos[idx]){
-          missingByPos[idx].forEach(miss=>{
-            const missSpan = document.createElement('span');
-            missSpan.className = 'dictation-missing-token';
-            missSpan.dataset.gapAnchor = miss.gapKey;
-          const word = document.createElement('span');
-          word.className = 'dictation-missing-word';
-          word.textContent = miss.token.raw;
-          const caret = document.createElement('span');
-          caret.className = 'dictation-missing-caret';
-          missSpan.appendChild(word);
-          missSpan.appendChild(caret);
-          line.appendChild(missSpan);
-        });
-      }
         const token = comparison.userTokens[idx];
         const metaInfo = meta[idx] || {};
         if(metaInfo.rewriteGroupId){
@@ -5387,21 +5399,6 @@ function renderComparisonResult(resultEl, comparison){
         line.appendChild(span);
         idx++;
         insertAnchors(idx);
-      }
-      if(missingByPos[comparison.userTokens.length]){
-        missingByPos[comparison.userTokens.length].forEach(miss=>{
-          const missSpan = document.createElement('span');
-          missSpan.className = 'dictation-missing-token';
-          missSpan.dataset.gapAnchor = miss.gapKey;
-          const word = document.createElement('span');
-          word.className = 'dictation-missing-word';
-          word.textContent = miss.token.raw;
-          const caret = document.createElement('span');
-          caret.className = 'dictation-missing-caret';
-          missSpan.appendChild(word);
-          missSpan.appendChild(caret);
-          line.appendChild(missSpan);
-        });
       }
       insertAnchors(comparison.userTokens.length);
       row.appendChild(label);
