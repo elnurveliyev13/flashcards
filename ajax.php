@@ -373,24 +373,29 @@ switch ($action) {
             'level' => $level,
             'voice' => $voiceid ?: null,
         ]);
-        // Validate against ordbank: focus word/baseform must exist as a wordform.
+        // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
         $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
-        if ($focuscheck === '' || !$DB->record_exists_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck])) {
+        $ob = null;
+        if ($focuscheck !== '') {
+            $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
+        }
+        if ($focuscheck === '' || !$ob || empty($ob['selected'])) {
             echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
             break;
         }
-        // Enrich with ordbank data (gender/forms/ipa) if missing.
-        $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
-        if ($ob && !empty($ob['selected'])) {
-            if (empty($data['transcription']) && !empty($ob['selected']['ipa'])) {
-                $data['transcription'] = $ob['selected']['ipa'];
-            }
-            if (!empty($ob['forms'])) {
-                $data['forms'] = $ob['forms'];
-            }
-            if (!empty($ob['selected']['gender'])) {
-                $data['gender'] = $ob['selected']['gender'];
-            }
+        // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
+        $selected = $ob['selected'];
+        $data['focusWord'] = $selected['baseform'] ?? $selected['wordform'] ?? $focuscheck;
+        $data['focusBaseform'] = $selected['baseform'] ?? $data['focusWord'];
+        $data['pos'] = $data['pos'] ?: (str_contains(core_text::strtolower($selected['tag'] ?? ''), 'verb') ? 'verb' : (str_contains(core_text::strtolower($selected['tag'] ?? ''), 'subst') ? 'substantiv' : ''));
+        if (!empty($selected['ipa'])) {
+            $data['transcription'] = $selected['ipa'];
+        }
+        if (!empty($selected['gender'])) {
+            $data['gender'] = $selected['gender'];
+        }
+        if (!empty($ob['forms'])) {
+            $data['forms'] = $ob['forms'];
         }
         $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
         echo json_encode(['ok' => true, 'data' => $data]);
