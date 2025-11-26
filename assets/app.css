@@ -3983,9 +3983,27 @@ select.inline-prompt-field {
 }
 
 .dictation-missing-caret {
-  font-size: 0.9rem;
-  line-height: 1.2;
-  color: #ef4444;
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: caret-bounce 1s ease-in-out infinite;
+}
+
+.dictation-missing-caret svg {
+  width: 100%;
+  height: 100%;
+  fill: #ef4444;
+}
+
+@keyframes caret-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
 }
 
 .dictation-gap-anchor {
