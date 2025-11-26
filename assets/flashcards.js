@@ -4904,17 +4904,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const allOrigToUser = new Map();
       orderedMatches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
 
-      // Create a sorted list of MATCHED original indices only (exclude missing tokens)
-      const matchedOrigSorted = Array.from(allOrigToUser.keys()).sort((a, b) => a - b);
+      // Create a sorted list of LIS original indices (tokens that stay in place)
+      const lisOrigSorted = Array.from(lisOrigToUser.keys()).sort((a, b) => a - b);
 
-      console.log('[DEBUG] Matched original indices:', matchedOrigSorted);
+      console.log('[DEBUG] LIS original indices (stay in place):', lisOrigSorted);
 
-      // For moveBlocks: find neighbors among MATCHED tokens only (skip missing)
+      // For moveBlocks: find neighbors among LIS tokens ONLY (skip moving tokens and missing)
+      // This ensures all moving tokens use the same gaps based on stable positions
       const findNeighbors = (value)=>{
         let prev = -1;
         let next = null;
-        // Search only in MATCHED tokens, not missing
-        for(const idx of matchedOrigSorted){
+        // Search only in LIS tokens (that stay in place)
+        for(const idx of lisOrigSorted){
           if(idx < value){
             prev = idx;
           } else if(idx > value){
