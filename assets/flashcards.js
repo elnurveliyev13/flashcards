@@ -5047,46 +5047,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const matchedByOrig = new Map();
       orderedMatches.forEach(m=> matchedByOrig.set(m.origIndex, m.userIndex));
       const missingByPosition = buildMissingByPosition(missingTokens, orderedMatches, userTokens.length);
+
+      // CRITICAL: For missing tokens, we need to find gaps based on LIS tokens only
+      // This ensures missing tokens share gaps with moveBlocks correctly
       missingTokens.forEach(item=>{
+        // Find where this missing token should appear in the ORIGINAL order
+        // by finding its neighbors in LIS (tokens that stay in place)
         let prevOrig = -1;
-        let prevUser = -1;
         let nextOrig = null;
-        let nextUser = userTokens.length;
 
-        // For missing tokens, use LIS tokens for prevUser/nextUser to avoid moveBlocks
-        // This ensures gaps are calculated relative to tokens that will stay in place
-        lisOrigToUser.forEach((userIdx, origIdx)=>{
-          if(origIdx < item.origIndex && origIdx > prevOrig){
-            prevOrig = origIdx;
-            prevUser = userIdx;
+        // Find neighbors in LIS (skip tokens that are moving)
+        for(let i = item.origIndex - 1; i >= 0; i--){
+          // Check if this original position is in LIS (stays in place)
+          if(lisOrigToUser.has(i)){
+            prevOrig = i;
+            break;
           }
-          if(origIdx > item.origIndex && (nextOrig === null || origIdx < nextOrig)){
-            nextOrig = origIdx;
-            nextUser = userIdx;
+        }
+        for(let i = item.origIndex + 1; i < originalTokens.length; i++){
+          if(lisOrigToUser.has(i)){
+            nextOrig = i;
+            break;
           }
-        });
+        }
 
-        // If no LIS neighbor found, fall back to ALL matches
-        if(prevUser === -1){
-          matchedByOrig.forEach((userIdx, origIdx)=>{
-            if(origIdx < item.origIndex && origIdx > prevOrig){
-              prevOrig = origIdx;
-              prevUser = userIdx;
+        // Fallback: if no LIS neighbor found, use ANY matched token
+        if(prevOrig === -1){
+          for(let i = item.origIndex - 1; i >= 0; i--){
+            if(matchedByOrig.has(i)){
+              prevOrig = i;
+              break;
             }
-          });
+          }
         }
-        if(nextUser === userTokens.length){
-          matchedByOrig.forEach((userIdx, origIdx)=>{
-            if(origIdx > item.origIndex && (nextOrig === null || origIdx < nextOrig)){
-              nextOrig = origIdx;
-              nextUser = userIdx;
+        if(nextOrig === null){
+          for(let i = item.origIndex + 1; i < originalTokens.length; i++){
+            if(matchedByOrig.has(i)){
+              nextOrig = i;
+              break;
             }
-          });
+          }
         }
+
+        // Now find where these neighbors are in the USER sequence
+        let prevUser = prevOrig !== -1 ? (lisOrigToUser.get(prevOrig) ?? matchedByOrig.get(prevOrig)) : -1;
+        let nextUser = nextOrig !== null ? (lisOrigToUser.get(nextOrig) ?? matchedByOrig.get(nextOrig)) : userTokens.length;
 
         const gapKey = buildGapKey(prevOrig, nextOrig);
         const beforeUser = prevUser;
-        const afterUser = nextUser ?? userTokens.length;
+        const afterUser = nextUser;
+
+        // CRITICAL: Check if there's already a gap with this key (from moveBlocks)
+        // If so, reuse it. Missing tokens share gaps with moveBlocks.
         if(!gapMeta[gapKey]){
           gapMeta[gapKey] = {
             before: prevOrig,
@@ -5095,7 +5107,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             afterUser,
             targetBoundary: beforeUser + 1
           };
-          console.log(`[DEBUG] Created gap for missing token ${item.token.raw} (orig_${item.origIndex}): gap=${gapKey}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
+          console.log(`[DEBUG] Created NEW gap for missing token ${item.token.raw} (orig_${item.origIndex}): gap=${gapKey}, prevOrig=${prevOrig}, nextOrig=${nextOrig}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
+        } else {
+          console.log(`[DEBUG] Missing token ${item.token.raw} (orig_${item.origIndex}) SHARES gap ${gapKey} (prevOrig=${prevOrig}, nextOrig=${nextOrig}) with existing element (boundary=${gapMeta[gapKey].targetBoundary})`);
         }
         gapsNeeded.add(gapKey);
       });
