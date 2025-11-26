@@ -51,6 +51,8 @@ class ordbank_helper {
         }
 
         $parts = self::split_compound($selected['lemma_id'] ?? null, $selected['wordform'] ?? $token);
+        $forms = self::fetch_forms($selected['lemma_id'] ?? 0, $selected['tag'] ?? '');
+        $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
 
         return [
             'token' => $token,
@@ -58,6 +60,8 @@ class ordbank_helper {
             'candidates' => array_values($candidates),
             'paradigm' => $paradigm,
             'parts' => $parts,
+            'forms' => $forms,
+            'gender' => $gender,
             'ambiguous' => $originalcount > 1,
         ];
     }
@@ -253,5 +257,92 @@ class ordbank_helper {
         }
 
         return $best ?: ($candidates ? reset($candidates) : null);
+    }
+
+    /**
+     * Fetch verb/noun/adjective forms from fullform table for UI population.
+     */
+    protected static function fetch_forms(int $lemmaid, string $tag): array {
+        global $DB;
+        if ($lemmaid <= 0) {
+            return [];
+        }
+        $lower = core_text::strtolower($tag);
+        $out = [];
+        try {
+            $records = $DB->get_records('ordbank_fullform', ['lemma_id' => $lemmaid]);
+        } catch (\Throwable $e) {
+            return [];
+        }
+        if (str_contains($lower, 'verb')) {
+            $verb = [];
+            foreach ($records as $rec) {
+                $t = core_text::strtolower((string)$rec->tag);
+                if (!$rec->oppslag) {
+                    continue;
+                }
+                if (!isset($verb['infinitiv']) && str_contains($t, 'inf')) {
+                    $verb['infinitiv'] = $rec->oppslag;
+                } elseif (!isset($verb['presens']) && str_contains($t, 'pres')) {
+                    $verb['presens'] = $rec->oppslag;
+                } elseif (!isset($verb['preteritum']) && str_contains($t, 'pret')) {
+                    $verb['preteritum'] = $rec->oppslag;
+                } elseif (!isset($verb['perfektum_partisipp']) && (str_contains($t, 'perf') || str_contains($t, 'part'))) {
+                    $verb['perfektum_partisipp'] = $rec->oppslag;
+                } elseif (!isset($verb['imperativ']) && str_contains($t, 'imper')) {
+                    $verb['imperativ'] = $rec->oppslag;
+                }
+            }
+            if (!empty($verb)) {
+                $out['verb'] = $verb;
+            }
+        } elseif (str_contains($lower, 'subst')) {
+            $noun = [];
+            foreach ($records as $rec) {
+                $t = core_text::strtolower((string)$rec->tag);
+                if (!$rec->oppslag) {
+                    continue;
+                }
+                if (!isset($noun['indef_sg']) && str_contains($t, 'ent ub')) {
+                    $noun['indef_sg'] = $rec->oppslag;
+                } elseif (!isset($noun['def_sg']) && str_contains($t, 'ent be')) {
+                    $noun['def_sg'] = $rec->oppslag;
+                } elseif (!isset($noun['indef_pl']) && str_contains($t, 'fl ub')) {
+                    $noun['indef_pl'] = $rec->oppslag;
+                } elseif (!isset($noun['def_pl']) && str_contains($t, 'fl be')) {
+                    $noun['def_pl'] = $rec->oppslag;
+                }
+            }
+            if (!empty($noun)) {
+                $out['noun'] = $noun;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Detect simple gender/article hint from tag.
+     */
+    protected static function detect_gender_from_tag(string $tag): string {
+        $t = core_text::strtolower($tag);
+        if (!str_contains($t, 'subst')) {
+            return '';
+        }
+        $hasmask = str_contains($t, 'mask');
+        $hasfem = str_contains($t, 'fem');
+        $hasneut = str_contains($t, 'nøy') || str_contains($t, 'noy');
+        if ($hasmask && $hasfem) {
+            return 'en/ei';
+        }
+        if ($hasmask) {
+            return 'en';
+        }
+        if ($hasfem) {
+            return 'ei';
+        }
+        if ($hasneut) {
+            return 'et';
+        }
+        return '';
     }
 }
