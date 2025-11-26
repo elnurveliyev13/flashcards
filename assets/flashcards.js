@@ -5339,12 +5339,20 @@ function renderComparisonResult(resultEl, comparison){
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
         list.forEach(key=>{
-          // Insert missing tokens for this gap
+          // Insert anchor first
+          const anchor = document.createElement('span');
+          anchor.className = 'dictation-gap-anchor';
+          anchor.dataset.gapAnchor = key;
+          const mark = document.createElement('span');
+          mark.className = 'dictation-gap-mark';
+          anchor.appendChild(mark);
+          line.appendChild(anchor);
+
+          // Insert missing tokens AFTER anchor
           const missingForGap = missingByGapKey.get(key) || [];
           missingForGap.forEach(miss=>{
             const missSpan = document.createElement('span');
             missSpan.className = 'dictation-missing-token';
-            missSpan.dataset.gapAnchor = miss.gapKey;
             const word = document.createElement('span');
             word.className = 'dictation-missing-word';
             word.textContent = miss.token.raw;
@@ -5354,15 +5362,6 @@ function renderComparisonResult(resultEl, comparison){
             missSpan.appendChild(caret);
             line.appendChild(missSpan);
           });
-
-          // Insert anchor
-          const anchor = document.createElement('span');
-          anchor.className = 'dictation-gap-anchor';
-          anchor.dataset.gapAnchor = key;
-          const mark = document.createElement('span');
-          mark.className = 'dictation-gap-mark';
-          anchor.appendChild(mark);
-          line.appendChild(anchor);
         });
       };
 
