@@ -5109,6 +5109,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         } else {
           console.log(`[DEBUG] Missing token ${item.token.raw} (orig_${item.origIndex}) SHARES gap ${gapKey} (prevOrig=${prevOrig}, nextOrig=${nextOrig}) with existing element (boundary=${gapMeta[gapKey].targetBoundary})`);
         }
+        // CRITICAL: Save the correct gapKey to the missing token object
+        item.gapKey = gapKey;
         gapsNeeded.add(gapKey);
       });
 
@@ -5124,6 +5126,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gapMeta,
         gapsNeeded,
         missingByPosition,
+        missingTokens, // CRITICAL: Return missingTokens with correct gapKey
         boundaryCounts,
         crossedBoundaries,
         overloadedBoundaries: Array.from(overloadedBoundaries)
@@ -5402,17 +5405,22 @@ function renderComparisonResult(resultEl, comparison){
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-user';
 
-      const missingByPos = comparison.movePlan.missingByPosition || {};
       const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
       const gapMeta = comparison.movePlan.gapMeta || {};
+      const missingTokens = comparison.movePlan.missingTokens || [];
 
-      // Build missingByGapKey map for inserting missing tokens at correct gaps
+      // Build missingByGapKey map using the CORRECT gapKey from missingTokens
       const missingByGapKey = new Map();
-      Object.values(missingByPos).flat().forEach(miss => {
-        if(!missingByGapKey.has(miss.gapKey)){
-          missingByGapKey.set(miss.gapKey, []);
+      missingTokens.forEach(item => {
+        const gapKey = item.gapKey; // Use the corrected gapKey from planMovesAndGaps
+        if(!gapKey){
+          console.warn('[WARN] Missing token without gapKey:', item);
+          return;
         }
-        missingByGapKey.get(miss.gapKey).push(miss);
+        if(!missingByGapKey.has(gapKey)){
+          missingByGapKey.set(gapKey, []);
+        }
+        missingByGapKey.get(gapKey).push(item);
       });
 
       // Calculate adjusted boundaries accounting for moveBlocks
