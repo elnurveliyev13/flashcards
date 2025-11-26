@@ -4,6 +4,7 @@ define('AJAX_SCRIPT', true);
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
 require_once(__DIR__ . '/lib.php');
+require_once(__DIR__ . '/classes/local/ordbank_helper.php');
 
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
@@ -374,6 +375,29 @@ switch ($action) {
         ]);
         $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
         echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
+    case 'ordbank_focus_helper':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $word = trim($payload['word'] ?? '');
+        $prev = trim($payload['prev'] ?? '');
+        $next = trim($payload['next'] ?? '');
+        if ($word === '') {
+            throw new invalid_parameter_exception('Missing word');
+        }
+        $context = [];
+        if ($prev !== '') {
+            $context['prev'] = $prev;
+        }
+        if ($next !== '') {
+            $context['next'] = $next;
+        }
+        $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
+        echo json_encode(['ok' => (bool)$data, 'data' => $data]);
         break;
 
     case 'ai_translate':

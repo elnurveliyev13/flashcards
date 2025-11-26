@@ -2005,22 +2005,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.className='focus-chip';
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
-          if(aiEnabled){
-            btn.addEventListener('click', ()=> triggerFocusHelper(token, token.index));
-          } else {
-            btn.addEventListener('click', ()=>{
-              focusHelperState.activeIndex = token.index;
-              updateChipActiveState();
-              if(fokusInput){
-                fokusInput.value = token.text;
-                try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
-              }
-              if(focusBaseInput && !focusBaseInput.value.trim()){
-                focusBaseInput.value = token.text;
-              }
-              setFocusStatus('', '');
-            });
-          }
+          btn.addEventListener('click', ()=>{
+            focusHelperState.activeIndex = token.index;
+            updateChipActiveState();
+            if(aiEnabled){
+              triggerFocusHelper(token, token.index);
+            } else {
+              triggerOrdbankHelper(token, token.index, tokens);
+            }
+          });
           if(token.index === focusHelperState.activeIndex){
             btn.classList.add('active');
           }
@@ -2174,6 +2167,52 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setFocusStatus('error', err?.message || aiStrings.error);
       }finally{
         if(focusHelperState.abortController === controller){
+          focusHelperState.abortController = null;
+        }
+      }
+    }
+
+    async function triggerOrdbankHelper(token, idx, tokens){
+      if(!frontInput || !token || !token.text){
+        return;
+      }
+      focusHelperState.activeIndex = idx;
+      updateChipActiveState();
+      setFocusStatus('loading', aiStrings.detecting);
+      const wordTokens = tokens.filter(t=>t.isWord);
+      const prev = wordTokens.filter(t=>t.index < idx).pop();
+      const next = wordTokens.filter(t=>t.index > idx).shift();
+      try{
+        const payload = {
+          word: token.text,
+          prev: prev ? prev.text : '',
+          next: next ? next.text : ''
+        };
+        const resp = await api('ordbank_focus_helper', {}, 'POST', payload);
+        if(!resp || !resp.ok || !resp.data){
+          setFocusStatus('error', aiStrings.error || 'Error');
+          return;
+        }
+        const data = resp.data;
+        if(fokusInput){
+          fokusInput.value = data.selected?.wordform || token.text;
+          try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
+        }
+        if(focusBaseInput && (focusBaseInput.value || '').trim() === ''){
+          focusBaseInput.value = data.selected?.wordform || token.text;
+        }
+        if(data.selected?.ipa){
+          const trEl = document.getElementById('uTranscription');
+          if(trEl && !trEl.value.trim()){
+            trEl.value = data.selected.ipa;
+          }
+        }
+        setFocusStatus('success', aiStrings.success || '');
+      }catch(err){
+        console.error('[Flashcards][Ordbank] focus helper failed', err);
+        setFocusStatus('error', aiStrings.error || 'Error');
+      }finally{
+        if(!aiEnabled && focusHelperState.abortController){
           focusHelperState.abortController = null;
         }
       }
