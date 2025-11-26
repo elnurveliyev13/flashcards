@@ -2189,8 +2189,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           next: next ? next.text : ''
         };
         const resp = await api('ordbank_focus_helper', {}, 'POST', payload);
-        if(!resp || !resp.ok || !resp.data){
-          setFocusStatus('error', aiStrings.error || 'Error');
+        if(!resp || resp.ok === false){
+          const msg = resp && resp.error ? resp.error : (aiStrings.error || 'Error');
+          setFocusStatus('error', msg);
           return;
         }
         const data = resp.data;

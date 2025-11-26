@@ -400,6 +400,7 @@ switch ($action) {
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
             echo json_encode(['ok' => (bool)$data, 'data' => $data]);
         } catch (\Throwable $ex) {
+            debugging('[flashcards] ordbank_focus_helper failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             http_response_code(400);
             echo json_encode(['ok' => false, 'error' => $ex->getMessage()]);
         }
