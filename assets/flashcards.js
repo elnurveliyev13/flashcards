@@ -5380,12 +5380,32 @@ function renderComparisonResult(resultEl, comparison){
         missingByGapKey.get(miss.gapKey).push(miss);
       });
 
+      // Calculate adjusted boundaries accounting for moveBlocks
+      // moveBlocks will be skipped, so gaps after them need to shift left
+      const moveBlockIndices = new Set();
+      comparison.movePlan.moveBlocks.forEach(block => {
+        for(let i = block.start; i <= block.end; i++){
+          moveBlockIndices.add(i);
+        }
+      });
+
       const gapsByBoundary = new Map();
       gapsNeeded.forEach(key=>{
         const meta = gapMeta[key];
         if(!meta) return;
-        const boundary = Number.isFinite(meta.targetBoundary) ? meta.targetBoundary : (meta.beforeUser ?? -1) + 1;
+        let boundary = Number.isFinite(meta.targetBoundary) ? meta.targetBoundary : (meta.beforeUser ?? -1) + 1;
+
+        // Adjust boundary: subtract number of moveBlock tokens before this boundary
+        let adjustment = 0;
+        for(let i = 0; i < boundary; i++){
+          if(moveBlockIndices.has(i)){
+            adjustment++;
+          }
+        }
+        boundary -= adjustment;
+
         const clamped = Math.max(0, Math.min(boundary, comparison.userTokens.length));
+        console.log(`[DEBUG] Gap ${key}: original boundary=${meta.targetBoundary}, adjustment=${adjustment}, final boundary=${boundary}`);
         if(!gapsByBoundary.has(clamped)){
           gapsByBoundary.set(clamped, []);
         }
