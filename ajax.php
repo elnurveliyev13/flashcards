@@ -398,7 +398,11 @@ switch ($action) {
                 $context['next'] = $next;
             }
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
-            echo json_encode(['ok' => (bool)$data, 'data' => $data]);
+            if (!$data) {
+                echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank']);
+            } else {
+                echo json_encode(['ok' => true, 'data' => $data]);
+            }
         } catch (\Throwable $ex) {
             debugging('[flashcards] ordbank_focus_helper failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             http_response_code(400);
