@@ -4886,6 +4886,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const lisOrigToUser = new Map();
       lisMatches.forEach(m=> lisOrigToUser.set(m.origIndex, m.userIndex));
 
+      console.log('[DEBUG] LIS tokens:', lisMatches.map(m => ({
+        origIndex: m.origIndex,
+        userIndex: m.userIndex,
+        origToken: m.origToken.raw,
+        userToken: m.userToken.raw
+      })));
+      console.log('[DEBUG] All matches:', orderedMatches.map(m => ({
+        origIndex: m.origIndex,
+        userIndex: m.userIndex,
+        origToken: m.origToken.raw,
+        userToken: m.userToken.raw,
+        inLIS: lisSet.has(m.id)
+      })));
+
       // Create a map of ALL matched words (not just LIS) for better gap calculation
       const allOrigToUser = new Map();
       orderedMatches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
