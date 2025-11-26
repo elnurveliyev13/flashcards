@@ -3855,7 +3855,7 @@ select.inline-prompt-field {
 .dictation-token {
   position: relative;
   display: inline-flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: 4px 8px;
   border-radius: 6px;
@@ -3863,12 +3863,12 @@ select.inline-prompt-field {
   color: #e2e8f0;
   font-weight: 500;
   line-height: 1.2;
-  vertical-align: middle;
+  vertical-align: baseline;
 }
 .dictation-token-has-correction {
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 0;
 }
 
@@ -3943,8 +3943,8 @@ select.inline-prompt-field {
   border-radius: 10px;
   border: 1px dashed #ef4444;
   background: transparent;
-  vertical-align: middle;
-  justify-content: center;
+  vertical-align: baseline;
+  justify-content: flex-end;
   align-items: center;
 }
 
@@ -3968,8 +3968,8 @@ select.inline-prompt-field {
   gap: 0;
   color: #ef4444;
   font-weight: 700;
-  vertical-align: middle;
-  justify-content: center;
+  vertical-align: baseline;
+  justify-content: flex-end;
 }
 
 .dictation-missing-word {
