@@ -74,10 +74,12 @@ class ordbank_helper {
                        f.TAG,
                        f.PARADIGME_ID,
                        f.BOY_NUMMER,
+                       l.GRUNNFORM AS baseform,
                        p.ipa AS ipa_from_dict,
                        p.xsampa,
                        p.nofabet
                   FROM {ordbank_fullform} f
+             LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
              LEFT JOIN {flashcards_pron_dict} p ON LOWER(p.wordform) = LOWER(f.OPPSLAG)
                  WHERE LOWER(f.OPPSLAG) = :w";
 
@@ -107,6 +109,7 @@ class ordbank_helper {
                     'ipa' => $rec->ipa_from_dict ?? null,
                     'xsampa' => $rec->xsampa ?? null,
                     'nofabet' => $rec->nofabet ?? null,
+                    'baseform' => $rec->baseform ?? null,
                 ];
             }
         }

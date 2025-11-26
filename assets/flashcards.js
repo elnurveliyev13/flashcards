@@ -2204,12 +2204,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
           return;
         }
+        const focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
         if(fokusInput){
-          fokusInput.value = data.selected?.wordform || token.text;
+          fokusInput.value = focusWordResolved;
           try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
         }
         if(focusBaseInput && (focusBaseInput.value || '').trim() === ''){
-          focusBaseInput.value = data.selected?.wordform || token.text;
+          focusBaseInput.value = data.selected.baseform || data.selected.wordform || token.text;
         }
         if(data.selected && data.selected.ipa){
           const trEl = document.getElementById('uTranscription');

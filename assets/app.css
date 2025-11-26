@@ -3984,10 +3984,12 @@ select.inline-prompt-field {
 
 .dictation-missing-caret {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   margin-left: 2px;
-  vertical-align: middle;
+  vertical-align: baseline;
+  position: relative;
+  top: 2px;
   animation: caret-bounce 1s ease-in-out infinite;
 }
 
