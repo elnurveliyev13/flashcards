@@ -5052,7 +5052,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         let prevUser = -1;
         let nextOrig = null;
         let nextUser = userTokens.length;
-        matchedByOrig.forEach((userIdx, origIdx)=>{
+
+        // For missing tokens, use LIS tokens for prevUser/nextUser to avoid moveBlocks
+        // This ensures gaps are calculated relative to tokens that will stay in place
+        lisOrigToUser.forEach((userIdx, origIdx)=>{
           if(origIdx < item.origIndex && origIdx > prevOrig){
             prevOrig = origIdx;
             prevUser = userIdx;
@@ -5062,6 +5065,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             nextUser = userIdx;
           }
         });
+
+        // If no LIS neighbor found, fall back to ALL matches
+        if(prevUser === -1){
+          matchedByOrig.forEach((userIdx, origIdx)=>{
+            if(origIdx < item.origIndex && origIdx > prevOrig){
+              prevOrig = origIdx;
+              prevUser = userIdx;
+            }
+          });
+        }
+        if(nextUser === userTokens.length){
+          matchedByOrig.forEach((userIdx, origIdx)=>{
+            if(origIdx > item.origIndex && (nextOrig === null || origIdx < nextOrig)){
+              nextOrig = origIdx;
+              nextUser = userIdx;
+            }
+          });
+        }
+
         const gapKey = buildGapKey(prevOrig, nextOrig);
         const beforeUser = prevUser;
         const afterUser = nextUser ?? userTokens.length;
@@ -5073,6 +5095,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             afterUser,
             targetBoundary: beforeUser + 1
           };
+          console.log(`[DEBUG] Created gap for missing token ${item.token.raw} (orig_${item.origIndex}): gap=${gapKey}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
         }
         gapsNeeded.add(gapKey);
       });
