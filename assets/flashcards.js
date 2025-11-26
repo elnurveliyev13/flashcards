@@ -2005,10 +2005,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.className='focus-chip';
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
-          if(!aiEnabled){
-            btn.disabled = true;
-          }else{
+          if(aiEnabled){
             btn.addEventListener('click', ()=> triggerFocusHelper(token, token.index));
+          } else {
+            btn.addEventListener('click', ()=>{
+              focusHelperState.activeIndex = token.index;
+              updateChipActiveState();
+              if(fokusInput){
+                fokusInput.value = token.text;
+                try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
+              }
+              if(focusBaseInput && !focusBaseInput.value.trim()){
+                focusBaseInput.value = token.text;
+              }
+              setFocusStatus('', '');
+            });
           }
           if(token.index === focusHelperState.activeIndex){
             btn.classList.add('active');
@@ -8610,4 +8621,3 @@ function renderComparisonResult(resultEl, comparison){
 
   }
 export { flashcardsInit };
-
