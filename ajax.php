@@ -397,11 +397,18 @@ switch ($action) {
             if ($next !== '') {
                 $context['next'] = $next;
             }
+            // Debug: check how many raw matches exist
+            $debug = [];
+            try {
+                $debug['fullform_count'] = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [core_text::strtolower($word)]);
+            } catch (\Throwable $dbgex) {
+                $debug['fullform_count_error'] = $dbgex->getMessage();
+            }
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
             if (!$data) {
-                echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank']);
+                echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
             } else {
-                echo json_encode(['ok' => true, 'data' => $data]);
+                echo json_encode(['ok' => true, 'data' => $data, 'debug' => $debug]);
             }
         } catch (\Throwable $ex) {
             debugging('[flashcards] ordbank_focus_helper failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);

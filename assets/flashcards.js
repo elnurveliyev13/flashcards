@@ -2192,6 +2192,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(!resp || resp.ok === false){
           const msg = resp && resp.error ? resp.error : (aiStrings.error || 'Error');
           setFocusStatus('error', msg);
+          if(resp && resp.debug){
+            console.warn('[Flashcards][Ordbank] debug:', resp.debug);
+          }
           return;
         }
         const data = resp.data;
