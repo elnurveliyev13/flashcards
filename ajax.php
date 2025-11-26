@@ -379,15 +379,41 @@ switch ($action) {
         if ($focuscheck !== '') {
             $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
         }
-        if ($focuscheck === '' || !$ob || empty($ob['selected'])) {
-            echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
-            break;
+        // If helper didn’t return, try a direct lookup to confirm existence.
+        if ($focuscheck === '' || (!$ob || empty($ob['selected']))) {
+            $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
+            if (!$exists) {
+                echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
+                break;
+            }
+            // Build a minimal selected from first match
+            $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 1", ['w' => $focuscheck]);
+            $ob = [
+                'selected' => [
+                    'lemma_id' => (int)$first->lemma_id,
+                    'wordform' => $first->oppslag,
+                    'baseform' => null,
+                    'tag' => $first->tag,
+                    'paradigme_id' => $first->paradigme_id,
+                    'boy_nummer' => (int)$first->boy_nummer,
+                    'ipa' => null,
+                    'gender' => '',
+                ],
+                'forms' => [],
+            ];
         }
         // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
         $selected = $ob['selected'];
         $data['focusWord'] = $selected['baseform'] ?? $selected['wordform'] ?? $focuscheck;
         $data['focusBaseform'] = $selected['baseform'] ?? $data['focusWord'];
-        $data['pos'] = $data['pos'] ?: (str_contains(core_text::strtolower($selected['tag'] ?? ''), 'verb') ? 'verb' : (str_contains(core_text::strtolower($selected['tag'] ?? ''), 'subst') ? 'substantiv' : ''));
+        $taglower = core_text::strtolower($selected['tag'] ?? '');
+        if (!$data['pos']) {
+            if (str_contains($taglower, 'verb')) {
+                $data['pos'] = 'verb';
+            } else if (str_contains($taglower, 'subst')) {
+                $data['pos'] = 'substantiv';
+            }
+        }
         if (!empty($selected['ipa'])) {
             $data['transcription'] = $selected['ipa'];
         }
