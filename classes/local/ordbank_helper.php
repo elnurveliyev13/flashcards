@@ -77,8 +77,8 @@ class ordbank_helper {
                        p.ipa AS ipa_from_dict,
                        p.xsampa,
                        p.nofabet
-                  FROM ordbank_fullform f
-             LEFT JOIN flashcards_pron_dict p ON LOWER(p.wordform) = LOWER(f.OPPSLAG)
+                  FROM {ordbank_fullform} f
+             LEFT JOIN {flashcards_pron_dict} p ON LOWER(p.wordform) = LOWER(f.OPPSLAG)
                  WHERE LOWER(f.OPPSLAG) = :w";
 
         try {
@@ -174,7 +174,7 @@ class ordbank_helper {
             return [$oppslag];
         }
 
-        $sql = 'SELECT * FROM ordbank_leddanalyse WHERE ' . implode(' AND ', $conditions);
+        $sql = 'SELECT * FROM {ordbank_leddanalyse} WHERE ' . implode(' AND ', $conditions);
         $rec = $DB->get_record_sql($sql, $params, IGNORE_MULTIPLE);
         if (!$rec) {
             return [$oppslag];
