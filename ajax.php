@@ -373,6 +373,25 @@ switch ($action) {
             'level' => $level,
             'voice' => $voiceid ?: null,
         ]);
+        // Validate against ordbank: focus word/baseform must exist as a wordform.
+        $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
+        if ($focuscheck === '' || !$DB->record_exists_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck])) {
+            echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
+            break;
+        }
+        // Enrich with ordbank data (gender/forms/ipa) if missing.
+        $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
+        if ($ob && !empty($ob['selected'])) {
+            if (empty($data['transcription']) && !empty($ob['selected']['ipa'])) {
+                $data['transcription'] = $ob['selected']['ipa'];
+            }
+            if (!empty($ob['forms'])) {
+                $data['forms'] = $ob['forms'];
+            }
+            if (!empty($ob['selected']['gender'])) {
+                $data['gender'] = $ob['selected']['gender'];
+            }
+        }
         $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
