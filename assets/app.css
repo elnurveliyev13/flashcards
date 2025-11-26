@@ -3971,7 +3971,7 @@ select.inline-prompt-field {
   color: #ef4444;
   font-weight: 700;
   vertical-align: bottom;
-  padding: 4px 0;
+  padding: 4px 8px;
 }
 
 .dictation-missing-word {
