@@ -5394,35 +5394,53 @@ function renderComparisonResult(resultEl, comparison){
         const startX = blockRect.left + (blockRect.width / 2) - containerRect.left;
         const startY = blockRect.top - containerRect.top;
 
-        // End: точка на уровне ТЕКСТА в строке (на уровне startY или чуть ниже)
+        // End: center of target anchor
         const endX = targetRect.left + (targetRect.width / 2) - containerRect.left;
-        // Опускаем стрелку к тому же уровню, где находится блок (или чуть ниже для видимости)
-        const endY = startY + blockRect.height * 0.5; // Центр блока - уровень текста
+        const endY = targetRect.top + (targetRect.height / 2) - containerRect.top;
 
-        // Calculate optimal arc height based on horizontal distance
+        // Calculate distances
         const horizontalDist = Math.abs(endX - startX);
+        const verticalDist = Math.abs(endY - startY);
+        const totalDistance = Math.sqrt(horizontalDist * horizontalDist + verticalDist * verticalDist);
 
-        // ПОЛОГАЯ дуга - низкая, параллельная тексту (20px над текстом)
-        const arcHeight = 20; // Фиксированная невысокая дуга
-
-        // Первая контрольная точка - небольшой подъём над текстом
-        const controlY1 = startY - arcHeight;
-
-        // Вторая контрольная точка - СТРОГО НАД endX на той же высоте
-        // Это создаст вертикальное падение под 90° вниз
-        const controlY2 = startY - arcHeight; // Та же высота - дуга параллельна тексту
-
-        // Horizontal control points
+        // Horizontal control points direction
         const direction = Math.sign(endX - startX);
-        // Первая контрольная точка на 40% пути
-        const cx1 = startX + direction * horizontalDist * 0.4;
-        // Вторая контрольная точка СТРОГО НАД endX (та же X-координата!)
-        // Это заставит стрелку падать вертикально вниз под 90°
-        const cx2 = endX;
+
+        // Check if multiline (words on different lines)
+        const isMultiline = verticalDist > 30;
+
+        let cx1, cy1, cx2, cy2, arcHeight;
+
+        if (isMultiline) {
+          // MULTILINE: Use S-curve for vertical transitions
+          // Dynamic arc height based on total distance
+          arcHeight = Math.max(20, totalDistance * 0.25);
+
+          // S-curve with two bends
+          cx1 = startX + direction * horizontalDist * 0.3;
+          cy1 = startY - arcHeight * 0.6;
+          cx2 = endX - direction * horizontalDist * 0.2;
+          cy2 = endY - arcHeight * 0.8;
+        } else {
+          // SINGLE LINE: Shallow arc parallel to text (original behavior)
+          arcHeight = 20;
+
+          // First control point - small rise above text
+          cy1 = startY - arcHeight;
+          // Second control point - EXACTLY ABOVE endX at same height
+          // This creates vertical 90° drop
+          cy2 = startY - arcHeight;
+
+          // First control point at 40% of the way
+          cx1 = startX + direction * horizontalDist * 0.4;
+          // Second control point EXACTLY ABOVE endX (same X-coordinate!)
+          // This forces arrow to drop vertically at 90°
+          cx2 = endX;
+        }
 
         // Draw smooth curved path
         const p = document.createElementNS(svgNS, 'path');
-        const d = `M ${startX} ${startY} C ${cx1} ${controlY1}, ${cx2} ${controlY2}, ${endX} ${endY}`;
+        const d = `M ${startX} ${startY} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${endX} ${endY}`;
         p.setAttribute('d', d);
         p.setAttribute('fill', 'none');
         p.setAttribute('stroke', '#ef4444');
@@ -5440,7 +5458,7 @@ function renderComparisonResult(resultEl, comparison){
 
         // Cubic Bezier derivative: B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
         const dx = 3*mt2*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t2*(endX - cx2);
-        const dy = 3*mt2*(controlY1 - startY) + 6*mt*t*(controlY2 - controlY1) + 3*t2*(endY - controlY2);
+        const dy = 3*mt2*(cy1 - startY) + 6*mt*t*(cy2 - cy1) + 3*t2*(endY - cy2);
 
         const mag = Math.hypot(dx, dy) || 1;
         const ux = dx / mag;
