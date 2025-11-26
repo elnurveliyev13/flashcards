@@ -3945,8 +3945,9 @@ select.inline-prompt-field {
 }
 
 .dictation-rewrite-original {
-  color: #ef4444;
+  color: #ffffff;
   text-decoration: line-through;
+  text-decoration-color: #ef4444;
 }
 
 .dictation-rewrite-correct {
@@ -4091,8 +4092,8 @@ select.inline-prompt-field {
   opacity: 0.7;
 }
 .dictation-move-block { border-color: rgba(239,68,68,0.7); background: rgba(239,68,68,0.08); }
-.dictation-rewrite-block { border-color: #ef4444; background: rgba(239,68,68,0.08); }
-.dictation-rewrite-original { color: #ef4444; }
+.dictation-rewrite-block { border-color: #ef4444; background: transparent; }
+.dictation-rewrite-original { color: #f8fafc; text-decoration-color: #ef4444; }
 .dictation-rewrite-correct { color: #ef4444; }
 
 .dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.1; display: block; margin-bottom: 2px; }
