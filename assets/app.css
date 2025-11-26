@@ -3863,7 +3863,7 @@ select.inline-prompt-field {
   color: #e2e8f0;
   font-weight: 500;
   line-height: 1.2;
-  vertical-align: baseline;
+  vertical-align: middle;
 }
 .dictation-token-has-correction {
   flex-direction: column;
@@ -3942,6 +3942,7 @@ select.inline-prompt-field {
   border-radius: 10px;
   border: 1px dashed #ef4444;
   background: transparent;
+  vertical-align: middle;
 }
 
 .dictation-rewrite-original {
@@ -3964,6 +3965,7 @@ select.inline-prompt-field {
   gap: 2px;
   color: #ef4444;
   font-weight: 700;
+  vertical-align: middle;
 }
 
 .dictation-missing-word {
