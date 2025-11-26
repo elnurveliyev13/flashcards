@@ -4904,10 +4904,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const allOrigToUser = new Map();
       orderedMatches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
 
+      // Create a sorted list of ALL original indices (including missing tokens)
+      const allOrigIndices = new Set();
+      orderedMatches.forEach(m => allOrigIndices.add(m.origIndex));
+      missingTokens.forEach(miss => allOrigIndices.add(miss.origIndex));
+      const allOrigSorted = Array.from(allOrigIndices).sort((a, b) => a - b);
+
+      console.log('[DEBUG] All original indices (including missing):', allOrigSorted);
+
       const findNeighbors = (value)=>{
         let prev = -1;
         let next = null;
-        for(const idx of lisOrigSorted){
+        // Search in ALL tokens (including missing), not just LIS
+        for(const idx of allOrigSorted){
           if(idx < value){
             prev = idx;
           } else if(idx > value){
