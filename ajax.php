@@ -27,7 +27,7 @@ if ($globalmode) {
     $access = \mod_flashcards\access_manager::check_user_access($USER->id);
 
     // Check permissions based on action
-    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'recognize_image' || $action === 'ai_focus_helper' || $action === 'ai_translate' || $action === 'ai_question') {
+    if ($action === 'upsert_card' || $action === 'create_deck' || $action === 'upload_media' || $action === 'transcribe_audio' || $action === 'recognize_image' || $action === 'ai_focus_helper' || $action === 'ai_translate' || $action === 'ai_question' || $action === 'ordbank_focus_helper') {
         // Allow site administrators and managers regardless of grace period/access
         $createallowed = !empty($access['can_create']);
         if (is_siteadmin() || has_capability('moodle/site:config', $context) || has_capability('moodle/course:manageactivities', $context)) {
