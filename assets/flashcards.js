@@ -4935,10 +4935,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const { prev, next } = findNeighbors(m.origIndex);
         const gapKey = buildGapKey(prev, next);
 
-        // Use LIS for anchor positions, but fall back to ALL matches if LIS neighbor is missing
+        // Calculate beforeUser: use LIS first, then ALL matches
         let beforeUser = -1;
-        let afterUser = userTokens.length;
-
         if(prev !== -1){
           if(lisOrigToUser.has(prev)){
             beforeUser = lisOrigToUser.get(prev);
@@ -4947,11 +4945,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
 
+        // Calculate afterUser: use LIS first, then ALL matches
+        // If 'next' is a missing token, it won't be in maps, so afterUser stays as default
+        let afterUser = userTokens.length;
         if(next !== null){
           if(lisOrigToUser.has(next)){
             afterUser = lisOrigToUser.get(next);
           } else if(allOrigToUser.has(next)){
             afterUser = allOrigToUser.get(next);
+          }
+          // If next token is missing (not in user input), we need to find the NEXT matched token
+          if(afterUser === userTokens.length){
+            // Find next matched token after 'next'
+            for(let i = next + 1; i < originalTokens.length; i++){
+              if(allOrigToUser.has(i)){
+                afterUser = allOrigToUser.get(i);
+                break;
+              }
+            }
           }
         }
 
@@ -4963,7 +4974,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             afterUser,
             targetBoundary: beforeUser + 1
           };
-          console.log(`[DEBUG] Created gap ${gapKey}: before=${prev}, after=${next}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
+          console.log(`[DEBUG] Created gap ${gapKey}: before=${prev}, after=${next}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}, nextIsMissing=${next !== null && !allOrigToUser.has(next)}`);
         }
         const hasError = m.score < 1 || m.userToken.raw !== m.origToken.raw;
         metaByUser[m.userIndex] = {
