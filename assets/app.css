@@ -3858,21 +3858,18 @@ select.inline-prompt-field {
   align-items: flex-end;
   justify-content: center;
   padding: 4px 8px;
-  padding-top: calc(1.2em + 4px);
   border-radius: 6px;
   background: transparent;
   color: #e2e8f0;
   font-weight: 500;
   line-height: 1.2;
   vertical-align: baseline;
-  min-height: calc(2.4em + 8px);
 }
 .dictation-token-has-correction {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
   gap: 0;
-  padding-top: 4px;
 }
 
 .dictation-token-ok {
@@ -3943,14 +3940,12 @@ select.inline-prompt-field {
   flex-direction: column;
   gap: 0;
   padding: 4px 8px;
-  padding-top: 4px;
   border-radius: 10px;
   border: 1px dashed #ef4444;
   background: transparent;
   vertical-align: baseline;
   justify-content: flex-end;
   align-items: center;
-  min-height: calc(2.4em + 8px);
 }
 
 .dictation-rewrite-original {
@@ -3958,14 +3953,20 @@ select.inline-prompt-field {
   text-decoration: line-through;
   text-decoration-color: #ef4444;
   line-height: 1.2;
-  min-height: 1.2em;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dictation-rewrite-correct {
   color: #ef4444;
   font-weight: 700;
   line-height: 1.2;
-  min-height: 1.2em;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
@@ -3979,9 +3980,7 @@ select.inline-prompt-field {
   font-weight: 700;
   vertical-align: baseline;
   justify-content: flex-end;
-  padding: 4px 8px;
-  padding-top: 4px;
-  min-height: calc(2.4em + 8px);
+  padding: 4px 0;
 }
 
 .dictation-missing-word {
@@ -3990,14 +3989,20 @@ select.inline-prompt-field {
   border-radius: 6px;
   color: #ef4444;
   line-height: 1.2;
-  min-height: 1.2em;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dictation-missing-caret {
   font-size: 0.9rem;
   line-height: 1.2;
   color: #ef4444;
-  min-height: 1.2em;
+  height: 1.2em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dictation-gap-anchor {
@@ -4117,7 +4122,7 @@ select.inline-prompt-field {
 .dictation-rewrite-original { color: #f8fafc; text-decoration-color: #ef4444; }
 .dictation-rewrite-correct { color: #ef4444; }
 
-.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 0; min-height: 1.2em; }
+.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: flex; align-items: center; justify-content: center; margin-bottom: 0; height: 1.2em; }
 .dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
 /* Final overrides: keep move blocks transparent */
 .dictation-move-block { background: transparent !important; }
