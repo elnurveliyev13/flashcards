@@ -2197,7 +2197,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
           return;
         }
-        const data = resp.data;
+        const data = resp && resp.data ? resp.data : null;
+        if(!data || !data.selected){
+          setFocusStatus('error', aiStrings.error || 'Error');
+          console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
+          return;
+        }
         if(fokusInput){
           fokusInput.value = data.selected?.wordform || token.text;
           try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
