@@ -5339,16 +5339,24 @@ function renderComparisonResult(resultEl, comparison){
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
         list.forEach(key=>{
-          // Insert anchor first
-          const anchor = document.createElement('span');
-          anchor.className = 'dictation-gap-anchor';
-          anchor.dataset.gapAnchor = key;
-          const mark = document.createElement('span');
-          mark.className = 'dictation-gap-mark';
-          anchor.appendChild(mark);
-          line.appendChild(anchor);
+          const meta = gapMeta[key];
+          const hasMoveBlock = gapsNeeded.has(key) && meta && Array.from(document.querySelectorAll('[data-target-gap]')).length === 0;
 
-          // Insert missing tokens AFTER anchor
+          // Check if this gap is for a move block (not for missing tokens only)
+          const isForMoveBlock = comparison.movePlan.moveBlocks.some(block => block.targetGapKey === key);
+
+          if (isForMoveBlock) {
+            // For move blocks: anchor first, then missing tokens after
+            const anchor = document.createElement('span');
+            anchor.className = 'dictation-gap-anchor';
+            anchor.dataset.gapAnchor = key;
+            const mark = document.createElement('span');
+            mark.className = 'dictation-gap-mark';
+            anchor.appendChild(mark);
+            line.appendChild(anchor);
+          }
+
+          // Insert missing tokens
           const missingForGap = missingByGapKey.get(key) || [];
           missingForGap.forEach(miss=>{
             const missSpan = document.createElement('span');
@@ -5362,12 +5370,24 @@ function renderComparisonResult(resultEl, comparison){
             missSpan.appendChild(caret);
             line.appendChild(missSpan);
           });
+
+          if (!isForMoveBlock && missingForGap.length === 0) {
+            // If no move block and no missing tokens, still insert anchor
+            const anchor = document.createElement('span');
+            anchor.className = 'dictation-gap-anchor';
+            anchor.dataset.gapAnchor = key;
+            const mark = document.createElement('span');
+            mark.className = 'dictation-gap-mark';
+            anchor.appendChild(mark);
+            line.appendChild(anchor);
+          }
         });
       };
 
       insertAnchors(0);
       const meta = comparison.movePlan.tokenMeta || [];
       let idx = 0;
+      let renderedPos = 0; // Track actual rendered position (excluding moved blocks)
       while(idx < comparison.userTokens.length){
         const token = comparison.userTokens[idx];
         const metaInfo = meta[idx] || {};
@@ -5391,6 +5411,8 @@ function renderComparisonResult(resultEl, comparison){
           rewriteEl.appendChild(original);
           line.appendChild(rewriteEl);
           idx = end + 1;
+          renderedPos++; // Rewrite block counts as one position
+          insertAnchors(renderedPos);
           continue;
         }
         if(metaInfo.moveBlockId){
@@ -5400,7 +5422,8 @@ function renderComparisonResult(resultEl, comparison){
             const span = createTokenSpan(token, metaInfo);
             line.appendChild(span);
             idx++;
-            insertAnchors(idx);
+            renderedPos++;
+            insertAnchors(renderedPos);
             continue;
           }
           const blockEl = document.createElement('span');
@@ -5415,14 +5438,17 @@ function renderComparisonResult(resultEl, comparison){
           });
           line.appendChild(blockEl);
           idx = block.end + 1;
+          // Move blocks don't add to renderedPos - they're moved elsewhere
           continue;
         }
         const span = createTokenSpan(token, metaInfo);
         line.appendChild(span);
         idx++;
-        insertAnchors(idx);
+        renderedPos++;
+        insertAnchors(renderedPos);
       }
-      insertAnchors(comparison.userTokens.length);
+      // Insert final anchors at the actual rendered position
+      insertAnchors(renderedPos);
       row.appendChild(label);
       row.appendChild(line);
       return row;
