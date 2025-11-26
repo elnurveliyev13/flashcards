@@ -5374,24 +5374,7 @@ function renderComparisonResult(resultEl, comparison){
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
         list.forEach(key=>{
-          const meta = gapMeta[key];
-          const hasMoveBlock = gapsNeeded.has(key) && meta && Array.from(document.querySelectorAll('[data-target-gap]')).length === 0;
-
-          // Check if this gap is for a move block (not for missing tokens only)
-          const isForMoveBlock = comparison.movePlan.moveBlocks.some(block => block.targetGapKey === key);
-
-          if (isForMoveBlock) {
-            // For move blocks: anchor first, then missing tokens after
-            const anchor = document.createElement('span');
-            anchor.className = 'dictation-gap-anchor';
-            anchor.dataset.gapAnchor = key;
-            const mark = document.createElement('span');
-            mark.className = 'dictation-gap-mark';
-            anchor.appendChild(mark);
-            line.appendChild(anchor);
-          }
-
-          // Insert missing tokens
+          // Insert missing tokens FIRST
           const missingForGap = missingByGapKey.get(key) || [];
           missingForGap.forEach(miss=>{
             const missSpan = document.createElement('span');
@@ -5406,16 +5389,14 @@ function renderComparisonResult(resultEl, comparison){
             line.appendChild(missSpan);
           });
 
-          if (!isForMoveBlock && missingForGap.length === 0) {
-            // If no move block and no missing tokens, still insert anchor
-            const anchor = document.createElement('span');
-            anchor.className = 'dictation-gap-anchor';
-            anchor.dataset.gapAnchor = key;
-            const mark = document.createElement('span');
-            mark.className = 'dictation-gap-mark';
-            anchor.appendChild(mark);
-            line.appendChild(anchor);
-          }
+          // Then insert anchor for move blocks (after missing tokens)
+          const anchor = document.createElement('span');
+          anchor.className = 'dictation-gap-anchor';
+          anchor.dataset.gapAnchor = key;
+          const mark = document.createElement('span');
+          mark.className = 'dictation-gap-mark';
+          anchor.appendChild(mark);
+          line.appendChild(anchor);
         });
       };
 
