@@ -3983,9 +3983,7 @@ select.inline-prompt-field {
 }
 
 .dictation-missing-caret {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   width: 0;
   height: 0;
   margin-left: 4px;
@@ -3993,7 +3991,9 @@ select.inline-prompt-field {
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
   border-top: 10px solid #ef4444;
-  vertical-align: middle;
+  vertical-align: baseline;
+  position: relative;
+  top: -2px;
   animation: caret-bounce 1s ease-in-out infinite;
 }
 
