@@ -2210,7 +2210,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(focusBaseInput && (focusBaseInput.value || '').trim() === ''){
           focusBaseInput.value = data.selected?.wordform || token.text;
         }
-        if(data.selected?.ipa){
+        if(data.selected && data.selected.ipa){
           const trEl = document.getElementById('uTranscription');
           if(trEl && !trEl.value.trim()){
             trEl.value = data.selected.ipa;
