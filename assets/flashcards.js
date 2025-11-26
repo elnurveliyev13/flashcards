@@ -5448,6 +5448,7 @@ function renderComparisonResult(resultEl, comparison){
       });
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
+        console.log(`[DEBUG] insertAnchors(${boundaryIdx}): gaps=${list.length > 0 ? list.join(', ') : 'none'}`);
         list.forEach(key=>{
           // Insert anchor for move blocks FIRST (arrows point here)
           const anchor = document.createElement('span');
@@ -5460,6 +5461,7 @@ function renderComparisonResult(resultEl, comparison){
 
           // Then insert missing tokens AFTER the anchor
           const missingForGap = missingByGapKey.get(key) || [];
+          console.log(`[DEBUG] Gap ${key} at boundary ${boundaryIdx}: missing tokens=${missingForGap.map(m => m.token.raw).join(', ') || 'none'}`);
           missingForGap.forEach(miss=>{
             const missSpan = document.createElement('span');
             missSpan.className = 'dictation-missing-token';
@@ -5471,6 +5473,7 @@ function renderComparisonResult(resultEl, comparison){
             missSpan.appendChild(word);
             missSpan.appendChild(caret);
             line.appendChild(missSpan);
+            console.log(`[DEBUG] Inserted missing token: ${miss.token.raw}`);
           });
         });
       };
