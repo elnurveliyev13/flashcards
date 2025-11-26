@@ -4932,13 +4932,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
 
-        gapMeta[gapKey] = gapMeta[gapKey] || {
-          before: prev,
-          after: next,
-          beforeUser,
-          afterUser,
-          targetBoundary: beforeUser + 1
-        };
+        if(!gapMeta[gapKey]){
+          gapMeta[gapKey] = {
+            before: prev,
+            after: next,
+            beforeUser,
+            afterUser,
+            targetBoundary: beforeUser + 1
+          };
+          console.log(`[DEBUG] Created gap ${gapKey}: before=${prev}, after=${next}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
+        }
         const hasError = m.score < 1 || m.userToken.raw !== m.origToken.raw;
         metaByUser[m.userIndex] = {
           match: m,
@@ -5100,6 +5103,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         blocks.push(current);
       }
 
+      console.log('[DEBUG] All moveBlocks created:', blocks.map(b => ({
+        id: b.id,
+        tokens: b.tokens,
+        start: b.start,
+        end: b.end,
+        targetBoundary: b.targetBoundary,
+        beforeUser: b.beforeUser,
+        afterUser: b.afterUser,
+        targetGapKey: b.targetGapKey
+      })));
+
       // Filter out blocks that don't actually need to move
       // A block doesn't need to move if it's already in the target position
       const filtered = blocks.filter(block => {
@@ -5112,6 +5126,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return !alreadyInPlace;
       });
       console.log('[DEBUG] Blocks before filter:', blocks.length, 'after filter:', filtered.length);
+      console.log('[DEBUG] Filtered blocks:', filtered.map(b => ({
+        id: b.id,
+        tokens: b.tokens,
+        start: b.start,
+        end: b.end,
+        targetBoundary: b.targetBoundary
+      })));
       return filtered;
     }
 
