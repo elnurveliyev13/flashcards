@@ -412,6 +412,10 @@ switch ($action) {
                 $lemma = $DB->get_record('ordbank_lemma', ['lemma_id' => $data['selected']['lemma_id']]);
                 if ($lemma && !empty($lemma->grunnform)) {
                     $data['selected']['baseform'] = $lemma->grunnform;
+                    // Also replace parts if they only contain the surface form.
+                    if (!empty($data['parts']) && count($data['parts']) === 1) {
+                        $data['parts'] = [$lemma->grunnform];
+                    }
                 }
             }
             if (!$data && !empty($debug['fullform_sample'])) {
@@ -436,6 +440,7 @@ switch ($action) {
                     'candidates' => [$first],
                     'paradigm' => [],
                     'parts' => [$baseform ?? $first->oppslag ?? $word],
+                    'ambiguous' => true,
                 ];
             }
             if (!$data) {

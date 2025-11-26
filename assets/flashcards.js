@@ -2199,6 +2199,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         // API may return {ok:true,data:{...}} or just data; handle both.
         const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
+        if(data && data.ambiguous && Array.isArray(data.candidates) && !data.selected){
+          setFocusStatus('error', aiStrings.choose || 'Choose one');
+          renderCandidateChoices(data.candidates);
+          return;
+        }
         if(!data || !data.selected){
           setFocusStatus('error', aiStrings.error || 'Error');
           console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
@@ -2227,6 +2232,74 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusHelperState.abortController = null;
         }
       }
+    }
+
+    function renderCandidateChoices(cands){
+      if(!focusStatusEl) return;
+      const container = document.createElement('div');
+      container.className = 'focus-candidate-list';
+      cands.forEach((c, i)=>{
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.className='focus-chip';
+        const base = c.baseform || c.oppslag || c.wordform || c.tag || `#${i+1}`;
+        const pos = resolvePosFromTag(c.tag || '');
+        btn.textContent = pos ? `${base} (${pos})` : base;
+        btn.addEventListener('click', ()=>{
+          // simulate selection
+          const fakeData = {
+            selected: {
+              baseform: c.baseform || base,
+              wordform: c.wordform || c.oppslag || base,
+              tag: c.tag || '',
+              ipa: c.ipa || null
+            },
+            candidates: cands,
+            ambiguous: false
+          };
+          applyOrdbankSelection(fakeData, {text: base});
+          setFocusStatus('success', aiStrings.success || '');
+          container.remove();
+        });
+        container.appendChild(btn);
+      });
+      focusStatusEl.textContent = aiStrings.choose || 'Choose one';
+      focusStatusEl.appendChild(container);
+    }
+
+    function resolvePosFromTag(tag){
+      const t = (tag||'').toLowerCase();
+      if(t.includes('verb')) return 'verb';
+      if(t.includes('subst')) return 'substantiv';
+      if(t.includes('adj')) return 'adjektiv';
+      return '';
+    }
+
+    function applyOrdbankSelection(data, token){
+      const focusWordResolved = data.selected.baseform || data.selected.wordform || (token && token.text) || '';
+      if(fokusInput){
+        fokusInput.value = focusWordResolved;
+        try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
+      }
+      if(focusBaseInput && (focusBaseInput.value || '').trim() === ''){
+        focusBaseInput.value = data.selected.baseform || data.selected.wordform || '';
+      }
+      if(data.selected && data.selected.ipa){
+        const trEl = document.getElementById('uTranscription');
+        if(trEl && !trEl.value.trim()){
+          trEl.value = data.selected.ipa;
+        }
+      }
+      // POS field
+      const posField = document.getElementById('uPOS');
+      const posVal = resolvePosFromTag(data.selected.tag || '');
+      if(posField && posVal){
+        posField.value = posVal;
+        if(typeof updatePOSHelp === 'function') {
+          try{ updatePOSHelp(); }catch(_e){}
+        }
+      }
+      // TODO: fill forms UI when available
     }
 
     if(frontInput){

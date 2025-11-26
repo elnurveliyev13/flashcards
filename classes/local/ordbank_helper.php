@@ -29,6 +29,7 @@ class ordbank_helper {
         if (empty($candidates)) {
             return null;
         }
+        $originalcount = count($candidates);
 
         $selected = self::narrow_by_context($candidates, $context);
         if (!$selected && !empty($candidates)) {
@@ -36,7 +37,12 @@ class ordbank_helper {
         }
 
         if (!$selected) {
-            return null;
+            return [
+                'token' => $token,
+                'selected' => null,
+                'candidates' => array_values($candidates),
+                'ambiguous' => true,
+            ];
         }
 
         $paradigm = null;
@@ -52,6 +58,7 @@ class ordbank_helper {
             'candidates' => array_values($candidates),
             'paradigm' => $paradigm,
             'parts' => $parts,
+            'ambiguous' => $originalcount > 1,
         ];
     }
 
@@ -207,32 +214,44 @@ class ordbank_helper {
         $prev = isset($context['prev']) ? core_text::strtolower((string)$context['prev']) : null;
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
 
-        $filtered = $candidates;
+        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei'];
+        $articles = ['en','ei','et','ein','eitt'];
 
-        // If previous token is an article, prefer nouns.
-        if (in_array($prev, ['en', 'ei', 'et'], true)) {
-            $filtered = array_filter($filtered, fn($c) => str_contains($c['tag'] ?? '', 'subst'));
+        $best = null;
+        $bestscore = -1;
+        foreach ($candidates as $cand) {
+            $tag = core_text::strtolower((string)($cand['tag'] ?? ''));
+            $score = 0;
+            $isverb = str_contains($tag, 'verb');
+            $isnoun = str_contains($tag, 'subst');
+            $isadj  = str_contains($tag, 'adj');
+
+            if ($cand['paradigme_id'] ?? null) {
+                $score += 1;
+            }
+            if ($isverb) { $score += 5; }
+            if ($isnoun) { $score += 2; }
+            if ($isadj)  { $score += 1; }
+
+            if (in_array($prev, $pronouns, true) && $isverb) {
+                $score += 4;
+            }
+            if ($prev === 'å' && $isverb) {
+                $score += 3;
+            }
+            if (in_array($prev, $articles, true) && $isnoun) {
+                $score += 3;
+            }
+            if ($next !== null && $isadj && !in_array($next, $articles, true)) {
+                $score += 1;
+            }
+
+            if ($score > $bestscore) {
+                $bestscore = $score;
+                $best = $cand;
+            }
         }
 
-        // If previous token is 'å', prefer infinitive/verbs.
-        if ($prev === 'å') {
-            $filtered = array_filter($filtered, fn($c) => str_contains($c['tag'] ?? '', 'verb'));
-        }
-
-        // If next token is a noun, prefer adjectives.
-        if ($next !== null) {
-            $filtered = array_filter($filtered, function ($c) use ($next) {
-                if (!str_contains($c['tag'] ?? '', 'adj')) {
-                    return true;
-                }
-                return true; // Placeholder for richer heuristics later.
-            });
-        }
-
-        if (!empty($filtered)) {
-            return reset($filtered);
-        }
-
-        return $candidates ? reset($candidates) : null;
+        return $best ?: ($candidates ? reset($candidates) : null);
     }
 }
