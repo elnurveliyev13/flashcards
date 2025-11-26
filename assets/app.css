@@ -3857,7 +3857,7 @@ select.inline-prompt-field {
 .dictation-token {
   position: relative;
   display: inline-grid;
-  grid-template-rows: 1.2em 1.2em;
+  grid-template-rows: 1.2em;
   align-items: end;
   justify-items: center;
   padding: 4px 8px;
@@ -3870,6 +3870,7 @@ select.inline-prompt-field {
 }
 .dictation-token-has-correction {
   grid-template-rows: 1.2em 1.2em;
+  padding-top: 4px;
 }
 
 .dictation-token-ok {
