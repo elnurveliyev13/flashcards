@@ -379,8 +379,12 @@ switch ($action) {
         if ($focuscheck !== '') {
             $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
         }
-        // If helper didn’t return, try a direct lookup to confirm existence.
-        if ($focuscheck === '' || (!$ob || empty($ob['selected']))) {
+        // If helper didn’t return, try clicked word as fallback.
+        if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
+            $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), []);
+        }
+        // If still nothing, try a direct lookup to confirm existence.
+        if ((!$ob || empty($ob['selected']))) {
             $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
             if (!$exists) {
                 echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
@@ -420,8 +424,12 @@ switch ($action) {
         if (!empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
         }
-        if (!empty($ob['forms'])) {
-            $data['forms'] = $ob['forms'];
+        $data['forms'] = $ob['forms'] ?? [];
+        if ((empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
+            $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
+        }
+        if (empty($data['gender']) && !empty($selected['gender'])) {
+            $data['gender'] = $selected['gender'];
         }
         $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
         echo json_encode(['ok' => true, 'data' => $data]);

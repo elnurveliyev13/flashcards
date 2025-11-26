@@ -262,7 +262,7 @@ class ordbank_helper {
     /**
      * Fetch verb/noun/adjective forms from fullform table for UI population.
      */
-    protected static function fetch_forms(int $lemmaid, string $tag): array {
+    public static function fetch_forms(int $lemmaid, string $tag): array {
         global $DB;
         if ($lemmaid <= 0) {
             return [];
