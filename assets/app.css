@@ -3943,6 +3943,7 @@ select.inline-prompt-field {
   border: 1px dashed #ef4444;
   background: transparent;
   vertical-align: middle;
+  justify-content: flex-end;
 }
 
 .dictation-rewrite-original {
@@ -3966,6 +3967,7 @@ select.inline-prompt-field {
   color: #ef4444;
   font-weight: 700;
   vertical-align: middle;
+  justify-content: flex-end;
 }
 
 .dictation-missing-word {
