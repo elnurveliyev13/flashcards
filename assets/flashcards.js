@@ -4904,9 +4904,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const allOrigToUser = new Map();
       orderedMatches.forEach(m => allOrigToUser.set(m.origIndex, m.userIndex));
 
-      // Create a sorted list of LIS original indices (tokens that stay in place)
-      const lisOrigSorted = Array.from(lisOrigToUser.keys()).sort((a, b) => a - b);
-
       console.log('[DEBUG] LIS original indices (stay in place):', lisOrigSorted);
 
       // For moveBlocks: find neighbors among LIS tokens ONLY (skip moving tokens and missing)
