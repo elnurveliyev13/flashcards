@@ -5456,19 +5456,16 @@ function renderComparisonResult(resultEl, comparison){
         const list = gapsByBoundary.get(boundaryIdx) || [];
         console.log(`[DEBUG] insertAnchors(${boundaryIdx}): gaps=${list.length > 0 ? list.join(', ') : 'none'}`);
         list.forEach(key=>{
-          // Insert anchor for move blocks FIRST (arrows point here)
-          const anchor = document.createElement('span');
-          anchor.className = 'dictation-gap-anchor';
-          anchor.dataset.gapAnchor = key;
-          const mark = document.createElement('span');
-          mark.className = 'dictation-gap-mark';
-          anchor.appendChild(mark);
-          line.appendChild(anchor);
-
-          // Then insert missing tokens AFTER the anchor
+          // Get all missing tokens for this gap
           const missingForGap = missingByGapKey.get(key) || [];
-          console.log(`[DEBUG] Gap ${key} at boundary ${boundaryIdx}: missing tokens=${missingForGap.map(m => m.token.raw).join(', ') || 'none'}`);
-          missingForGap.forEach(miss=>{
+
+          // Sort missing tokens by origIndex to insert in correct order
+          const sortedMissing = [...missingForGap].sort((a, b) => a.origIndex - b.origIndex);
+
+          console.log(`[DEBUG] Gap ${key} at boundary ${boundaryIdx}: missing tokens=${sortedMissing.map(m => `${m.token.raw}(${m.origIndex})`).join(', ') || 'none'}`);
+
+          // Insert missing tokens first, sorted by origIndex
+          sortedMissing.forEach(miss=>{
             const missSpan = document.createElement('span');
             missSpan.className = 'dictation-missing-token';
             const word = document.createElement('span');
@@ -5479,8 +5476,17 @@ function renderComparisonResult(resultEl, comparison){
             missSpan.appendChild(word);
             missSpan.appendChild(caret);
             line.appendChild(missSpan);
-            console.log(`[DEBUG] Inserted missing token: ${miss.token.raw}`);
+            console.log(`[DEBUG] Inserted missing token: ${miss.token.raw} (orig_${miss.origIndex})`);
           });
+
+          // Then insert anchor for move blocks (after all missing tokens)
+          const anchor = document.createElement('span');
+          anchor.className = 'dictation-gap-anchor';
+          anchor.dataset.gapAnchor = key;
+          const mark = document.createElement('span');
+          mark.className = 'dictation-gap-mark';
+          anchor.appendChild(mark);
+          line.appendChild(anchor);
         });
       };
 
