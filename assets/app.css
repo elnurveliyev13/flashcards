@@ -3837,11 +3837,13 @@ select.inline-prompt-field {
   position: relative;
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 0.35rem;
   padding: 0.85rem;
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(100, 116, 139, 0.2);
+  line-height: 1.2;
 }
 
 .dictation-line-user {
@@ -3956,20 +3958,12 @@ select.inline-prompt-field {
   text-decoration: line-through;
   text-decoration-color: #ef4444;
   line-height: 1.2;
-  height: 1.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .dictation-rewrite-correct {
   color: #ef4444;
   font-weight: 700;
   line-height: 1.2;
-  height: 1.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 
@@ -3993,20 +3987,12 @@ select.inline-prompt-field {
   border-radius: 6px;
   color: #ef4444;
   line-height: 1.2;
-  height: 1.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .dictation-missing-caret {
   font-size: 0.9rem;
   line-height: 1.2;
   color: #ef4444;
-  height: 1.2em;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .dictation-gap-anchor {
@@ -4126,7 +4112,7 @@ select.inline-prompt-field {
 .dictation-rewrite-original { color: #f8fafc; text-decoration-color: #ef4444; }
 .dictation-rewrite-correct { color: #ef4444; }
 
-.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: flex; align-items: center; justify-content: center; margin-bottom: 0; height: 1.2em; }
+.dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 0; }
 .dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
 /* Final overrides: keep move blocks transparent */
 .dictation-move-block { background: transparent !important; }
