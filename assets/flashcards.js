@@ -2197,7 +2197,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
           return;
         }
-        const data = resp && resp.data ? resp.data : null;
+        // API may return {ok:true,data:{...}} or just data; handle both.
+        const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
         if(!data || !data.selected){
           setFocusStatus('error', aiStrings.error || 'Error');
           console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
