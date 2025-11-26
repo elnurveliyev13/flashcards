@@ -378,26 +378,31 @@ switch ($action) {
         break;
 
     case 'ordbank_focus_helper':
-        $raw = file_get_contents('php://input');
-        $payload = json_decode($raw, true);
-        if (!is_array($payload)) {
-            throw new invalid_parameter_exception('Invalid payload');
+        try {
+            $raw = file_get_contents('php://input');
+            $payload = json_decode($raw, true);
+            if (!is_array($payload)) {
+                throw new invalid_parameter_exception('Invalid payload');
+            }
+            $word = trim($payload['word'] ?? '');
+            $prev = trim($payload['prev'] ?? '');
+            $next = trim($payload['next'] ?? '');
+            if ($word === '') {
+                throw new invalid_parameter_exception('Missing word');
+            }
+            $context = [];
+            if ($prev !== '') {
+                $context['prev'] = $prev;
+            }
+            if ($next !== '') {
+                $context['next'] = $next;
+            }
+            $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
+            echo json_encode(['ok' => (bool)$data, 'data' => $data]);
+        } catch (\Throwable $ex) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => $ex->getMessage()]);
         }
-        $word = trim($payload['word'] ?? '');
-        $prev = trim($payload['prev'] ?? '');
-        $next = trim($payload['next'] ?? '');
-        if ($word === '') {
-            throw new invalid_parameter_exception('Missing word');
-        }
-        $context = [];
-        if ($prev !== '') {
-            $context['prev'] = $prev;
-        }
-        if ($next !== '') {
-            $context['next'] = $next;
-        }
-        $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
-        echo json_encode(['ok' => (bool)$data, 'data' => $data]);
         break;
 
     case 'ai_translate':
