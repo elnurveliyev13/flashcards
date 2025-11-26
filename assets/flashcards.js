@@ -590,7 +590,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_translation_status_idle: 'Translation ready',
         front_translation_copy: 'Copy translation',
         focus_translation_label: 'Focus meaning',
-        fokus: 'Fokus word/phrase',
+        fokus: 'Focus word/phrase',
         focus_baseform: 'Base form',
         focus_baseform_ph: '_ _ _',
         ai_helper_label: 'AI focus helper',
