@@ -400,7 +400,9 @@ switch ($action) {
             // Debug: check how many raw matches exist
             $debug = [];
             try {
-                $debug['fullform_count'] = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [core_text::strtolower($word)]);
+                $debug['fullform_count'] = $DB->count_records_select('{ordbank_fullform}', 'LOWER(OPPSLAG)=?', [core_text::strtolower($word)]);
+                $sample = $DB->get_records_sql("SELECT LEMMA_ID, OPPSLAG, TAG FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 5", ['w' => core_text::strtolower($word)]);
+                $debug['fullform_sample'] = array_values($sample);
             } catch (\Throwable $dbgex) {
                 $debug['fullform_count_error'] = $dbgex->getMessage();
             }
