@@ -5629,9 +5629,8 @@ function renderComparisonResult(resultEl, comparison){
           const segmentTokens = comparison.userTokens.slice(start, end + 1).map(t=>t.raw).join(' ');
           const rewriteEl = document.createElement('span');
           rewriteEl.className = 'dictation-rewrite-block';
-          if(group){
-            rewriteEl.dataset.targetGap = group.targetGapKey;
-          }
+          // NOTE: Rewrite blocks don't need arrows - they show the correction inline
+          // Do NOT set data-target-gap here
           const corrected = document.createElement('span');
           corrected.className = 'dictation-rewrite-correct';
           corrected.textContent = group ? group.correctText : '';
