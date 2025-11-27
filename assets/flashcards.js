@@ -1,4 +1,4 @@
-﻿/* global M */
+/* global M */
 import { log as baseDebugLog } from './modules/debug.js';
 import { idbPut, idbGet, urlFor } from './modules/storage.js';
 import { createIOSRecorder } from './modules/recorder.js';
@@ -125,7 +125,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const clearBtn = document.createElement('button');
         clearBtn.type = 'button';
         clearBtn.className = 'textarea-clear';
-        clearBtn.innerHTML = '×';
+        clearBtn.innerHTML = '?';
         clearBtn.title = 'Clear';
         clearBtn.setAttribute('aria-label', 'Clear field');
 
@@ -389,8 +389,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const privateAudioLabel = dataset.privateAudioLabel || 'Private audio';
     const sttStrings = {
       idle: 'Status',
-      uploading: dataset.sttUploading || 'Uploading Private audio…',
-      transcribing: dataset.sttTranscribing || 'Transcribing…',
+      uploading: dataset.sttUploading || 'Uploading Private audio',
+      transcribing: dataset.sttTranscribing || 'Transcribing',
       success: dataset.sttSuccess || 'Transcription inserted',
       error: dataset.sttError || 'Transcription failed',
       limit: dataset.sttLimit || 'Clip is longer than allowed',
@@ -436,15 +436,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       addPart('OCR', usage.ocrTokens, 'img');
       addPart('EL TTS', usage.elevenlabsTtsTokens, 'chr');
       addPart('EL STT', usage.elevenlabsSttTokens, 's');
-      return parts.join(' · ');
+      return parts.join('  ');
     }
     function updateUsageFromResponse(data){
       if(data && data.usage && typeof data.usage === 'object'){
         mediaUsageSummary = buildMediaUsageSummary(data.usage);
         // Refresh status display with new usage
         if(mediaStatusIndicator){
-          const currentText = mediaStatusIndicator.textContent.split(' · ')[0] || aiStrings.translationIdle;
-          mediaStatusIndicator.textContent = mediaUsageSummary ? `${currentText} · ${mediaUsageSummary}` : currentText;
+          const currentText = mediaStatusIndicator.textContent.split('  ')[0] || aiStrings.translationIdle;
+          mediaStatusIndicator.textContent = mediaUsageSummary ? `${currentText}  ${mediaUsageSummary}` : currentText;
         }
       }
     }
@@ -459,7 +459,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const cropToolbar = $("#ocrCropToolbar");
     const aiStrings = {
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
-      detecting: dataset.aiDetecting || 'Detecting expression…',
+      detecting: dataset.aiDetecting || 'Detecting expression',
       success: dataset.aiSuccess || 'Focus phrase updated',
       error: dataset.aiError || 'Unable to detect an expression',
       notext: dataset.aiNoText || 'Type a sentence to enable the helper',
@@ -473,30 +473,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontTransShow: dataset.frontTransShow || 'Show translation',
       frontTransHide: dataset.frontTransHide || 'Hide translation',
       translationIdle: 'Status',
-      translationLoading: dataset.translationLoading || 'Translating…',
+      translationLoading: dataset.translationLoading || 'Translating',
       translationError: dataset.translationError || 'Translation failed',
       translationReverseHint: dataset.translationReverseHint || 'Type in your language to translate into Norwegian automatically.',
-      aiChatEmpty: dataset.aiChatEmpty || 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+      aiChatEmpty: dataset.aiChatEmpty || '  AI      / ',
       aiChatUser: dataset.aiChatUser || 'You',
       aiChatAssistant: dataset.aiChatAssistant || 'AI',
       aiChatError: dataset.aiChatError || 'AI could not answer that question.',
-      aiChatLoading: dataset.aiChatLoading || 'Thinking…',
+      aiChatLoading: dataset.aiChatLoading || 'Thinking',
       // Dictation exercise strings
-      dictationPlaceholder: dataset.dictationPlaceholder || 'Напишите то, что услышали...',
-      dictationCheck: dataset.dictationCheck || 'Проверить',
-      dictationReplay: dataset.dictationReplay || 'Прослушать снова',
-      dictationEmptyInput: dataset.dictationEmptyInput || 'Введите текст',
-      dictationCorrect: dataset.dictationCorrect || 'Правильно!',
-      dictationPerfect: dataset.dictationPerfect || 'Отлично! Всё правильно!',
-      dictationHint: dataset.dictationHint || 'Смотрите правильный ответ ниже',
-      dictationCorrectAnswer: dataset.dictationCorrectAnswer || 'Правильный ответ:',
-      dictationYourAnswer: dataset.dictationYourAnswer || 'Ваш ответ:',
-      dictationShouldBe: dataset.dictationShouldBe || 'Должно быть:',
-      dictationError: dataset.dictationError || 'ошибка',
-      dictationErrors2: dataset.dictationErrors2 || 'ошибки',
-      dictationErrors5: dataset.dictationErrors5 || 'ошибок',
-      dictationMissingWord: dataset.dictationMissingWord || 'Пропущено слово',
-      dictationExtraWord: dataset.dictationExtraWord || 'Лишнее слово'
+      dictationPlaceholder: dataset.dictationPlaceholder || ' ,  ...',
+      dictationCheck: dataset.dictationCheck || '',
+      dictationReplay: dataset.dictationReplay || ' ',
+      dictationEmptyInput: dataset.dictationEmptyInput || ' ',
+      dictationCorrect: dataset.dictationCorrect || '!',
+      dictationPerfect: dataset.dictationPerfect || '!  !',
+      dictationHint: dataset.dictationHint || '   ',
+      dictationCorrectAnswer: dataset.dictationCorrectAnswer || ' :',
+      dictationYourAnswer: dataset.dictationYourAnswer || ' :',
+      dictationShouldBe: dataset.dictationShouldBe || ' :',
+      dictationError: dataset.dictationError || '',
+      dictationErrors2: dataset.dictationErrors2 || '',
+      dictationErrors5: dataset.dictationErrors5 || '',
+      dictationMissingWord: dataset.dictationMissingWord || ' ',
+      dictationExtraWord: dataset.dictationExtraWord || ' '
     };
     let frontTranslationSlot = null;
     // frontTranslationToggle and frontTranslationVisible removed - translation is always visible
@@ -600,7 +600,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Ask the AI',
         ai_question_placeholder: 'Type a question about this sentence...',
         ai_question_button: 'Ask',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+        ai_chat_empty: '  AI      / ',
         ai_chat_user: 'You',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'The AI could not answer that question.',
@@ -610,8 +610,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         back_en: 'Translation (English)',
         save: 'Save',
         cancel: 'Cancel',
-        show_advanced: 'Show Advanced ▼',
-        hide_advanced: 'Hide Advanced ▲',
+        show_advanced: 'Show Advanced ',
+        hide_advanced: 'Hide Advanced ^',
         empty: 'Nothing due today',
         transcription: 'Transcription',
         pos: 'Part of speech',
@@ -671,92 +671,92 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       uk: {
         app_title: 'MyMemory',
-        interface_language_label: 'Мова інтерфейсу',
-        font_scale_label: 'Розмір шрифту',
-        tab_quickinput: 'Створити',
-        tab_study: 'Навчання',
-        tab_dashboard: 'Панель',
-        quick_audio: 'Записати аудіо',
-        quick_photo: 'Зробити фото',
-        choosefile: 'Вибрати файл',
-        chooseaudiofile: 'Вибрати аудіофайл',
-        tts_voice: 'Голос',
-        tts_voice_hint: 'Виберіть голос перед тим, як попросити AI помічника згенерувати аудіо.',
-        front: 'Текст',
-        front_translation_toggle_show: 'Показати переклад',
-        front_translation_toggle_hide: 'Сховати переклад',
-        front_translation_mode_label: 'Напрямок перекладу',
-        front_translation_mode_hint: 'Натисніть, щоб змінити мови введення/виведення',
-        front_translation_status_idle: 'Переклад готовий',
-        front_translation_copy: 'Копіювати переклад',
-        focus_translation_label: 'Фокусне значення',
-        fokus: 'Фокусне слово/фраза',
-        focus_baseform: 'Базова форма',
+        interface_language_label: ' ',
+        font_scale_label: ' ',
+        tab_quickinput: '',
+        tab_study: '',
+        tab_dashboard: '',
+        quick_audio: ' ',
+        quick_photo: ' ',
+        choosefile: ' ',
+        chooseaudiofile: ' ',
+        tts_voice: '',
+        tts_voice_hint: '   ,   AI   .',
+        front: '',
+        front_translation_toggle_show: ' ',
+        front_translation_toggle_hide: ' ',
+        front_translation_mode_label: ' ',
+        front_translation_mode_hint: ',    /',
+        front_translation_status_idle: ' ',
+        front_translation_copy: ' ',
+        focus_translation_label: ' ',
+        fokus: ' /',
+        focus_baseform: ' ',
         focus_baseform_ph: '_ _ _',
-        ai_helper_label: 'AI помічник фокусу',
-        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
-        ai_no_text: 'Введіть речення, щоб увімкнути помічника',
-        choose_focus_word: 'Оберіть фокус-слово',
-        ai_question_label: 'Запитати AI',
-        ai_question_placeholder: 'Введіть Ваше запитання…',
-        ai_question_button: 'Запитати',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
-        ai_chat_user: 'Ви',
+        ai_helper_label: 'AI  ',
+        ai_click_hint: ' -  ,    ',
+        ai_no_text: ' ,   ',
+        choose_focus_word: ' -',
+        ai_question_label: ' AI',
+        ai_question_placeholder: '  ',
+        ai_question_button: '',
+        ai_chat_empty: '  AI      / ',
+        ai_chat_user: '',
         ai_chat_assistant: 'AI',
-        ai_chat_error: 'AI не зміг відповісти на це запитання.',
-        ai_chat_loading: 'Обробка...',
-        explanation: 'Пояснення',
-        back: 'Переклад',
-        back_en: 'Переклад (англійська)',
-        save: 'Зберегти',
-        cancel: 'Скасувати',
-        show_advanced: 'Показати додаткові ▼',
-        hide_advanced: 'Сховати додаткові ▲',
-        empty: 'Сьогодні нічого не заплановано',
-        transcription: 'Транскрипція',
-        pos: 'Частина мови',
-        gender: 'Рід',
-        noun_forms: 'Форми іменника',
-        verb_forms: 'Форми дієслова',
-        adj_forms: 'Форми прикметника',
-        collocations: 'Загальні словосполучення',
-        examples: 'Приклади речень',
-        antonyms: 'Антоніми',
-        cognates: 'Споріднені слова',
-        sayings: 'Загальні вислови',
-        fill_field: 'Будь ласка, заповніть: {$a}',
-        update: 'Оновити',
-        createnew: 'Створити',
-        audio: 'Аудіо',
-        order_audio_word: 'Фокусне аудіо',
-        order_audio_text: 'Аудіо',
-        image: 'Зображення',
-        order: 'Порядок (натискайте послідовно)',
-        easy: 'Легко',
-        normal: 'Нормально',
-        hard: 'Важко',
-        btnHardHint: 'Повторити цю картку сьогодні',
-        btnNormalHint: 'Наступний огляд завтра',
-        btnEasyHint: 'Перейти до наступного етапу',
-        dashboard_total_cards: 'Всього створено карток',
-        dashboard_active_vocab: 'Активний словник',
-        dashboard_streak: 'Поточна серія (днів)',
-        dashboard_stage_chart: 'Розподіл карток за етапами',
-        dashboard_activity_chart: 'Активність перегляду (останні 7 днів)',
-        dashboard_achievements: 'Досягнення',
-        achievement_week_warrior: 'Воїн тижня (7-денна серія)',
-        achievement_level_a0: 'Рівень A0 - Початківець',
-        achievement_level_a1: 'Рівень A1 - Елементарний',
-        achievement_level_a2: 'Рівень A2 - Базовий',
-        achievement_level_b1: 'Рівень B1 - Середній',
-        achievement_level_b2: 'Рівень B2 - Вище середнього',
-        save: 'Зберегти',
-        skip: 'Пропустити',
-        showmore: 'Показати більше',
-        front_audio_badge: 'Аудіо лицьової сторони',
-        focus_audio_badge: 'Фокусне аудіо',
+        ai_chat_error: 'AI      .',
+        ai_chat_loading: '...',
+        explanation: '',
+        back: '',
+        back_en: ' ()',
+        save: '',
+        cancel: '',
+        show_advanced: '  ',
+        hide_advanced: '  ^',
+        empty: '   ',
+        transcription: '',
+        pos: ' ',
+        gender: 'г',
+        noun_forms: ' ',
+        verb_forms: ' 䳺',
+        adj_forms: ' ',
+        collocations: ' ',
+        examples: ' ',
+        antonyms: '',
+        cognates: ' ',
+        sayings: ' ',
+        fill_field: ' , : {$a}',
+        update: '',
+        createnew: '',
+        audio: '',
+        order_audio_word: ' ',
+        order_audio_text: '',
+        image: '',
+        order: ' ( )',
+        easy: '',
+        normal: '',
+        hard: '',
+        btnHardHint: '   ',
+        btnNormalHint: '  ',
+        btnEasyHint: '   ',
+        dashboard_total_cards: '  ',
+        dashboard_active_vocab: ' ',
+        dashboard_streak: '  ()',
+        dashboard_stage_chart: '   ',
+        dashboard_activity_chart: '  ( 7 )',
+        dashboard_achievements: '',
+        achievement_week_warrior: '  (7- )',
+        achievement_level_a0: 'г A0 - ',
+        achievement_level_a1: 'г A1 - ',
+        achievement_level_a2: 'г A2 - ',
+        achievement_level_b1: 'г B1 - ',
+        achievement_level_b2: 'г B2 -  ',
+        save: '',
+        skip: '',
+        showmore: ' ',
+        front_audio_badge: '  ',
+        focus_audio_badge: ' ',
         front_placeholder: '_ _ _',
-        ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
+        ai_click_hint: ' -  ,    ',
         translation_en_placeholder: '_ _ _',
         translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
@@ -771,92 +771,92 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       ru: {
         app_title: 'MyMemory',
-        interface_language_label: 'Язык интерфейса',
-        font_scale_label: 'Размер шрифта',
-        tab_quickinput: 'Создать',
-        tab_study: 'Обучение',
-        tab_dashboard: 'Панель',
-        quick_audio: 'Записать аудио',
-        quick_photo: 'Сделать фото',
-        choosefile: 'Выбрать файл',
-        chooseaudiofile: 'Выбрать аудиофайл',
-        tts_voice: 'Голос',
-        tts_voice_hint: 'Выберите голос перед тем, как попросить AI помощника сгенерировать аудио.',
-        front: 'Текст',
-        front_translation_toggle_show: 'Показать перевод',
-        front_translation_toggle_hide: 'Скрыть перевод',
-        front_translation_mode_label: 'Направление перевода',
-        front_translation_mode_hint: 'Нажмите, чтобы изменить языки ввода/вывода',
-        front_translation_status_idle: 'Перевод готов',
-        front_translation_copy: 'Копировать перевод',
-        focus_translation_label: 'Фокусное значение',
-        fokus: 'Фокусное слово/фраза',
-        focus_baseform: 'Базовая форма',
+        interface_language_label: ' ',
+        font_scale_label: ' ',
+        tab_quickinput: '',
+        tab_study: '',
+        tab_dashboard: '',
+        quick_audio: ' ',
+        quick_photo: ' ',
+        choosefile: ' ',
+        chooseaudiofile: ' ',
+        tts_voice: '',
+        tts_voice_hint: '   ,   AI   .',
+        front: '',
+        front_translation_toggle_show: ' ',
+        front_translation_toggle_hide: ' ',
+        front_translation_mode_label: ' ',
+        front_translation_mode_hint: ',    /',
+        front_translation_status_idle: ' ',
+        front_translation_copy: ' ',
+        focus_translation_label: ' ',
+        fokus: ' /',
+        focus_baseform: ' ',
         focus_baseform_ph: '_ _ _',
-        ai_helper_label: 'AI помощник фокуса',
-        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
-        ai_no_text: 'Введите предложение, чтобы включить помощника',
-        choose_focus_word: 'Выберите фокус-слово',
-        ai_question_label: 'Спросить ИИ',
-        ai_question_placeholder: 'Введите Ваш вопрос...',
-        ai_question_button: 'Спросить',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
-        ai_chat_user: 'Вы',
-        ai_chat_assistant: 'ИИ',
-        ai_chat_error: 'ИИ не смог ответить на этот вопрос.',
-        ai_chat_loading: 'Думает...',
-        explanation: 'Объяснение',
-        back: 'Перевод',
-        back_en: 'Перевод (английский)',
-        save: 'Сохранить',
-        cancel: 'Отмена',
-        show_advanced: 'Показать дополнительные ▼',
-        hide_advanced: 'Скрыть дополнительные ▲',
-        empty: 'Сегодня ничего не запланировано',
-        transcription: 'Транскрипция',
-        pos: 'Часть речи',
-        gender: 'Род',
-        noun_forms: 'Формы существительного',
-        verb_forms: 'Формы глагола',
-        adj_forms: 'Формы прилагательного',
-        collocations: 'Общие словосочетания',
-        examples: 'Примеры предложений',
-        antonyms: 'Антонимы',
-        cognates: 'Родственные слова',
-        sayings: 'Общие выражения',
-        fill_field: 'Пожалуйста, заполните: {$a}',
-        update: 'Обновить',
-        createnew: 'Создать',
-        audio: 'Аудио',
-        order_audio_word: 'Фокусное аудио',
-        order_audio_text: 'Аудио',
-        image: 'Изображение',
-        order: 'Порядок (нажимайте последовательно)',
-        easy: 'Легко',
-        normal: 'Нормально',
-        hard: 'Сложно',
-        btnHardHint: 'Повторить эту карточку сегодня',
-        btnNormalHint: 'Следующий обзор завтра',
-        btnEasyHint: 'Перейти к следующему этапу',
-        dashboard_total_cards: 'Всего создано карточек',
-        dashboard_active_vocab: 'Активный словарь',
-        dashboard_streak: 'Текущая серия (дней)',
-        dashboard_stage_chart: 'Распределение карточек по этапам',
-        dashboard_activity_chart: 'Активность просмотра (последние 7 дней)',
-        dashboard_achievements: 'Достижения',
-        achievement_week_warrior: 'Воин недели (7-дневная серия)',
-        achievement_level_a0: 'Уровень A0 - Начинающий',
-        achievement_level_a1: 'Уровень A1 - Элементарный',
-        achievement_level_a2: 'Уровень A2 - Базовый',
-        achievement_level_b1: 'Уровень B1 - Средний',
-        achievement_level_b2: 'Уровень B2 - Выше среднего',
-        save: 'Сохранить',
-        skip: 'Пропустить',
-        showmore: 'Показать больше',
-        front_audio_badge: 'Аудио лицевой стороны',
-        focus_audio_badge: 'Фокусное аудио',
+        ai_helper_label: 'AI  ',
+        ai_click_hint: '   ,    ',
+        ai_no_text: ' ,   ',
+        choose_focus_word: ' -',
+        ai_question_label: ' ',
+        ai_question_placeholder: '  ...',
+        ai_question_button: '',
+        ai_chat_empty: '  AI      / ',
+        ai_chat_user: '',
+        ai_chat_assistant: '',
+        ai_chat_error: '      .',
+        ai_chat_loading: '...',
+        explanation: '',
+        back: '',
+        back_en: ' ()',
+        save: '',
+        cancel: '',
+        show_advanced: '  ',
+        hide_advanced: '  ^',
+        empty: '   ',
+        transcription: '',
+        pos: ' ',
+        gender: '',
+        noun_forms: ' ',
+        verb_forms: ' ',
+        adj_forms: ' ',
+        collocations: ' ',
+        examples: ' ',
+        antonyms: '',
+        cognates: ' ',
+        sayings: ' ',
+        fill_field: ', : {$a}',
+        update: '',
+        createnew: '',
+        audio: '',
+        order_audio_word: ' ',
+        order_audio_text: '',
+        image: '',
+        order: ' ( )',
+        easy: '',
+        normal: '',
+        hard: '',
+        btnHardHint: '   ',
+        btnNormalHint: '  ',
+        btnEasyHint: '   ',
+        dashboard_total_cards: '  ',
+        dashboard_active_vocab: ' ',
+        dashboard_streak: '  ()',
+        dashboard_stage_chart: '   ',
+        dashboard_activity_chart: '  ( 7 )',
+        dashboard_achievements: '',
+        achievement_week_warrior: '  (7- )',
+        achievement_level_a0: ' A0 - ',
+        achievement_level_a1: ' A1 - ',
+        achievement_level_a2: ' A2 - ',
+        achievement_level_b1: ' B1 - ',
+        achievement_level_b2: ' B2 -  ',
+        save: '',
+        skip: '',
+        showmore: ' ',
+        front_audio_badge: '  ',
+        focus_audio_badge: ' ',
         front_placeholder: '_ _ _',
-        ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
+        ai_click_hint: '   ,    ',
         translation_en_placeholder: '_ _ _',
         translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
@@ -873,46 +873,46 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Langue de l\'interface',
         font_scale_label: 'Taille du texte',
-        tab_quickinput: 'Créer',
-        tab_study: 'Étudier',
+        tab_quickinput: 'Creer',
+        tab_study: 'Etudier',
         tab_dashboard: 'Tableau de bord',
         quick_audio: 'Enregistrer l\'audio',
         quick_photo: 'Prendre une photo',
         choosefile: 'Choisir un fichier',
         chooseaudiofile: 'Choisir un fichier audio',
         tts_voice: 'Voix',
-        tts_voice_hint: 'Sélectionnez une voix avant de demander à l\'assistant IA de générer l\'audio.',
+        tts_voice_hint: 'Selectionnez une voix avant de demander a l\'assistant IA de generer l\'audio.',
         front: 'Texte',
         front_translation_toggle_show: 'Afficher la traduction',
         front_translation_toggle_hide: 'Masquer la traduction',
         front_translation_mode_label: 'Direction de traduction',
-        front_translation_mode_hint: 'Appuyez pour changer les langues d\'entrée/sortie',
-        front_translation_status_idle: 'Traduction prête',
+        front_translation_mode_hint: 'Appuyez pour changer les langues d\'entree/sortie',
+        front_translation_status_idle: 'Traduction prete',
         front_translation_copy: 'Copier la traduction',
         focus_translation_label: 'Signification focale',
         fokus: 'Mot/phrase focal',
         focus_baseform: 'Forme de base',
         focus_baseform_ph: '_ _ _',
         ai_helper_label: 'Assistant IA focal',
-        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée',
+        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour detecter une expression figee',
         ai_no_text: 'Saisissez une phrase pour activer l\'assistant',
         choose_focus_word: 'Choisissez le mot focal',
-        ai_question_label: 'Demander à l\'IA',
+        ai_question_label: 'Demander a l\'IA',
         ai_question_placeholder: 'Tapez une question sur cette phrase...',
         ai_question_button: 'Demander',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+        ai_chat_empty: '  AI      / ',
         ai_chat_user: 'Vous',
         ai_chat_assistant: 'IA',
-        ai_chat_error: 'L\'IA n\'a pas pu répondre à cette question.',
-        ai_chat_loading: 'Réflexion...',
+        ai_chat_error: 'L\'IA n\'a pas pu repondre a cette question.',
+        ai_chat_loading: 'Reflexion...',
         explanation: 'Explication',
         back: 'Traduction',
         back_en: 'Traduction (anglais)',
         save: 'Enregistrer',
         cancel: 'Annuler',
-        show_advanced: 'Afficher avancé ▼',
-        hide_advanced: 'Masquer avancé ▲',
-        empty: 'Rien prévu aujourd\'hui',
+        show_advanced: 'Afficher avance ',
+        hide_advanced: 'Masquer avance ^',
+        empty: 'Rien prevu aujourd\'hui',
         transcription: 'Transcription',
         pos: 'Partie du discours',
         gender: 'Genre',
@@ -922,41 +922,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         collocations: 'Collocations courantes',
         examples: 'Exemples de phrases',
         antonyms: 'Antonymes',
-        cognates: 'Mots apparentés',
+        cognates: 'Mots apparentes',
         sayings: 'Expressions courantes',
         fill_field: 'Veuillez remplir : {$a}',
-        update: 'Mettre à jour',
-        createnew: 'Créer',
+        update: 'Mettre a jour',
+        createnew: 'Creer',
         audio: 'Audio',
         order_audio_word: 'Audio focal',
         order_audio_text: 'Audio',
         image: 'Image',
-        order: 'Ordre (cliquer en séquence)',
+        order: 'Ordre (cliquer en sequence)',
         easy: 'Facile',
         normal: 'Normal',
         hard: 'Difficile',
-        btnHardHint: 'Répéter cette carte aujourd\'hui',
-        btnNormalHint: 'Prochaine révision demain',
-        btnEasyHint: 'Passer à l\'étape suivante',
-        dashboard_total_cards: 'Total de cartes créées',
+        btnHardHint: 'Repeter cette carte aujourd\'hui',
+        btnNormalHint: 'Prochaine revision demain',
+        btnEasyHint: 'Passer a l\'etape suivante',
+        dashboard_total_cards: 'Total de cartes creees',
         dashboard_active_vocab: 'Vocabulaire actif',
-        dashboard_streak: 'Série actuelle (jours)',
-        dashboard_stage_chart: 'Distribution des étapes de cartes',
-        dashboard_activity_chart: 'Activité de révision (7 derniers jours)',
-        dashboard_achievements: 'Réalisations',
-        achievement_week_warrior: 'Guerrier de la semaine (série de 7 jours)',
-        achievement_level_a0: 'Niveau A0 - Débutant',
-        achievement_level_a1: 'Niveau A1 - Élémentaire',
-        achievement_level_a2: 'Niveau A2 - Pré-intermédiaire',
-        achievement_level_b1: 'Niveau B1 - Intermédiaire',
-        achievement_level_b2: 'Niveau B2 - Intermédiaire supérieur',
+        dashboard_streak: 'Serie actuelle (jours)',
+        dashboard_stage_chart: 'Distribution des etapes de cartes',
+        dashboard_activity_chart: 'Activite de revision (7 derniers jours)',
+        dashboard_achievements: 'Realisations',
+        achievement_week_warrior: 'Guerrier de la semaine (serie de 7 jours)',
+        achievement_level_a0: 'Niveau A0 - Debutant',
+        achievement_level_a1: 'Niveau A1 - Elementaire',
+        achievement_level_a2: 'Niveau A2 - Pre-intermediaire',
+        achievement_level_b1: 'Niveau B1 - Intermediaire',
+        achievement_level_b2: 'Niveau B2 - Intermediaire superieur',
         save: 'Enregistrer',
         skip: 'Passer',
         showmore: 'Afficher plus',
         front_audio_badge: 'Audio du recto',
         focus_audio_badge: 'Audio focal',
         front_placeholder: '_ _ _',
-        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour détecter une expression figée',
+        ai_click_hint: 'Appuyez sur n\'importe quel mot ci-dessus pour detecter une expression figee',
         translation_en_placeholder: '_ _ _',
         translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
@@ -972,7 +972,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       es: {
         app_title: 'MyMemory',
         interface_language_label: 'Idioma de la interfaz',
-        font_scale_label: 'Tamaño de fuente',
+        font_scale_label: 'Tamano de fuente',
         tab_quickinput: 'Crear',
         tab_study: 'Estudiar',
         tab_dashboard: 'Panel',
@@ -983,45 +983,45 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         tts_voice: 'Voz',
         tts_voice_hint: 'Selecciona una voz antes de pedir al asistente IA que genere audio.',
         front: 'Texto',
-        front_translation_toggle_show: 'Mostrar traducción',
-        front_translation_toggle_hide: 'Ocultar traducción',
-        front_translation_mode_label: 'Dirección de traducción',
+        front_translation_toggle_show: 'Mostrar traduccion',
+        front_translation_toggle_hide: 'Ocultar traduccion',
+        front_translation_mode_label: 'Direccion de traduccion',
         front_translation_mode_hint: 'Toca para cambiar los idiomas de entrada/salida',
-        front_translation_status_idle: 'Traducción lista',
-        front_translation_copy: 'Copiar traducción',
+        front_translation_status_idle: 'Traduccion lista',
+        front_translation_copy: 'Copiar traduccion',
         focus_translation_label: 'Significado focal',
         fokus: 'Palabra/frase focal',
         focus_baseform: 'Forma base',
         focus_baseform_ph: '_ _ _',
         ai_helper_label: 'Asistente IA focal',
-        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija',
-        ai_no_text: 'Escribe una oración para activar el asistente',
+        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresion fija',
+        ai_no_text: 'Escribe una oracion para activar el asistente',
         choose_focus_word: 'Elige la palabra focal',
         ai_question_label: 'Preguntar a la IA',
         ai_question_placeholder: 'Escribe una pregunta sobre esta frase...',
         ai_question_button: 'Preguntar',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
-        ai_chat_user: 'Tú',
+        ai_chat_empty: '  AI      / ',
+        ai_chat_user: 'Tu',
         ai_chat_assistant: 'IA',
         ai_chat_error: 'La IA no pudo responder a esa pregunta.',
         ai_chat_loading: 'Pensando...',
-        explanation: 'Explicación',
-        back: 'Traducción',
-        back_en: 'Traducción (inglés)',
+        explanation: 'Explicacion',
+        back: 'Traduccion',
+        back_en: 'Traduccion (ingles)',
         save: 'Guardar',
         cancel: 'Cancelar',
-        show_advanced: 'Mostrar avanzado ▼',
-        hide_advanced: 'Ocultar avanzado ▲',
+        show_advanced: 'Mostrar avanzado ',
+        hide_advanced: 'Ocultar avanzado ^',
         empty: 'Nada pendiente hoy',
-        transcription: 'Transcripción',
-        pos: 'Categoría gramatical',
-        gender: 'Género',
+        transcription: 'Transcripcion',
+        pos: 'Categoria gramatical',
+        gender: 'Genero',
         noun_forms: 'Formas del sustantivo',
         verb_forms: 'Formas del verbo',
         adj_forms: 'Formas del adjetivo',
         collocations: 'Colocaciones comunes',
         examples: 'Oraciones de ejemplo',
-        antonyms: 'Antónimos',
+        antonyms: 'Antonimos',
         cognates: 'Cognados',
         sayings: 'Expresiones comunes',
         fill_field: 'Por favor, complete: {$a}',
@@ -1032,19 +1032,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         order_audio_text: 'Audio',
         image: 'Imagen',
         order: 'Orden (hacer clic en secuencia)',
-        easy: 'Fácil',
+        easy: 'Facil',
         normal: 'Normal',
-        hard: 'Difícil',
+        hard: 'Dificil',
         btnHardHint: 'Repetir esta tarjeta hoy',
-        btnNormalHint: 'Próxima revisión mañana',
+        btnNormalHint: 'Proxima revision manana',
         btnEasyHint: 'Pasar a la siguiente etapa',
         dashboard_total_cards: 'Total de tarjetas creadas',
         dashboard_active_vocab: 'Vocabulario activo',
-        dashboard_streak: 'Racha actual (días)',
-        dashboard_stage_chart: 'Distribución de etapas de tarjetas',
-        dashboard_activity_chart: 'Actividad de revisión (últimos 7 días)',
+        dashboard_streak: 'Racha actual (dias)',
+        dashboard_stage_chart: 'Distribucion de etapas de tarjetas',
+        dashboard_activity_chart: 'Actividad de revision (ultimos 7 dias)',
         dashboard_achievements: 'Logros',
-        achievement_week_warrior: 'Guerrero de la semana (racha de 7 días)',
+        achievement_week_warrior: 'Guerrero de la semana (racha de 7 dias)',
         achievement_level_a0: 'Nivel A0 - Principiante',
         achievement_level_a1: 'Nivel A1 - Elemental',
         achievement_level_a2: 'Nivel A2 - Pre-intermedio',
@@ -1052,11 +1052,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         achievement_level_b2: 'Nivel B2 - Intermedio superior',
         save: 'Guardar',
         skip: 'Omitir',
-        showmore: 'Mostrar más',
+        showmore: 'Mostrar mas',
         front_audio_badge: 'Audio del anverso',
         focus_audio_badge: 'Audio focal',
         front_placeholder: '_ _ _',
-        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresión fija',
+        ai_click_hint: 'Toca cualquier palabra arriba para detectar una expresion fija',
         translation_en_placeholder: '_ _ _',
         translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
@@ -1071,92 +1071,92 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       pl: {
         app_title: 'MyMemory',
-        interface_language_label: 'Język interfejsu',
+        interface_language_label: 'Jezyk interfejsu',
         font_scale_label: 'Rozmiar czcionki',
-        tab_quickinput: 'Utwórz',
+        tab_quickinput: 'Utworz',
         tab_study: 'Nauka',
         tab_dashboard: 'Panel',
         quick_audio: 'Nagraj audio',
-        quick_photo: 'Zrób zdjęcie',
+        quick_photo: 'Zrob zdjecie',
         choosefile: 'Wybierz plik',
         chooseaudiofile: 'Wybierz plik audio',
-        tts_voice: 'Głos',
-        tts_voice_hint: 'Wybierz głos przed poproszeniem asystenta AI o wygenerowanie audio.',
+        tts_voice: 'Glos',
+        tts_voice_hint: 'Wybierz glos przed poproszeniem asystenta AI o wygenerowanie audio.',
         front: 'Tekst',
-        front_translation_toggle_show: 'Pokaż tłumaczenie',
-        front_translation_toggle_hide: 'Ukryj tłumaczenie',
-        front_translation_mode_label: 'Kierunek tłumaczenia',
-        front_translation_mode_hint: 'Dotknij, aby zmienić języki wejścia/wyjścia',
-        front_translation_status_idle: 'Tłumaczenie gotowe',
-        front_translation_copy: 'Kopiuj tłumaczenie',
+        front_translation_toggle_show: 'Pokaz tlumaczenie',
+        front_translation_toggle_hide: 'Ukryj tlumaczenie',
+        front_translation_mode_label: 'Kierunek tlumaczenia',
+        front_translation_mode_hint: 'Dotknij, aby zmienic jezyki wejscia/wyjscia',
+        front_translation_status_idle: 'Tlumaczenie gotowe',
+        front_translation_copy: 'Kopiuj tlumaczenie',
         focus_translation_label: 'Fokusowe znaczenie',
-        fokus: 'Słowo/fraza fokusowa',
+        fokus: 'Slowo/fraza fokusowa',
         focus_baseform: 'Forma podstawowa',
         focus_baseform_ph: '_ _ _',
         ai_helper_label: 'Asystent AI fokusa',
-        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie',
-        ai_no_text: 'Wpisz zdanie, aby włączyć asystenta',
-        choose_focus_word: 'Wybierz słowo fokusowe',
+        ai_click_hint: 'Dotknij dowolnego slowa powyzej, aby wykryc stale wyrazenie',
+        ai_no_text: 'Wpisz zdanie, aby wlaczyc asystenta',
+        choose_focus_word: 'Wybierz slowo fokusowe',
         ai_question_label: 'Zapytaj AI',
-        ai_question_placeholder: 'Wpisz pytanie dotyczące tego zdania...',
+        ai_question_placeholder: 'Wpisz pytanie dotyczace tego zdania...',
         ai_question_button: 'Zapytaj',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+        ai_chat_empty: '  AI      / ',
         ai_chat_user: 'Ty',
         ai_chat_assistant: 'AI',
-        ai_chat_error: 'AI nie mogła odpowiedzieć na to pytanie.',
-        ai_chat_loading: 'Myśli...',
-        explanation: 'Wyjaśnienie',
-        back: 'Tłumaczenie',
-        back_en: 'Tłumaczenie (angielski)',
+        ai_chat_error: 'AI nie mogla odpowiedziec na to pytanie.',
+        ai_chat_loading: 'Mysli...',
+        explanation: 'Wyjasnienie',
+        back: 'Tlumaczenie',
+        back_en: 'Tlumaczenie (angielski)',
         save: 'Zapisz',
         cancel: 'Anuluj',
-        show_advanced: 'Pokaż zaawansowane ▼',
-        hide_advanced: 'Ukryj zaawansowane ▲',
+        show_advanced: 'Pokaz zaawansowane ',
+        hide_advanced: 'Ukryj zaawansowane ^',
         empty: 'Nic do nauki dzisiaj',
         transcription: 'Transkrypcja',
-        pos: 'Część mowy',
+        pos: 'Czesc mowy',
         gender: 'Rodzaj',
         noun_forms: 'Formy rzeczownika',
         verb_forms: 'Formy czasownika',
         adj_forms: 'Formy przymiotnika',
         collocations: 'Typowe kolokacje',
-        examples: 'Przykładowe zdania',
+        examples: 'Przykladowe zdania',
         antonyms: 'Antonimy',
         cognates: 'Wyrazy pokrewne',
-        sayings: 'Powszechne wyrażenia',
-        fill_field: 'Proszę wypełnić: {$a}',
+        sayings: 'Powszechne wyrazenia',
+        fill_field: 'Prosze wypelnic: {$a}',
         update: 'Aktualizuj',
-        createnew: 'Utwórz',
+        createnew: 'Utworz',
         audio: 'Audio',
         order_audio_word: 'Audio fokusowe',
         order_audio_text: 'Audio',
         image: 'Obraz',
-        order: 'Kolejność (klikaj po kolei)',
-        easy: 'Łatwe',
+        order: 'Kolejnosc (klikaj po kolei)',
+        easy: 'Latwe',
         normal: 'Normalne',
         hard: 'Trudne',
-        btnHardHint: 'Powtórz tę fiszkę dzisiaj',
-        btnNormalHint: 'Następny przegląd jutro',
-        btnEasyHint: 'Przejdź do następnego etapu',
-        dashboard_total_cards: 'Łączna liczba utworzonych fiszek',
-        dashboard_active_vocab: 'Aktywne słownictwo',
+        btnHardHint: 'Powtorz te fiszke dzisiaj',
+        btnNormalHint: 'Nastepny przeglad jutro',
+        btnEasyHint: 'Przejdz do nastepnego etapu',
+        dashboard_total_cards: 'Laczna liczba utworzonych fiszek',
+        dashboard_active_vocab: 'Aktywne slownictwo',
         dashboard_streak: 'Obecna seria (dni)',
-        dashboard_stage_chart: 'Rozkład etapów fiszek',
-        dashboard_activity_chart: 'Aktywność przeglądu (ostatnie 7 dni)',
-        dashboard_achievements: 'Osiągnięcia',
+        dashboard_stage_chart: 'Rozklad etapow fiszek',
+        dashboard_activity_chart: 'Aktywnosc przegladu (ostatnie 7 dni)',
+        dashboard_achievements: 'Osiagniecia',
         achievement_week_warrior: 'Wojownik tygodnia (7-dniowa seria)',
-        achievement_level_a0: 'Poziom A0 - Początkujący',
+        achievement_level_a0: 'Poziom A0 - Poczatkujacy',
         achievement_level_a1: 'Poziom A1 - Elementarny',
         achievement_level_a2: 'Poziom A2 - Podstawowy',
-        achievement_level_b1: 'Poziom B1 - Średniozaawansowany',
-        achievement_level_b2: 'Poziom B2 - Zaawansowany średni',
+        achievement_level_b1: 'Poziom B1 - Sredniozaawansowany',
+        achievement_level_b2: 'Poziom B2 - Zaawansowany sredni',
         save: 'Zapisz',
-        skip: 'Pomiń',
-        showmore: 'Pokaż więcej',
+        skip: 'Pomin',
+        showmore: 'Pokaz wiecej',
         front_audio_badge: 'Audio przodu',
         focus_audio_badge: 'Audio fokusowe',
         front_placeholder: '_ _ _',
-        ai_click_hint: 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie',
+        ai_click_hint: 'Dotknij dowolnego slowa powyzej, aby wykryc stale wyrazenie',
         translation_en_placeholder: '_ _ _',
         translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
@@ -1200,7 +1200,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: 'Chiedi all\'AI',
         ai_question_placeholder: 'Digita una domanda su questa frase...',
         ai_question_button: 'Chiedi',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+        ai_chat_empty: '  AI      / ',
         ai_chat_user: 'Tu',
         ai_chat_assistant: 'AI',
         ai_chat_error: 'L\'AI non ha potuto rispondere a quella domanda.',
@@ -1210,8 +1210,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         back_en: 'Traduzione (inglese)',
         save: 'Salva',
         cancel: 'Annulla',
-        show_advanced: 'Mostra avanzate ▼',
-        hide_advanced: 'Nascondi avanzate ▲',
+        show_advanced: 'Mostra avanzate ',
+        hide_advanced: 'Nascondi avanzate ^',
         empty: 'Niente da fare oggi',
         transcription: 'Trascrizione',
         pos: 'Parte del discorso',
@@ -1242,7 +1242,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         dashboard_active_vocab: 'Vocabolario attivo',
         dashboard_streak: 'Serie attuale (giorni)',
         dashboard_stage_chart: 'Distribuzione fasi schede',
-        dashboard_activity_chart: 'Attività di ripasso (ultimi 7 giorni)',
+        dashboard_activity_chart: 'Attivita di ripasso (ultimi 7 giorni)',
         dashboard_achievements: 'Traguardi',
         achievement_week_warrior: 'Guerriero della settimana (serie di 7 giorni)',
         achievement_level_a0: 'Livello A0 - Principiante',
@@ -1271,24 +1271,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       de: {
         app_title: 'MyMemory',
-        interface_language_label: 'Sprache der Oberfläche',
-        font_scale_label: 'Schriftgröße',
+        interface_language_label: 'Sprache der Oberflache',
+        font_scale_label: 'Schriftgro?e',
         tab_quickinput: 'Erstellen',
         tab_study: 'Studieren',
         tab_dashboard: 'Dashboard',
         quick_audio: 'Audio aufnehmen',
         quick_photo: 'Foto aufnehmen',
-        choosefile: 'Datei auswählen',
-        chooseaudiofile: 'Audiodatei auswählen',
+        choosefile: 'Datei auswahlen',
+        chooseaudiofile: 'Audiodatei auswahlen',
         tts_voice: 'Stimme',
-        tts_voice_hint: 'Wählen Sie eine Stimme aus, bevor Sie den KI-Assistenten bitten, Audio zu generieren.',
+        tts_voice_hint: 'Wahlen Sie eine Stimme aus, bevor Sie den KI-Assistenten bitten, Audio zu generieren.',
         front: 'Text',
-        front_translation_toggle_show: 'Übersetzung anzeigen',
-        front_translation_toggle_hide: 'Übersetzung ausblenden',
-        front_translation_mode_label: 'Übersetzungsrichtung',
-        front_translation_mode_hint: 'Tippen Sie, um die Eingabe-/Ausgabesprachen zu ändern',
-        front_translation_status_idle: 'Übersetzung bereit',
-        front_translation_copy: 'Übersetzung kopieren',
+        front_translation_toggle_show: 'Ubersetzung anzeigen',
+        front_translation_toggle_hide: 'Ubersetzung ausblenden',
+        front_translation_mode_label: 'Ubersetzungsrichtung',
+        front_translation_mode_hint: 'Tippen Sie, um die Eingabe-/Ausgabesprachen zu andern',
+        front_translation_status_idle: 'Ubersetzung bereit',
+        front_translation_copy: 'Ubersetzung kopieren',
         focus_translation_label: 'Fokusbedeutung',
         fokus: 'Fokuswort/-phrase',
         focus_baseform: 'Grundform',
@@ -1296,35 +1296,35 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_helper_label: 'KI-Fokus-Assistent',
         ai_click_hint: 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen',
         ai_no_text: 'Geben Sie einen Satz ein, um den Assistenten zu aktivieren',
-        choose_focus_word: 'Fokuswort auswählen',
+        choose_focus_word: 'Fokuswort auswahlen',
         ai_question_label: 'KI fragen',
         ai_question_placeholder: 'Stellen Sie eine Frage zu diesem Satz...',
         ai_question_button: 'Fragen',
-        ai_chat_empty: 'Поставте запитання AI стосовно Вашого тексту або фокусного слова/ фразы',
+        ai_chat_empty: '  AI      / ',
         ai_chat_user: 'Sie',
         ai_chat_assistant: 'KI',
         ai_chat_error: 'Die KI konnte diese Frage nicht beantworten.',
         ai_chat_loading: 'Denkt nach...',
-        explanation: 'Erklärung',
-        back: 'Übersetzung',
-        back_en: 'Übersetzung (Englisch)',
+        explanation: 'Erklarung',
+        back: 'Ubersetzung',
+        back_en: 'Ubersetzung (Englisch)',
         save: 'Speichern',
         cancel: 'Abbrechen',
-        show_advanced: 'Erweitert anzeigen ▼',
-        hide_advanced: 'Erweitert ausblenden ▲',
-        empty: 'Heute nichts fällig',
+        show_advanced: 'Erweitert anzeigen ',
+        hide_advanced: 'Erweitert ausblenden ^',
+        empty: 'Heute nichts fallig',
         transcription: 'Transkription',
         pos: 'Wortart',
         gender: 'Geschlecht',
         noun_forms: 'Substantivformen',
         verb_forms: 'Verbformen',
         adj_forms: 'Adjektivformen',
-        collocations: 'Häufige Kollokationen',
-        examples: 'Beispielsätze',
+        collocations: 'Haufige Kollokationen',
+        examples: 'Beispielsatze',
         antonyms: 'Antonyme',
-        cognates: 'Verwandte Wörter',
-        sayings: 'Häufige Redewendungen',
-        fill_field: 'Bitte ausfüllen: {$a}',
+        cognates: 'Verwandte Worter',
+        sayings: 'Haufige Redewendungen',
+        fill_field: 'Bitte ausfullen: {$a}',
         update: 'Aktualisieren',
         createnew: 'Erstellen',
         audio: 'Audio',
@@ -1336,22 +1336,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         normal: 'Normal',
         hard: 'Schwer',
         btnHardHint: 'Diese Karte heute wiederholen',
-        btnNormalHint: 'Nächste Wiederholung morgen',
-        btnEasyHint: 'Zur nächsten Stufe wechseln',
+        btnNormalHint: 'Nachste Wiederholung morgen',
+        btnEasyHint: 'Zur nachsten Stufe wechseln',
         dashboard_total_cards: 'Gesamt erstellte Karten',
         dashboard_active_vocab: 'Aktiver Wortschatz',
         dashboard_streak: 'Aktuelle Serie (Tage)',
         dashboard_stage_chart: 'Kartenstufen-Verteilung',
-        dashboard_activity_chart: 'Überprüfungsaktivität (letzte 7 Tage)',
+        dashboard_activity_chart: 'Uberprufungsaktivitat (letzte 7 Tage)',
         dashboard_achievements: 'Erfolge',
         achievement_week_warrior: 'Wochenkrieger (7-Tages-Serie)',
-        achievement_level_a0: 'Niveau A0 - Anfänger',
+        achievement_level_a0: 'Niveau A0 - Anfanger',
         achievement_level_a1: 'Niveau A1 - Grundstufe',
         achievement_level_a2: 'Niveau A2 - Untere Mittelstufe',
         achievement_level_b1: 'Niveau B1 - Mittelstufe',
         achievement_level_b2: 'Niveau B2 - Obere Mittelstufe',
         save: 'Speichern',
-        skip: 'Überspringen',
+        skip: 'Uberspringen',
         showmore: 'Mehr anzeigen',
         front_audio_badge: 'Vorderseiten-Audio',
         focus_audio_badge: 'Fokus-Audio',
@@ -1529,7 +1529,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const c = (code||'').toLowerCase();
       const map = {
         en:'English', no:'Norsk', nb:'Norsk', nn:'Nynorsk',
-        uk:'Українська', ru:'Русский', pl:'Polski', de:'Deutsch', fr:'Français', es:'Español', it:'Italiano'
+        uk:'', ru:'', pl:'Polski', de:'Deutsch', fr:'Francais', es:'Espanol', it:'Italiano'
       };
       return map[c] || c.toUpperCase();
     }
@@ -1565,13 +1565,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // Show language selector dialog
     function showLanguageSelector(){
       const languages = [
-        {code: 'uk', name: 'Українська'},
+        {code: 'uk', name: ''},
         {code: 'en', name: 'English'},
-        {code: 'ru', name: 'Русский'},
+        {code: 'ru', name: ''},
         {code: 'pl', name: 'Polski'},
         {code: 'de', name: 'Deutsch'},
-        {code: 'fr', name: 'Français'},
-        {code: 'es', name: 'Español'},
+        {code: 'fr', name: 'Francais'},
+        {code: 'es', name: 'Espanol'},
         {code: 'it', name: 'Italiano'}
       ];
 
@@ -1602,10 +1602,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const langLabel = languageName(userLang2);
       const norwegianLabel = languageName('no');
       if(translationForwardLabel){
-        translationForwardLabel.textContent = `${norwegianLabel} → ${langLabel}`;
+        translationForwardLabel.textContent = `${norwegianLabel} > ${langLabel}`;
       }
       if(translationReverseLabel){
-        translationReverseLabel.textContent = `${langLabel} → ${norwegianLabel}`;
+        translationReverseLabel.textContent = `${langLabel} > ${norwegianLabel}`;
       }
     }
 
@@ -1621,7 +1621,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const text = label || aiStrings.translationIdle;
       const summary = mediaUsageSummary;
-      mediaStatusIndicator.textContent = summary ? `${text} · ${summary}` : text;
+      mediaStatusIndicator.textContent = summary ? `${text}  ${summary}` : text;
       mediaStatusIndicator.dataset.state = state || '';
       mediaStatusIndicator.classList.remove('error','success');
       if(state === 'error'){
@@ -1636,7 +1636,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const clean = (text || '').trim();
-      focusTranslationText.textContent = clean || '�';
+      focusTranslationText.textContent = clean || '?';
     }
 
     function applyTranslationDirection(dir){
@@ -1760,7 +1760,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       btnRemove.type = 'button';
       btnRemove.className = 'fc-link-btn';
       btnRemove.style.cssText = 'font-size: 0.85em; padding: 2px 6px; color: #ef4444;';
-      btnRemove.textContent = '× Remove';
+      btnRemove.textContent = '? Remove';
       btnRemove.addEventListener('click', () => {
         if(type === 'Example') {
           examplesData.splice(index, 1);
@@ -1804,7 +1804,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       btnToggle.type = 'button';
       btnToggle.className = 'fc-link-btn';
       btnToggle.style.cssText = 'font-size: 0.85em; padding: 4px 8px;';
-      btnToggle.textContent = '👁 Show/Hide';
+      btnToggle.textContent = '?? Show/Hide';
       btnToggle.addEventListener('click', (e) => {
         e.preventDefault();
         inputTrans.classList.toggle('hidden');
@@ -1941,7 +1941,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');
     applyTranslationDirection('no-user');
-    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'’\-]+/gu; } catch(_e){ return /[A-Za-z0-9'’\-]+/g; } })();
+    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
 
     function setFocusStatus(state, text){
       if(!focusStatusEl) return;
@@ -2075,17 +2075,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const posVal = resolvePosFromTag(data.pos || '');
       if(posVal === 'verb' && data.forms && data.forms.verb){
         const vf = data.forms.verb;
-        const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = vf.infinitiv || '';
-        const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = vf.presens || '';
-        const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = vf.preteritum || '';
-        const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = vf.perfektum_partisipp || '';
-        const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = vf.imperativ || '';
+        const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
+        const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv)';
+        const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens)';
+        const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum)';
+        const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp)';
+        const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ)';
       } else if(posVal === 'substantiv' && data.forms && data.forms.noun){
         const nf = data.forms.noun;
-        const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = nf.indef_sg || '';
-        const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = nf.def_sg || '';
-        const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = nf.indef_pl || '';
-        const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = nf.def_pl || '';
+        const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
+        const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg)';
+        const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg)';
+        const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl)';
+        const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl)';
       }
       if(Array.isArray(data.collocations) && data.collocations.length){
         const collEl = document.getElementById('uCollocations');
@@ -2334,17 +2336,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         if(posVal === 'verb'){
           const vf = (data.forms && data.forms.verb) || {};
-          const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = vf.infinitiv || '';
-          const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = vf.presens || '';
-          const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = vf.preteritum || '';
-          const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = vf.perfektum_partisipp || '';
-          const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = vf.imperativ || '';
+          const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
+          const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv)';
+          const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens)';
+          const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum)';
+          const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp)';
+          const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ)';
         } else if(posVal === 'substantiv'){
           const nf = (data.forms && data.forms.noun) || {};
-          const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = nf.indef_sg || '';
-          const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = nf.def_sg || '';
-          const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = nf.indef_pl || '';
-          const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = nf.def_pl || '';
+          const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
+          const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg)';
+          const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg)';
+          const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl)';
+          const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl)';
         }
         const posField = document.getElementById('uPOS');
         if(posField && posVal){
@@ -2770,13 +2774,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       nb:{one:'dag', other:'dager'},
       no:{one:'dag', other:'dager'},
       nn:{one:'dag', other:'dager'},
-      ru:{one:'день', few:'дня', many:'дней', other:'дней'},
-      uk:{one:'день', few:'дні', many:'днів', other:'днів'},
+      ru:{one:'', few:'', many:'', other:''},
+      uk:{one:'', few:'', many:'', other:''},
       de:{one:'Tag', other:'Tage'},
       fr:{one:'jour', other:'jours'},
-      es:{one:'día', other:'días'},
+      es:{one:'dia', other:'dias'},
       it:{one:'giorno', other:'giorni'},
-      pl:{one:'dzień', few:'dni', many:'dni', other:'dni'}
+      pl:{one:'dzien', few:'dni', many:'dni', other:'dni'}
     };
     const pluralRulesCache = {};
     function getInterfaceLanguage(){
@@ -4422,7 +4426,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const userInput = inputEl.value.trim();
 
         if(!userInput){
-          resultEl.innerHTML = '<div class="dictation-error-msg">⚠️ ' + (aiStrings.dictationEmptyInput || 'Введите текст') + '</div>';
+          resultEl.innerHTML = '<div class="dictation-error-msg">?? ' + (aiStrings.dictationEmptyInput || ' ') + '</div>';
           resultEl.classList.remove('hidden');
           return;
         }
@@ -4444,12 +4448,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           inputEl.disabled = true;
           inputEl.classList.add('dictation-success');
           checkBtn.disabled = true;
-          checkBtn.textContent = '✓ ' + (aiStrings.dictationCorrect || 'Правильно!');
+          checkBtn.textContent = '? ' + (aiStrings.dictationCorrect || '!');
           checkBtn.classList.remove('primary');
           checkBtn.classList.add('success');
         } else if(checkCount >= 2){
           // After 2 attempts, show hint
-          inputEl.placeholder = aiStrings.dictationHint || 'Смотрите правильный ответ ниже';
+          inputEl.placeholder = aiStrings.dictationHint || '   ';
         }
       });
 
@@ -4463,7 +4467,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     // Compare two texts character by character and word by word
-﻿    // Compare dictation answers with move-aware logic
+?    // Compare dictation answers with move-aware logic
     function compareTexts(userInput, correctText){
       const userNorm = (userInput || '').trim();
       const correctNorm = (correctText || '').trim();
@@ -4826,7 +4830,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return a.start < b.start;
     }
 
-    // Monotone alignment (Needleman–Wunsch) to derive non-crossing anchors
+    // Monotone alignment (NeedlemanWunsch) to derive non-crossing anchors
     function monotoneAlignment(userTokens, originalTokens){
       const n = userTokens.length;
       const m = originalTokens.length;
@@ -5374,16 +5378,16 @@ function renderComparisonResult(resultEl, comparison){
       if(comparison.isCorrect){
         const success = document.createElement('div');
         success.className = 'dictation-success-msg';
-        success.textContent = `? ${aiStrings.dictationPerfect || 'Отлично! Всё правильно!'}`;
+        success.textContent = `? ${aiStrings.dictationPerfect || '!  !'}`;
         wrapper.appendChild(success);
         resultEl.appendChild(wrapper);
         return;
       }
 
       const errorCount = comparison.errorCount || 0;
-      const errorWord = errorCount === 1 ? (aiStrings.dictationError || 'ошибка') :
-                        errorCount < 5 ? (aiStrings.dictationErrors2 || 'ошибки') :
-                        (aiStrings.dictationErrors5 || 'ошибок');
+      const errorWord = errorCount === 1 ? (aiStrings.dictationError || '') :
+                        errorCount < 5 ? (aiStrings.dictationErrors2 || '') :
+                        (aiStrings.dictationErrors5 || '');
       const summary = document.createElement('div');
       summary.className = 'dictation-errors-summary';
       summary.textContent = `?? ${errorCount} ${errorWord}`;
@@ -5408,7 +5412,7 @@ function renderComparisonResult(resultEl, comparison){
       row.className = 'dictation-comparison-row';
       const label = document.createElement('div');
       label.className = 'dictation-comparison-label';
-      label.textContent = aiStrings.dictationYourAnswer || 'Ваш ответ:';
+      label.textContent = aiStrings.dictationYourAnswer || ' :';
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-user';
 
@@ -5574,7 +5578,7 @@ function renderComparisonResult(resultEl, comparison){
       row.className = 'dictation-comparison-row';
       const label = document.createElement('div');
       label.className = 'dictation-comparison-label';
-      label.textContent = aiStrings.dictationShouldBe || 'Должно быть:';
+      label.textContent = aiStrings.dictationShouldBe || ' :';
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-correct';
       comparison.originalTokens.forEach((token, idx)=>{
@@ -5691,13 +5695,13 @@ function renderComparisonResult(resultEl, comparison){
           // First control point - small rise above text
           cy1 = startY - arcHeight;
           // Second control point - EXACTLY ABOVE endX at same height
-          // This creates vertical 90° drop
+          // This creates vertical 90 drop
           cy2 = startY - arcHeight;
 
           // First control point at 40% of the way
           cx1 = startX + direction * horizontalDist * 0.4;
           // Second control point EXACTLY ABOVE endX (same X-coordinate!)
-          // This forces arrow to drop vertically at 90°
+          // This forces arrow to drop vertically at 90
           cx2 = endX;
         }
 
@@ -5719,7 +5723,7 @@ function renderComparisonResult(resultEl, comparison){
         const t2 = t * t;
         const t3 = t2 * t;
 
-        // Cubic Bezier derivative: B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+        // Cubic Bezier derivative: B'(t) = 3(1-t)?(P1-P0) + 6(1-t)t(P2-P1) + 3t?(P3-P2)
         const dx = 3*mt2*(cx1 - startX) + 6*mt*t*(cx2 - cx1) + 3*t2*(endX - cx2);
         const dy = 3*mt2*(cy1 - startY) + 6*mt*t*(cy2 - cy1) + 3*t2*(endY - cy2);
 
@@ -5789,15 +5793,15 @@ function renderComparisonResult(resultEl, comparison){
             </div>
             <div class="dictation-controls">
               <button type="button" class="dictation-check-btn primary">
-                ${aiStrings.dictationCheck || 'Проверить'}
+                ${aiStrings.dictationCheck || ''}
               </button>
-              <button type="button" class="dictation-replay-btn" title="${aiStrings.dictationReplay || 'Прослушать снова'}">
-                🔊 0.85x
+              <button type="button" class="dictation-replay-btn" title="${aiStrings.dictationReplay || ' '}">
+                ?? 0.85x
               </button>
             </div>
             <div class="dictation-result hidden"></div>
             <div class="dictation-correct-answer hidden">
-              <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || 'Правильный ответ:'}</div>
+              <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || ' :'}</div>
               <div class="correct-answer-text">${card.text}</div>
             </div>
           </div>
@@ -6850,7 +6854,7 @@ function renderComparisonResult(resultEl, comparison){
         });
       }
 
-      // Playback chain: student → original → STOP (one-time playback)
+      // Playback chain: student > original > STOP (one-time playback)
       async function playbackChain(){
         console.log('[PronunciationPractice] playbackChain called');
         console.log('[PronunciationPractice] studentRecordingBlob:', studentRecordingBlob);
@@ -7226,7 +7230,7 @@ function renderComparisonResult(resultEl, comparison){
       $$("#orderChips .chip").forEach(ch=>{
         ch.classList.toggle("active", orderChosen.includes(ch.dataset.kind));
       });
-      const pretty = (orderChosen.length ? orderChosen : DEFAULT_ORDER).map(k=>chipsMap[k]).join(' → ');
+      const pretty = (orderChosen.length ? orderChosen : DEFAULT_ORDER).map(k=>chipsMap[k]).join(' > ');
       const prevEl = document.getElementById('orderPreview');
       if(prevEl) prevEl.textContent = pretty;
     }
@@ -7653,7 +7657,7 @@ function renderComparisonResult(resultEl, comparison){
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="🗑";
+        del.textContent="??";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;
@@ -8034,7 +8038,7 @@ function renderComparisonResult(resultEl, comparison){
       if(field === 'transcription'){
         editor = inputEl('text');
         editor.value = currentItem.card.transcription || '';
-        editor.placeholder = '[transkrɪpʃən]';
+        editor.placeholder = '[transkr?p??n]';
         inputWrap.appendChild(editor);
       } else if(field === 'pos'){
         editor = selectEl();
@@ -8360,13 +8364,13 @@ function renderComparisonResult(resultEl, comparison){
         statusClass = 'access-active';
         statusTitle = M?.str?.mod_flashcards?.access_status_active || 'Active Access';
         statusDesc = M?.str?.mod_flashcards?.access_status_active_desc || 'You have full access to create and review flashcards.';
-        statusIcon = '✅';
+        statusIcon = '?';
       } else if (access.status === 'grace') {
         statusClass = 'access-grace';
         const daysLeft = access.days_remaining || 0;
         statusTitle = (M?.str?.mod_flashcards?.access_status_grace || 'Grace Period ({$a} days remaining)').replace('{$a}', daysLeft);
         statusDesc = M?.str?.mod_flashcards?.access_status_grace_desc || 'You can review your existing cards but cannot create new ones. Enrol in a course to restore full access.';
-        statusIcon = '⏰';
+        statusIcon = '?';
 
         // Add enrol button for grace period
         const enrolBtn = document.createElement('button');
@@ -8381,7 +8385,7 @@ function renderComparisonResult(resultEl, comparison){
         statusClass = 'access-expired';
         statusTitle = M?.str?.mod_flashcards?.access_status_expired || 'Access Expired';
         statusDesc = M?.str?.mod_flashcards?.access_status_expired_desc || 'Your access has expired. Enrol in a course to regain access to flashcards.';
-        statusIcon = '❌';
+        statusIcon = '?';
 
         // Add enrol button for expired access
         const enrolBtn = document.createElement('button');
@@ -8664,7 +8668,7 @@ function renderComparisonResult(resultEl, comparison){
 
         const labels = stageData.map(d => `Stage ${d.stage}`);
         const data = stageData.map(d => d.count);
-        const stageEmojis = ['🌰', '🌱', '🌿', '☘️', '🍀', '🌷', '🌼', '🌳', '🌴', '✅', '🏆', '👑'];
+        const stageEmojis = ['??', '??', '??', '??', '??', '??', '??', '??', '??', '?', '??', '??'];
 
         new Chart(canvas, {
           type: 'doughnut',
@@ -8732,14 +8736,14 @@ function renderComparisonResult(resultEl, comparison){
         const activeVocab = Math.round(stats.activeVocab || 0);
 
         const achievements = [
-          { id: 2, threshold: 7, current: stats.currentStreak, icon: '🔥' },
+          { id: 2, threshold: 7, current: stats.currentStreak, icon: '??' },
 
           // Language Level Achievements (based on Active Vocabulary)
-          { id: 5, threshold: 100, current: activeVocab, icon: '🌱' },  // A0
-          { id: 6, threshold: 600, current: activeVocab, icon: '🌿' },  // A1
-          { id: 7, threshold: 1500, current: activeVocab, icon: '🍀' }, // A2
-          { id: 8, threshold: 2500, current: activeVocab, icon: '🌳' }, // B1
-          { id: 9, threshold: 4500, current: activeVocab, icon: '🏆' }  // B2
+          { id: 5, threshold: 100, current: activeVocab, icon: '??' },  // A0
+          { id: 6, threshold: 600, current: activeVocab, icon: '??' },  // A1
+          { id: 7, threshold: 1500, current: activeVocab, icon: '??' }, // A2
+          { id: 8, threshold: 2500, current: activeVocab, icon: '??' }, // B1
+          { id: 9, threshold: 4500, current: activeVocab, icon: '??' }  // B2
         ];
 
         achievements.forEach(ach => {
@@ -8750,7 +8754,7 @@ function renderComparisonResult(resultEl, comparison){
           const completed = ach.current >= ach.threshold;
           if (completed) {
             card.classList.add('fc-achievement-completed');
-            progress.textContent = '✅ Completed';
+            progress.textContent = '? Completed';
           } else {
             progress.textContent = `${ach.current}/${ach.threshold}`;
           }
@@ -8821,8 +8825,8 @@ function renderComparisonResult(resultEl, comparison){
             scheduleTranslationRefresh();
           }
           const langNames = {
-            en: 'English', uk: 'Українська', ru: 'Українська',
-            fr: 'Français', es: 'Español', pl: 'Polski',
+            en: 'English', uk: '', ru: '',
+            fr: 'Francais', es: 'Espanol', pl: 'Polski',
             it: 'Italiano', de: 'Deutsch'
           };
           const langName = langNames[newLang] || newLang;

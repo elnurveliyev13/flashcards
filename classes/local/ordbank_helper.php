@@ -275,44 +275,79 @@ class ordbank_helper {
             return [];
         }
         if (str_contains($lower, 'verb')) {
-            $verb = [];
+            $verb = [
+                'infinitiv' => [],
+                'presens' => [],
+                'preteritum' => [],
+                'perfektum_partisipp' => [],
+                'imperativ' => [],
+            ];
             foreach ($records as $rec) {
                 $t = core_text::strtolower((string)$rec->tag);
                 if (!$rec->oppslag) {
                     continue;
                 }
-                if (!isset($verb['infinitiv']) && str_contains($t, 'inf')) {
-                    $verb['infinitiv'] = $rec->oppslag;
-                } elseif (!isset($verb['presens']) && str_contains($t, 'pres')) {
-                    $verb['presens'] = $rec->oppslag;
-                } elseif (!isset($verb['preteritum']) && str_contains($t, 'pret')) {
-                    $verb['preteritum'] = $rec->oppslag;
-                } elseif (!isset($verb['perfektum_partisipp']) && (str_contains($t, 'perf') || str_contains($t, 'part'))) {
-                    $verb['perfektum_partisipp'] = $rec->oppslag;
-                } elseif (!isset($verb['imperativ']) && str_contains($t, 'imper')) {
-                    $verb['imperativ'] = $rec->oppslag;
+                $boy = (int)$rec->boy_nummer;
+                // Exclude participle for presens: skip tags with "part"
+                $ispart = str_contains($t, 'part');
+                if ($boy === 1 || str_contains($t, 'inf')) {
+                    $verb['infinitiv'][] = $rec->oppslag;
+                }
+                if (($boy === 2 || str_contains($t, 'pres')) && !$ispart) {
+                    $verb['presens'][] = $rec->oppslag;
+                }
+                if ($boy === 4 || str_contains($t, 'pret')) {
+                    $verb['preteritum'][] = $rec->oppslag;
+                }
+                if ($boy === 5 || str_contains($t, 'perf') || $ispart) {
+                    $verb['perfektum_partisipp'][] = $rec->oppslag;
+                }
+                if ($boy === 3 || str_contains($t, 'imper')) {
+                    $verb['imperativ'][] = $rec->oppslag;
                 }
             }
+            // Deduplicate and prefer non-participle presens if available.
+            $verb = array_map(function($arr) {
+                $arr = array_values(array_unique(array_filter($arr)));
+                return $arr;
+            }, $verb);
+            if (!empty($verb['presens'])) {
+                $nonende = array_filter($verb['presens'], fn($v) => !preg_match('/ende$/u', $v));
+                if (!empty($nonende)) {
+                    $verb['presens'] = array_values($nonende);
+                }
+            }
+            $verb = array_filter($verb, fn($v) => !empty($v));
             if (!empty($verb)) {
                 $out['verb'] = $verb;
             }
         } elseif (str_contains($lower, 'subst')) {
-            $noun = [];
+            $noun = [
+                'indef_sg' => [],
+                'def_sg' => [],
+                'indef_pl' => [],
+                'def_pl' => [],
+            ];
             foreach ($records as $rec) {
                 $t = core_text::strtolower((string)$rec->tag);
                 if (!$rec->oppslag) {
                     continue;
                 }
-                if (!isset($noun['indef_sg']) && str_contains($t, 'ent ub')) {
-                    $noun['indef_sg'] = $rec->oppslag;
-                } elseif (!isset($noun['def_sg']) && str_contains($t, 'ent be')) {
-                    $noun['def_sg'] = $rec->oppslag;
-                } elseif (!isset($noun['indef_pl']) && str_contains($t, 'fl ub')) {
-                    $noun['indef_pl'] = $rec->oppslag;
-                } elseif (!isset($noun['def_pl']) && str_contains($t, 'fl be')) {
-                    $noun['def_pl'] = $rec->oppslag;
+                if (str_contains($t, 'ent ub')) {
+                    $noun['indef_sg'][] = $rec->oppslag;
+                } elseif (str_contains($t, 'ent be')) {
+                    $noun['def_sg'][] = $rec->oppslag;
+                } elseif (str_contains($t, 'fl ub')) {
+                    $noun['indef_pl'][] = $rec->oppslag;
+                } elseif (str_contains($t, 'fl be')) {
+                    $noun['def_pl'][] = $rec->oppslag;
                 }
             }
+            $noun = array_map(function($arr){
+                $arr = array_values(array_unique(array_filter($arr)));
+                return $arr;
+            }, $noun);
+            $noun = array_filter($noun, fn($v) => !empty($v));
             if (!empty($noun)) {
                 $out['noun'] = $noun;
             }
