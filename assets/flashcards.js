@@ -2034,13 +2034,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(typeof data.correction === 'string' && data.correction.trim()){
         correctionMessage = data.correction.trim();
       }
-      if(data.focusWord && fokusInput){
+      // Try to detect multiword expressions from ordbokene in the original front text.
+      let matchedExpression = '';
+      if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
+        const frontLower = frontInput.value.toLowerCase();
+        matchedExpression = data.expressions
+          .map(e => (e || '').trim())
+          .filter(Boolean)
+          .filter(e => frontLower.includes(e.toLowerCase()))
+          .sort((a,b) => b.length - a.length)[0] || '';
+      }
+      if((data.focusWord || matchedExpression) && fokusInput){
         const posVal = resolvePosFromTag(data.pos || '');
-        let focusVal = data.focusWord;
-        if(posVal === 'verb'){
-          focusVal = `(å) ${focusVal}`;
-        } else if(posVal === 'substantiv' && data.gender){
-          focusVal = `(${data.gender}) ${focusVal}`;
+        let focusVal = matchedExpression || data.focusWord;
+        if(!matchedExpression){
+          if(posVal === 'verb'){
+            focusVal = `(å) ${focusVal}`;
+          } else if(posVal === 'substantiv' && data.gender){
+            focusVal = `(${data.gender}) ${focusVal}`;
+          }
         }
         fokusInput.value = focusVal;
         try{
