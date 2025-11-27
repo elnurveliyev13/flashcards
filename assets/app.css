@@ -3896,6 +3896,18 @@ select.inline-prompt-field {
   background: transparent;
 }
 
+/* Disable tokenization and outline for correct answer display */
+.dictation-line-correct .dictation-token {
+  padding: 0;
+  border: none;
+  outline: none;
+}
+
+.dictation-line-correct {
+  display: block;
+  flex-wrap: nowrap;
+}
+
 .dictation-token-warn {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.15);
