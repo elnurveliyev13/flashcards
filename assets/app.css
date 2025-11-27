@@ -3702,6 +3702,8 @@ select.inline-prompt-field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin: 0;
+  padding: 0;
 }
 
 .dictation-comparison-label {
@@ -3710,6 +3712,8 @@ select.inline-prompt-field {
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin: 0;
+  padding: 0;
 }
 
 .dictation-comparison-text {
@@ -3844,6 +3848,8 @@ select.inline-prompt-field {
   gap: 0.35rem;
   padding: 0.85rem;
   margin: 0;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
   background: rgba(15, 23, 42, 0.55);
   border: 1px solid rgba(100, 116, 139, 0.2);
@@ -3854,12 +3860,16 @@ select.inline-prompt-field {
   background: rgba(59, 130, 246, 0.05);
   margin: 0;
   padding: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dictation-line-correct {
   background: rgba(16, 185, 129, 0.05);
   margin: 0;
   padding: 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dictation-token {

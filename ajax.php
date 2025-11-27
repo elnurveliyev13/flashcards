@@ -438,12 +438,14 @@ switch ($action) {
                 $data['forms'] = $tmp['forms'];
             }
         }
-        // If still no forms/definition/examples and ordbokene is enabled, try API lookup.
-        if ($orbokeneenabled && (empty($data['forms']) || empty($data['definition']) || empty($data['examples']))) {
+        // Always try Ordbøkene for expressions (and for forms/definition/examples if они пустые).
+        $debugai = [];
+        if ($orbokeneenabled) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
-            $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $focuscheck, $lang);
+            $span = $data['focusBaseform'] ?? $focuscheck;
+            $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($span, $lang);
             $debugai['ordbokene'] = [
-                'span' => $data['focusBaseform'] ?? $focuscheck,
+                'span' => $span,
                 'ok' => !empty($orbokenedata),
                 'expressions' => $orbokenedata['expressions'] ?? [],
                 'url' => $orbokenedata['dictmeta']['url'] ?? ''
@@ -459,9 +461,11 @@ switch ($action) {
                     $data['examples'] = $orbokenedata['examples'];
                 }
                 if (!empty($orbokenedata['expressions'])) {
-                    $data['expressions'] = $orbokenedata['expressions'];
+                    $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $orbokenedata['expressions'])));
                 }
-                $data['dictmeta'] = $orbokenedata['dictmeta'] ?? [];
+                if (empty($data['dictmeta']) && !empty($orbokenedata['dictmeta'])) {
+                    $data['dictmeta'] = $orbokenedata['dictmeta'];
+                }
             }
         }
         if (empty($data['gender']) && !empty($selected['gender'])) {
