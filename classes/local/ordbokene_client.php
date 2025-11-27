@@ -23,8 +23,10 @@ defined('MOODLE_INTERNAL') || die();
  * No API key is required per official docs.
  */
 class ordbokene_client {
-    /** @var string base URL */
-    protected const BASE = 'https://ord.uib.no/api/ordbok';
+    /** @var string base URL for search */
+    protected const SEARCH = 'https://ord.uib.no/api/articles';
+    /** @var string base URL for article fetch */
+    protected const ARTICLE = 'https://ord.uib.no/%s/article/%d.json';
 
     /**
      * Lookup a word/expression.
@@ -39,33 +41,47 @@ class ordbokene_client {
             return [];
         }
         $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
-        $url = self::BASE . '/' . $lang . '/' . rawurlencode($word);
-
+        $searchurl = self::SEARCH . '?w=' . rawurlencode($word) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
         try {
             $curl = new \curl();
-            $resp = $curl->get($url);
-            if ($resp === false || $resp === '') {
+            $resp = $curl->get($searchurl);
+            $search = json_decode($resp, true);
+            if (!is_array($search) || empty($search['articles'])) {
                 return [];
             }
-            $data = json_decode($resp, true);
-            if (!is_array($data)) {
+            $articleid = null;
+            $articlelang = null;
+            if (!empty($search['articles']['bm'][0])) {
+                $articleid = (int)$search['articles']['bm'][0];
+                $articlelang = 'bm';
+            } else if (!empty($search['articles']['nn'][0])) {
+                $articleid = (int)$search['articles']['nn'][0];
+                $articlelang = 'nn';
+            }
+            if (!$articleid || !$articlelang) {
                 return [];
             }
-            return self::normalize($data, $lang, $url);
+            $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
+            $resp2 = $curl->get($articleurl);
+            $article = json_decode($resp2, true);
+            if (!is_array($article)) {
+                return [];
+            }
+            return self::normalize_article($article, $articlelang, $articleurl);
         } catch (\Throwable $e) {
             return [];
         }
     }
 
     /**
-     * Normalize API response to internal structure.
+     * Normalize article json to internal structure.
      *
-     * @param array $payload
+     * @param array $article
      * @param string $lang
      * @param string $url
      * @return array
      */
-    protected static function normalize(array $payload, string $lang, string $url): array {
+    protected static function normalize_article(array $article, string $lang, string $url): array {
         $out = [
             'source' => 'ordbokene',
             'dictmeta' => ['lang' => $lang, 'url' => $url],
@@ -77,95 +93,99 @@ class ordbokene_client {
             'examples' => [],
         ];
 
-        // Grunnform / oppslag.
-        $out['baseform'] = $payload['oppslag'] ?? ($payload['lemma'] ?? '');
-
-        // Try to pick first article.
-        $articles = $payload['artikler'] ?? $payload['artikkel'] ?? [];
-        if (!is_array($articles)) {
-            $articles = [];
+        // Baseform from first lemma.
+        if (!empty($article['lemmas'][0]['lemma'])) {
+            $out['baseform'] = $article['lemmas'][0]['lemma'];
         }
-        $first = [];
-        if (!empty($articles)) {
-            $first = $articles[0];
-        } elseif (!empty($payload)) {
-            $first = $payload;
-        }
-
-        // POS (ordklasse).
-        if (!empty($first['ordklasse'])) {
-            $out['pos'] = $first['ordklasse'];
-        }
-
-        // Bøyning.
-        if (!empty($first['bøyning']) && is_array($first['bøyning'])) {
-            $out['forms'] = self::extract_forms($first['bøyning']);
-        }
-
-        // Betydning / bruk.
-        if (!empty($first['betydning']) && is_array($first['betydning'])) {
-            foreach ($first['betydning'] as $b) {
-                if (!empty($b['definisjon'])) {
-                    $out['meanings'][] = trim($b['definisjon']);
-                }
-            }
-        }
-
-        // Eksempel.
-        if (!empty($first['eksempel']) && is_array($first['eksempel'])) {
-            foreach ($first['eksempel'] as $ex) {
-                if (!empty($ex['tekst'])) {
-                    $out['examples'][] = trim($ex['tekst']);
-                }
-            }
-        }
-
-        // Faste uttrykk.
-        if (!empty($first['faste_uttrykk']) && is_array($first['faste_uttrykk'])) {
-            foreach ($first['faste_uttrykk'] as $fx) {
-                if (!empty($fx['uttrykk'])) {
-                    $out['expressions'][] = trim($fx['uttrykk']);
-                }
-            }
-        }
+        // Forms from paradigm_info.
+        $out['forms'] = self::extract_forms_from_paradigm($article['lemmas'][0]['paradigm_info'] ?? []);
+        // Expressions from sub-articles in definitions.
+        $out['expressions'] = self::extract_expressions($article['body']['definitions'] ?? []);
+        // Meanings/examples: take first definition explanation and examples if any.
+        $out['meanings'] = self::extract_meanings($article['body']['definitions'] ?? []);
+        $out['examples'] = self::extract_examples($article['body']['definitions'] ?? []);
 
         return array_filter($out, fn($v) => !empty($v));
     }
 
-    /**
-     * Extract verb/noun forms from bøyning-array.
-     *
-     * @param array $b
-     * @return array
-     */
-    protected static function extract_forms(array $b): array {
+    protected static function extract_forms_from_paradigm(array $paradigm): array {
         $forms = [];
-        // The API may expose slot names; we map them to our internal keys.
-        $map = [
-            'infinitiv' => ['infinitiv'],
-            'presens' => ['presens'],
-            'preteritum' => ['preteritum'],
-            'presens perfektum' => ['presens_perfektum', 'perfektum_presens'],
-            'presens_perfektum' => ['presens_perfektum'],
-            'imperativ' => ['imperativ'],
-            'presens partisipp' => ['presens_partisipp'],
-            'perfektum partisipp' => ['perfektum_partisipp'],
-        ];
-        foreach ($b as $slot => $values) {
-            if (!is_array($values)) {
+        foreach ($paradigm as $p) {
+            if (empty($p['inflection']) || !is_array($p['inflection'])) {
                 continue;
             }
-            foreach ($map as $needle => $targets) {
-                if (mb_stripos($slot, $needle) !== false) {
-                    foreach ($targets as $t) {
-                        if (!isset($forms['verb'])) {
-                            $forms['verb'] = [];
+            foreach ($p['inflection'] as $inf) {
+                if (empty($inf['tags']) || empty($inf['word_form'])) {
+                    continue;
+                }
+                $tags = array_map('strtolower', $inf['tags']);
+                $wf = $inf['word_form'];
+                if (in_array('infinitive', $tags) || in_array('infinitiv', $tags)) {
+                    $forms['verb']['infinitiv'][] = $wf;
+                }
+                if (in_array('present', $tags) || in_array('presens', $tags)) {
+                    $forms['verb']['presens'][] = $wf;
+                }
+                if (in_array('past', $tags) || in_array('preteritum', $tags)) {
+                    $forms['verb']['preteritum'][] = $wf;
+                }
+                if (in_array('perfect_participle', $tags) || in_array('perfektum_partisipp', $tags)) {
+                    $forms['verb']['perfektum_partisipp'][] = $wf;
+                }
+                if (in_array('imperative', $tags) || in_array('imperativ', $tags)) {
+                    $forms['verb']['imperativ'][] = $wf;
+                }
+            }
+        }
+        // Deduplicate
+        if (!empty($forms['verb'])) {
+            $forms['verb'] = array_map(function($arr){
+                return array_values(array_unique(array_filter($arr)));
+            }, $forms['verb']);
+        }
+        return $forms;
+    }
+
+    protected static function extract_expressions(array $definitions): array {
+        $expr = [];
+        foreach ($definitions as $def) {
+            foreach ($def['elements'] ?? [] as $el) {
+                if (($el['type_'] ?? '') === 'sub_article' && !empty($el['lemmas'])) {
+                    foreach ($el['lemmas'] as $l) {
+                        if (is_string($l) && $l !== '') {
+                            $expr[] = $l;
                         }
-                        $forms['verb'][$t] = array_values(array_unique(array_filter($values)));
                     }
                 }
             }
         }
-        return $forms;
+        return array_values(array_unique(array_filter($expr)));
+    }
+
+    protected static function extract_meanings(array $definitions): array {
+        $out = [];
+        foreach ($definitions as $def) {
+            foreach ($def['elements'] ?? [] as $el) {
+                if (($el['type_'] ?? '') === 'definition' || ($el['type_'] ?? '') === 'explanation') {
+                    $content = $el['content'] ?? '';
+                    if (is_string($content) && trim($content) !== '') {
+                        $out[] = trim($content);
+                    }
+                }
+            }
+        }
+        return array_values(array_unique(array_filter($out)));
+    }
+
+    protected static function extract_examples(array $definitions): array {
+        $out = [];
+        foreach ($definitions as $def) {
+            foreach ($def['elements'] ?? [] as $el) {
+                if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
+                    $out[] = trim($el['quote']['content']);
+                }
+            }
+        }
+        return array_values(array_unique(array_filter($out)));
     }
 }
