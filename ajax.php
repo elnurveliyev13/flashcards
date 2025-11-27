@@ -537,17 +537,6 @@ switch ($action) {
                     }
                     if (!empty($orbokenedata['expressions'])) {
                         $data['expressions'] = $orbokenedata['expressions'];
-                        // Try to detect expression inside the full front text.
-                        if ($fronttext !== '') {
-                            $frontlower = core_text::strtolower($fronttext);
-                            foreach ($orbokenedata['expressions'] as $expr) {
-                                $expr = trim($expr);
-                                if ($expr !== '' && str_contains($frontlower, core_text::strtolower($expr))) {
-                                    $data['selected']['wordform'] = $expr;
-                                    break;
-                                }
-                            }
-                        }
                     }
                     if (empty($data['forms']) && !empty($orbokenedata['forms'])) {
                         $data['forms'] = $orbokenedata['forms'];
@@ -559,6 +548,49 @@ switch ($action) {
                         $data['examples'] = $orbokenedata['examples'];
                     }
                     $data['dictmeta'] = $orbokenedata['dictmeta'] ?? [];
+                }
+                // Try to detect a multiword expression around the clicked word using the full front text.
+                if ($fronttext !== '') {
+                    $candidates = [];
+                    $words = preg_split('/\\s+/', core_text::strtolower($fronttext));
+                    $lowerword = core_text::strtolower($word);
+                    $idx = array_search($lowerword, $words, true);
+                    if ($idx !== false) {
+                        for ($len = 3; $len >= 2; $len--) { // try longer spans first
+                            $start = max(0, $idx - ($len - 1));
+                            for ($i = $start; $i <= $idx; $i++) {
+                                if ($i + $len <= count($words)) {
+                                    $span = trim(implode(' ', array_slice($words, $i, $len)));
+                                    if ($span && !in_array($span, $candidates, true)) {
+                                        $candidates[] = $span;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    foreach ($candidates as $cand) {
+                        $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
+                        if (!empty($lookup)) {
+                            $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
+                            if (empty($data['selected']['wordform'])) {
+                                $data['selected']['wordform'] = $cand;
+                            }
+                            if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
+                                $data['selected']['baseform'] = $lookup['baseform'];
+                            }
+                            if (empty($data['forms']) && !empty($lookup['forms'])) {
+                                $data['forms'] = $lookup['forms'];
+                            }
+                            if (empty($data['definition']) && !empty($lookup['meanings'])) {
+                                $data['definition'] = $lookup['meanings'][0];
+                            }
+                            if (empty($data['examples']) && !empty($lookup['examples'])) {
+                                $data['examples'] = $lookup['examples'];
+                            }
+                            $data['dictmeta'] = $lookup['dictmeta'] ?? [];
+                            break;
+                        }
+                    }
                 }
             }
 
