@@ -3974,21 +3974,6 @@ select.inline-prompt-field {
   padding: 4px 8px;
   position: relative;
   z-index: 10; /* Above arrows */
-  /* Add semi-transparent background to block arrows */
-  background: var(--bg);
-  border-radius: 4px;
-  /* Strong text outline for readability */
-  text-shadow:
-    -2px -2px 0 var(--bg),
-    2px -2px 0 var(--bg),
-    -2px 2px 0 var(--bg),
-    2px 2px 0 var(--bg),
-    -1px 0 0 var(--bg),
-    1px 0 0 var(--bg),
-    0 -1px 0 var(--bg),
-    0 1px 0 var(--bg),
-    0 0 4px var(--bg),
-    0 0 6px var(--bg);
 }
 
 .dictation-missing-word {
@@ -3997,6 +3982,24 @@ select.inline-prompt-field {
   border-radius: 6px;
   color: #ef4444;
   line-height: 1.2;
+  position: relative;
+  /* Very thick outline using paint-order for perfect coverage */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--surface-1);
+  /* Fallback for browsers that don't support paint-order */
+  text-shadow:
+    -3px -3px 0 var(--surface-1),
+    3px -3px 0 var(--surface-1),
+    -3px 3px 0 var(--surface-1),
+    3px 3px 0 var(--surface-1),
+    -2px -2px 0 var(--surface-1),
+    2px -2px 0 var(--surface-1),
+    -2px 2px 0 var(--surface-1),
+    2px 2px 0 var(--surface-1),
+    -1px 0 0 var(--surface-1),
+    1px 0 0 var(--surface-1),
+    0 -1px 0 var(--surface-1),
+    0 1px 0 var(--surface-1);
 }
 
 .dictation-missing-caret {
