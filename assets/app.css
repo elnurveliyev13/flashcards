@@ -3820,7 +3820,7 @@ select.inline-prompt-field {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.2275rem; /* 0.35 * 0.65 = 0.2275 (reduced by 35%) */
+  gap: 0.15925rem; /* 0.2275 * 0.70 = 0.15925 (reduced by additional 30%) */
   padding: 0;
   margin: 0;
   width: 100%;
@@ -3928,7 +3928,7 @@ select.inline-prompt-field {
 .dictation-move-block {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.2275rem; /* 0.35 * 0.65 = 0.2275 (reduced by 35%) */
+  gap: 0.15925rem; /* 0.2275 * 0.70 = 0.15925 (reduced by additional 30%) */
   padding: 4px 8px;
   border-radius: 8px;
   border: 2px dashed rgba(239, 68, 68, 0.7);
