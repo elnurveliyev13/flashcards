@@ -3985,21 +3985,21 @@ select.inline-prompt-field {
   position: relative;
   /* Very thick outline using paint-order for perfect coverage */
   paint-order: stroke fill;
-  -webkit-text-stroke: 3px var(--surface-1);
+  -webkit-text-stroke: 3px var(--bg);
   /* Fallback for browsers that don't support paint-order */
   text-shadow:
-    -3px -3px 0 var(--surface-1),
-    3px -3px 0 var(--surface-1),
-    -3px 3px 0 var(--surface-1),
-    3px 3px 0 var(--surface-1),
-    -2px -2px 0 var(--surface-1),
-    2px -2px 0 var(--surface-1),
-    -2px 2px 0 var(--surface-1),
-    2px 2px 0 var(--surface-1),
-    -1px 0 0 var(--surface-1),
-    1px 0 0 var(--surface-1),
-    0 -1px 0 var(--surface-1),
-    0 1px 0 var(--surface-1);
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 
 .dictation-missing-caret {
