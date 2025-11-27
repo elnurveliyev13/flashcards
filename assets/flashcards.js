@@ -5447,10 +5447,29 @@ function renderComparisonResult(resultEl, comparison){
       const gapsNeeded = comparison.movePlan.gapsNeeded || new Set();
       const gapMeta = comparison.movePlan.gapMeta || {};
       const missingTokens = comparison.movePlan.missingTokens || [];
+      const rewriteGroups = comparison.movePlan.rewriteGroups || [];
 
-      // Build missingByGapKey map using the CORRECT gapKey from missingTokens
+      // Filter out missing tokens that are inside rewrite groups
+      // They should not be inserted separately as they're already handled in the rewrite block
+      const rewriteOrigRanges = rewriteGroups.map(g => ({
+        origMin: g.origMin,
+        origMax: g.origMax
+      }));
+
+      const filteredMissingTokens = missingTokens.filter(item => {
+        // Check if this missing token is inside any rewrite group
+        const insideRewrite = rewriteOrigRanges.some(range =>
+          item.origIndex >= range.origMin && item.origIndex <= range.origMax
+        );
+        if(insideRewrite){
+          console.log(`[DEBUG] Excluding missing token ${item.token.raw} (orig_${item.origIndex}) - inside rewrite group`);
+        }
+        return !insideRewrite;
+      });
+
+      // Build missingByGapKey map using the CORRECT gapKey from filteredMissingTokens
       const missingByGapKey = new Map();
-      missingTokens.forEach(item => {
+      filteredMissingTokens.forEach(item => {
         const gapKey = item.gapKey; // Use the corrected gapKey from planMovesAndGaps
         if(!gapKey){
           console.warn('[WARN] Missing token without gapKey:', item);
@@ -5594,8 +5613,6 @@ function renderComparisonResult(resultEl, comparison){
         renderedPos++;
         insertAnchors(renderedPos);
       }
-      // Insert final anchors at the actual rendered position
-      insertAnchors(renderedPos);
       row.appendChild(label);
       row.appendChild(line);
       return row;
