@@ -2223,7 +2223,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const payload = {
           word: token.text,
           prev: prev ? prev.text : '',
-          next: next ? next.text : ''
+          next: next ? next.text : '',
+          frontText: frontInput.value || ''
         };
         const resp = await api('ordbank_focus_helper', {}, 'POST', payload);
         if(!resp || resp.ok === false){
@@ -2246,15 +2247,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
           return;
         }
-        const posVal = resolvePosFromTag(data.selected.tag || '');
+        // Try to detect multiword expressions
+        let matchedExpression = '';
+        if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
+          const frontLower = frontInput.value.toLowerCase();
+          matchedExpression = data.expressions
+            .map(e => (e || '').trim())
+            .filter(Boolean)
+            .filter(e => frontLower.includes(e.toLowerCase()))
+            .sort((a,b) => b.length - a.length)[0] || '';
+        }
+
+        const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
         let focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
-        // prefix infinitive/article
-        if(posVal === 'verb'){
-          focusWordResolved = `(å) ${focusWordResolved}`;
-        } else if(posVal === 'substantiv'){
-          const art = data.selected.gender || '';
-          if(art){
-            focusWordResolved = `(${art}) ${focusWordResolved}`;
+        if(matchedExpression){
+          focusWordResolved = matchedExpression;
+        } else {
+          // prefix infinitive/article
+          if(posVal === 'verb'){
+            focusWordResolved = `(å) ${focusWordResolved}`;
+          } else if(posVal === 'substantiv'){
+            const art = data.selected.gender || '';
+            if(art){
+              focusWordResolved = `(${art}) ${focusWordResolved}`;
+            }
           }
         }
         if(fokusInput){

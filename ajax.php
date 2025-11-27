@@ -465,6 +465,7 @@ switch ($action) {
                 throw new invalid_parameter_exception('Invalid payload');
             }
             $word = trim($payload['word'] ?? '');
+            $fronttext = trim($payload['frontText'] ?? '');
             $prev = trim($payload['prev'] ?? '');
             $next = trim($payload['next'] ?? '');
             if ($word === '') {
@@ -525,6 +526,42 @@ switch ($action) {
                     'ambiguous' => true,
                 ];
             }
+            // Optionally enrich with ordbokene expressions/meanings.
+            $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
+            if ($orbokeneenabled) {
+                $lang = 'begge';
+                $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($word, $lang);
+                if (!empty($orbokenedata)) {
+                    if (empty($data['selected']['baseform']) && !empty($orbokenedata['baseform'])) {
+                        $data['selected']['baseform'] = $orbokenedata['baseform'];
+                    }
+                    if (!empty($orbokenedata['expressions'])) {
+                        $data['expressions'] = $orbokenedata['expressions'];
+                        // Try to detect expression inside the full front text.
+                        if ($fronttext !== '') {
+                            $frontlower = core_text::strtolower($fronttext);
+                            foreach ($orbokenedata['expressions'] as $expr) {
+                                $expr = trim($expr);
+                                if ($expr !== '' && str_contains($frontlower, core_text::strtolower($expr))) {
+                                    $data['selected']['wordform'] = $expr;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (empty($data['forms']) && !empty($orbokenedata['forms'])) {
+                        $data['forms'] = $orbokenedata['forms'];
+                    }
+                    if (empty($data['definition']) && !empty($orbokenedata['meanings'])) {
+                        $data['definition'] = $orbokenedata['meanings'][0];
+                    }
+                    if (empty($data['examples']) && !empty($orbokenedata['examples'])) {
+                        $data['examples'] = $orbokenedata['examples'];
+                    }
+                    $data['dictmeta'] = $orbokenedata['dictmeta'] ?? [];
+                }
+            }
+
             if (!$data) {
                 echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
             } else {
