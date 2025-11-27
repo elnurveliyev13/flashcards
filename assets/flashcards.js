@@ -5496,10 +5496,12 @@ function renderComparisonResult(resultEl, comparison){
       });
 
       const gapsByBoundary = new Map();
-      gapsNeeded.forEach(key=>{
-        const meta = gapMeta[key];
-        if(!meta) return;
-        let boundary = Number.isFinite(meta.targetBoundary) ? meta.targetBoundary : (meta.beforeUser ?? -1) + 1;
+      // Use actual moveBlocks' targetBoundary instead of gapMeta baseline
+      comparison.movePlan.moveBlocks.forEach(block => {
+        const key = block.targetGapKey;
+        if(!gapsNeeded.has(key)) return;
+
+        let boundary = block.targetBoundary;
 
         // Adjust boundary: subtract number of moveBlock tokens before this boundary
         let adjustment = 0;
@@ -5511,11 +5513,14 @@ function renderComparisonResult(resultEl, comparison){
         boundary -= adjustment;
 
         const clamped = Math.max(0, Math.min(boundary, comparison.userTokens.length));
-        console.log(`[DEBUG] Gap ${key}: original boundary=${meta.targetBoundary}, adjustment=${adjustment}, final boundary=${boundary}`);
+        console.log(`[DEBUG] Gap ${key}: original boundary=${block.targetBoundary}, adjustment=${adjustment}, final boundary=${boundary}`);
         if(!gapsByBoundary.has(clamped)){
           gapsByBoundary.set(clamped, []);
         }
-        gapsByBoundary.get(clamped).push(key);
+        // Store gap only once per boundary (avoid duplicates)
+        if(!gapsByBoundary.get(clamped).includes(key)){
+          gapsByBoundary.get(clamped).push(key);
+        }
       });
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
