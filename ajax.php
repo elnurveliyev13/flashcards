@@ -475,6 +475,28 @@ switch ($action) {
         echo json_encode($resp);
         break;
 
+    case 'ordbokene_ping':
+        // Minimal connectivity test to Ordbøkene (ord.uib.no).
+        $url = 'https://ord.uib.no/api/articles?w=klar&dict=bm,nn&scope=e';
+        $result = ['ok' => false, 'url' => $url];
+        try {
+            $curl = new \curl();
+            $resp = $curl->get($url);
+            $result['http_code'] = $curl->info['http_code'] ?? null;
+            $result['raw'] = $resp;
+            $decoded = json_decode($resp, true);
+            if (is_array($decoded)) {
+                $result['ok'] = true;
+                $result['json'] = $decoded;
+            } else {
+                $result['error'] = 'Invalid JSON';
+            }
+        } catch (\Throwable $e) {
+            $result['error'] = $e->getMessage();
+        }
+        echo json_encode($result);
+        break;
+
     case 'ordbank_focus_helper':
         try {
             $raw = file_get_contents('php://input');
