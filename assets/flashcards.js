@@ -5541,6 +5541,24 @@ function renderComparisonResult(resultEl, comparison){
 
           console.log(`[DEBUG] Gap ${key} at boundary ${boundaryIdx}: moveBlock origIndices=${moveBlockOrigIndices.join(',')}, missing before=${missingBefore.map(m => `${m.token.raw}(${m.origIndex})`).join(', ')}, missing after=${missingAfter.map(m => `${m.token.raw}(${m.origIndex})`).join(', ')}`);
 
+          // If there are no moveBlocks for this gap, just insert all missing tokens without anchor
+          if(moveBlockOrigIndices.length === 0){
+            sortedMissing.forEach(miss=>{
+              const missSpan = document.createElement('span');
+              missSpan.className = 'dictation-missing-token';
+              const word = document.createElement('span');
+              word.className = 'dictation-missing-word';
+              word.textContent = miss.token.raw;
+              const caret = document.createElement('span');
+              caret.className = 'dictation-missing-caret';
+              missSpan.appendChild(word);
+              missSpan.appendChild(caret);
+              line.appendChild(missSpan);
+              console.log(`[DEBUG] Inserted missing token (no moveBlocks): ${miss.token.raw} (orig_${miss.origIndex})`);
+            });
+            return;
+          }
+
           // Insert missing tokens BEFORE anchor (those with origIndex < moveBlock origIndex)
           missingBefore.forEach(miss=>{
             const missSpan = document.createElement('span');
