@@ -2076,18 +2076,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(posVal === 'verb' && data.forms && data.forms.verb){
         const vf = data.forms.verb;
         const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
-        const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv)';
-        const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens)';
-        const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum)';
-        const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp)';
-        const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ)';
+        const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv);
+        const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens);
+        const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum);
+        const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp);
+        const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ);
       } else if(posVal === 'substantiv' && data.forms && data.forms.noun){
         const nf = data.forms.noun;
         const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
-        const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg)';
-        const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg)';
-        const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl)';
-        const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl)';
+        const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg);
+        const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg);
+        const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl);
+        const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl);
       }
       if(Array.isArray(data.collocations) && data.collocations.length){
         const collEl = document.getElementById('uCollocations');
@@ -2337,18 +2337,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(posVal === 'verb'){
           const vf = (data.forms && data.forms.verb) || {};
           const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
-          const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv)';
-          const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens)';
-          const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum)';
-          const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp)';
-          const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ)';
+          const _vf1=document.getElementById('uVerbInfinitiv'); if(_vf1 && !_vf1.value) _vf1.value = joinForms(vf.infinitiv);
+          const _vf2=document.getElementById('uVerbPresens'); if(_vf2 && !_vf2.value) _vf2.value = joinForms(vf.presens);
+          const _vf3=document.getElementById('uVerbPreteritum'); if(_vf3 && !_vf3.value) _vf3.value = joinForms(vf.preteritum);
+          const _vf4=document.getElementById('uVerbPerfektum'); if(_vf4 && !_vf4.value) _vf4.value = joinForms(vf.perfektum_partisipp);
+          const _vf5=document.getElementById('uVerbImperativ'); if(_vf5 && !_vf5.value) _vf5.value = joinForms(vf.imperativ);
         } else if(posVal === 'substantiv'){
           const nf = (data.forms && data.forms.noun) || {};
           const joinForms = val => Array.isArray(val) ? val.join(' / ') : (val || '');
-          const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg)';
-          const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg)';
-          const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl)';
-          const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl)';
+          const _nf1=document.getElementById('uNounIndefSg'); if(_nf1 && !_nf1.value) _nf1.value = joinForms(nf.indef_sg);
+          const _nf2=document.getElementById('uNounDefSg'); if(_nf2 && !_nf2.value) _nf2.value = joinForms(nf.def_sg);
+          const _nf3=document.getElementById('uNounIndefPl'); if(_nf3 && !_nf3.value) _nf3.value = joinForms(nf.indef_pl);
+          const _nf4=document.getElementById('uNounDefPl'); if(_nf4 && !_nf4.value) _nf4.value = joinForms(nf.def_pl);
         }
         const posField = document.getElementById('uPOS');
         if(posField && posVal){
