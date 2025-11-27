@@ -3972,6 +3972,15 @@ select.inline-prompt-field {
   font-weight: 700;
   vertical-align: bottom;
   padding: 4px 8px;
+  position: relative;
+  z-index: 10; /* Above arrows */
+  /* Add white shadow/outline for better readability over arrows */
+  text-shadow:
+    -1px -1px 0 var(--bg),
+    1px -1px 0 var(--bg),
+    -1px 1px 0 var(--bg),
+    1px 1px 0 var(--bg),
+    0 0 3px var(--bg);
 }
 
 .dictation-missing-word {
@@ -4031,6 +4040,7 @@ select.inline-prompt-field {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  z-index: 5; /* Below missing tokens (z-index: 10) */
 }
 
 /* Mobile responsiveness */
