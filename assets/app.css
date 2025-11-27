@@ -3622,11 +3622,6 @@ select.inline-prompt-field {
   cursor: not-allowed;
 }
 
-.dictation-check-btn.success {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-}
-
 
 .dictation-result {
   margin-top: 1rem;

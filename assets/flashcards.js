@@ -4474,9 +4474,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           inputEl.disabled = true;
           inputEl.classList.add('dictation-success');
           checkBtn.disabled = true;
-          checkBtn.textContent = '? ' + (aiStrings.dictationCorrect || '!');
-          checkBtn.classList.remove('primary');
-          checkBtn.classList.add('success');
+          checkBtn.style.display = 'none'; // Hide the button completely
         } else if(checkCount >= 2){
           // After 2 attempts, show hint
           inputEl.placeholder = aiStrings.dictationHint || '   ';
@@ -5488,6 +5486,30 @@ function renderComparisonResult(resultEl, comparison){
         missingByGapKey.get(gapKey).push(item);
       });
 
+      // Build mapping: for each user position, which missing tokens should come AFTER it
+      // This is for gaps with no moveBlocks
+      const missingAfterUserPos = new Map();
+      filteredMissingTokens.forEach(item => {
+        // Find which user token this missing token should come after
+        // It should go after the last user token that has origIndex < item.origIndex
+        let afterUserIdx = -1;
+        for(let i = 0; i < comparison.userTokens.length; i++){
+          const userMeta = meta[i];
+          if(userMeta && userMeta.match && userMeta.match.origIndex < item.origIndex){
+            afterUserIdx = i;
+          }
+        }
+        if(!missingAfterUserPos.has(afterUserIdx)){
+          missingAfterUserPos.set(afterUserIdx, []);
+        }
+        missingAfterUserPos.get(afterUserIdx).push(item);
+      });
+
+      // Sort missing tokens by origIndex for each position
+      missingAfterUserPos.forEach((tokens, pos) => {
+        tokens.sort((a, b) => a.origIndex - b.origIndex);
+      });
+
       // Calculate adjusted boundaries accounting for moveBlocks
       // moveBlocks will be skipped, so gaps after them need to shift left
       const moveBlockIndices = new Set();
@@ -5542,21 +5564,10 @@ function renderComparisonResult(resultEl, comparison){
 
           console.log(`[DEBUG] Gap ${key} at boundary ${boundaryIdx}: moveBlock origIndices=${moveBlockOrigIndices.join(',')}, missing before=${missingBefore.map(m => `${m.token.raw}(${m.origIndex})`).join(', ')}, missing after=${missingAfter.map(m => `${m.token.raw}(${m.origIndex})`).join(', ')}`);
 
-          // If there are no moveBlocks for this gap, just insert all missing tokens without anchor
+          // If there are no moveBlocks for this gap, we cannot determine correct position
+          // These missing tokens will be shown inline with user tokens instead
           if(moveBlockOrigIndices.length === 0){
-            sortedMissing.forEach(miss=>{
-              const missSpan = document.createElement('span');
-              missSpan.className = 'dictation-missing-token';
-              const word = document.createElement('span');
-              word.className = 'dictation-missing-word';
-              word.textContent = miss.token.raw;
-              const caret = document.createElement('span');
-              caret.className = 'dictation-missing-caret';
-              missSpan.appendChild(word);
-              missSpan.appendChild(caret);
-              line.appendChild(missSpan);
-              console.log(`[DEBUG] Inserted missing token (no moveBlocks): ${miss.token.raw} (orig_${miss.origIndex})`);
-            });
+            console.log(`[DEBUG] Skipping gap ${key} - no moveBlocks to anchor missing tokens`);
             return;
           }
 
@@ -5659,6 +5670,23 @@ function renderComparisonResult(resultEl, comparison){
         }
         const span = createTokenSpan(token, metaInfo);
         line.appendChild(span);
+
+        // Insert missing tokens that should come AFTER this user token
+        const missingAfter = missingAfterUserPos.get(idx) || [];
+        missingAfter.forEach(miss => {
+          const missSpan = document.createElement('span');
+          missSpan.className = 'dictation-missing-token';
+          const word = document.createElement('span');
+          word.className = 'dictation-missing-word';
+          word.textContent = miss.token.raw;
+          const caret = document.createElement('span');
+          caret.className = 'dictation-missing-caret';
+          missSpan.appendChild(word);
+          missSpan.appendChild(caret);
+          line.appendChild(missSpan);
+          console.log(`[DEBUG] Inserted missing token inline AFTER user token ${idx}: ${miss.token.raw} (orig_${miss.origIndex})`);
+        });
+
         idx++;
         renderedPos++;
         insertAnchors(renderedPos);
