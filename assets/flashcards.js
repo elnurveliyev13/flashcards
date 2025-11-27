@@ -5052,7 +5052,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       console.log(`[DEBUG] Error rate: ${errorTokenCount}/${totalTokens} = ${(errorRate * 100).toFixed(1)}%, tooManyErrors=${tooManyErrors}`);
 
       const mode = (overloadedBoundaries.size || tooManyErrors) ? 'rewrite' : 'arrows';
-      const problemIds = new Set([...overloadBlocks]);
+      // When tooManyErrors=true, include ALL moveBlocks in problemIds, not just overloaded ones
+      const problemIds = tooManyErrors
+        ? new Set(moveBlocks.map(b => b.id))
+        : new Set([...overloadBlocks]);
+
+      console.log(`[DEBUG] Mode=${mode}, problemIds=${Array.from(problemIds).join(', ')}, overloadedBoundaries=${overloadedBoundaries.size}`);
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
         moveBlocks,
         problemIds,
