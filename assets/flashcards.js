@@ -5060,8 +5060,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         : new Set([...overloadBlocks]);
 
       console.log(`[DEBUG] Mode=${mode}, problemIds=${Array.from(problemIds).join(', ')}, overloadedBoundaries=${overloadedBoundaries.size}, allBlocks=${allBlocks.length}, filteredBlocks=${moveBlocks.length}`);
+      // When tooManyErrors=true, pass allBlocks to buildRewriteGroups so it can find ALL problematic tokens
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
-        moveBlocks,
+        moveBlocks: tooManyErrors ? allBlocks : moveBlocks,
         problemIds,
         matches: orderedMatches,
         userTokens,
