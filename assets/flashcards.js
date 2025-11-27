@@ -4435,25 +4435,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const inputEl = exerciseEl.querySelector('.dictation-input');
       const checkBtn = exerciseEl.querySelector('.dictation-check-btn');
-      const replayBtn = exerciseEl.querySelector('.dictation-replay-btn');
       const resultEl = exerciseEl.querySelector('.dictation-result');
       const correctAnswerEl = exerciseEl.querySelector('.dictation-correct-answer');
 
-      if(!inputEl || !checkBtn || !replayBtn || !resultEl || !correctAnswerEl) return;
+      if(!inputEl || !checkBtn || !resultEl || !correctAnswerEl) return;
 
       const correctText = inputEl.dataset.correctText || card.text;
       let audioPlayed = false;
       let checkCount = 0;
-
-      // Get audio URL for replay button (but don't auto-play here - handled by showCurrent autoplay logic)
-      const frontUrl = await resolveAudioUrl(card, 'front');
-
-      // Replay button - play audio again at 0.85x
-      replayBtn.addEventListener('click', () => {
-        if(frontUrl){
-          playAudioFromUrl(frontUrl, 0.85);
-        }
-      });
 
       // Check button - verify user input and show visual feedback
       checkBtn.addEventListener('click', () => {
@@ -5434,12 +5423,10 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       const errorCount = comparison.errorCount || 0;
-      const errorWord = errorCount === 1 ? (aiStrings.dictationError || '') :
-                        errorCount < 5 ? (aiStrings.dictationErrors2 || '') :
-                        (aiStrings.dictationErrors5 || '');
+      const errorWord = errorCount === 1 ? 'error' : 'errors';
       const summary = document.createElement('div');
       summary.className = 'dictation-errors-summary';
-      summary.textContent = `?? ${errorCount} ${errorWord}`;
+      summary.textContent = `Found ${errorCount} ${errorWord}`;
       wrapper.appendChild(summary);
 
       const visual = document.createElement('div');
@@ -5902,10 +5889,7 @@ function renderComparisonResult(resultEl, comparison){
             </div>
             <div class="dictation-controls">
               <button type="button" class="dictation-check-btn primary">
-                ${aiStrings.dictationCheck || ''}
-              </button>
-              <button type="button" class="dictation-replay-btn" title="${aiStrings.dictationReplay || ' '}">
-                ?? 0.85x
+                Check
               </button>
             </div>
             <div class="dictation-result hidden"></div>
