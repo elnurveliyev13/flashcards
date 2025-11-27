@@ -4467,7 +4467,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     // Compare two texts character by character and word by word
-?    // Compare dictation answers with move-aware logic
+    // Compare dictation answers with move-aware logic
     function compareTexts(userInput, correctText){
       const userNorm = (userInput || '').trim();
       const correctNorm = (correctText || '').trim();
