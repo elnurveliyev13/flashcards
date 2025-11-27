@@ -608,17 +608,14 @@ switch ($action) {
                 $ordbokene_debug['enabled'] = false;
             }
 
-            if (!$data) {
-                if (!empty($ordbokene_debug)) {
-                    $debug['ordbokene'] = $ordbokene_debug;
-                }
-                echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
-            } else {
-                if (!empty($ordbokene_debug)) {
-                    $debug['ordbokene'] = $ordbokene_debug;
-                }
-                echo json_encode(['ok' => true, 'data' => $data, 'debug' => $debug]);
-            }
+        if (!empty($ordbokene_debug)) {
+            $debug['ordbokene'] = $ordbokene_debug;
+        }
+        if (!$data) {
+            echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
+        } else {
+            echo json_encode(['ok' => true, 'data' => $data, 'debug' => $debug]);
+        }
         } catch (\Throwable $ex) {
             debugging('[flashcards] ordbank_focus_helper failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             http_response_code(400);
