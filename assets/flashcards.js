@@ -5440,7 +5440,7 @@ function renderComparisonResult(resultEl, comparison){
       row.className = 'dictation-comparison-row';
       const label = document.createElement('div');
       label.className = 'dictation-comparison-label';
-      label.textContent = aiStrings.dictationYourAnswer || ' :';
+      label.textContent = aiStrings.dictationYourAnswer || 'Ваш ответ:';
       const line = document.createElement('div');
       line.className = 'dictation-line dictation-line-user';
 
