@@ -5040,9 +5040,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           overloadBlocks.add(block.id);
         }
       });
-      // Use rewrite only when a boundary is overloaded (2+ blocks through same boundary)
+      // Use rewrite when:
+      // 1. A boundary is overloaded (2+ blocks through same boundary), OR
+      // 2. Too many errors (>60% of tokens need correction)
       const crossingBlocks = new Set(); // crossings no longer trigger rewrite alone
-      const mode = (overloadedBoundaries.size) ? 'rewrite' : 'arrows';
+      const totalTokens = userTokens.length;
+      const errorTokenCount = movableMatches.length + missingTokens.length;
+      const errorRate = totalTokens > 0 ? errorTokenCount / totalTokens : 0;
+      const tooManyErrors = errorRate > 0.6;
+
+      console.log(`[DEBUG] Error rate: ${errorTokenCount}/${totalTokens} = ${(errorRate * 100).toFixed(1)}%, tooManyErrors=${tooManyErrors}`);
+
+      const mode = (overloadedBoundaries.size || tooManyErrors) ? 'rewrite' : 'arrows';
       const problemIds = new Set([...overloadBlocks]);
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
         moveBlocks,
