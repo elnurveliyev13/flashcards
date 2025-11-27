@@ -5099,7 +5099,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         let prevOrig = -1;
         let nextOrig = null;
 
-        // Find neighbors in LIS (skip tokens that are moving)
+        // Find neighbors in LIS ONLY (tokens that stay in place)
+        // If no LIS neighbors found, prev=-1 or next=null means gap extends to start/end
         for(let i = item.origIndex - 1; i >= 0; i--){
           // Check if this original position is in LIS (stays in place)
           if(lisOrigToUser.has(i)){
@@ -5111,24 +5112,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(lisOrigToUser.has(i)){
             nextOrig = i;
             break;
-          }
-        }
-
-        // Fallback: if no LIS neighbor found, use ANY matched token
-        if(prevOrig === -1){
-          for(let i = item.origIndex - 1; i >= 0; i--){
-            if(matchedByOrig.has(i)){
-              prevOrig = i;
-              break;
-            }
-          }
-        }
-        if(nextOrig === null){
-          for(let i = item.origIndex + 1; i < originalTokens.length; i++){
-            if(matchedByOrig.has(i)){
-              nextOrig = i;
-              break;
-            }
           }
         }
 
