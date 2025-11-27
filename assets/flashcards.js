@@ -4936,89 +4936,75 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       console.log('[DEBUG] LIS original indices (stay in place):', lisOrigSorted);
 
-      // For moveBlocks: find neighbors among ALL matched tokens in original order
-      // This ensures correct target position calculation
-      const findNeighbors = (value)=>{
-        let prev = -1;
-        let next = null;
-        // Search through ALL original positions that have matches
-        for(let i = value - 1; i >= 0; i--){
-          if(allOrigToUser.has(i)){
-            prev = i;
-            break;
-          }
-        }
-        for(let i = value + 1; i < originalTokens.length; i++){
-          if(allOrigToUser.has(i)){
-            next = i;
-            break;
-          }
-        }
-        return { prev, next };
-      };
-
       const metaByUser = Array(userTokens.length).fill(null);
       const gapMeta = {};
+      const tokensPerGap = {}; // Track which tokens belong to each gap
 
       orderedMatches.forEach((m)=>{
         const inLis = lisSet.has(m.id);
-        const { prev, next } = findNeighbors(m.origIndex);
-        const gapKey = buildGapKey(prev, next);
 
-        // Calculate beforeUser: use LIS first, then ALL matches
-        let beforeUser = -1;
-        if(prev !== -1){
-          if(lisOrigToUser.has(prev)){
-            beforeUser = lisOrigToUser.get(prev);
-          } else if(allOrigToUser.has(prev)){
-            beforeUser = allOrigToUser.get(prev);
+        // For both gap and targetBoundary calculation, use LIS tokens (stable positions)
+        // Find the nearest LIS tokens to determine where this token should go
+        let prevLIS = -1;
+        let nextLIS = null;
+        for(const idx of lisOrigSorted){
+          if(idx < m.origIndex){
+            prevLIS = idx;
+          } else if(idx > m.origIndex){
+            nextLIS = idx;
+            break;
           }
         }
 
-        // Calculate afterUser: use LIS first, then ALL matches
-        // If 'next' is a missing token, it won't be in maps, so afterUser stays as default
+        // Use LIS-based gap key so tokens between same LIS anchors share the same gap
+        const gapKey = buildGapKey(prevLIS, nextLIS);
+
+        // Calculate beforeUser and afterUser based on LIS positions (stable anchors)
+        let beforeUser = -1;
+        if(prevLIS !== -1){
+          beforeUser = lisOrigToUser.get(prevLIS) ?? -1;
+        }
+
         let afterUser = userTokens.length;
-        if(next !== null){
-          if(lisOrigToUser.has(next)){
-            afterUser = lisOrigToUser.get(next);
-          } else if(allOrigToUser.has(next)){
-            afterUser = allOrigToUser.get(next);
-          }
-          // If next token is missing (not in user input), we need to find the NEXT matched token
-          if(afterUser === userTokens.length){
-            // Find next matched token after 'next'
-            for(let i = next + 1; i < originalTokens.length; i++){
-              if(allOrigToUser.has(i)){
-                afterUser = allOrigToUser.get(i);
-                break;
-              }
-            }
-          }
+        if(nextLIS !== null){
+          afterUser = lisOrigToUser.get(nextLIS) ?? userTokens.length;
         }
 
         if(!gapMeta[gapKey]){
           gapMeta[gapKey] = {
-            before: prev,
-            after: next,
+            before: prevLIS,
+            after: nextLIS,
             beforeUser,
             afterUser,
             targetBoundary: beforeUser + 1
           };
-          console.log(`[DEBUG] Created gap ${gapKey}: before=${prev}, after=${next}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}, nextIsMissing=${next !== null && !allOrigToUser.has(next)}`);
+          tokensPerGap[gapKey] = [];
+          console.log(`[DEBUG] Created gap ${gapKey}: before=${prevLIS}, after=${nextLIS}, beforeUser=${beforeUser}, afterUser=${afterUser}, targetBoundary=${beforeUser + 1}`);
         }
+
+        // Track which tokens go into this gap (for calculating offset)
+        if(!inLis){
+          tokensPerGap[gapKey].push(m.origIndex);
+        }
+
         const hasError = m.score < 1 || m.userToken.raw !== m.origToken.raw;
         metaByUser[m.userIndex] = {
           match: m,
           inLis,
           targetGapKey: gapKey,
-          targetGap: { before: prev, after: next },
+          targetGap: { before: prevLIS, after: nextLIS },
           hasError,
           needsMove: !inLis
         };
       });
 
+      // Sort tokens in each gap by their original index to assign correct offsets
+      Object.keys(tokensPerGap).forEach(gapKey => {
+        tokensPerGap[gapKey].sort((a, b) => a - b);
+      });
+
       const movableMatches = orderedMatches.filter(m=>!lisSet.has(m.id));
-      const moveBlocks = buildMoveBlocks(movableMatches, metaByUser, gapMeta, userTokens.length);
+      const moveBlocks = buildMoveBlocks(movableMatches, metaByUser, gapMeta, tokensPerGap, userTokens.length);
 
       const boundaryCounts = Array(userTokens.length + 1).fill(0);
       moveBlocks.forEach(block=>{
@@ -5166,13 +5152,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       };
     }
 
-    function buildMoveBlocks(movableMatches, metaByUser, gapMeta, userLength){
+    function buildMoveBlocks(movableMatches, metaByUser, gapMeta, tokensPerGap, userLength){
       const blocks = [];
       let current = null;
       movableMatches.forEach(m=>{
         const meta = metaByUser[m.userIndex] || {};
         const gapKey = meta.targetGapKey || buildGapKey(-1, null);
         const gap = gapMeta[gapKey] || { before: -1, after: null, beforeUser: -1, afterUser: userLength, targetBoundary: 0 };
+
+        // Calculate offset within the gap based on original position
+        const tokensInThisGap = tokensPerGap[gapKey] || [];
+        const offsetInGap = tokensInThisGap.indexOf(m.origIndex);
+        const targetBoundary = (gap.beforeUser ?? -1) + 1 + offsetInGap;
+
         const lastOrig = current && current.origIndices.length ? current.origIndices[current.origIndices.length - 1] : -Infinity;
         const expectedNextOrig = current ? lastOrig + 1 : null;
         const adjacent = current
@@ -5198,7 +5190,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             targetGap: meta.targetGap || { before: -1, after: null },
             beforeUser: gap.beforeUser ?? -1,
             afterUser: gap.afterUser ?? userLength,
-            targetBoundary: gap.targetBoundary ?? ((gap.beforeUser ?? -1) + 1),
+            targetBoundary: targetBoundary,
             hasError: !!meta.hasError,
             resolvedByRewrite: false
           };
