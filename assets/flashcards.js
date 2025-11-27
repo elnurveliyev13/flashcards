@@ -5067,7 +5067,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         matches: orderedMatches,
         userTokens,
         originalTokens,
-        metaByUser
+        metaByUser,
+        missingTokens
       }) : [];
 
       // Create a set of token indices that are in moveBlocks
@@ -5281,7 +5282,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return set;
     }
 
-    function buildRewriteGroups({ moveBlocks, problemIds, matches, userTokens, originalTokens, metaByUser }){ // eslint-disable-line max-params
+    function buildRewriteGroups({ moveBlocks, problemIds, matches, userTokens, originalTokens, metaByUser, missingTokens = [] }){ // eslint-disable-line max-params
       if(!problemIds.size || !moveBlocks.length){
         return [];
       }
@@ -5308,6 +5309,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           origMax = Math.max(origMax, idx);
         });
       });
+
+      // CRITICAL: Include missing tokens in the initial range calculation
+      // This ensures that missing tokens between problemBlocks are included in the rewrite group
+      if(missingTokens && missingTokens.length > 0){
+        console.log(`[DEBUG] Checking ${missingTokens.length} missing tokens for range expansion`);
+        missingTokens.forEach(item => {
+          // Temporarily expand range to see if this missing token is "near" the problem area
+          const nearProblemArea = item.origIndex >= origMin - 1 && item.origIndex <= origMax + 1;
+          if(nearProblemArea){
+            console.log(`[DEBUG] Including missing token ${item.token.raw} (orig_${item.origIndex}) in rewrite range`);
+            origMin = Math.min(origMin, item.origIndex);
+            origMax = Math.max(origMax, item.origIndex);
+          }
+        });
+      }
+
       if(!Number.isFinite(origMin) || !Number.isFinite(origMax)){
         return [];
       }
