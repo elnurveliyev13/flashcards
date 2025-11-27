@@ -4933,17 +4933,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       console.log('[DEBUG] LIS original indices (stay in place):', lisOrigSorted);
 
-      // For moveBlocks: find neighbors among LIS tokens ONLY (skip moving tokens and missing)
-      // This ensures all moving tokens use the same gaps based on stable positions
+      // For moveBlocks: find neighbors among ALL matched tokens in original order
+      // This ensures correct target position calculation
       const findNeighbors = (value)=>{
         let prev = -1;
         let next = null;
-        // Search only in LIS tokens (that stay in place)
-        for(const idx of lisOrigSorted){
-          if(idx < value){
-            prev = idx;
-          } else if(idx > value){
-            next = idx;
+        // Search through ALL original positions that have matches
+        for(let i = value - 1; i >= 0; i--){
+          if(allOrigToUser.has(i)){
+            prev = i;
+            break;
+          }
+        }
+        for(let i = value + 1; i < originalTokens.length; i++){
+          if(allOrigToUser.has(i)){
+            next = i;
             break;
           }
         }
@@ -5416,7 +5420,7 @@ function renderComparisonResult(resultEl, comparison){
       if(comparison.isCorrect){
         const success = document.createElement('div');
         success.className = 'dictation-success-msg';
-        success.textContent = `? ${aiStrings.dictationPerfect || '!  !'}`;
+        success.textContent = 'Perfect! Well done!';
         wrapper.appendChild(success);
         resultEl.appendChild(wrapper);
         return;
