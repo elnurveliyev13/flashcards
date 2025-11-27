@@ -5052,12 +5052,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       console.log(`[DEBUG] Error rate: ${errorTokenCount}/${totalTokens} = ${(errorRate * 100).toFixed(1)}%, tooManyErrors=${tooManyErrors}`);
 
       const mode = (overloadedBoundaries.size || tooManyErrors) ? 'rewrite' : 'arrows';
-      // When tooManyErrors=true, include ALL moveBlocks in problemIds, not just overloaded ones
+      // When tooManyErrors=true, include ALL moveBlocks in problemIds (even filtered out ones)
+      // Use allBlocksBeforeFilter to get complete list of blocks
+      const allBlocks = moveBlocks.allBlocksBeforeFilter || moveBlocks;
       const problemIds = tooManyErrors
-        ? new Set(moveBlocks.map(b => b.id))
+        ? new Set(allBlocks.map(b => b.id))
         : new Set([...overloadBlocks]);
 
-      console.log(`[DEBUG] Mode=${mode}, problemIds=${Array.from(problemIds).join(', ')}, overloadedBoundaries=${overloadedBoundaries.size}`);
+      console.log(`[DEBUG] Mode=${mode}, problemIds=${Array.from(problemIds).join(', ')}, overloadedBoundaries=${overloadedBoundaries.size}, allBlocks=${allBlocks.length}, filteredBlocks=${moveBlocks.length}`);
       const rewriteGroups = mode === 'rewrite' ? buildRewriteGroups({
         moveBlocks,
         problemIds,
@@ -5238,6 +5240,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         end: b.end,
         targetBoundary: b.targetBoundary
       })));
+
+      // Store all blocks (before filtering) for error rate calculation
+      filtered.allBlocksBeforeFilter = blocks;
+
       return filtered;
     }
 
