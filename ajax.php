@@ -528,9 +528,16 @@ switch ($action) {
             }
             // Optionally enrich with ordbokene expressions/meanings.
             $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
+            $ordbokene_debug = [];
             if ($orbokeneenabled) {
                 $lang = 'begge';
                 $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($word, $lang);
+                $ordbokene_debug['word_lookup'] = [
+                    'word' => $word,
+                    'ok' => !empty($orbokenedata),
+                    'expressions' => $orbokenedata['expressions'] ?? [],
+                    'url' => $orbokenedata['dictmeta']['url'] ?? ''
+                ];
                 if (!empty($orbokenedata)) {
                     if (empty($data['selected']['baseform']) && !empty($orbokenedata['baseform'])) {
                         $data['selected']['baseform'] = $orbokenedata['baseform'];
@@ -587,9 +594,18 @@ switch ($action) {
                             if (empty($data['examples']) && !empty($lookup['examples'])) {
                                 $data['examples'] = $lookup['examples'];
                             }
-                            $data['dictmeta'] = $lookup['dictmeta'] ?? [];
+                    $data['dictmeta'] = $lookup['dictmeta'] ?? [];
+                            $ordbokene_debug['ngram_hit'] = [
+                                'span' => $cand,
+                                'ok' => true,
+                                'expressions' => $lookup['expressions'] ?? [],
+                                'url' => $lookup['dictmeta']['url'] ?? ''
+                            ];
                             break;
                         }
+                    }
+                    if (!isset($ordbokene_debug['ngram_hit'])) {
+                        $ordbokene_debug['ngram_hit'] = ['ok' => false];
                     }
                 }
             }
@@ -597,6 +613,9 @@ switch ($action) {
             if (!$data) {
                 echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
             } else {
+                if (!empty($ordbokene_debug)) {
+                    $debug['ordbokene'] = $ordbokene_debug;
+                }
                 echo json_encode(['ok' => true, 'data' => $data, 'debug' => $debug]);
             }
         } catch (\Throwable $ex) {
