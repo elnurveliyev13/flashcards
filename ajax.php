@@ -565,33 +565,44 @@ switch ($action) {
                 $ordbokene_debug['candidates'] = $candidates;
 
                 foreach ($candidates as $cand) {
-                    $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
-                    $ordbokene_debug['tries'][] = [
-                        'span' => $cand,
-                        'ok' => !empty($lookup),
-                        'expressions' => $lookup['expressions'] ?? [],
-                        'url' => $lookup['dictmeta']['url'] ?? ''
-                    ];
-                    if (!empty($lookup)) {
-                        $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
-                        if (empty($data['selected']['wordform'])) {
-                            $data['selected']['wordform'] = $cand;
+                    try {
+                        $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
+                        $ordbokene_debug['tries'][] = [
+                            'span' => $cand,
+                            'ok' => !empty($lookup),
+                            'expressions' => $lookup['expressions'] ?? [],
+                            'url' => $lookup['dictmeta']['url'] ?? ''
+                        ];
+                        if (!empty($lookup)) {
+                            $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
+                            if (empty($data['selected']['wordform'])) {
+                                $data['selected']['wordform'] = $cand;
+                            }
+                            if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
+                                $data['selected']['baseform'] = $lookup['baseform'];
+                            }
+                            if (empty($data['forms']) && !empty($lookup['forms'])) {
+                                $data['forms'] = $lookup['forms'];
+                            }
+                            if (empty($data['definition']) && !empty($lookup['meanings'])) {
+                                $data['definition'] = $lookup['meanings'][0];
+                            }
+                            if (empty($data['examples']) && !empty($lookup['examples'])) {
+                                $data['examples'] = $lookup['examples'];
+                            }
+                            $data['dictmeta'] = $lookup['dictmeta'] ?? [];
+                            break;
                         }
-                        if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
-                            $data['selected']['baseform'] = $lookup['baseform'];
-                        }
-                        if (empty($data['forms']) && !empty($lookup['forms'])) {
-                            $data['forms'] = $lookup['forms'];
-                        }
-                        if (empty($data['definition']) && !empty($lookup['meanings'])) {
-                            $data['definition'] = $lookup['meanings'][0];
-                        }
-                        if (empty($data['examples']) && !empty($lookup['examples'])) {
-                            $data['examples'] = $lookup['examples'];
-                        }
-                        $data['dictmeta'] = $lookup['dictmeta'] ?? [];
-                        break;
+                    } catch (\Throwable $obex) {
+                        $ordbokene_debug['tries'][] = [
+                            'span' => $cand,
+                            'ok' => false,
+                            'error' => $obex->getMessage()
+                        ];
                     }
+                }
+                if (empty($ordbokene_debug['tries'])) {
+                    $ordbokene_debug['tries'] = [];
                 }
             } else {
                 $ordbokene_debug['enabled'] = false;
