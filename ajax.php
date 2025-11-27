@@ -375,6 +375,7 @@ switch ($action) {
             'level' => $level,
             'voice' => $voiceid ?: null,
         ]);
+        $debugai = [];
         // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
         $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
         $ob = null;
@@ -430,10 +431,23 @@ switch ($action) {
         if ((empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
             $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
         }
+        // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
+        if ((empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
+            $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
+            if (!empty($tmp['forms'])) {
+                $data['forms'] = $tmp['forms'];
+            }
+        }
         // If still no forms/definition/examples and ordbokene is enabled, try API lookup.
         if ($orbokeneenabled && (empty($data['forms']) || empty($data['definition']) || empty($data['examples']))) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
             $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $focuscheck, $lang);
+            $debugai['ordbokene'] = [
+                'span' => $data['focusBaseform'] ?? $focuscheck,
+                'ok' => !empty($orbokenedata),
+                'expressions' => $orbokenedata['expressions'] ?? [],
+                'url' => $orbokenedata['dictmeta']['url'] ?? ''
+            ];
             if (!empty($orbokenedata)) {
                 if (empty($data['forms']) && !empty($orbokenedata['forms'])) {
                     $data['forms'] = $orbokenedata['forms'];
@@ -454,7 +468,11 @@ switch ($action) {
             $data['gender'] = $selected['gender'];
         }
         $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
-        echo json_encode(['ok' => true, 'data' => $data]);
+        $resp = ['ok' => true, 'data' => $data];
+        if (!empty($debugai)) {
+            $resp['debug'] = $debugai;
+        }
+        echo json_encode($resp);
         break;
 
     case 'ordbank_focus_helper':
