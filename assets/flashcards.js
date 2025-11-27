@@ -4543,15 +4543,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const lisIndices = computeLisWithTies(matches);
       const lisSet = new Set(lisIndices.map(idx => matches[idx]?.id).filter(Boolean));
 
-      // CRITICAL: Tokens already in correct position (userIndex == origIndex) should ALWAYS be in LIS
-      // This prevents incorrect gap calculations for tokens that don't need to move
-      matches.forEach((m, idx) => {
-        if(m.userIndex === m.origIndex && !lisSet.has(m.id)){
-          console.log(`[DEBUG] Adding token in correct position to LIS: ${m.userToken.raw} (user_${m.userIndex} = orig_${m.origIndex})`);
-          lisSet.add(m.id);
-        }
-      });
-
       const movePlan = buildMovePlan({
         matches,
         lisSet,
