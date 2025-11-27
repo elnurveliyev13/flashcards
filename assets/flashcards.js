@@ -5286,6 +5286,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return [];
       }
       const problemBlocks = moveBlocks.filter(b=>problemIds.has(b.id));
+      console.log(`[DEBUG] buildRewriteGroups: moveBlocks=${moveBlocks.length}, problemIds=${Array.from(problemIds).join(',')}, problemBlocks=${problemBlocks.length}`);
+      console.log(`[DEBUG] problemBlocks origIndices:`, problemBlocks.map(b => `${b.id}:[${b.origIndices.join(',')}]`).join(' '));
       if(!problemBlocks.length){
         return [];
       }
@@ -5345,6 +5347,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         targetGapKey: buildGapKey(origMin - 1, origMax + 1),
         correctText
       };
+      console.log(`[DEBUG] Created rewrite group: origMin=${origMin}, origMax=${origMax}, userMin=${userMin}, userMax=${userMax}, correctText="${correctText}"`);
       for(let i = group.start; i <= group.end; i++){
         metaByUser[i] = metaByUser[i] || {};
         metaByUser[i].rewriteGroupId = group.id;
