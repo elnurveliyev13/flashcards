@@ -3820,7 +3820,7 @@ select.inline-prompt-field {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.35rem;
+  gap: 0.2275rem; /* 0.35 * 0.65 = 0.2275 (reduced by 35%) */
   padding: 0;
   margin: 0;
   width: 100%;
@@ -3863,6 +3863,23 @@ select.inline-prompt-field {
   font-weight: 500;
   line-height: 1.2;
   vertical-align: bottom;
+  z-index: 10; /* Above arrows */
+  /* Text outline for visibility above arrows */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--bg);
+  text-shadow:
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 .dictation-token-has-correction {
   grid-template-rows: 1.2em 1.2em;
@@ -3911,7 +3928,7 @@ select.inline-prompt-field {
 .dictation-move-block {
   display: inline-flex;
   align-items: baseline;
-  gap: 0.35rem;
+  gap: 0.2275rem; /* 0.35 * 0.65 = 0.2275 (reduced by 35%) */
   padding: 4px 8px;
   border-radius: 8px;
   border: 2px dashed rgba(239, 68, 68, 0.7);
@@ -3919,6 +3936,24 @@ select.inline-prompt-field {
   vertical-align: baseline;
   flex-wrap: nowrap;
   height: fit-content;
+  z-index: 10; /* Above arrows */
+  position: relative;
+  /* Text outline for visibility above arrows */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--bg);
+  text-shadow:
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 .dictation-move-block .dictation-token {
   padding: 0;
@@ -3947,6 +3982,24 @@ select.inline-prompt-field {
   border: 1px dashed #ef4444;
   background: transparent;
   vertical-align: bottom;
+  z-index: 10; /* Above arrows */
+  position: relative;
+  /* Text outline for visibility above arrows */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--bg);
+  text-shadow:
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 
 .dictation-rewrite-original {
@@ -3954,12 +4007,48 @@ select.inline-prompt-field {
   text-decoration: line-through;
   text-decoration-color: #ef4444;
   line-height: 1.2;
+  position: relative;
+  z-index: 10;
+  /* Text outline for visibility above arrows */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--bg);
+  text-shadow:
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 
 .dictation-rewrite-correct {
   color: #ef4444;
   font-weight: 700;
   line-height: 1.2;
+  position: relative;
+  z-index: 10;
+  /* Text outline for visibility above arrows */
+  paint-order: stroke fill;
+  -webkit-text-stroke: 3px var(--bg);
+  text-shadow:
+    -3px -3px 0 var(--bg),
+    3px -3px 0 var(--bg),
+    -3px 3px 0 var(--bg),
+    3px 3px 0 var(--bg),
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg);
 }
 
 
