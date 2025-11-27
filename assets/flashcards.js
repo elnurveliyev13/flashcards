@@ -4553,7 +4553,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const moveIssues = movePlan.mode === 'rewrite'
         ? (movePlan.rewriteGroups.length ? 1 : 0)
         : movePlan.moveBlocks.length;
-      const errorCount = extras.length + missing.length + spellingIssues + orderIssues + moveIssues;
+      const errorCount = extras.length + missing.length + spellingIssues + moveIssues;
       const isCorrect = errorCount === 0;
 
       return {
