@@ -5486,30 +5486,6 @@ function renderComparisonResult(resultEl, comparison){
         missingByGapKey.get(gapKey).push(item);
       });
 
-      // Build mapping: for each user position, which missing tokens should come AFTER it
-      // This is for gaps with no moveBlocks
-      const missingAfterUserPos = new Map();
-      filteredMissingTokens.forEach(item => {
-        // Find which user token this missing token should come after
-        // It should go after the last user token that has origIndex < item.origIndex
-        let afterUserIdx = -1;
-        for(let i = 0; i < comparison.userTokens.length; i++){
-          const userMeta = meta[i];
-          if(userMeta && userMeta.match && userMeta.match.origIndex < item.origIndex){
-            afterUserIdx = i;
-          }
-        }
-        if(!missingAfterUserPos.has(afterUserIdx)){
-          missingAfterUserPos.set(afterUserIdx, []);
-        }
-        missingAfterUserPos.get(afterUserIdx).push(item);
-      });
-
-      // Sort missing tokens by origIndex for each position
-      missingAfterUserPos.forEach((tokens, pos) => {
-        tokens.sort((a, b) => a.origIndex - b.origIndex);
-      });
-
       // Calculate adjusted boundaries accounting for moveBlocks
       // moveBlocks will be skipped, so gaps after them need to shift left
       const moveBlockIndices = new Set();
@@ -5614,6 +5590,31 @@ function renderComparisonResult(resultEl, comparison){
 
       insertAnchors(0);
       const meta = comparison.movePlan.tokenMeta || [];
+
+      // Build mapping: for each user position, which missing tokens should come AFTER it
+      // This is for gaps with no moveBlocks
+      const missingAfterUserPos = new Map();
+      filteredMissingTokens.forEach(item => {
+        // Find which user token this missing token should come after
+        // It should go after the last user token that has origIndex < item.origIndex
+        let afterUserIdx = -1;
+        for(let i = 0; i < comparison.userTokens.length; i++){
+          const userMeta = meta[i];
+          if(userMeta && userMeta.match && userMeta.match.origIndex < item.origIndex){
+            afterUserIdx = i;
+          }
+        }
+        if(!missingAfterUserPos.has(afterUserIdx)){
+          missingAfterUserPos.set(afterUserIdx, []);
+        }
+        missingAfterUserPos.get(afterUserIdx).push(item);
+      });
+
+      // Sort missing tokens by origIndex for each position
+      missingAfterUserPos.forEach((tokens, pos) => {
+        tokens.sort((a, b) => a.origIndex - b.origIndex);
+      });
+
       let idx = 0;
       let renderedPos = 0; // Track actual rendered position (excluding moved blocks)
       while(idx < comparison.userTokens.length){

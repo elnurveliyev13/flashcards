@@ -29,6 +29,49 @@ class ordbokene_client {
     protected const ARTICLE = 'https://ord.uib.no/%s/article/%d.json';
 
     /**
+     * Lookup any expressions/lemma for a given span (multiword).
+     * Returns ['expressions'=>[], 'baseform'=>string, 'dictmeta'=>[]]
+     */
+    public static function search_expressions(string $span, string $lang = 'begge'): array {
+        $span = trim($span);
+        if ($span === '') {
+            return [];
+        }
+        $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
+        $searchurl = self::SEARCH . '?w=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        try {
+            $curl = new \curl();
+            $resp = $curl->get($searchurl);
+            $search = json_decode($resp, true);
+            if (!is_array($search) || empty($search['articles'])) {
+                return [];
+            }
+            $articleid = null;
+            $articlelang = null;
+            if (!empty($search['articles']['bm'][0])) {
+                $articleid = (int)$search['articles']['bm'][0];
+                $articlelang = 'bm';
+            } else if (!empty($search['articles']['nn'][0])) {
+                $articleid = (int)$search['articles']['nn'][0];
+                $articlelang = 'nn';
+            }
+            if (!$articleid || !$articlelang) {
+                return [];
+            }
+            $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
+            $resp2 = $curl->get($articleurl);
+            $article = json_decode($resp2, true);
+            if (!is_array($article)) {
+                return [];
+            }
+            $norm = self::normalize_article($article, $articlelang, $articleurl);
+            return $norm;
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    /**
      * Lookup a word/expression.
      *
      * @param string $word Word or phrase
