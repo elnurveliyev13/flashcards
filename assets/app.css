@@ -3974,13 +3974,21 @@ select.inline-prompt-field {
   padding: 4px 8px;
   position: relative;
   z-index: 10; /* Above arrows */
-  /* Add white shadow/outline for better readability over arrows */
+  /* Add semi-transparent background to block arrows */
+  background: var(--bg);
+  border-radius: 4px;
+  /* Strong text outline for readability */
   text-shadow:
-    -1px -1px 0 var(--bg),
-    1px -1px 0 var(--bg),
-    -1px 1px 0 var(--bg),
-    1px 1px 0 var(--bg),
-    0 0 3px var(--bg);
+    -2px -2px 0 var(--bg),
+    2px -2px 0 var(--bg),
+    -2px 2px 0 var(--bg),
+    2px 2px 0 var(--bg),
+    -1px 0 0 var(--bg),
+    1px 0 0 var(--bg),
+    0 -1px 0 var(--bg),
+    0 1px 0 var(--bg),
+    0 0 4px var(--bg),
+    0 0 6px var(--bg);
 }
 
 .dictation-missing-word {
