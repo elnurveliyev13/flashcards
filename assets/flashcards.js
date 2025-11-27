@@ -1651,6 +1651,25 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       // Translation is always visible - no toggle needed
       scheduleTranslationRefresh();
+
+      // Auto-focus the appropriate input field and move cursor to end
+      if(translationDirection === 'user-no'){
+        // Reverse mode: focus uTransLocal
+        if(translationInputLocal){
+          translationInputLocal.focus();
+          // Move cursor to end of text
+          const len = translationInputLocal.value.length;
+          translationInputLocal.setSelectionRange(len, len);
+        }
+      }else{
+        // Forward mode: focus uFront
+        if(frontInput){
+          frontInput.focus();
+          // Move cursor to end of text
+          const len = frontInput.value.length;
+          frontInput.setSelectionRange(len, len);
+        }
+      }
     }
 
     function scheduleTranslationRefresh(){

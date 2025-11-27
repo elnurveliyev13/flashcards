@@ -4007,24 +4007,6 @@ select.inline-prompt-field {
   text-decoration: line-through;
   text-decoration-color: #ef4444;
   line-height: 1.2;
-  position: relative;
-  z-index: 10;
-  /* Text outline for visibility above arrows */
-  paint-order: stroke fill;
-  -webkit-text-stroke: 3px var(--bg);
-  text-shadow:
-    -3px -3px 0 var(--bg),
-    3px -3px 0 var(--bg),
-    -3px 3px 0 var(--bg),
-    3px 3px 0 var(--bg),
-    -2px -2px 0 var(--bg),
-    2px -2px 0 var(--bg),
-    -2px 2px 0 var(--bg),
-    2px 2px 0 var(--bg),
-    -1px 0 0 var(--bg),
-    1px 0 0 var(--bg),
-    0 -1px 0 var(--bg),
-    0 1px 0 var(--bg);
 }
 
 .dictation-rewrite-correct {
