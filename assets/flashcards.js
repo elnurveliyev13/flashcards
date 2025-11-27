@@ -5541,6 +5541,12 @@ function renderComparisonResult(resultEl, comparison){
           gapsByBoundary.get(clamped).push(key);
         }
       });
+
+      // Helper function to check if token is punctuation
+      const isPunctuation = (text) => {
+        return /^[.,!?;:—–\-…]$/.test(text.trim());
+      };
+
       const insertAnchors = (boundaryIdx)=>{
         const list = gapsByBoundary.get(boundaryIdx) || [];
         console.log(`[DEBUG] insertAnchors(${boundaryIdx}): gaps=${list.length > 0 ? list.join(', ') : 'none'}`);
@@ -5573,17 +5579,21 @@ function renderComparisonResult(resultEl, comparison){
 
           // Insert missing tokens BEFORE anchor (those with origIndex < moveBlock origIndex)
           missingBefore.forEach(miss=>{
+            const isPunc = isPunctuation(miss.token.raw);
             const missSpan = document.createElement('span');
-            missSpan.className = 'dictation-missing-token';
+            missSpan.className = isPunc ? 'dictation-missing-token dictation-missing-punctuation' : 'dictation-missing-token';
             const word = document.createElement('span');
             word.className = 'dictation-missing-word';
             word.textContent = miss.token.raw;
-            const caret = document.createElement('span');
-            caret.className = 'dictation-missing-caret';
             missSpan.appendChild(word);
-            missSpan.appendChild(caret);
+            // Only add caret if NOT punctuation
+            if (!isPunc) {
+              const caret = document.createElement('span');
+              caret.className = 'dictation-missing-caret';
+              missSpan.appendChild(caret);
+            }
             line.appendChild(missSpan);
-            console.log(`[DEBUG] Inserted missing token BEFORE anchor: ${miss.token.raw} (orig_${miss.origIndex})`);
+            console.log(`[DEBUG] Inserted missing token BEFORE anchor: ${miss.token.raw} (orig_${miss.origIndex})${isPunc ? ' [PUNCTUATION]' : ''}`);
           });
 
           // Insert anchor for move blocks
@@ -5597,17 +5607,21 @@ function renderComparisonResult(resultEl, comparison){
 
           // Insert missing tokens AFTER anchor (those with origIndex >= moveBlock origIndex)
           missingAfter.forEach(miss=>{
+            const isPunc = isPunctuation(miss.token.raw);
             const missSpan = document.createElement('span');
-            missSpan.className = 'dictation-missing-token';
+            missSpan.className = isPunc ? 'dictation-missing-token dictation-missing-punctuation' : 'dictation-missing-token';
             const word = document.createElement('span');
             word.className = 'dictation-missing-word';
             word.textContent = miss.token.raw;
-            const caret = document.createElement('span');
-            caret.className = 'dictation-missing-caret';
             missSpan.appendChild(word);
-            missSpan.appendChild(caret);
+            // Only add caret if NOT punctuation
+            if (!isPunc) {
+              const caret = document.createElement('span');
+              caret.className = 'dictation-missing-caret';
+              missSpan.appendChild(caret);
+            }
             line.appendChild(missSpan);
-            console.log(`[DEBUG] Inserted missing token AFTER anchor: ${miss.token.raw} (orig_${miss.origIndex})`);
+            console.log(`[DEBUG] Inserted missing token AFTER anchor: ${miss.token.raw} (orig_${miss.origIndex})${isPunc ? ' [PUNCTUATION]' : ''}`);
           });
         });
       };
@@ -5709,17 +5723,21 @@ function renderComparisonResult(resultEl, comparison){
         // Insert missing tokens that should come AFTER this user token
         const missingAfter = missingAfterUserPos.get(idx) || [];
         missingAfter.forEach(miss => {
+          const isPunc = isPunctuation(miss.token.raw);
           const missSpan = document.createElement('span');
-          missSpan.className = 'dictation-missing-token';
+          missSpan.className = isPunc ? 'dictation-missing-token dictation-missing-punctuation' : 'dictation-missing-token';
           const word = document.createElement('span');
           word.className = 'dictation-missing-word';
           word.textContent = miss.token.raw;
-          const caret = document.createElement('span');
-          caret.className = 'dictation-missing-caret';
           missSpan.appendChild(word);
-          missSpan.appendChild(caret);
+          // Only add caret if NOT punctuation
+          if (!isPunc) {
+            const caret = document.createElement('span');
+            caret.className = 'dictation-missing-caret';
+            missSpan.appendChild(caret);
+          }
           line.appendChild(missSpan);
-          console.log(`[DEBUG] Inserted missing token inline AFTER user token ${idx}: ${miss.token.raw} (orig_${miss.origIndex})`);
+          console.log(`[DEBUG] Inserted missing token inline AFTER user token ${idx}: ${miss.token.raw} (orig_${miss.origIndex})${isPunc ? ' [PUNCTUATION]' : ''}`);
         });
 
         idx++;

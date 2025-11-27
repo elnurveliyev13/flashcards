@@ -4089,6 +4089,14 @@ select.inline-prompt-field {
   animation: caret-bounce 1s ease-in-out infinite;
 }
 
+/* Punctuation marks displayed as single-line tokens */
+.dictation-missing-punctuation {
+  grid-template-rows: 1.2em !important; /* Single row instead of double */
+  padding: 4px 8px !important;
+  display: inline-grid !important;
+  align-items: end !important;
+}
+
 @keyframes caret-bounce {
   0%, 100% {
     transform: translateY(0);
