@@ -2231,6 +2231,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const msg = resp && resp.error ? resp.error : (aiStrings.error || 'Error');
           setFocusStatus('error', msg);
           if(resp && resp.debug){
+            console.warn('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
+          }
+          if(resp && resp.debug){
             console.warn('[Flashcards][Ordbank] debug:', resp.debug);
           }
           return;
@@ -2246,6 +2249,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           setFocusStatus('error', aiStrings.error || 'Error');
           console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
           return;
+        }
+        if(resp && resp.debug && resp.debug.ordbokene){
+          console.info('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
         }
         // Try to detect multiword expressions
         let matchedExpression = '';

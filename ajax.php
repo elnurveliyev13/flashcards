@@ -531,43 +531,28 @@ switch ($action) {
             $ordbokene_debug = [];
             if ($orbokeneenabled) {
                 $lang = 'begge';
-                $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($word, $lang);
-                $ordbokene_debug['word_lookup'] = [
-                    'word' => $word,
-                    'ok' => !empty($orbokenedata),
-                    'expressions' => $orbokenedata['expressions'] ?? [],
-                    'url' => $orbokenedata['dictmeta']['url'] ?? ''
-                ];
-                if (!empty($orbokenedata)) {
-                    if (empty($data['selected']['baseform']) && !empty($orbokenedata['baseform'])) {
-                        $data['selected']['baseform'] = $orbokenedata['baseform'];
+                $ordbokene_debug['enabled'] = true;
+                $wordsfront = preg_split('/\\s+/', core_text::strtolower($fronttext));
+                $lowerword = core_text::strtolower($word);
+                $candidates = [];
+                // base candidates
+                $candidates[] = $lowerword;
+                $candidates[] = trim($lowerword . ' over');
+                $candidates[] = trim('være ' . $lowerword . ' over');
+                // n-grams around the clicked word (length 2-4)
+                if (!empty($wordsfront)) {
+                    $positions = [];
+                    foreach ($wordsfront as $i => $w) {
+                        if ($w === $lowerword) {
+                            $positions[] = $i;
+                        }
                     }
-                    if (!empty($orbokenedata['expressions'])) {
-                        $data['expressions'] = $orbokenedata['expressions'];
-                    }
-                    if (empty($data['forms']) && !empty($orbokenedata['forms'])) {
-                        $data['forms'] = $orbokenedata['forms'];
-                    }
-                    if (empty($data['definition']) && !empty($orbokenedata['meanings'])) {
-                        $data['definition'] = $orbokenedata['meanings'][0];
-                    }
-                    if (empty($data['examples']) && !empty($orbokenedata['examples'])) {
-                        $data['examples'] = $orbokenedata['examples'];
-                    }
-                    $data['dictmeta'] = $orbokenedata['dictmeta'] ?? [];
-                }
-                // Try to detect a multiword expression around the clicked word using the full front text.
-                if ($fronttext !== '') {
-                    $candidates = [];
-                    $words = preg_split('/\\s+/', core_text::strtolower($fronttext));
-                    $lowerword = core_text::strtolower($word);
-                    $idx = array_search($lowerword, $words, true);
-                    if ($idx !== false) {
-                        for ($len = 3; $len >= 2; $len--) { // try longer spans first
+                    foreach ($positions as $idx) {
+                        for ($len = 4; $len >= 2; $len--) {
                             $start = max(0, $idx - ($len - 1));
                             for ($i = $start; $i <= $idx; $i++) {
-                                if ($i + $len <= count($words)) {
-                                    $span = trim(implode(' ', array_slice($words, $i, $len)));
+                                if ($i + $len <= count($wordsfront)) {
+                                    $span = trim(implode(' ', array_slice($wordsfront, $i, $len)));
                                     if ($span && !in_array($span, $candidates, true)) {
                                         $candidates[] = $span;
                                     }
@@ -575,42 +560,47 @@ switch ($action) {
                             }
                         }
                     }
-                    foreach ($candidates as $cand) {
-                        $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
-                        if (!empty($lookup)) {
-                            $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
-                            if (empty($data['selected']['wordform'])) {
-                                $data['selected']['wordform'] = $cand;
-                            }
-                            if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
-                                $data['selected']['baseform'] = $lookup['baseform'];
-                            }
-                            if (empty($data['forms']) && !empty($lookup['forms'])) {
-                                $data['forms'] = $lookup['forms'];
-                            }
-                            if (empty($data['definition']) && !empty($lookup['meanings'])) {
-                                $data['definition'] = $lookup['meanings'][0];
-                            }
-                            if (empty($data['examples']) && !empty($lookup['examples'])) {
-                                $data['examples'] = $lookup['examples'];
-                            }
-                    $data['dictmeta'] = $lookup['dictmeta'] ?? [];
-                            $ordbokene_debug['ngram_hit'] = [
-                                'span' => $cand,
-                                'ok' => true,
-                                'expressions' => $lookup['expressions'] ?? [],
-                                'url' => $lookup['dictmeta']['url'] ?? ''
-                            ];
-                            break;
+                }
+                $candidates = array_values(array_unique(array_filter($candidates)));
+                $ordbokene_debug['candidates'] = $candidates;
+
+                foreach ($candidates as $cand) {
+                    $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
+                    $ordbokene_debug['tries'][] = [
+                        'span' => $cand,
+                        'ok' => !empty($lookup),
+                        'expressions' => $lookup['expressions'] ?? [],
+                        'url' => $lookup['dictmeta']['url'] ?? ''
+                    ];
+                    if (!empty($lookup)) {
+                        $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
+                        if (empty($data['selected']['wordform'])) {
+                            $data['selected']['wordform'] = $cand;
                         }
-                    }
-                    if (!isset($ordbokene_debug['ngram_hit'])) {
-                        $ordbokene_debug['ngram_hit'] = ['ok' => false];
+                        if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
+                            $data['selected']['baseform'] = $lookup['baseform'];
+                        }
+                        if (empty($data['forms']) && !empty($lookup['forms'])) {
+                            $data['forms'] = $lookup['forms'];
+                        }
+                        if (empty($data['definition']) && !empty($lookup['meanings'])) {
+                            $data['definition'] = $lookup['meanings'][0];
+                        }
+                        if (empty($data['examples']) && !empty($lookup['examples'])) {
+                            $data['examples'] = $lookup['examples'];
+                        }
+                        $data['dictmeta'] = $lookup['dictmeta'] ?? [];
+                        break;
                     }
                 }
+            } else {
+                $ordbokene_debug['enabled'] = false;
             }
 
             if (!$data) {
+                if (!empty($ordbokene_debug)) {
+                    $debug['ordbokene'] = $ordbokene_debug;
+                }
                 echo json_encode(['ok' => false, 'error' => 'No matches found in ordbank', 'debug' => $debug]);
             } else {
                 if (!empty($ordbokene_debug)) {
