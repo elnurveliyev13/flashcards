@@ -5597,9 +5597,19 @@ function renderComparisonResult(resultEl, comparison){
       const meta = comparison.movePlan.tokenMeta || [];
 
       // Build mapping: for each user position, which missing tokens should come AFTER it
-      // This is for gaps with no moveBlocks
+      // This is ONLY for gaps with no moveBlocks (otherwise they're handled by anchor)
+      const gapsWithMoveBlocks = new Set();
+      comparison.movePlan.moveBlocks.forEach(block => {
+        gapsWithMoveBlocks.add(block.targetGapKey);
+      });
+
       const missingAfterUserPos = new Map();
       filteredMissingTokens.forEach(item => {
+        // Skip if this missing token's gap has moveBlocks (will be handled by anchor)
+        if(gapsWithMoveBlocks.has(item.gapKey)){
+          return;
+        }
+
         // Find which user token this missing token should come after
         // It should go after the last user token that has origIndex < item.origIndex
         let afterUserIdx = -1;
