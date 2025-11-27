@@ -5,6 +5,7 @@ require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
 require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/local/ordbank_helper.php');
+require_once(__DIR__ . '/classes/local/ordbokene_client.php');
 
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
@@ -367,6 +368,7 @@ switch ($action) {
             $level = '';
         }
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
+        $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
         $helper = new \mod_flashcards\local\ai_helper();
         $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
             'language' => $language,
@@ -427,6 +429,26 @@ switch ($action) {
         $data['forms'] = $ob['forms'] ?? [];
         if ((empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
             $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
+        }
+        // If still no forms/definition/examples and ordbokene is enabled, try API lookup.
+        if ($orbokeneenabled && (empty($data['forms']) || empty($data['definition']) || empty($data['examples']))) {
+            $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
+            $orbokenedata = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $focuscheck, $lang);
+            if (!empty($orbokenedata)) {
+                if (empty($data['forms']) && !empty($orbokenedata['forms'])) {
+                    $data['forms'] = $orbokenedata['forms'];
+                }
+                if (empty($data['definition']) && !empty($orbokenedata['meanings'])) {
+                    $data['definition'] = $orbokenedata['meanings'][0];
+                }
+                if (empty($data['examples']) && !empty($orbokenedata['examples'])) {
+                    $data['examples'] = $orbokenedata['examples'];
+                }
+                if (!empty($orbokenedata['expressions'])) {
+                    $data['expressions'] = $orbokenedata['expressions'];
+                }
+                $data['dictmeta'] = $orbokenedata['dictmeta'] ?? [];
+            }
         }
         if (empty($data['gender']) && !empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
