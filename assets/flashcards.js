@@ -5981,6 +5981,13 @@ function renderComparisonResult(resultEl, comparison){
           ${tr}
         `;
 
+        // Get audio URL for dictation autoplay
+        const dictationAudioUrl = await resolveAudioUrl(card, 'front');
+        if(dictationAudioUrl){
+          el.dataset.autoplay = dictationAudioUrl;
+        }
+        el.dataset.slotType = 'dictation';
+
         // Setup dictation exercise behavior
         setTimeout(() => {
           setupDictationExercise(el, card, dictationId);
@@ -6061,6 +6068,10 @@ function renderComparisonResult(resultEl, comparison){
       if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
         // First opening - play first slot's audio
         autoplayUrl = items[0].dataset.autoplay;
+        // Check if first slot is dictation - play at 0.85 speed
+        if(items[0].dataset.slotType === 'dictation'){
+          autoplayRate = 0.85;
+        }
       } else if(prevCount > 0 && count > prevCount){
         // Show More clicked
         const newSlot = items[count - 1];
@@ -6075,6 +6086,10 @@ function renderComparisonResult(resultEl, comparison){
         } else if(newSlot && newSlot.dataset && newSlot.dataset.autoplay){
           // Play newly revealed slot's audio if it has one
           autoplayUrl = newSlot.dataset.autoplay;
+          // Check if new slot is dictation - play at 0.85 speed
+          if(newSlot.dataset.slotType === 'dictation'){
+            autoplayRate = 0.85;
+          }
         }
       }
       if(autoplayUrl){
