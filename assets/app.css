@@ -1037,7 +1037,7 @@ select:focus-visible{
   position:relative;
   top:auto;
   right:auto;
-  margin-bottom:var(--space-2);
+  margin-bottom:var(--space-1);
   justify-content:space-between;
   align-items:center;
   flex-wrap:wrap;
@@ -3693,7 +3693,7 @@ select.inline-prompt-field {
 .dictation-comparison-row {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.075rem;
   margin: 0;
   padding: 0;
 }
@@ -3704,7 +3704,7 @@ select.inline-prompt-field {
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 0.25rem 0;
+  margin: 0 0 0.175rem 0;
   padding: 0 0 0 0.75rem;
 }
 
@@ -3833,7 +3833,7 @@ select.inline-prompt-field {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.079625rem; /* 0.15925 / 2 = 0.079625 (reduced by 50%) */
+  gap: 0.04459rem; /* 0.0637 * 0.7 = 0.04459 (reduced by 30%) */
   padding: 0;
   margin: 0;
   width: 100%;
@@ -4270,7 +4270,24 @@ select.inline-prompt-field {
 .dictation-rewrite-correct { color: #ef4444; }
 
 .dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 0; }
-.dictation-token-wrong-text { color: #f8fafc; text-decoration: line-through; text-decoration-color: #ef4444; display: inline; line-height: 1.2; }
+.dictation-token-wrong-text {
+  color: #f8fafc;
+  display: inline;
+  line-height: 1.2;
+  position: relative;
+}
+.dictation-token-wrong-text::after {
+  content: '';
+  position: absolute;
+  left: -0.25em;
+  right: -0.25em;
+  top: 50%;
+  transform: translateY(1px);
+  height: 2px;
+  background: #ef4444;
+  border: none;
+  outline: none;
+}
 /* Final overrides: keep move blocks transparent */
 .dictation-move-block { background: transparent !important; }
 
