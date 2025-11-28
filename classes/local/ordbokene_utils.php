@@ -6,7 +6,7 @@ defined('MOODLE_INTERNAL') || die();
 use mod_flashcards\local\ordbank_helper;
 
 /**
- * Build expression candidates (lemmas + raw, n-grams, templates with gaps).
+ * Build expression candidates (lemmas + constrained n-grams starting with baselemma).
  *
  * @param string $fronttext Full sentence
  * @param string $base Base form / clicked word (may be inflected)
@@ -15,10 +15,10 @@ use mod_flashcards\local\ordbank_helper;
 function mod_flashcards_build_expression_candidates(string $fronttext, string $base): array {
     $cands = [];
 
-    // Lemma для base.
+    // Lemma for base (prefer verb lemma if any).
     $baseanalysis = ordbank_helper::analyze_token($base, []);
     $baselemma = core_text::strtolower(trim($baseanalysis['selected']['baseform'] ?? $base));
-    // Try a naive verb guess (dreier -> dreie) if lemma equals surface and ends with "er".
+    // Heuristic: if same as surface and ends with "er", try replacing with "e" once.
     if ($baselemma === core_text::strtolower($base) && preg_match('~er$~', $baselemma)) {
         $guess = preg_replace('~er$~', 'e', $baselemma);
         if ($guess && $guess !== $baselemma) {
@@ -37,7 +37,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
     }
 
-    // Lemmatize via ordbank_helper; fallback to token.
+    // Lemmatize via ordbank_helper; fallback to token; also apply the "er->e" guess.
     $lemmas = [];
     foreach ($rawtokens as $t) {
         $analysis = ordbank_helper::analyze_token($t, []);
@@ -52,17 +52,16 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $lemmas[] = $lem;
     }
 
-    // Предлоги/частицы, которые реально присутствуют в тексте.
+    // Prepositions actually present in text (fallback to om/over).
     $prepsText = array_values(array_unique(array_intersect(
         ['over','om','for','med','til','av','på','i'],
         $rawtokens
     )));
-    // Если нет — всё равно пробуем пару частых (om/over) для klar/dreie случаев.
     if (empty($prepsText)) {
         $prepsText = ['om','over'];
     }
 
-    // Base candidates (grunnform + prep из текста).
+    // Base candidates (must start with baselemma).
     if ($baselemma !== '') {
         $cands[] = $baselemma;
         foreach ($prepsText as $prep) {
@@ -71,12 +70,15 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
     }
 
-    // Helper to make n-grams.
-    $build_ngrams = function(array $tokens) {
+    // Helper to make n-grams that start with baselemma.
+    $build_ngrams = function(array $tokens, string $baselemma) {
         $out = [];
         $len = count($tokens);
         for ($n = 6; $n >= 2; $n--) {
             for ($i = 0; $i + $n <= $len; $i++) {
+                if ($tokens[$i] !== $baselemma) {
+                    continue;
+                }
                 $span = trim(implode(' ', array_slice($tokens, $i, $n)));
                 if ($span) {
                     $out[] = $span;
@@ -85,16 +87,16 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
         return $out;
     };
-    $cands = array_merge($cands, $build_ngrams($rawtokens), $build_ngrams($lemmas));
+    $cands = array_merge($cands, $build_ngrams($rawtokens, $baselemma), $build_ngrams($lemmas, $baselemma));
 
-    // Flexible templates with up to 2 gaps around base (use raw and lemma tokens).
+    // Flexible templates with up to 2 gaps around base (only if slice starts with baselemma).
     $tokensets = [$rawtokens, $lemmas];
     foreach ($tokensets as $tokens) {
         $len = count($tokens);
         foreach ($tokens as $i => $tok) {
             if ($tok === $baselemma) {
                 for ($gap = 1; $gap <= 2; $gap++) {
-                    $start = max(0, $i - 1);
+                    $start = $i;
                     $end = min($len, $i + 2 + $gap);
                     if ($end > $start) {
                         $slice = array_slice($tokens, $start, $end - $start);
