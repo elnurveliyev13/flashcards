@@ -492,7 +492,22 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     $cands = [];
     $base = trim(core_text::strtolower($base));
     $front = trim(core_text::strtolower($fronttext));
-    $tokens = array_values(array_filter(preg_split('/\\s+/', $front)));
+    $rawtokens = array_values(array_filter(preg_split('/\\s+/', $front)));
+    // Лемматизируем простейшим способом: если в ordbank есть лемма — берём её, иначе слово как есть.
+    $tokens = [];
+    global $DB;
+    foreach ($rawtokens as $t) {
+        $clean = trim($t, " \t\n\r\0\x0B,.;:!?«»\"'()[]{}");
+        if ($clean === '') {
+            continue;
+        }
+        $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($clean, []);
+        $lemma = $analysis['selected']['baseform'] ?? null;
+        $tokens[] = $lemma ? core_text::strtolower($lemma) : $clean;
+    }
+    // Удаляем стоп-слова/звуки
+    $stop = ['uhm','hva','jeg','du','han','hun','det','som','og','i','på','til','på','av','en','ei','et','er','var','har','hadde','skal','skulle','vil','ville','kan','kunne','må','måtte'];
+    $tokens = array_values(array_filter($tokens, fn($t) => !in_array($t, $stop, true)));
     // Base candidates
     if ($base !== '') {
         $cands[] = $base;
