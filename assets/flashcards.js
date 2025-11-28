@@ -125,7 +125,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const clearBtn = document.createElement('button');
         clearBtn.type = 'button';
         clearBtn.className = 'textarea-clear';
-        clearBtn.innerHTML = '?';
+        clearBtn.innerHTML = '\u00D7';
         clearBtn.title = 'Clear';
         clearBtn.setAttribute('aria-label', 'Clear field');
 
@@ -482,7 +482,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiChatError: dataset.aiChatError || 'AI could not answer that question.',
       aiChatLoading: dataset.aiChatLoading || 'Thinking',
       // Dictation exercise strings
-      dictationPlaceholder: dataset.dictationPlaceholder || ' ,  ...',
+      dictationPlaceholder: dataset.dictationPlaceholder || 'Type what you hear...',
       dictationCheck: dataset.dictationCheck || '',
       dictationReplay: dataset.dictationReplay || ' ',
       dictationEmptyInput: dataset.dictationEmptyInput || ' ',

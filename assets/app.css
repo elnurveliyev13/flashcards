@@ -1464,14 +1464,14 @@ audio{max-width:260px}
   position:absolute;
   top:6px;
   right:6px;
-  width:22px;
-  height:22px;
+  width:33px;
+  height:33px;
   padding:0;
   border:none;
   background:var(--surface-1);
   color:var(--text-muted);
   border-radius:50%;
-  font-size:14px;
+  font-size:21px;
   line-height:1;
   cursor:pointer;
   opacity:0;
@@ -2259,6 +2259,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-shrink:0;
 }
 .fc-quick-media-btn.fc-media-inline{
+  display: flex;
+  justify-content: center;
+  align-items: center;
   padding:8px 10px;
   min-width:90px;
   min-height:52px;
