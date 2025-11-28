@@ -1458,18 +1458,12 @@ audio{max-width:260px}
   display:block;
 }
 .textarea-wrap textarea{
-  padding-right:39px;
-}
-.textarea-wrap #uTransLocal{
-  padding-right:12px;
-}
-#uTransLocal + .textarea-clear{
-  display:none;
+  padding-right:36px;
 }
 .textarea-clear{
   position:absolute;
   top:3px;
-  right:3px;
+  right:0;
   width:33px;
   height:33px;
   padding:0;
@@ -2278,7 +2272,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-quick-media-btn.fc-media-inline .fc-media-icon{
   font-size:1.25rem;
   line-height: 1;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .slot-inline-controls .fc-quick-media-btn.fc-media-inline{
   width:56px;
@@ -3915,14 +3911,23 @@ select.inline-prompt-field {
 
 /* Disable tokenization and outline for correct answer display */
 .dictation-line-correct .dictation-token {
-  padding: 0;
-  border: none;
-  outline: none;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+  paint-order: normal !important;
+  background: transparent !important;
+  display: inline !important;
+  grid-template-rows: auto !important;
 }
 
 .dictation-line-correct {
-  display: block;
-  flex-wrap: nowrap;
+  display: block !important;
+  flex-wrap: nowrap !important;
+  padding: 4px 8px !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
 }
 
 .dictation-token-warn {
