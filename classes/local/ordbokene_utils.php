@@ -53,10 +53,8 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     }
 
     // Prepositions actually present in text (fallback to om/over).
-    $prepsText = array_values(array_unique(array_intersect(
-        ['over','om','for','med','til','av','på','i'],
-        $rawtokens
-    )));
+    $preplist = ['over','om','for','med','til','av','på','i'];
+    $prepsText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
     if (empty($prepsText)) {
         $prepsText = ['om','over'];
     }
@@ -88,6 +86,15 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         return $out;
     };
     $cands = array_merge($cands, $build_ngrams($rawtokens, $baselemma), $build_ngrams($lemmas, $baselemma));
+
+    // Reflexive patterns: baselemma + ' seg ' + prep (if seg+prep exist in text).
+    $hasSeg = in_array('seg', $rawtokens, true);
+    $prepsInText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
+    if ($hasSeg && !empty($prepsInText)) {
+        foreach ($prepsInText as $prep) {
+            $cands[] = trim($baselemma . ' seg ' . $prep);
+        }
+    }
 
     // Flexible templates with up to 2 gaps around base (only if slice starts with baselemma).
     $tokensets = [$rawtokens, $lemmas];

@@ -451,6 +451,8 @@ switch ($action) {
             if (!empty($data['focusWord']) && core_text::strtolower($data['focusWord']) !== core_text::strtolower($data['focusBaseform'] ?? '')) {
                 $candidates[] = core_text::strtolower(trim($data['focusWord']));
             }
+            // Добавим кандидаты из текста (леммы/n-граммы), чтобы подхватить выражения, если ИИ их не дал.
+            $candidates = array_merge($candidates, mod_flashcards_build_expression_candidates($fronttext, $span));
             $candidates = array_values(array_unique(array_filter($candidates)));
             $debugai['ordbokene'] = ['candidates' => $candidates, 'tries' => []];
             foreach ($candidates as $cand) {
