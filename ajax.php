@@ -6,6 +6,7 @@ require_once($CFG->libdir . '/filelib.php');
 require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/local/ordbank_helper.php');
 require_once(__DIR__ . '/classes/local/ordbokene_client.php');
+require_once(__DIR__ . '/classes/local/ordbokene_utils.php');
 
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
