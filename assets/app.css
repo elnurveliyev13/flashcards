@@ -3869,7 +3869,7 @@ select.inline-prompt-field {
   grid-template-rows: 1.2em;
   align-items: end;
   justify-items: center;
-  padding: 4px 8px;
+  padding: 3.4px 6.8px; /* 4px * 0.85 = 3.4px, 8px * 0.85 = 6.8px (reduced by 15%) */
   border-radius: 6px;
   background: transparent;
   color: #e2e8f0;
@@ -4226,7 +4226,7 @@ select.inline-prompt-field {
   }
 }
 .dictation-token-inner {
-  padding: 4px 8px;
+  padding: 3.4px 6.8px; /* 4px * 0.85 = 3.4px, 8px * 0.85 = 6.8px (reduced by 15%) */
   border-radius: 6px;
   background: rgba(148, 163, 184, 0.1);
   color: inherit;
@@ -4238,7 +4238,7 @@ select.inline-prompt-field {
 .dictation-token-inner.dictation-token-extra { color: #f8fafc; background: transparent; }
 
 .dictation-token-inner {
-  padding: 4px 8px;
+  padding: 3.4px 6.8px; /* 4px * 0.85 = 3.4px, 8px * 0.85 = 6.8px (reduced by 15%) */
   border-radius: 6px;
   background: rgba(148, 163, 184, 0.1);
   color: inherit;
