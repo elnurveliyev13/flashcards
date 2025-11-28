@@ -3,6 +3,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use mod_flashcards\local\ordbank_helper;
+
 /**
  * Build expression candidates (lemmas + raw, n-grams, templates with gaps).
  *
@@ -12,7 +14,11 @@ defined('MOODLE_INTERNAL') || die();
  */
 function mod_flashcards_build_expression_candidates(string $fronttext, string $base): array {
     $cands = [];
-    $base = trim(core_text::strtolower($base));
+
+    // Lemma для base.
+    $baseanalysis = ordbank_helper::analyze_token($base, []);
+    $baselemma = core_text::strtolower(trim($baseanalysis['selected']['baseform'] ?? $base));
+
     $front = trim(core_text::strtolower($fronttext));
 
     // Split, clean punctuation.
@@ -27,17 +33,27 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     // Lemmatize via ordbank_helper; fallback to token.
     $lemmas = [];
     foreach ($rawtokens as $t) {
-        $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($t, []);
+        $analysis = ordbank_helper::analyze_token($t, []);
         $lemma = $analysis['selected']['baseform'] ?? null;
         $lemmas[] = $lemma ? core_text::strtolower($lemma) : $t;
     }
 
-    // Base candidates (try key preposition combos).
-    if ($base !== '') {
-        $cands[] = $base;
-        foreach (['over','om','for','med','til','av'] as $prep) {
-            $cands[] = trim($base . ' ' . $prep);
-            $cands[] = trim('være ' . $base . ' ' . $prep);
+    // Предлоги/частицы, которые реально присутствуют в тексте.
+    $prepsText = array_values(array_unique(array_intersect(
+        ['over','om','for','med','til','av','på','i'],
+        $rawtokens
+    )));
+    // Если нет — всё равно пробуем пару частых (om/over) для klar/dreie случаев.
+    if (empty($prepsText)) {
+        $prepsText = ['om','over'];
+    }
+
+    // Base candidates (grunnform + prep из текста).
+    if ($baselemma !== '') {
+        $cands[] = $baselemma;
+        foreach ($prepsText as $prep) {
+            $cands[] = trim($baselemma . ' ' . $prep);
+            $cands[] = trim('være ' . $baselemma . ' ' . $prep);
         }
     }
 
@@ -57,12 +73,12 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     };
     $cands = array_merge($cands, $build_ngrams($rawtokens), $build_ngrams($lemmas));
 
-    // Flexible templates with gaps (up to 2) around base (lemma/raw).
+    // Flexible templates with up to 2 gaps around base (use raw and lemma tokens).
     $tokensets = [$rawtokens, $lemmas];
     foreach ($tokensets as $tokens) {
         $len = count($tokens);
         foreach ($tokens as $i => $tok) {
-            if ($tok === $base) {
+            if ($tok === $baselemma) {
                 for ($gap = 1; $gap <= 2; $gap++) {
                     $start = max(0, $i - 1);
                     $end = min($len, $i + 2 + $gap);
