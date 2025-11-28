@@ -4279,8 +4279,8 @@ select.inline-prompt-field {
 .dictation-token-wrong-text::after {
   content: '';
   position: absolute;
-  left: -0.25em;
-  right: -0.25em;
+  left: -0.125em;
+  right: -0.125em;
   top: 50%;
   transform: translateY(1px);
   height: 2px;
