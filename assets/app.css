@@ -1458,7 +1458,7 @@ audio{max-width:260px}
   display:block;
 }
 .textarea-wrap textarea{
-  padding-right:32px;
+  padding-right:45px;
 }
 .textarea-clear{
   position:absolute;
@@ -1471,14 +1471,15 @@ audio{max-width:260px}
   background:var(--surface-1);
   color:var(--text-muted);
   border-radius:50%;
-  font-size:21px;
-  line-height:1;
+  font-size:24px;
+  line-height:33px;
   cursor:pointer;
   opacity:0;
   transition:opacity 0.15s ease, background 0.15s ease, color 0.15s ease;
   display:flex;
   align-items:center;
   justify-content:center;
+  font-family:Arial, sans-serif;
 }
 .textarea-wrap:hover .textarea-clear,
 .textarea-wrap:focus-within .textarea-clear{
