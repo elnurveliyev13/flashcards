@@ -3912,6 +3912,7 @@ select.inline-prompt-field {
 /* Disable tokenization and outline for correct answer display */
 .dictation-line-correct .dictation-token {
   padding: 0 !important;
+  margin: 0 !important;
   border: none !important;
   outline: none !important;
   -webkit-text-stroke: 0 !important;
@@ -3922,12 +3923,21 @@ select.inline-prompt-field {
   grid-template-rows: auto !important;
 }
 
+.dictation-line-correct .dictation-token::after {
+  content: ' ';
+}
+
+.dictation-line-correct .dictation-token:last-child::after {
+  content: '';
+}
+
 .dictation-line-correct {
   display: block !important;
   flex-wrap: nowrap !important;
   padding: 4px 8px !important;
   line-height: 1.6 !important;
   font-weight: 500 !important;
+  white-space: normal !important;
 }
 
 .dictation-token-warn {

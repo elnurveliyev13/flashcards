@@ -7736,7 +7736,13 @@ function renderComparisonResult(resultEl, comparison){
 
     const listPlayer = new Audio();
     async function audioURLFromCard(c){ if(c.audioKey) return await urlForSafe(c.audioKey); return resolveAsset(c.audio) || null; }
-    function fmtDateTime(ts){ return ts? new Date(ts).toLocaleString() : '-'; }
+    function fmtDateTime(ts){
+      if(!ts) return '-';
+      const d = new Date(ts);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      return `${day}.${month}`;
+    }
 
     // Format stage as inline pill (for cards list table)
     function formatStageBadge(step){
