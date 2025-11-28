@@ -2466,8 +2466,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-media-icon {
+  display: inline-block;
   font-size: 1.625rem; /* 26px */
   color: var(--icon-muted);
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .media-pill {
