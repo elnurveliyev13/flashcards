@@ -2066,8 +2066,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if((data.focusWord || matchedExpression) && fokusInput){
         const posVal = resolvePosFromTag(data.pos || '');
         let focusVal = (matchedExpression || data.focusWord || '').trim();
-        // Keep lowercase to avoid accidental uppercasing like "AV".
-        focusVal = focusVal.toLowerCase();
         if(!matchedExpression){
           if(posVal === 'verb'){
             focusVal = `(å) ${focusVal}`;
@@ -2300,7 +2298,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }
           }
         }
-        focusWordResolved = (focusWordResolved || '').toLowerCase();
+        focusWordResolved = (focusWordResolved || '').trim();
         if(fokusInput){
           fokusInput.value = focusWordResolved;
           try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
@@ -9148,5 +9146,3 @@ function renderComparisonResult(resultEl, comparison){
 
   }
 export { flashcardsInit };
-
-

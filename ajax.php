@@ -455,6 +455,15 @@ switch ($action) {
                     'url' => $lookup['dictmeta']['url'] ?? ''
                 ];
                 if (!empty($lookup)) {
+                    // Prefer expressions as baseform (grunnform).
+                    if (!empty($lookup['expressions'])) {
+                        $expr = $lookup['expressions'][0];
+                        $data['focusWord'] = $expr;
+                        $data['focusBaseform'] = $expr;
+                    } else if (!empty($lookup['baseform'])) {
+                        $data['focusWord'] = $lookup['baseform'];
+                        $data['focusBaseform'] = $lookup['baseform'];
+                    }
                     if (empty($data['forms']) && !empty($lookup['forms'])) {
                         $data['forms'] = $lookup['forms'];
                     }
@@ -466,8 +475,6 @@ switch ($action) {
                     }
                     if (!empty($lookup['expressions'])) {
                         $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'])));
-                        // Если нашли выражение, используем его как wordform.
-                        $data['focusWord'] = $lookup['expressions'][0];
                     }
                     if (empty($data['dictmeta']) && !empty($lookup['dictmeta'])) {
                         $data['dictmeta'] = $lookup['dictmeta'];

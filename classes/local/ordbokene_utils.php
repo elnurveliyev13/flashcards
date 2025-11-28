@@ -4,10 +4,10 @@
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Build expression candidates (n-grams + templates with gaps, using raw tokens and lemmas).
+ * Build expression candidates (lemmas + raw, n-grams, templates with gaps).
  *
  * @param string $fronttext Full sentence
- * @param string $base Base form / clicked word
+ * @param string $base Base form / clicked word (may be inflected)
  * @return array
  */
 function mod_flashcards_build_expression_candidates(string $fronttext, string $base): array {
@@ -15,7 +15,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     $base = trim(core_text::strtolower($base));
     $front = trim(core_text::strtolower($fronttext));
 
-    // Split and clean punctuation.
+    // Split, clean punctuation.
     $rawtokens = [];
     foreach (array_values(array_filter(preg_split('/\s+/', $front))) as $t) {
         $clean = trim($t, " \t\n\r\0\x0B,.;:!?<>\"'()[]{}");
@@ -24,7 +24,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
     }
 
-    // Lemmatize via ordbank_helper; if no lemma, keep token.
+    // Lemmatize via ordbank_helper; fallback to token.
     $lemmas = [];
     foreach ($rawtokens as $t) {
         $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($t, []);
@@ -32,18 +32,20 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $lemmas[] = $lemma ? core_text::strtolower($lemma) : $t;
     }
 
-    // Base candidates.
+    // Base candidates (try key preposition combos).
     if ($base !== '') {
         $cands[] = $base;
-        $cands[] = trim($base . ' over');
-        $cands[] = trim('være ' . $base . ' over');
+        foreach (['over','om','for','med','til','av'] as $prep) {
+            $cands[] = trim($base . ' ' . $prep);
+            $cands[] = trim('være ' . $base . ' ' . $prep);
+        }
     }
 
-    // N-grams (raw and lemma) length 2..5.
+    // Helper to make n-grams.
     $build_ngrams = function(array $tokens) {
         $out = [];
         $len = count($tokens);
-        for ($n = 5; $n >= 2; $n--) {
+        for ($n = 6; $n >= 2; $n--) {
             for ($i = 0; $i + $n <= $len; $i++) {
                 $span = trim(implode(' ', array_slice($tokens, $i, $n)));
                 if ($span) {
@@ -55,7 +57,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     };
     $cands = array_merge($cands, $build_ngrams($rawtokens), $build_ngrams($lemmas));
 
-    // Flexible templates with up to 2 gaps around base (use raw and lemma tokens).
+    // Flexible templates with gaps (up to 2) around base (lemma/raw).
     $tokensets = [$rawtokens, $lemmas];
     foreach ($tokensets as $tokens) {
         $len = count($tokens);
