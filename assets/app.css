@@ -1463,6 +1463,9 @@ audio{max-width:260px}
 .textarea-wrap #uTransLocal{
   padding-right:12px;
 }
+#uTransLocal + .textarea-clear{
+  display:none;
+}
 .textarea-clear{
   position:absolute;
   top:3px;
@@ -2263,12 +2266,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-shrink:0;
 }
 .fc-quick-media-btn.fc-media-inline{
-  display: flex;
+  display: flex !important;
+  flex-direction: row !important;
   justify-content: center;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 10px !important;
   min-width:90px;
   min-height:52px;
+  gap: 0 !important;
 }
 .fc-quick-media-btn.fc-media-inline .fc-media-icon{
   font-size:1.25rem;
