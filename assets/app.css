@@ -3704,14 +3704,14 @@ select.inline-prompt-field {
   color: #94a3b8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin: 0 0 0.175rem 0;
-  padding: 0 0 0 0.75rem;
+  margin: 0 0 0.13rem 0;
+  padding: 0;
 }
 
 .dictation-comparison-text {
   font-size: 1.125rem;
   line-height: 1.8;
-  padding: 1rem;
+  padding: 0.5rem 1rem 1rem 1rem;
   background: rgba(15, 23, 42, 0.6);
   border-radius: 10px;
   border: 1px solid rgba(100, 116, 139, 0.2);
