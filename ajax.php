@@ -443,10 +443,17 @@ switch ($action) {
         $debugai = [];
         if ($orbokeneenabled) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
-            $span = $data['focusBaseform'] ?? $focuscheck;
-            $ngramcandidates = mod_flashcards_build_expression_candidates($fronttext, $span);
-            $debugai['ordbokene'] = ['candidates' => $ngramcandidates, 'tries' => []];
-            foreach ($ngramcandidates as $cand) {
+            // Используем предложение ИИ как основу для проверки в Ordbøkene.
+            $candidates = [];
+            if (!empty($data['focusBaseform'])) {
+                $candidates[] = core_text::strtolower(trim($data['focusBaseform']));
+            }
+            if (!empty($data['focusWord']) && core_text::strtolower($data['focusWord']) !== core_text::strtolower($data['focusBaseform'] ?? '')) {
+                $candidates[] = core_text::strtolower(trim($data['focusWord']));
+            }
+            $candidates = array_values(array_unique(array_filter($candidates)));
+            $debugai['ordbokene'] = ['candidates' => $candidates, 'tries' => []];
+            foreach ($candidates as $cand) {
                 $lookup = \mod_flashcards\local\ordbokene_client::search_expressions($cand, $lang);
                 $debugai['ordbokene']['tries'][] = [
                     'span' => $cand,
@@ -455,7 +462,7 @@ switch ($action) {
                     'url' => $lookup['dictmeta']['url'] ?? ''
                 ];
                 if (!empty($lookup)) {
-                    // Prefer expressions as baseform (grunnform).
+                    // Берём выражение/лемму из Ordbøkene, если есть.
                     if (!empty($lookup['expressions'])) {
                         $expr = $lookup['expressions'][0];
                         $data['focusWord'] = $expr;
