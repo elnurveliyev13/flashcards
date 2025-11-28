@@ -443,16 +443,28 @@ switch ($action) {
         $debugai = [];
         if ($orbokeneenabled) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
-            // Используем предложение ИИ как основу для проверки в Ordbøkene.
             $candidates = [];
-            if (!empty($data['focusBaseform'])) {
-                $candidates[] = core_text::strtolower(trim($data['focusBaseform']));
+            $fb = core_text::strtolower(trim($data['focusBaseform'] ?? ''));
+            $fw = core_text::strtolower(trim($data['focusWord'] ?? ''));
+            if ($fb !== '') { $candidates[] = $fb; }
+            if ($fw !== '' && $fw !== $fb) { $candidates.append($fw); }
+            // Если AI ничего не дал, пробуем глагол + seg + предлог из текста.
+            if (empty($candidates)) {
+                $tokens = array_values(array_filter(preg_split('/\\s+/', core_text::strtolower($fronttext))));
+                $preps = ['om','over','for','med','til','av','på','i'];
+                $segidx = array_search('seg', $tokens, true);
+                if ($segidx !== false) {
+                    foreach ($preps as $p) {
+                        $prepidx = array_search($p, $tokens, true);
+                        if ($prepidx !== false && $segidx < $prepidx) {
+                            $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($clickedword, []);
+                            $lemma = core_text::strtolower($analysis['selected']['baseform'] ?? $clickedword);
+                            $candidates[] = trim($lemma . ' seg ' . $p);
+                            break;
+                        }
+                    }
+                }
             }
-            if (!empty($data['focusWord']) && core_text::strtolower($data['focusWord']) !== core_text::strtolower($data['focusBaseform'] ?? '')) {
-                $candidates[] = core_text::strtolower(trim($data['focusWord']));
-            }
-            // Добавим кандидаты из текста (леммы/n-граммы), чтобы подхватить выражения, если ИИ их не дал.
-            $candidates = array_merge($candidates, mod_flashcards_build_expression_candidates($fronttext, $span));
             $candidates = array_values(array_unique(array_filter($candidates)));
             $debugai['ordbokene'] = ['candidates' => $candidates, 'tries' => []];
             foreach ($candidates as $cand) {
@@ -464,7 +476,6 @@ switch ($action) {
                     'url' => $lookup['dictmeta']['url'] ?? ''
                 ];
                 if (!empty($lookup)) {
-                    // Берём выражение/лемму из Ordbøkene, если есть.
                     if (!empty($lookup['expressions'])) {
                         $expr = $lookup['expressions'][0];
                         $data['focusWord'] = $expr;
