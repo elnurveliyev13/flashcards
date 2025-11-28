@@ -18,6 +18,13 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     // Lemma для base.
     $baseanalysis = ordbank_helper::analyze_token($base, []);
     $baselemma = core_text::strtolower(trim($baseanalysis['selected']['baseform'] ?? $base));
+    // Try a naive verb guess (dreier -> dreie) if lemma equals surface and ends with "er".
+    if ($baselemma === core_text::strtolower($base) && preg_match('~er$~', $baselemma)) {
+        $guess = preg_replace('~er$~', 'e', $baselemma);
+        if ($guess && $guess !== $baselemma) {
+            $baselemma = $guess;
+        }
+    }
 
     $front = trim(core_text::strtolower($fronttext));
 
@@ -35,7 +42,14 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     foreach ($rawtokens as $t) {
         $analysis = ordbank_helper::analyze_token($t, []);
         $lemma = $analysis['selected']['baseform'] ?? null;
-        $lemmas[] = $lemma ? core_text::strtolower($lemma) : $t;
+        $lem = $lemma ? core_text::strtolower($lemma) : $t;
+        if ($lem === $t && preg_match('~er$~', $t)) {
+            $guess = preg_replace('~er$~', 'e', $t);
+            if ($guess && $guess !== $lem) {
+                $lemmas[] = $guess;
+            }
+        }
+        $lemmas[] = $lem;
     }
 
     // Предлоги/частицы, которые реально присутствуют в тексте.
