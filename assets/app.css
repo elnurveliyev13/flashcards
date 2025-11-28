@@ -1463,7 +1463,7 @@ audio{max-width:260px}
 .textarea-clear{
   position:absolute;
   top:0;
-  right:0;
+  right:-39px;
   width:33px;
   height:33px;
   padding:0;
