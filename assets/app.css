@@ -1458,12 +1458,12 @@ audio{max-width:260px}
   display:block;
 }
 .textarea-wrap textarea{
-  padding-right:45px;
+  padding-right:12px;
 }
 .textarea-clear{
   position:absolute;
-  top:6px;
-  right:6px;
+  top:0;
+  right:0;
   width:33px;
   height:33px;
   padding:0;
