@@ -629,6 +629,69 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     return $cands;
 }
 
+    case 'ordbokene_suggest':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $query = trim($payload['query'] ?? '');
+        $lang = trim($payload['lang'] ?? 'begge');
+        if ($query === '' || mb_strlen($query) < 2) {
+            echo json_encode(['ok' => true, 'data' => []]);
+            break;
+        }
+        $langparam = in_array($lang, ['bm', 'nn'], true) ? $lang : 'bm,nn';
+        $url = 'https://ord.uib.no/api/articles?w=' . rawurlencode($query) . '&dict=' . $langparam . '&scope=e';
+        $suggestions = [];
+        try {
+            $curl = new \curl();
+            $resp = $curl->get($url);
+            $json = json_decode($resp, true);
+            if (is_array($json) && !empty($json['articles'])) {
+                foreach ($json['articles'] as $dict => $ids) {
+                    if (!is_array($ids)) {
+                        continue;
+                    }
+                    foreach (array_slice($ids, 0, 5) as $id) {
+                        $articleurl = sprintf('https://ord.uib.no/%s/article/%d.json', $dict, (int)$id);
+                        try {
+                            $resp2 = $curl->get($articleurl);
+                            $article = json_decode($resp2, true);
+                            if (!is_array($article) || empty($article['lemmas'][0]['lemma'])) {
+                                continue;
+                            }
+                            $lemma = trim($article['lemmas'][0]['lemma']);
+                            if ($lemma === '') {
+                                continue;
+                            }
+                            $suggestions[] = [
+                                'lemma' => $lemma,
+                                'dict' => $dict,
+                                'id' => (int)$id,
+                                'url' => $articleurl,
+                            ];
+                        } catch (\Throwable $e) {
+                            // skip failed article fetch
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            echo json_encode(['ok' => false, 'error' => 'lookup_failed', 'message' => $e->getMessage()]);
+            break;
+        }
+        $seen = [];
+        $deduped = [];
+        foreach ($suggestions as $s) {
+            $key = strtolower($s['lemma'] . '|' . $s['dict']);
+            if (!isset($seen[$key])) {
+                $seen[$key] = true;
+                $deduped[] = $s;
+            }
+        }
+        echo json_encode(['ok' => true, 'data' => array_slice($deduped, 0, 12)]);
+        break;
     case 'ordbokene_ping':
         // Minimal connectivity test to Ordbøkene (ord.uib.no).
         $url = 'https://ord.uib.no/api/articles?w=klar&dict=bm,nn&scope=e';
@@ -953,3 +1016,4 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     default:
         throw new moodle_exception('invalidaction');
 }
+
