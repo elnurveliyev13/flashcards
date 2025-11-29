@@ -1992,12 +1992,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!frontInput){
         return '';
       }
-      const value = frontInput.value || '';
-      const matches = value.match(wordRegex);
-      if(!matches || !matches.length){
-        return '';
-      }
-      return matches[matches.length - 1];
+      const value = (frontInput.value || '').trim();
+      return value.length > 120 ? value.slice(-120) : value;
     }
 
     function hideFrontSuggest(){
@@ -2042,13 +2038,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!frontInput || !value){
         return;
       }
-      const current = frontInput.value || '';
       let next = value;
-      const q = (query || '').trim();
-      if(q){
-        const idx = current.toLowerCase().lastIndexOf(q.toLowerCase());
-        if(idx >= 0){
-          next = current.slice(0, idx) + value + current.slice(idx + q.length);
+      if(query){
+        const current = frontInput.value || '';
+        const q = query.trim();
+        if(q){
+          const idx = current.toLowerCase().lastIndexOf(q.toLowerCase());
+          if(idx >= 0){
+            next = current.slice(0, idx) + value + current.slice(idx + q.length);
+          }
         }
       }
       frontInput.value = next;
