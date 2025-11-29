@@ -101,7 +101,6 @@ class ordbank_helper {
             return [];
         }
 
-        // Deduplicate by lemma + tag + paradigme.
         $out = [];
         foreach ($records as $rec) {
             $key = implode('|', [
@@ -111,15 +110,26 @@ class ordbank_helper {
                 (int)$rec->boy_nummer,
             ]);
             if (!isset($out[$key])) {
+                $ipa = $rec->ipa_from_dict ?? null;
+                $xsampa = $rec->xsampa ?? null;
+                $nofabet = $rec->nofabet ?? null;
+                if (empty($ipa) && !empty($rec->baseform)) {
+                    $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform);
+                    if ($pron) {
+                        $ipa = $pron['ipa'] ?? null;
+                        $xsampa = $pron['xsampa'] ?? null;
+                        $nofabet = $pron['nofabet'] ?? null;
+                    }
+                }
                 $out[$key] = [
                     'lemma_id' => (int)$rec->lemma_id,
                     'wordform' => $rec->wordform,
                     'tag' => $rec->tag,
                     'paradigme_id' => $rec->paradigme_id,
                     'boy_nummer' => (int)$rec->boy_nummer,
-                    'ipa' => $rec->ipa_from_dict ?? null,
-                    'xsampa' => $rec->xsampa ?? null,
-                    'nofabet' => $rec->nofabet ?? null,
+                    'ipa' => $ipa,
+                    'xsampa' => $xsampa,
+                    'nofabet' => $nofabet,
                     'baseform' => $rec->baseform ?? null,
                 ];
             }
@@ -311,6 +321,9 @@ class ordbank_helper {
                 }
                 if ($boy === 3 || str_contains($t, 'imper')) {
                     $verb['imperativ'][] = $rec->oppslag;
+                }
+                if (empty($verb['infinitiv']) && $boy === 0 && str_contains($t, 'verb')) {
+                    $verb['infinitiv'][] = $rec->oppslag;
                 }
             }
             $verb = array_map(function($arr) {
