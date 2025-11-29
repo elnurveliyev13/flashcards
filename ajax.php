@@ -196,6 +196,61 @@ function flashcards_fetch_ordbokene_expressions(string $query, int $limit = 8): 
     return $out;
 }
 
+/**
+ * Fallback: lookup spans directly and return baseforms as expressions.
+ *
+ * @param string $query
+ * @param int $limit
+ * @return array<int,array<string,mixed>>
+ */
+function flashcards_fetch_ordbokene_lookup_spans(string $query, int $limit = 6): array {
+    $query = trim($query);
+    if ($query === '' || mb_strlen($query) < 2) {
+        return [];
+    }
+    $parts = array_values(array_filter(preg_split('/\s+/u', $query)));
+    $spans = [$query];
+    if (count($parts) >= 3) {
+        $spans[] = implode(' ', array_slice($parts, -3));
+    }
+    if (count($parts) >= 2) {
+        $spans[] = implode(' ', array_slice($parts, -2));
+    }
+    $out = [];
+    $seen = [];
+    foreach ($spans as $span) {
+        $span = trim($span);
+        if ($span === '' || isset($seen[$span])) {
+            continue;
+        }
+        $seen[$span] = true;
+        try {
+            $data = \mod_flashcards\local\ordbokene_client::lookup($span, 'begge');
+            if (empty($data)) {
+                continue;
+            }
+            $base = trim((string)($data['baseform'] ?? ''));
+            if ($base !== '') {
+                $key = core_text::strtolower($base . '|ordbokene');
+                if (!isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $out[] = [
+                        'lemma' => $base,
+                        'dict' => 'ordbokene',
+                        'source' => 'ordbokene',
+                    ];
+                    if (count($out) >= $limit) {
+                        return $out;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore and continue
+        }
+    }
+    return $out;
+}
+
 switch ($action) {
     case 'fetch':
         echo json_encode([ 'ok' => true, 'data' => \mod_flashcards\local\api::fetch_progress($flashcardsid, $userid) ]);
@@ -804,6 +859,22 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             $results[] = $item;
             if (count($results) >= $limit) {
                 break;
+            }
+        }
+
+        // Fallback: direct lookup for spans to pull baseforms when expressions array is empty.
+        if (count($results) < $limit) {
+            $lookupspans = flashcards_fetch_ordbokene_lookup_spans($query, $limit);
+            foreach ($lookupspans as $item) {
+                $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
+                if ($key === '|' || isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $results[] = $item;
+                if (count($results) >= $limit) {
+                    break;
+                }
             }
         }
 

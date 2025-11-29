@@ -1676,7 +1676,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(translationDebounce){
         clearTimeout(translationDebounce);
       }
-      translationDebounce = setTimeout(runTranslationHelper, 650);
+      translationDebounce = setTimeout(runTranslationHelper, 950);
     }
 
     async function runTranslationHelper(){
