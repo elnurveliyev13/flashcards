@@ -128,6 +128,74 @@ function flashcards_fetch_ordbokene_suggestions(string $query, int $limit = 12):
     return $deduped;
 }
 
+/**
+ * Try to fetch multi-word expressions from Ordbøkene first.
+ *
+ * @param string $query
+ * @param int $limit
+ * @return array<int,array<string,mixed>>
+ */
+function flashcards_fetch_ordbokene_expressions(string $query, int $limit = 8): array {
+    $query = trim($query);
+    if ($query === '' || mb_strlen($query) < 2) {
+        return [];
+    }
+    // Try full query first, then shorter trailing spans (e.g. last 3/2 tokens).
+    $parts = array_values(array_filter(preg_split('/\s+/u', $query)));
+    $spans = [$query];
+    if (count($parts) >= 3) {
+        $spans[] = implode(' ', array_slice($parts, -3));
+    }
+    if (count($parts) >= 2) {
+        $spans[] = implode(' ', array_slice($parts, -2));
+    }
+    $out = [];
+    $seen = [];
+    foreach ($spans as $span) {
+        $span = trim($span);
+        if ($span === '' || isset($seen[$span])) {
+            continue;
+        }
+        $seen[$span] = true;
+        try {
+            $data = \mod_flashcards\local\ordbokene_client::search_expressions($span, 'begge');
+            if (empty($data)) {
+                continue;
+            }
+            $exprs = [];
+            if (!empty($data['expressions']) && is_array($data['expressions'])) {
+                $exprs = array_map('strval', $data['expressions']);
+            }
+            // If no expressions array, try baseform from article as a fallback.
+            if (empty($exprs) && !empty($data['baseform'])) {
+                $exprs[] = (string)$data['baseform'];
+            }
+            foreach ($exprs as $expr) {
+                $expr = trim($expr);
+                if ($expr === '') {
+                    continue;
+                }
+                $key = core_text::strtolower($expr . '|ordbokene');
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $out[] = [
+                    'lemma' => $expr,
+                    'dict' => 'ordbokene',
+                    'source' => 'ordbokene',
+                ];
+                if (count($out) >= $limit) {
+                    return $out;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore and continue with next span.
+        }
+    }
+    return $out;
+}
+
 switch ($action) {
     case 'fetch':
         echo json_encode([ 'ok' => true, 'data' => \mod_flashcards\local\api::fetch_progress($flashcardsid, $userid) ]);
@@ -725,7 +793,21 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $results = [];
         $seen = [];
 
-        // Remote suggestions first (ord.uib.no full query to prioritize multi-word hits).
+        // Remote expressions first (ord.uib.no full query to prioritize multi-word hits).
+        $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
+        foreach ($expressions as $item) {
+            $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
+            if ($key === '|' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $results[] = $item;
+            if (count($results) >= $limit) {
+                break;
+            }
+        }
+
+        // Remote lemma suggestions next (ord.uib.no full query).
         try {
             $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
             foreach ($remote as $item) {

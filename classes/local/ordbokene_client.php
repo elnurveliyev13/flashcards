@@ -38,37 +38,48 @@ class ordbokene_client {
             return [];
         }
         $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
-        $searchurl = self::SEARCH . '?w=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
-        try {
-            $curl = new \curl();
-            $resp = $curl->get($searchurl);
-            $search = json_decode($resp, true);
-            if (!is_array($search) || empty($search['articles'])) {
-                return [];
+        $curl = new \curl();
+        $searches = [];
+        // Primary: legacy article search with w= (supports simple phrases).
+        $searches[] = self::SEARCH . '?w=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        // Fallback: ord_2 API style with q= to match mid-phrase expressions (observed on ordbokene.no).
+        $searches[] = self::SEARCH . '?q=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+
+        foreach ($searches as $searchurl) {
+            try {
+                $resp = $curl->get($searchurl);
+                $search = json_decode($resp, true);
+                if (!is_array($search) || empty($search['articles'])) {
+                    continue;
+                }
+                $articleid = null;
+                $articlelang = null;
+                if (!empty($search['articles']['bm'][0])) {
+                    $articleid = (int)$search['articles']['bm'][0];
+                    $articlelang = 'bm';
+                } else if (!empty($search['articles']['nn'][0])) {
+                    $articleid = (int)$search['articles']['nn'][0];
+                    $articlelang = 'nn';
+                }
+                if (!$articleid || !$articlelang) {
+                    continue;
+                }
+                $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
+                $resp2 = $curl->get($articleurl);
+                $article = json_decode($resp2, true);
+                if (!is_array($article)) {
+                    continue;
+                }
+                $norm = self::normalize_article($article, $articlelang, $articleurl);
+                if (!empty($norm)) {
+                    return $norm;
+                }
+            } catch (\Throwable $e) {
+                // Try next fallback.
+                continue;
             }
-            $articleid = null;
-            $articlelang = null;
-            if (!empty($search['articles']['bm'][0])) {
-                $articleid = (int)$search['articles']['bm'][0];
-                $articlelang = 'bm';
-            } else if (!empty($search['articles']['nn'][0])) {
-                $articleid = (int)$search['articles']['nn'][0];
-                $articlelang = 'nn';
-            }
-            if (!$articleid || !$articlelang) {
-                return [];
-            }
-            $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
-            $resp2 = $curl->get($articleurl);
-            $article = json_decode($resp2, true);
-            if (!is_array($article)) {
-                return [];
-            }
-            $norm = self::normalize_article($article, $articlelang, $articleurl);
-            return $norm;
-        } catch (\Throwable $e) {
-            return [];
         }
+        return [];
     }
 
     /**
