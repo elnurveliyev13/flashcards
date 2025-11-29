@@ -263,43 +263,52 @@ function flashcards_fetch_ordbokene_suggest(string $query, int $limit = 12): arr
     if ($query === '' || mb_strlen($query) < 2) {
         return [];
     }
-    $url = sprintf(
-        'https://ord.uib.no/api/suggest?q=%s&dict=bm,nn&include=eif&n=%d',
-        rawurlencode($query),
-        $limit
-    );
+    $buildUrls = function(string $q) use ($limit): array {
+        return [
+            sprintf('https://ord.uib.no/api/suggest?q=%s&dict=bm,nn&include=efis&n=%d', rawurlencode($q), $limit),
+            sprintf('https://ord.uib.no/api/suggest?q=%s%%&dict=bm,nn&include=efis&n=%d', rawurlencode($q), $limit),
+        ];
+    };
+    $urls = $buildUrls($query);
+    $out = [];
+    $seen = [];
     try {
         $curl = new \curl();
-        $resp = $curl->get($url);
-        $json = json_decode($resp, true);
-        if (!is_array($json) || empty($json['suggest'])) {
-            return [];
-        }
-        $out = [];
-        $seen = [];
-        foreach ($json['suggest'] as $item) {
-            $lemma = trim((string)($item[0] ?? ''));
-            if ($lemma === '') {
+        foreach ($urls as $url) {
+            $resp = $curl->get($url);
+            $json = json_decode($resp, true);
+            if (!is_array($json) || empty($json['a'])) {
                 continue;
             }
-            $key = core_text::strtolower($lemma . '|ordbokene');
-            if (isset($seen[$key])) {
-                continue;
-            }
-            $seen[$key] = true;
-            $out[] = [
-                'lemma' => $lemma,
-                'dict' => 'ordbokene',
-                'source' => 'ordbokene',
-            ];
-            if (count($out) >= $limit) {
-                break;
+            foreach (['exact','inflect','freetext','similar'] as $bucket) {
+                if (empty($json['a'][$bucket]) || !is_array($json['a'][$bucket])) {
+                    continue;
+                }
+                foreach ($json['a'][$bucket] as $item) {
+                    $lemma = trim((string)($item[0] ?? ''));
+                    if ($lemma === '') {
+                        continue;
+                    }
+                    $key = core_text::strtolower($lemma . '|ordbokene');
+                    if (isset($seen[$key])) {
+                        continue;
+                    }
+                    $seen[$key] = true;
+                    $out[] = [
+                        'lemma' => $lemma,
+                        'dict' => 'ordbokene',
+                        'source' => 'ordbokene',
+                    ];
+                    if (count($out) >= $limit) {
+                        return $out;
+                    }
+                }
             }
         }
-        return $out;
     } catch (\Throwable $e) {
-        return [];
+        // ignore and return what we have
     }
+    return $out;
 }
 
 switch ($action) {
