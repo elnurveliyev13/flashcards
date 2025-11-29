@@ -2023,7 +2023,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         lemma.textContent = item.lemma || '';
         const dict = document.createElement('span');
         dict.className = 'dict';
-        const label = (item.dict || '').toLowerCase() === 'ordbank' ? 'Ordbank' : (item.dict || '');
+        let label = (item.dict || '').toLowerCase() === 'ordbank' ? 'Ordbank' : (item.dict || '');
+        if(item.langs && Array.isArray(item.langs) && item.langs.length){
+          const names = item.langs.map(l=>{
+            const v = (l||'').toLowerCase();
+            if(v==='bm' || v==='bokmål' || v==='bokmal') return 'bokmål';
+            if(v==='nn' || v==='nynorsk') return 'nynorsk';
+            return v.toUpperCase();
+          }).filter(Boolean);
+          if(names.length){
+            label = names.join(', ');
+          }
+        }
         dict.textContent = label;
         btn.appendChild(lemma);
         btn.appendChild(dict);

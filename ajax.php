@@ -286,6 +286,10 @@ function flashcards_fetch_ordbokene_suggest(string $query, int $limit = 12): arr
                 }
                 foreach ($json['a'][$bucket] as $item) {
                     $lemma = trim((string)($item[0] ?? ''));
+                    $langs = [];
+                    if (!empty($item[1]) && is_array($item[1])) {
+                        $langs = array_values(array_filter(array_map('strval', $item[1])));
+                    }
                     if ($lemma === '') {
                         continue;
                     }
@@ -298,6 +302,7 @@ function flashcards_fetch_ordbokene_suggest(string $query, int $limit = 12): arr
                         'lemma' => $lemma,
                         'dict' => 'ordbokene',
                         'source' => 'ordbokene',
+                        'langs' => $langs,
                     ];
                     if (count($out) >= $limit) {
                         return $out;
