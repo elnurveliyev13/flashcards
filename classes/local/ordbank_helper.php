@@ -113,12 +113,21 @@ class ordbank_helper {
                 $ipa = $rec->ipa_from_dict ?? null;
                 $xsampa = $rec->xsampa ?? null;
                 $nofabet = $rec->nofabet ?? null;
+                // Fallback to pron dict by surface and baseform if IPA is still empty.
+                if (empty($ipa)) {
+                    $pronSurface = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->wordform, null);
+                    if ($pronSurface) {
+                        $ipa = $pronSurface['ipa'] ?? $ipa;
+                        $xsampa = $pronSurface['xsampa'] ?? $xsampa;
+                        $nofabet = $pronSurface['nofabet'] ?? $nofabet;
+                    }
+                }
                 if (empty($ipa) && !empty($rec->baseform)) {
-                    $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform);
+                    $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform, null);
                     if ($pron) {
-                        $ipa = $pron['ipa'] ?? null;
-                        $xsampa = $pron['xsampa'] ?? null;
-                        $nofabet = $pron['nofabet'] ?? null;
+                        $ipa = $pron['ipa'] ?? $ipa;
+                        $xsampa = $pron['xsampa'] ?? $xsampa;
+                        $nofabet = $pron['nofabet'] ?? $nofabet;
                     }
                 }
                 $out[$key] = [

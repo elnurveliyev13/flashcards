@@ -2116,7 +2116,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     if(fokusInput){
-      fokusInput.addEventListener('input', ()=>{
+      const handleSuggestInput = ()=>{
         const q = (fokusInput.value || '').trim();
         if(suggestTimer){
           clearTimeout(suggestTimer);
@@ -2125,14 +2125,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           hideFokusSuggest();
           return;
         }
-        suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 250);
-      });
-      fokusInput.addEventListener('focus', ()=>{
-        const q = (fokusInput.value || '').trim();
-        if(q.length >= 2){
-          fetchFokusSuggest(q);
-        }
-      });
+        suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 200);
+      };
+      fokusInput.addEventListener('input', handleSuggestInput);
+      fokusInput.addEventListener('focus', handleSuggestInput);
       fokusInput.addEventListener('blur', ()=>{
         setTimeout(hideFokusSuggest, 120);
       });
