@@ -1907,7 +1907,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     const frontInput = $("#uFront");
     const fokusInput = $("#uFokus");
-    const fokusSuggest = $("#fokusSuggest");
+    let fokusSuggest = $("#fokusSuggest");
+    // Create suggest container if missing (template cache fallback).
+    if(!fokusSuggest && fokusInput && fokusInput.parentElement){
+      const div = document.createElement('div');
+      div.id = 'fokusSuggest';
+      div.className = 'fokus-suggest';
+      fokusInput.parentElement.appendChild(div);
+      fokusSuggest = div;
+    }
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusStatusEl = document.getElementById('focusHelperStatus');

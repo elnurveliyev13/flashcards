@@ -50,6 +50,19 @@ class ordbank_helper {
             $paradigm = self::build_paradigm((int)$selected['paradigme_id']);
         }
 
+        // Ensure transcription present if available in pron dict.
+        if (empty($selected['ipa'])) {
+            $pron = pronunciation_manager::lookup((string)($selected['wordform'] ?? $token), null);
+            if (!$pron && !empty($selected['baseform'])) {
+                $pron = pronunciation_manager::lookup((string)$selected['baseform'], null);
+            }
+            if ($pron) {
+                $selected['ipa'] = $pron['ipa'] ?? null;
+                $selected['xsampa'] = $pron['xsampa'] ?? null;
+                $selected['nofabet'] = $pron['nofabet'] ?? null;
+            }
+        }
+
         $parts = self::split_compound($selected['lemma_id'] ?? null, $selected['wordform'] ?? $token);
         $forms = self::fetch_forms($selected['lemma_id'] ?? 0, $selected['tag'] ?? '');
         $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
@@ -227,6 +240,14 @@ class ordbank_helper {
         $sql = 'SELECT * FROM {ordbank_leddanalyse} WHERE ' . implode(' AND ', $conditions);
         $rec = $DB->get_record_sql($sql, $params, IGNORE_MULTIPLE);
         if (!$rec) {
+            // Heuristic fallback: split simple compounds with hyphen or s-fuge before last segment.
+            if (str_contains($oppslag, '-')) {
+                return array_values(array_filter(array_map('trim', explode('-', $oppslag))));
+            }
+            // Try naive split before final noun-like tail if "s" fuge present.
+            if (preg_match('~^(.+?)(s)(bolig|hus|mann|menn|vei|gate|plass|verk|arbeid|tid|sted|by|rom|bok|bok|rett)~iu', $oppslag, $m)) {
+                return array_values(array_filter([$m[1], $m[2], $m[3]]));
+            }
             return [$oppslag];
         }
 
