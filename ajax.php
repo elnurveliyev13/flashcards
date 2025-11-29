@@ -251,6 +251,57 @@ function flashcards_fetch_ordbokene_lookup_spans(string $query, int $limit = 6):
     return $out;
 }
 
+/**
+ * Use /api/suggest with include=eif to surface expressions and inflections.
+ *
+ * @param string $query
+ * @param int $limit
+ * @return array<int,array<string,mixed>>
+ */
+function flashcards_fetch_ordbokene_suggest(string $query, int $limit = 12): array {
+    $query = trim($query);
+    if ($query === '' || mb_strlen($query) < 2) {
+        return [];
+    }
+    $url = sprintf(
+        'https://ord.uib.no/api/suggest?q=%s&dict=bm,nn&include=eif&n=%d',
+        rawurlencode($query),
+        $limit
+    );
+    try {
+        $curl = new \curl();
+        $resp = $curl->get($url);
+        $json = json_decode($resp, true);
+        if (!is_array($json) || empty($json['suggest'])) {
+            return [];
+        }
+        $out = [];
+        $seen = [];
+        foreach ($json['suggest'] as $item) {
+            $lemma = trim((string)($item[0] ?? ''));
+            if ($lemma === '') {
+                continue;
+            }
+            $key = core_text::strtolower($lemma . '|ordbokene');
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = [
+                'lemma' => $lemma,
+                'dict' => 'ordbokene',
+                'source' => 'ordbokene',
+            ];
+            if (count($out) >= $limit) {
+                break;
+            }
+        }
+        return $out;
+    } catch (\Throwable $e) {
+        return [];
+    }
+}
+
 switch ($action) {
     case 'fetch':
         echo json_encode([ 'ok' => true, 'data' => \mod_flashcards\local\api::fetch_progress($flashcardsid, $userid) ]);
@@ -847,6 +898,20 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $limit = 12;
         $results = [];
         $seen = [];
+
+        // Suggest endpoint (includes expressions/inflections) first.
+        $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
+        foreach ($suggestRemote as $item) {
+            $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
+            if ($key === '|' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $results[] = $item;
+            if (count($results) >= $limit) {
+                break;
+            }
+        }
 
         // Remote expressions first (ord.uib.no full query to prioritize multi-word hits).
         $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
