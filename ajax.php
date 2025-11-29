@@ -62,6 +62,72 @@ if ($globalmode) {
 
 $userid = $USER->id;
 
+/**
+ * Fetch lemma suggestions from Ordbøkene (ord.uib.no) API.
+ *
+ * @param string $query
+ * @param int $limit
+ * @return array<int,array<string,mixed>>
+ */
+function flashcards_fetch_ordbokene_suggestions(string $query, int $limit = 12): array {
+    $query = trim($query);
+    if ($query === '' || mb_strlen($query) < 2) {
+        return [];
+    }
+    $url = 'https://ord.uib.no/api/articles?w=' . rawurlencode($query) . '&dict=bm,nn&scope=e';
+    $suggestions = [];
+    try {
+        $curl = new \curl();
+        $resp = $curl->get($url);
+        $json = json_decode($resp, true);
+        if (is_array($json) && !empty($json['articles'])) {
+            foreach ($json['articles'] as $dict => $ids) {
+                if (!is_array($ids)) {
+                    continue;
+                }
+                foreach (array_slice($ids, 0, $limit) as $id) {
+                    $articleurl = sprintf('https://ord.uib.no/%s/article/%d.json', $dict, (int)$id);
+                    try {
+                        $resp2 = $curl->get($articleurl);
+                        $article = json_decode($resp2, true);
+                        if (!is_array($article) || empty($article['lemmas'][0]['lemma'])) {
+                            continue;
+                        }
+                        $lemma = trim($article['lemmas'][0]['lemma']);
+                        if ($lemma === '') {
+                            continue;
+                        }
+                        $suggestions[] = [
+                            'lemma' => $lemma,
+                            'dict' => $dict,
+                            'id' => (int)$id,
+                            'url' => $articleurl,
+                        ];
+                    } catch (\Throwable $e) {
+                        // Skip failed article fetch.
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        return [];
+    }
+    $seen = [];
+    $deduped = [];
+    foreach ($suggestions as $s) {
+        $key = core_text::strtolower(($s['lemma'] ?? '') . '|' . ($s['dict'] ?? ''));
+        if (isset($seen[$key]) || ($s['lemma'] ?? '') === '') {
+            continue;
+        }
+        $seen[$key] = true;
+        $deduped[] = $s;
+        if (count($deduped) >= $limit) {
+            break;
+        }
+    }
+    return $deduped;
+}
+
 switch ($action) {
     case 'fetch':
         echo json_encode([ 'ok' => true, 'data' => \mod_flashcards\local\api::fetch_progress($flashcardsid, $userid) ]);
@@ -640,56 +706,73 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             echo json_encode(['ok' => true, 'data' => []]);
             break;
         }
-        // Always search both dictionaries for suggestions.
-        $url = 'https://ord.uib.no/api/articles?w=' . rawurlencode($query) . '&dict=bm,nn&scope=e';
-        $suggestions = [];
+        $data = flashcards_fetch_ordbokene_suggestions($query, 12);
+        echo json_encode(['ok' => true, 'data' => $data]);
+        break;
+
+    case 'front_suggest':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $query = trim($payload['query'] ?? '');
+        if ($query === '' || mb_strlen($query) < 2) {
+            echo json_encode(['ok' => true, 'data' => []]);
+            break;
+        }
+        $limit = 12;
+        $results = [];
+        $seen = [];
+        // Local ordbank prefix search (fast, offline-friendly).
         try {
-            $curl = new \curl();
-            $resp = $curl->get($url);
-            $json = json_decode($resp, true);
-            if (is_array($json) && !empty($json['articles'])) {
-                foreach ($json['articles'] as $dict => $ids) {
-                    if (!is_array($ids)) {
-                        continue;
-                    }
-                    foreach (array_slice($ids, 0, 5) as $id) {
-                        $articleurl = sprintf('https://ord.uib.no/%s/article/%d.json', $dict, (int)$id);
-                        try {
-                            $resp2 = $curl->get($articleurl);
-                            $article = json_decode($resp2, true);
-                            if (!is_array($article) || empty($article['lemmas'][0]['lemma'])) {
-                                continue;
-                            }
-                            $lemma = trim($article['lemmas'][0]['lemma']);
-                            if ($lemma === '') {
-                                continue;
-                            }
-                            $suggestions[] = [
-                                'lemma' => $lemma,
-                                'dict' => $dict,
-                                'id' => (int)$id,
-                                'url' => $articleurl,
-                            ];
-                        } catch (\Throwable $e) {
-                            // skip failed article fetch
-                        }
-                    }
+            $records = $DB->get_records_sql(
+                "SELECT DISTINCT f.OPPSLAG AS lemma, f.LEMMA_ID, l.GRUNNFORM AS baseform
+                   FROM {ordbank_fullform} f
+              LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
+                  WHERE LOWER(f.OPPSLAG) LIKE :q
+               ORDER BY f.OPPSLAG ASC",
+                ['q' => core_text::strtolower($query) . '%'],
+                0,
+                $limit
+            );
+            foreach ($records as $rec) {
+                $key = core_text::strtolower($rec->lemma . '|ordbank');
+                if (isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $results[] = [
+                    'lemma' => $rec->lemma,
+                    'baseform' => $rec->baseform ?? null,
+                    'dict' => 'ordbank',
+                    'source' => 'ordbank',
+                ];
+                if (count($results) >= $limit) {
+                    break;
                 }
             }
         } catch (\Throwable $e) {
-            echo json_encode(['ok' => false, 'error' => 'lookup_failed', 'message' => $e->getMessage()]);
-            break;
+            // DB lookup is best-effort; fall through to remote suggestions.
         }
-        $seen = [];
-        $deduped = [];
-        foreach ($suggestions as $s) {
-            $key = strtolower($s['lemma'] . '|' . $s['dict']);
-            if (!isset($seen[$key])) {
+
+        // Fill remaining slots with Ordbøkene API suggestions.
+        if (count($results) < $limit) {
+            $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
+            foreach ($remote as $item) {
+                $key = core_text::strtolower(($item['lemma'] ?? '') . '|' . ($item['dict'] ?? ''));
+                if ($key === '|' || isset($seen[$key])) {
+                    continue;
+                }
                 $seen[$key] = true;
-                $deduped[] = $s;
+                $results[] = $item;
+                if (count($results) >= $limit) {
+                    break;
+                }
             }
         }
-        echo json_encode(['ok' => true, 'data' => array_slice($deduped, 0, 12)]);
+
+        echo json_encode(['ok' => true, 'data' => array_slice($results, 0, $limit)]);
         break;
     case 'ordbokene_ping':
         // Minimal connectivity test to Ordbøkene (ord.uib.no).

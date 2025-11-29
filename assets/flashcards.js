@@ -1906,6 +1906,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     compactPOSOptions();
 
     const frontInput = $("#uFront");
+    const frontInputWrap = frontInput ? frontInput.closest('.front-input-wrap') : null;
+    const frontSuggest = frontInputWrap ? frontInputWrap.querySelector('[data-front-suggest]') : null;
     const fokusInput = $("#uFokus");
     let fokusSuggest = $("#fokusSuggest");
     // Create suggest container if missing (template cache fallback).
@@ -1947,10 +1949,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(translationDirection === 'no-user'){
           scheduleTranslationRefresh();
         }
+        scheduleFrontSuggest();
       });
       frontInput.addEventListener('focus', ()=>{
         if(translationDirection !== 'no-user' && !frontInput.value.trim()){
           applyTranslationDirection('no-user');
+        }
+        scheduleFrontSuggest();
+      });
+      frontInput.addEventListener('click', scheduleFrontSuggest);
+      frontInput.addEventListener('blur', ()=>{
+        setTimeout(hideFrontSuggest, 120);
+      });
+      frontInput.addEventListener('keydown', e=>{
+        if(e.key === 'Escape'){
+          hideFrontSuggest();
         }
       });
     }
@@ -1970,6 +1983,116 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     setFocusTranslation('');
     applyTranslationDirection('no-user');
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
+
+    // Front-side autocomplete (ordbokene + local ordbank)
+    const frontSuggestCache = {};
+    let frontSuggestTimer = null;
+
+    function currentFrontQuery(){
+      if(!frontInput){
+        return '';
+      }
+      const value = frontInput.value || '';
+      const matches = value.match(wordRegex);
+      if(!matches || !matches.length){
+        return '';
+      }
+      return matches[matches.length - 1];
+    }
+
+    function hideFrontSuggest(){
+      if(frontSuggest){
+        frontSuggest.innerHTML = '';
+        frontSuggest.classList.remove('open');
+      }
+    }
+
+    function renderFrontSuggest(list, query){
+      if(!frontSuggest){
+        return;
+      }
+      frontSuggest.innerHTML = '';
+      if(!Array.isArray(list) || !list.length){
+        frontSuggest.classList.remove('open');
+        return;
+      }
+      list.forEach(item=>{
+        const btn = document.createElement('div');
+        btn.className = 'fokus-suggest-item';
+        const lemma = document.createElement('span');
+        lemma.className = 'lemma';
+        lemma.textContent = item.lemma || '';
+        const dict = document.createElement('span');
+        dict.className = 'dict';
+        const label = (item.dict || '').toLowerCase() === 'ordbank' ? 'Ordbank' : (item.dict || '');
+        dict.textContent = label;
+        btn.appendChild(lemma);
+        btn.appendChild(dict);
+        btn.addEventListener('mousedown', e=>{
+          e.preventDefault();
+          applyFrontSuggestion(item.lemma || '', query);
+          hideFrontSuggest();
+        });
+        frontSuggest.appendChild(btn);
+      });
+      frontSuggest.classList.add('open');
+    }
+
+    function applyFrontSuggestion(value, query){
+      if(!frontInput || !value){
+        return;
+      }
+      const current = frontInput.value || '';
+      let next = value;
+      const q = (query || '').trim();
+      if(q){
+        const idx = current.toLowerCase().lastIndexOf(q.toLowerCase());
+        if(idx >= 0){
+          next = current.slice(0, idx) + value + current.slice(idx + q.length);
+        }
+      }
+      frontInput.value = next;
+      try{
+        frontInput.dispatchEvent(new Event('input', {bubbles:true}));
+        frontInput.dispatchEvent(new Event('autogrow:refresh'));
+        frontInput.focus();
+      }catch(_e){}
+    }
+
+    async function fetchFrontSuggest(query){
+      if(!frontSuggest){
+        return;
+      }
+      const key = query.toLowerCase();
+      if(frontSuggestCache[key]){
+        renderFrontSuggest(frontSuggestCache[key], query);
+        return;
+      }
+      try{
+        const resp = await api('front_suggest', {}, 'POST', {query});
+        const list = Array.isArray(resp) ? resp : [];
+        frontSuggestCache[key] = list;
+        renderFrontSuggest(list, query);
+      }catch(err){
+        console.error('[Flashcards] front suggest failed', err);
+        hideFrontSuggest();
+      }
+    }
+
+    function scheduleFrontSuggest(){
+      if(!frontInput){
+        return;
+      }
+      const q = currentFrontQuery();
+      if(frontSuggestTimer){
+        clearTimeout(frontSuggestTimer);
+      }
+      if(!q || q.length < 2){
+        hideFrontSuggest();
+        return;
+      }
+      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 200);
+    }
 
     function setFocusStatus(state, text){
       if(!focusStatusEl) return;
