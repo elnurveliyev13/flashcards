@@ -1987,6 +1987,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // Front-side autocomplete (ordbokene + local ordbank)
     const frontSuggestCache = {};
     let frontSuggestTimer = null;
+    let frontSuggestRequestSeq = 0;
+    let frontSuggestActive = '';
+    let frontSuggestRendered = '';
 
     function currentFrontQuery(){
       if(!frontInput){
@@ -2061,16 +2064,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!frontSuggest){
         return;
       }
+      const seq = ++frontSuggestRequestSeq;
+      frontSuggestActive = query;
       const key = query.toLowerCase();
       if(frontSuggestCache[key]){
-        renderFrontSuggest(frontSuggestCache[key], query);
+        if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
+          frontSuggestRendered = query;
+          renderFrontSuggest(frontSuggestCache[key], query);
+        }
         return;
       }
       try{
         const resp = await api('front_suggest', {}, 'POST', {query});
         const list = Array.isArray(resp) ? resp : [];
         frontSuggestCache[key] = list;
-        renderFrontSuggest(list, query);
+        if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
+          frontSuggestRendered = query;
+          renderFrontSuggest(list, query);
+        }
       }catch(err){
         console.error('[Flashcards] front suggest failed', err);
         hideFrontSuggest();
@@ -2089,7 +2100,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         hideFrontSuggest();
         return;
       }
-      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 120);
+      // short debounce to avoid flicker while typing
+      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 80);
     }
 
     function setFocusStatus(state, text){
