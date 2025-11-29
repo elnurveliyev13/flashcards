@@ -636,13 +636,12 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             throw new invalid_parameter_exception('Invalid payload');
         }
         $query = trim($payload['query'] ?? '');
-        $lang = trim($payload['lang'] ?? 'begge');
         if ($query === '' || mb_strlen($query) < 2) {
             echo json_encode(['ok' => true, 'data' => []]);
             break;
         }
-        $langparam = in_array($lang, ['bm', 'nn'], true) ? $lang : 'bm,nn';
-        $url = 'https://ord.uib.no/api/articles?w=' . rawurlencode($query) . '&dict=' . $langparam . '&scope=e';
+        // Always search both dictionaries for suggestions.
+        $url = 'https://ord.uib.no/api/articles?w=' . rawurlencode($query) . '&dict=bm,nn&scope=e';
         $suggestions = [];
         try {
             $curl = new \curl();

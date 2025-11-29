@@ -2033,6 +2033,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             } else {
               triggerOrdbankHelper(token, token.index, tokens);
             }
+            triggerFokusSuggestForInput();
           });
           if(token.index === focusHelperState.activeIndex){
             btn.classList.add('active');
@@ -2051,6 +2052,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // --- Fokus autocomplete (ordbokene) ---
     let suggestTimer = null;
     const suggestCache = {};
+
+    function triggerFokusSuggestForInput(){
+      if(!fokusInput) return;
+      const q = (fokusInput.value || '').trim();
+      if(suggestTimer){
+        clearTimeout(suggestTimer);
+      }
+      if(q.length < 2){
+        hideFokusSuggest();
+        return;
+      }
+      suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 200);
+    }
 
     function hideFokusSuggest(){
       if(fokusSuggest){
@@ -2116,19 +2130,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     if(fokusInput){
-      const handleSuggestInput = ()=>{
-        const q = (fokusInput.value || '').trim();
-        if(suggestTimer){
-          clearTimeout(suggestTimer);
-        }
-        if(q.length < 2){
-          hideFokusSuggest();
-          return;
-        }
-        suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 200);
-      };
-      fokusInput.addEventListener('input', handleSuggestInput);
-      fokusInput.addEventListener('focus', handleSuggestInput);
+      fokusInput.addEventListener('input', triggerFokusSuggestForInput);
+      fokusInput.addEventListener('focus', triggerFokusSuggestForInput);
       fokusInput.addEventListener('blur', ()=>{
         setTimeout(hideFokusSuggest, 120);
       });
@@ -2137,7 +2140,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           hideFokusSuggest();
         }
       });
-      fokusInput.addEventListener('click', handleSuggestInput);
+      fokusInput.addEventListener('click', triggerFokusSuggestForInput);
     }
 
     function renderCompoundParts(parts, fallbackText){
