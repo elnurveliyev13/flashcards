@@ -2331,11 +2331,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordTokens = tokens.filter(t=>t.isWord);
       const prev = wordTokens.filter(t=>t.index < idx).pop();
       const next = wordTokens.filter(t=>t.index > idx).shift();
+      const next2 = wordTokens.filter(t=>t.index > idx).slice(0,2)[1];
       try{
         const payload = {
           word: token.text,
           prev: prev ? prev.text : '',
           next: next ? next.text : '',
+          next2: next2 ? next2.text : '',
           frontText: frontInput.value || ''
         };
         const resp = await api('ordbank_focus_helper', {}, 'POST', payload);

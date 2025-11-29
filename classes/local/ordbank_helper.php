@@ -217,9 +217,11 @@ class ordbank_helper {
 
         $prev = isset($context['prev']) ? core_text::strtolower((string)$context['prev']) : null;
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
+        $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
 
-        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei'];
+        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det'];
         $articles = ['en','ei','et','ein','eitt'];
+        $prepseg = ['om','over','for','med','til','av','på','pa','i'];
 
         $best = null;
         $bestscore = -1;
@@ -248,6 +250,12 @@ class ordbank_helper {
             }
             if ($next !== null && $isadj && !in_array($next, $articles, true)) {
                 $score += 1;
+            }
+            if ($next === 'seg' && $isverb) {
+                $score += 5;
+            }
+            if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
+                $score += 2;
             }
 
             if ($score > $bestscore) {

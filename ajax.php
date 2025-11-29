@@ -484,11 +484,11 @@ switch ($action) {
                     'expressions' => $lookup['expressions'] ?? [],
                     'url' => $lookup['dictmeta']['url'] ?? ''
                 ];
-                if (!empty($lookup)) {
-                    if (!empty($lookup['expressions'])) {
-                        $expr = $lookup['expressions'][0];
-                        $data['focusWord'] = $expr;
-                        $data['focusBaseform'] = $expr;
+            if (!empty($lookup)) {
+                if (!empty($lookup['expressions'])) {
+                    $expr = $lookup['expressions'][0];
+                    $data['focusWord'] = $expr;
+                    $data['focusBaseform'] = $expr;
                     } else if (!empty($lookup['baseform'])) {
                         $data['focusWord'] = $lookup['baseform'];
                         $data['focusBaseform'] = $lookup['baseform'];
@@ -528,6 +528,29 @@ switch ($action) {
                         $data['dictmeta'] = $lookup['dictmeta'];
                     }
                     break;
+                }
+            }
+            // Fallback: if nothing chosen, try direct lookup of focusWord/baseform.
+            if (empty($data['definition']) && !empty($data['focusWord'])) {
+                $fallback = \mod_flashcards\local\ordbokene_client::lookup($data['focusWord'], $lang);
+                $debugai['ordbokene']['fallback'] = [
+                    'word' => $data['focusWord'],
+                    'ok' => !empty($fallback),
+                    'url' => $fallback['dictmeta']['url'] ?? ''
+                ];
+                if (!empty($fallback)) {
+                    if (empty($data['definition']) && !empty($fallback['meanings'])) {
+                        $data['definition'] = $fallback['meanings'][0];
+                    }
+                    if (empty($data['examples']) && !empty($fallback['examples'])) {
+                        $data['examples'] = $fallback['examples'];
+                    }
+                    if (empty($data['forms']) && !empty($fallback['forms'])) {
+                        $data['forms'] = $fallback['forms'];
+                    }
+                    if (empty($data['dictmeta']) && !empty($fallback['dictmeta'])) {
+                        $data['dictmeta'] = $fallback['dictmeta'];
+                    }
                 }
             }
         }
@@ -639,6 +662,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             $fronttext = trim($payload['frontText'] ?? '');
             $prev = trim($payload['prev'] ?? '');
             $next = trim($payload['next'] ?? '');
+            $next2 = trim($payload['next2'] ?? '');
             if ($word === '') {
                 throw new invalid_parameter_exception('Missing word');
             }
@@ -648,6 +672,9 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             }
             if ($next !== '') {
                 $context['next'] = $next;
+            }
+            if ($next2 !== '') {
+                $context['next2'] = $next2;
             }
             // Debug: check how many raw matches exist
             $debug = [];
