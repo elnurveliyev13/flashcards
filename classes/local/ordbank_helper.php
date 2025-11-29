@@ -207,7 +207,7 @@ class ordbank_helper {
      * Apply simple heuristics using surrounding tokens to narrow down candidates.
      *
      * @param array<int,array<string,mixed>> $candidates
-     * @param array $context e.g. ['prev' => 'en', 'next' => '...']
+     * @param array $context e.g. ['prev' => 'en', 'next' => '...', 'next2' => 'om']
      * @return array<string,mixed>|null
      */
     protected static function narrow_by_context(array $candidates, array $context): ?array {
@@ -296,7 +296,6 @@ class ordbank_helper {
                     continue;
                 }
                 $boy = (int)$rec->boy_nummer;
-                // Exclude participle for presens: skip tags with "part"
                 $ispart = str_contains($t, 'part');
                 if ($boy === 1 || str_contains($t, 'inf')) {
                     $verb['infinitiv'][] = $rec->oppslag;
@@ -314,7 +313,6 @@ class ordbank_helper {
                     $verb['imperativ'][] = $rec->oppslag;
                 }
             }
-            // Deduplicate and prefer non-participle presens if available.
             $verb = array_map(function($arr) {
                 $arr = array_values(array_unique(array_filter($arr)));
                 return $arr;

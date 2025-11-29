@@ -1907,6 +1907,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     const frontInput = $("#uFront");
     const fokusInput = $("#uFokus");
+    const fokusSuggest = $("#fokusSuggest");
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusStatusEl = document.getElementById('focusHelperStatus');
@@ -2043,6 +2044,101 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           span.className = 'focus-punctuation';
           span.textContent = token.text;
           focusWordList.appendChild(span);
+        }
+      });
+    }
+
+    // --- Fokus autocomplete (ordbokene) ---
+    let suggestTimer = null;
+    const suggestCache = {};
+
+    function hideFokusSuggest(){
+      if(fokusSuggest){
+        fokusSuggest.innerHTML = '';
+        fokusSuggest.classList.remove('open');
+      }
+    }
+
+    function renderFokusSuggest(list){
+      if(!fokusSuggest){
+        return;
+      }
+      fokusSuggest.innerHTML = '';
+      if(!Array.isArray(list) || !list.length){
+        fokusSuggest.classList.remove('open');
+        return;
+      }
+      list.forEach(item=>{
+        const btn = document.createElement('div');
+        btn.className = 'fokus-suggest-item';
+        const lemma = document.createElement('span');
+        lemma.className = 'lemma';
+        lemma.textContent = item.lemma || '';
+        const dict = document.createElement('span');
+        dict.className = 'dict';
+        dict.textContent = item.dict || '';
+        btn.appendChild(lemma);
+        btn.appendChild(dict);
+        btn.addEventListener('mousedown', (e)=>{
+          e.preventDefault();
+          const val = item.lemma || '';
+          if(fokusInput){
+            fokusInput.value = val;
+            try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
+          }
+          hideFokusSuggest();
+          // Trigger ordbank helper immediately with the selected lemma.
+          const dummyToken = {text: val, isWord: true, index: 0};
+          triggerOrdbankHelper(dummyToken, 0, [dummyToken]);
+        });
+        fokusSuggest.appendChild(btn);
+      });
+      fokusSuggest.classList.add('open');
+    }
+
+    async function fetchFokusSuggest(query){
+      const key = `${userLang2}:${query}`;
+      if(suggestCache[key]){
+        renderFokusSuggest(suggestCache[key]);
+        return;
+      }
+      try{
+        const resp = await api('ordbokene_suggest', {}, 'POST', {query, lang: userLang2});
+        if(resp && resp.ok && Array.isArray(resp.data)){
+          suggestCache[key] = resp.data;
+          renderFokusSuggest(resp.data);
+        }else{
+          renderFokusSuggest([]);
+        }
+      }catch(_e){
+        renderFokusSuggest([]);
+      }
+    }
+
+    if(fokusInput){
+      fokusInput.addEventListener('input', ()=>{
+        const q = (fokusInput.value || '').trim();
+        if(suggestTimer){
+          clearTimeout(suggestTimer);
+        }
+        if(q.length < 2){
+          hideFokusSuggest();
+          return;
+        }
+        suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 250);
+      });
+      fokusInput.addEventListener('focus', ()=>{
+        const q = (fokusInput.value || '').trim();
+        if(q.length >= 2){
+          fetchFokusSuggest(q);
+        }
+      });
+      fokusInput.addEventListener('blur', ()=>{
+        setTimeout(hideFokusSuggest, 120);
+      });
+      fokusInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape'){
+          hideFokusSuggest();
         }
       });
     }
