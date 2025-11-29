@@ -130,6 +130,23 @@ class ordbank_helper {
                         $nofabet = $pron['nofabet'] ?? $nofabet;
                     }
                 }
+                // Final DB fallback: direct select from flashcards_pron_dict (surface then baseform).
+                if (empty($ipa)) {
+                    try {
+                        global $DB;
+                        $p = $DB->get_record_select('flashcards_pron_dict', 'LOWER(wordform) = ?', [core_text::strtolower((string)$rec->wordform)], '*', IGNORE_MULTIPLE);
+                        if (!$p && !empty($rec->baseform)) {
+                            $p = $DB->get_record_select('flashcards_pron_dict', 'LOWER(wordform) = ?', [core_text::strtolower((string)$rec->baseform)], '*', IGNORE_MULTIPLE);
+                        }
+                        if ($p) {
+                            $ipa = $p->ipa ?? $ipa;
+                            $xsampa = $p->xsampa ?? $xsampa;
+                            $nofabet = $p->nofabet ?? $nofabet;
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore pronunciation lookup errors
+                    }
+                }
                 $out[$key] = [
                     'lemma_id' => (int)$rec->lemma_id,
                     'wordform' => $rec->wordform,

@@ -2137,6 +2137,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           hideFokusSuggest();
         }
       });
+      fokusInput.addEventListener('click', handleSuggestInput);
     }
 
     function renderCompoundParts(parts, fallbackText){
