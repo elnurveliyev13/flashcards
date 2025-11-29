@@ -1676,7 +1676,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(translationDebounce){
         clearTimeout(translationDebounce);
       }
-      translationDebounce = setTimeout(runTranslationHelper, 950);
+      translationDebounce = setTimeout(runTranslationHelper, 1400);
     }
 
     async function runTranslationHelper(){
@@ -1990,6 +1990,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let frontSuggestRequestSeq = 0;
     let frontSuggestActive = '';
     let frontSuggestRendered = '';
+    let frontSuggestAbort = null;
 
     function currentFrontQuery(){
       if(!frontInput){
@@ -2077,6 +2078,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const seq = ++frontSuggestRequestSeq;
       frontSuggestActive = query;
+      if(frontSuggestAbort){
+        try{ frontSuggestAbort.abort(); }catch(_e){}
+      }
+      frontSuggestAbort = new AbortController();
       const key = query.toLowerCase();
       if(frontSuggestCache[key]){
         if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
@@ -2086,7 +2091,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       try{
-        const resp = await api('front_suggest', {}, 'POST', {query});
+        const resp = await api('front_suggest', {}, 'POST', {query}, {signal: frontSuggestAbort.signal});
         const list = Array.isArray(resp) ? resp : [];
         frontSuggestCache[key] = list;
         if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
@@ -2094,7 +2099,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           renderFrontSuggest(list, query);
         }
       }catch(err){
-        console.error('[Flashcards] front suggest failed', err);
+        if(err?.name !== 'AbortError'){
+          console.error('[Flashcards] front suggest failed', err);
+        }
         hideFrontSuggest();
       }
     }
@@ -2111,8 +2118,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         hideFrontSuggest();
         return;
       }
-      // short debounce to avoid flicker while typing
-      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 80);
+      // very short debounce to match ordbokene.no responsiveness
+      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 40);
     }
 
     function setFocusStatus(state, text){
