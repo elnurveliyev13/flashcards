@@ -725,6 +725,30 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $results = [];
         $seen = [];
 
+        // Remote suggestions first (ord.uib.no full query to prioritize multi-word hits).
+        try {
+            $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
+            foreach ($remote as $item) {
+                $key = core_text::strtolower(($item['lemma'] ?? '') . '|' . ($item['dict'] ?? ''));
+                if ($key === '|' || isset($seen[$key])) {
+                    continue;
+                }
+                $seen[$key] = true;
+                $results[] = [
+                    'lemma' => $item['lemma'] ?? '',
+                    'dict' => $item['dict'] ?? 'ordbokene',
+                    'id' => $item['id'] ?? null,
+                    'url' => $item['url'] ?? '',
+                    'source' => 'ordbokene',
+                ];
+                if (count($results) >= $limit) {
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            // If remote fails, we still fall back to local below.
+        }
+
         // Use the last token for local ordbank prefix search (handles "dreie s" -> search "s").
         $parts = preg_split('/\s+/u', $query);
         $prefix = is_array($parts) && count($parts) ? trim((string)end($parts)) : $query;
@@ -758,22 +782,6 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
                 }
             } catch (\Throwable $e) {
                 // DB lookup is best-effort; fall through to remote suggestions.
-            }
-        }
-
-        // Fill remaining slots with Ordbøkene API suggestions using the full query (enables multi-word hits).
-        if (count($results) < $limit) {
-            $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
-            foreach ($remote as $item) {
-                $key = core_text::strtolower(($item['lemma'] ?? '') . '|' . ($item['dict'] ?? ''));
-                if ($key === '|' || isset($seen[$key])) {
-                    continue;
-                }
-                $seen[$key] = true;
-                $results[] = $item;
-                if (count($results) >= $limit) {
-                    break;
-                }
             }
         }
 

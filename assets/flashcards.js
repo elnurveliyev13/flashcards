@@ -2089,7 +2089,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         hideFrontSuggest();
         return;
       }
-      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 200);
+      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 120);
     }
 
     function setFocusStatus(state, text){
