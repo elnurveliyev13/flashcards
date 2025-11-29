@@ -179,6 +179,13 @@ class ai_helper {
         return $this->openai->answer_question($userid, $fronttext, $question, $language);
     }
 
+    /**
+     * Delegate to OpenAI to pick the best definition among candidates using context.
+     */
+    public function choose_best_definition(string $fronttext, string $focusword, array $definitions, string $language, int $userid): ?array {
+        return $this->openai->choose_best_definition($fronttext, $focusword, $definitions, $language, $userid);
+    }
+
     protected function enforce_clicked_focus(string $focus, string $clicked): string {
         $focus = trim($focus);
         $clicked = trim($clicked);

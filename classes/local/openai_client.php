@@ -274,6 +274,72 @@ PROMPT;
         ];
     }
 
+    /**
+     * Choose the best matching definition from Ordbokene candidates using sentence context.
+     *
+     * @param string $fronttext
+     * @param string $focusword
+     * @param array $definitions
+     * @param string $language
+     * @return array|null ['index'=>int,'definition'=>string]
+     */
+    public function choose_best_definition(string $fronttext, string $focusword, array $definitions, string $language, int $userid = 0): ?array {
+        if (!$this->is_enabled()) {
+            return null;
+        }
+        $defs = array_values(array_filter(array_map(function($d){
+            return trim((string)$d);
+        }, $definitions)));
+        if (count($defs) <= 1) {
+            return null;
+        }
+        $front = $this->trim_prompt_text($fronttext, 300);
+        $focus = $this->trim_prompt_text($focusword, 80);
+        $langname = $this->language_name($this->sanitize_language($language));
+
+        $systemprompt = 'You are a careful Norwegian tutor. Pick the ONE definition that matches the focus word/expression in the given sentence. Respond with pure JSON.';
+        $userprompt = "Sentence: {$front}\nFocus: {$focus}\nUI language: {$langname}\nDefinitions:\n";
+        foreach ($defs as $i => $d) {
+            $userprompt .= sprintf("%d) %s\n", $i, $d);
+        }
+        $userprompt .= "Return JSON: {\"index\": <number>, \"definition\": \"<exact chosen text>\"}. Do not add prose.";
+
+        $payload = [
+            'model' => $this->model,
+            'temperature' => 0.1,
+            'max_tokens' => 80,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt],
+                ['role' => 'user', 'content' => $userprompt],
+            ],
+        ];
+
+        $response = $this->request($payload);
+        $this->record_usage($userid, $response->usage ?? null);
+        $content = $response->choices[0]->message->content ?? '';
+        if ($content === '') {
+            return null;
+        }
+        $json = null;
+        $clean = trim($content);
+        if (preg_match('~\{.*\}~s', $clean, $m)) {
+            $json = $m[0];
+        }
+        $decoded = $json ? json_decode($json, true) : json_decode($clean, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        $idx = isset($decoded['index']) ? (int)$decoded['index'] : null;
+        if ($idx === null || $idx < 0 || $idx >= count($defs)) {
+            return null;
+        }
+        $def = trim((string)($decoded['definition'] ?? $defs[$idx] ?? ''));
+        if ($def === '') {
+            $def = $defs[$idx] ?? '';
+        }
+        return $def === '' ? null : ['index' => $idx, 'definition' => $def];
+    }
+
     public function answer_question(int $userid, string $context, string $question, string $language, array $options = []): array {
         if (!$this->is_enabled()) {
             throw new coding_exception('openai client is not configured');

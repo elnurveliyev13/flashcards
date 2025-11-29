@@ -2028,7 +2028,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             focusHelperState.activeIndex = token.index;
             updateChipActiveState();
             if(aiEnabled){
-              triggerFocusHelper(token, token.index);
+              triggerFocusHelper(token, token.index, tokens);
             } else {
               triggerOrdbankHelper(token, token.index, tokens);
             }
@@ -2045,6 +2045,74 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusWordList.appendChild(span);
         }
       });
+    }
+
+    function renderCompoundParts(parts, fallbackText){
+      const container = document.getElementById('compoundParts');
+      if(!container){
+        return;
+      }
+      container.innerHTML = '';
+      const cleanParts = Array.isArray(parts) ? parts.filter(p => typeof p === 'string' && p.trim() !== '') : [];
+      const items = cleanParts.length ? cleanParts : (fallbackText ? [fallbackText] : []);
+      if(!items.length){
+        container.textContent = '';
+        return;
+      }
+      items.forEach((part, idx) => {
+        const chip = document.createElement('span');
+        const isFuge = (items.length >= 2 && idx === 1) || /^-+$/.test(part.trim());
+        const colorIdx = (idx % 4) + 1;
+        chip.className = `ledd-chip ${isFuge ? 'ledd-fuge' : ('ledd-' + colorIdx)}`;
+        chip.textContent = part;
+        container.appendChild(chip);
+        if(idx !== items.length - 1){
+          const sep = document.createElement('span');
+          sep.className = 'ledd-sep';
+          sep.textContent = '|';
+          container.appendChild(sep);
+        }
+      });
+    }
+
+    function renderFormsPreview(forms, posVal){
+      const container = document.getElementById('formsPreview');
+      if(!container){
+        return;
+      }
+      container.innerHTML = '';
+      if(!forms || typeof forms !== 'object'){
+        return;
+      }
+      const addChip = (label, values) => {
+        const vals = Array.isArray(values) ? values : [];
+        if(!vals.length){
+          return;
+        }
+        const chip = document.createElement('div');
+        chip.className = 'form-chip';
+        const title = document.createElement('strong');
+        title.textContent = label;
+        chip.appendChild(title);
+        const body = document.createElement('div');
+        body.textContent = vals.join(', ');
+        chip.appendChild(body);
+        container.appendChild(chip);
+      };
+      if(forms.verb){
+        addChip('Infinitiv', forms.verb.infinitiv || []);
+        addChip('Presens', forms.verb.presens || []);
+        addChip('Preteritum', forms.verb.preteritum || []);
+        addChip('Perf. partisipp', forms.verb.perfektum_partisipp || []);
+        addChip('Imperativ', forms.verb.imperativ || []);
+      } else if(forms.noun){
+        addChip('Indef. sg', forms.noun.indef_sg || []);
+        addChip('Def. sg', forms.noun.def_sg || []);
+        addChip('Indef. pl', forms.noun.indef_pl || []);
+        addChip('Def. pl', forms.noun.def_pl || []);
+      } else if(posVal && Array.isArray(forms)){
+        addChip('Former', forms);
+      }
     }
 
     function applyAiPayload(data){
@@ -2168,6 +2236,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           genderField.value = data.gender;
         }
       }
+      renderCompoundParts(data.parts || [], data.focusWord || data.focusBaseform || '');
+      renderFormsPreview(data.forms || {}, posVal);
       if(data.errors && (data.errors.tts_front || data.errors.tts_focus)){
         const msgs = [];
         if(data.errors.tts_front) msgs.push(`Front: ${data.errors.tts_front}`);
@@ -2181,17 +2251,29 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return correctionMessage;
     }
 
-    async function triggerFocusHelper(token, idx){
-      if(!aiEnabled){
-        setFocusStatus('disabled', aiStrings.disabled);
-        return;
-      }
+    async function triggerFocusHelper(token, idx, tokens){
       if(!frontInput || !frontInput.value.trim()){
         setFocusStatus('idle', aiStrings.notext);
         return;
       }
       focusHelperState.activeIndex = idx;
       updateChipActiveState();
+      // Always prefill via deterministic ordbank, even when AI is enabled.
+      let prefilled = false;
+      try{
+        const prefillResp = await triggerOrdbankHelper(token, idx, tokens, {silent:true});
+        prefilled = !!(prefillResp && prefillResp.selected);
+      }catch(_prefillErr){
+        // best-effort, continue to AI
+      }
+      if(!aiEnabled){
+        if(prefilled){
+          setFocusStatus('success', aiStrings.success || '');
+        } else {
+          setFocusStatus('disabled', aiStrings.disabled);
+        }
+        return;
+      }
       if(focusHelperState.abortController){
         focusHelperState.abortController.abort();
       }
@@ -2221,6 +2303,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         console.error('[Flashcards][AI] focus helper failed', err);
         setFocusStatus('error', err?.message || aiStrings.error);
+        // Fallback to deterministic ordbank lookup when AI is disabled/unavailable.
+        if(!prefilled && tokens && Array.isArray(tokens) && tokens.length){
+          try{
+            await triggerOrdbankHelper(token, idx, tokens);
+          }catch(_fallbackErr){
+            // Ignore fallback errors; primary error already surfaced.
+          }
+        }
       }finally{
         if(focusHelperState.abortController === controller){
           focusHelperState.abortController = null;
@@ -2228,13 +2318,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
-    async function triggerOrdbankHelper(token, idx, tokens){
+    async function triggerOrdbankHelper(token, idx, tokens, options = {}){
       if(!frontInput || !token || !token.text){
         return;
       }
+      const silent = options && options.silent === true;
       focusHelperState.activeIndex = idx;
       updateChipActiveState();
-      setFocusStatus('loading', aiStrings.detecting);
+      if(!silent){
+        setFocusStatus('loading', aiStrings.detecting);
+      }
       const wordTokens = tokens.filter(t=>t.isWord);
       const prev = wordTokens.filter(t=>t.index < idx).pop();
       const next = wordTokens.filter(t=>t.index > idx).shift();
@@ -2247,27 +2340,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         };
         const resp = await api('ordbank_focus_helper', {}, 'POST', payload);
         if(!resp || resp.ok === false){
-          const msg = resp && resp.error ? resp.error : (aiStrings.error || 'Error');
-          setFocusStatus('error', msg);
-          if(resp && resp.debug){
-            console.warn('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
+          if(!silent){
+            const msg = resp && resp.error ? resp.error : (aiStrings.error || 'Error');
+            setFocusStatus('error', msg);
+            if(resp && resp.debug){
+              console.warn('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
+            }
+            if(resp && resp.debug){
+              console.warn('[Flashcards][Ordbank] debug:', resp.debug);
+            }
           }
-          if(resp && resp.debug){
-            console.warn('[Flashcards][Ordbank] debug:', resp.debug);
-          }
-          return;
+          return null;
         }
         // API may return {ok:true,data:{...}} or just data; handle both.
         const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
         if(data && data.ambiguous && Array.isArray(data.candidates) && !data.selected){
-          setFocusStatus('error', aiStrings.choose || 'Choose one');
-          renderCandidateChoices(data.candidates);
-          return;
+          if(!silent){
+            setFocusStatus('error', aiStrings.choose || 'Choose one');
+            renderCandidateChoices(data.candidates);
+          }
+          return data;
         }
         if(!data || !data.selected){
-          setFocusStatus('error', aiStrings.error || 'Error');
-          console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
-          return;
+          if(!silent){
+            setFocusStatus('error', aiStrings.error || 'Error');
+            console.warn('[Flashcards][Ordbank] missing data.selected in response', resp);
+          }
+          return null;
         }
         if(resp && resp.debug && resp.debug.ordbokene){
           console.info('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
@@ -2312,10 +2411,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             trEl.value = data.selected.ipa;
           }
         }
-        setFocusStatus('success', aiStrings.success || '');
+        renderCompoundParts(data.parts || [], focusWordResolved);
+        renderFormsPreview(data.forms || {}, posVal);
+        if(!silent){
+          setFocusStatus('success', aiStrings.success || '');
+        }
+        return data;
       }catch(err){
         console.error('[Flashcards][Ordbank] focus helper failed', err);
-        setFocusStatus('error', aiStrings.error || 'Error');
+        if(!silent){
+          setFocusStatus('error', aiStrings.error || 'Error');
+        }
+        return null;
       }finally{
         if(!aiEnabled && focusHelperState.abortController){
           focusHelperState.abortController = null;
@@ -2388,6 +2495,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             trEl.value = data.selected.ipa;
           }
         }
+        renderCompoundParts(data.parts || [], focusWordResolved);
+        renderFormsPreview(data.forms || {}, posVal);
         if(posVal === 'verb'){
           const vf = (data.forms && data.forms.verb) || {};
           const joinForms = val => Array.isArray(val) ? val.join('\n') : (val || '');
@@ -7455,6 +7564,8 @@ function renderComparisonResult(resultEl, comparison){
       const _genderField = document.getElementById('uGender'); if(_genderField) _genderField.value = '';
       ['uNounIndefSg','uNounDefSg','uNounIndefPl','uNounDefPl','uVerbInfinitiv','uVerbPresens','uVerbPreteritum','uVerbPerfektum','uVerbImperativ','uAdjPositiv','uAdjKomparativ','uAdjSuperlativ','uAntonyms','uCollocations','uExamples','uCognates','uSayings']
         .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+      const compoundEl = document.getElementById('compoundParts'); if(compoundEl) compoundEl.innerHTML = '';
+      const formsPrevEl = document.getElementById('formsPreview'); if(formsPrevEl) formsPrevEl.innerHTML = '';
       togglePOSUI();
       updatePOSHelp();
       setAdvancedVisibility(false);

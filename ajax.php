@@ -432,12 +432,21 @@ switch ($action) {
         if ((empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
             $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
         }
+        if (empty($data['parts']) && !empty($ob['parts'])) {
+            $data['parts'] = $ob['parts'];
+        }
         // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
         if ((empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
             $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
             if (!empty($tmp['forms'])) {
                 $data['forms'] = $tmp['forms'];
             }
+            if (empty($data['parts']) && !empty($tmp['parts'])) {
+                $data['parts'] = $tmp['parts'];
+            }
+        }
+        if (empty($data['parts']) && !empty($data['focusWord'])) {
+            $data['parts'] = [$data['focusWord']];
         }
         // Always try Ordbøkene for expressions (and for forms/definition/examples if они пустые).
         $debugai = [];
@@ -447,7 +456,7 @@ switch ($action) {
             $fb = core_text::strtolower(trim($data['focusBaseform'] ?? ''));
             $fw = core_text::strtolower(trim($data['focusWord'] ?? ''));
             if ($fb !== '') { $candidates[] = $fb; }
-            if ($fw !== '' && $fw !== $fb) { $candidates.append($fw); }
+            if ($fw !== '' && $fw !== $fb) { $candidates[] = $fw; }
             // Если AI ничего не дал, пробуем глагол + seg + предлог из текста.
             if (empty($candidates)) {
                 $tokens = array_values(array_filter(preg_split('/\\s+/', core_text::strtolower($fronttext))));
@@ -487,7 +496,26 @@ switch ($action) {
                     if (empty($data['forms']) && !empty($lookup['forms'])) {
                         $data['forms'] = $lookup['forms'];
                     }
-                    if (empty($data['definition']) && !empty($lookup['meanings'])) {
+                    // Let AI pick the best-fitting definition from Ordbokene options using context.
+                    $chosenmeaning = null;
+                    if (!empty($lookup['meanings'])) {
+                        if (count($lookup['meanings']) === 1) {
+                            $chosenmeaning = $lookup['meanings'][0];
+                        } else {
+                            try {
+                                $picked = $helper->choose_best_definition($fronttext, $data['focusWord'] ?? $clickedword, $lookup['meanings'], $language, $userid);
+                                if (!empty($picked['definition'])) {
+                                    $chosenmeaning = $picked['definition'];
+                                    $debugai['ordbokene']['chosen_meaning'] = $picked;
+                                }
+                            } catch (\Throwable $pickex) {
+                                $debugai['ordbokene']['chosen_error'] = $pickex->getMessage();
+                            }
+                        }
+                    }
+                    if (empty($data['definition']) && !empty($chosenmeaning)) {
+                        $data['definition'] = $chosenmeaning;
+                    } else if (empty($data['definition']) && !empty($lookup['meanings'])) {
                         $data['definition'] = $lookup['meanings'][0];
                     }
                     if (empty($data['examples']) && !empty($lookup['examples'])) {
