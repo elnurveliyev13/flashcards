@@ -311,6 +311,39 @@ function flashcards_fetch_ordbokene_suggest(string $query, int $limit = 12): arr
     return $out;
 }
 
+/**
+ * Filter suggestions so multi-word queries keep only lemmas that contain all tokens.
+ *
+ * @param array $items
+ * @param string $query
+ * @return array
+ */
+function flashcards_filter_multiword(array $items, string $query): array {
+    $tokens = array_values(array_filter(preg_split('/\s+/u', trim($query))));
+    if (count($tokens) < 2) {
+        return $items;
+    }
+    $lowerTokens = array_map(function($t){ return core_text::strtolower($t); }, $tokens);
+    $out = [];
+    foreach ($items as $item) {
+        $lemma = core_text::strtolower((string)($item['lemma'] ?? ''));
+        if ($lemma === '') {
+            continue;
+        }
+        $ok = true;
+        foreach ($lowerTokens as $tok) {
+            if (strpos($lemma, $tok) === false) {
+                $ok = false;
+                break;
+            }
+        }
+        if ($ok) {
+            $out[] = $item;
+        }
+    }
+    return $out ?: $items;
+}
+
 switch ($action) {
     case 'fetch':
         echo json_encode([ 'ok' => true, 'data' => \mod_flashcards\local\api::fetch_progress($flashcardsid, $userid) ]);
@@ -910,6 +943,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
 
         // Suggest endpoint (includes expressions/inflections) first.
         $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
+        $suggestRemote = flashcards_filter_multiword($suggestRemote, $query);
         foreach ($suggestRemote as $item) {
             $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
             if ($key === '|' || isset($seen[$key])) {
@@ -924,6 +958,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
 
         // Remote expressions first (ord.uib.no full query to prioritize multi-word hits).
         $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
+        $expressions = flashcards_filter_multiword($expressions, $query);
         foreach ($expressions as $item) {
             $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
             if ($key === '|' || isset($seen[$key])) {
@@ -955,6 +990,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         // Remote lemma suggestions next (ord.uib.no full query).
         try {
             $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
+            $remote = flashcards_filter_multiword($remote, $query);
             foreach ($remote as $item) {
                 $key = core_text::strtolower(($item['lemma'] ?? '') . '|' . ($item['dict'] ?? ''));
                 if ($key === '|' || isset($seen[$key])) {
