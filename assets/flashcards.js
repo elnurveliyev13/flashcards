@@ -2893,6 +2893,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
         let focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
+        if(silent){
+          return data;
+        }
         if(expressionResolved){
           focusWordResolved = expressionResolved;
         } else {
