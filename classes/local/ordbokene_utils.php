@@ -58,12 +58,9 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $lemmas[] = $lem;
     }
 
-    // Prepositions actually present in text (fallback to om/over).
+    // Prepositions actually present in text; do not force defaults to avoid phantom particles like "om".
     $preplist = ['over','om','for','med','til','av','på','pa','i'];
     $prepsText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
-    if (empty($prepsText)) {
-        $prepsText = ['om','over'];
-    }
 
     // Base candidates (must start with baselemma).
     if ($baselemma !== '') {
@@ -152,10 +149,19 @@ function mod_flashcards_normalize_infinitive(string $value): string {
 function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $clicked, string $base = '', string $lang = 'begge'): ?array {
     $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
     $candidates = mod_flashcards_build_expression_candidates($fronttext, $base ?: $clicked);
+    $sentTokens = array_filter(preg_split('/\s+/', core_text::strtolower($fronttext)));
     foreach ($candidates as $cand) {
         $norm = mod_flashcards_normalize_infinitive($cand);
         if ($norm === '') {
             continue;
+        }
+        // Skip expressions whose tokens are not present in the sentence to avoid phantom particles (e.g., 'handle om' when no 'om').
+        $exprTokens = array_filter(preg_split('/\s+/', $norm));
+        if (!empty($exprTokens)) {
+            $missing = array_diff($exprTokens, $sentTokens);
+            if (!empty($missing)) {
+                continue;
+            }
         }
         try {
             $lookup = ordbokene_client::lookup($norm, $lang);
