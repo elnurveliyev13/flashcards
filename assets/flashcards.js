@@ -760,17 +760,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focus_audio_badge: 'Аудіо (слово)',
         front_placeholder: '_ _ _',
         ai_click_hint: 'Натисніть будь-яке слово вище, щоб виявити сталий вираз',
-        translation_en_placeholder: 'I love you',
-        translation_placeholder: 'Я тебе кохаю',
-        explanation_placeholder: 'Пояснення...',
-        focus_placeholder: 'Фокусне слово/фраза...',
-        collocations_placeholder: 'словосполучення...',
-        examples_placeholder: 'приклади...',
-        antonyms_placeholder: 'антоніми...',
-        cognates_placeholder: 'споріднені слова...',
-        sayings_placeholder: 'вислови...',
-        transcription_placeholder: '[МФА напр. /hu:s/]',
-        one_per_line_placeholder: 'по одному на рядок...',
+        translation_en_placeholder: '_ _ _',
+        translation_placeholder: '_ _ _',
+        explanation_placeholder: '_ _ _',
+        focus_placeholder: '_ _ _',
+        collocations_placeholder: '_ _ _',
+        examples_placeholder: '_ _ _',
+        antonyms_placeholder: '_ _ _',
+        cognates_placeholder: '_ _ _',
+        sayings_placeholder: '_ _ _',
+        transcription_placeholder: '_ _ _',
+        one_per_line_placeholder: '_ _ _',
       },
       ru: {
         app_title: 'MyMemory',
@@ -860,8 +860,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focus_audio_badge: 'Фокусное аудио',
         front_placeholder: '_ _ _',
         ai_click_hint: 'Нажмите любое слово выше, чтобы выявить устойчивое выражение',
-        translation_en_placeholder: 'I love you',
-        translation_placeholder: 'Я тебя люблю',
+        translation_en_placeholder: '_ _ _',
+        translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
         focus_placeholder: '_ _ _',
         collocations_placeholder: '_ _ _',
@@ -2298,7 +2298,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const citation = document.createElement('div');
       citation.className = 'ordbokene-citation';
-      citation.textContent = info.citation || aiStrings.ordbokeneCitation || '';
+      const citationText = info.citation || aiStrings.ordbokeneCitation || '';
+      if(citationText){
+        citation.appendChild(document.createTextNode(citationText));
+      }
+      const dictUrl = (info.dictmeta && info.dictmeta.url) ? info.dictmeta.url : '';
+      if(dictUrl && info.expression){
+        citation.appendChild(document.createTextNode(' '));
+        const link = document.createElement('a');
+        link.className = 'ordbokene-citation-link';
+        link.href = dictUrl;
+        link.rel = 'noreferrer noopener';
+        link.target = '_blank';
+        link.textContent = info.expression;
+        citation.appendChild(link);
+      }
       ordbokeneBlock.appendChild(citation);
     }
 
