@@ -916,20 +916,24 @@ switch ($action) {
         };
 
         // Suggest endpoint (includes expressions/inflections) first.
-        $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
-        $suggestRemote = flashcards_filter_multiword($suggestRemote, $query);
-        foreach ($suggestRemote as $item) {
-            if (!$mergeordbokene($item)) {
-                break;
+        if (count($results) < $limit) {
+            $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
+            $suggestRemote = flashcards_filter_multiword($suggestRemote, $query);
+            foreach ($suggestRemote as $item) {
+                if (!$mergeordbokene($item)) {
+                    break;
+                }
             }
         }
 
-        // Remote expressions first (ord.uib.no full query to prioritize multi-word hits).
-        $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
-        $expressions = flashcards_filter_multiword($expressions, $query);
-        foreach ($expressions as $item) {
-            if (!$mergeordbokene($item)) {
-                break;
+        // Remote expressions (ord.uib.no full query to prioritize multi-word hits).
+        if (count($results) < $limit) {
+            $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
+            $expressions = flashcards_filter_multiword($expressions, $query);
+            foreach ($expressions as $item) {
+                if (!$mergeordbokene($item)) {
+                    break;
+                }
             }
         }
 
@@ -944,22 +948,24 @@ switch ($action) {
         }
 
         // Remote lemma suggestions next (ord.uib.no full query).
-        try {
-            $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
-            $remote = flashcards_filter_multiword($remote, $query);
-            foreach ($remote as $item) {
-                if (!$mergeordbokene($item)) {
-                    break;
+        if (count($results) < $limit) {
+            try {
+                $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
+                $remote = flashcards_filter_multiword($remote, $query);
+                foreach ($remote as $item) {
+                    if (!$mergeordbokene($item)) {
+                        break;
+                    }
                 }
+            } catch (\Throwable $e) {
+                // If remote fails, we still fall back to local below.
             }
-        } catch (\Throwable $e) {
-            // If remote fails, we still fall back to local below.
         }
 
         // Use the last token for local ordbank prefix search (handles "dreie s" -> search "s").
         $parts = preg_split('/\s+/u', $query);
         $prefix = is_array($parts) && count($parts) ? trim((string)end($parts)) : $query;
-        if (core_text::strlen($prefix) >= 2) {
+        if (count($results) < $limit && core_text::strlen($prefix) >= 2) {
             try {
                 $records = $DB->get_records_sql(
                     "SELECT DISTINCT f.OPPSLAG AS lemma, f.LEMMA_ID, l.GRUNNFORM AS baseform
