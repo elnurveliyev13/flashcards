@@ -53,6 +53,11 @@ class ai_helper {
             $focusword = $focusphrase;
         }
 
+        if ($focusphrase !== '' && $this->phrase_has_missing_particles($focusphrase, $fronttext)) {
+            $focusphrase = '';
+            $focusword = $this->enforce_clicked_focus($clickedword, $clickedword);
+        }
+
         // Base form: ALWAYS extract single word from clicked word (no articles, no å)
         $baseform = $this->extract_base_form($clickedword, $focusword);
 
@@ -240,6 +245,44 @@ class ai_helper {
         }
         $value = preg_replace('/[^a-z0-9æøå]/u', '', $value);
         return $value ?: '';
+    }
+
+    /**
+     * Check whether a suggested phrase relies on particles/prepositions that are absent in the learner sentence.
+     */
+    protected function phrase_has_missing_particles(string $phrase, string $sentence): bool {
+        $phraseTokens = $this->tokenize_words($phrase);
+        if (count($phraseTokens) < 2) {
+            return false;
+        }
+        $sentenceTokens = array_unique($this->tokenize_words($sentence));
+        $sentenceSet = array_flip($sentenceTokens);
+        foreach (array_slice($phraseTokens, 1) as $token) {
+            if (isset($sentenceSet[$token])) {
+                continue;
+            }
+            if ($this->is_particle_like($token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected function tokenize_words(string $text): array {
+        $text = core_text::strtolower($text);
+        preg_match_all('/[\p{L}]+/u', $text, $matches);
+        return $matches[0] ?? [];
+    }
+
+    protected function is_particle_like(string $token): bool {
+        $token = core_text::strtolower($token);
+        $particles = [
+            'om', 'opp', 'ut', 'inn', 'innom', 'ned', 'over', 'til', 'fra',
+            'for', 'med', 'av', 'på', 'paa', 'pa', 'igjen', 'bort', 'fram', 'frem',
+            'hjem', 'hjemme', 'hjemmefra', 'etter', 'under', 'uten', 'hos',
+            'mot', 'mellom', 'rundt',
+        ];
+        return in_array($token, $particles, true);
     }
 
     /**
