@@ -6,5 +6,6 @@
 .git/
 nul
 .claude/
-.corpus/
-.ord.html
+ord.uib.no.html
+
+corpus/

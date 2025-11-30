@@ -1,0 +1,17 @@
+// ...existing code...
+{
+  "search.useIgnoreFiles": false,
+  "search.useGlobalIgnoreFiles": false,
+  "files.exclude": {
+    "**/.corpus": false,
+    "**/.corpus/**": false
+  },
+  "search.exclude": {
+    "**/.corpus": false,
+    "**/.corpus/**": false
+  },
+  "files.watcherExclude": {
+    "**/.corpus/**": false
+  }
+}
+// ...existing code...

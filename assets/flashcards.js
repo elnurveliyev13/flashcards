@@ -2021,6 +2021,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       frontSuggest.innerHTML = '';
+      const formatDictLabel = (item)=>{
+        const langs = (item.langs || []).map(l=>{
+          const v = (l||'').toLowerCase();
+          if(v==='bm' || v==='bokmål' || v==='bokmal') return 'bokmål';
+          if(v==='nn' || v==='nynorsk') return 'nynorsk';
+          return v ? v.toUpperCase() : '';
+        }).filter(Boolean);
+        const langLabel = langs.length ? langs.join(' / ') : '';
+        const source = ((item.dict || '').toLowerCase() === 'ordbokene') ? 'Ordbokene' : 'Ordbank';
+        return langLabel ? `${langLabel} · ${source}` : source;
+      };
       if(!Array.isArray(list) || !list.length){
         frontSuggest.classList.remove('open');
         return;
@@ -2033,19 +2044,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         lemma.textContent = item.lemma || '';
         const dict = document.createElement('span');
         dict.className = 'dict';
-        let label = (item.dict || '').toLowerCase() === 'ordbank' ? 'Ordbank' : (item.dict || '');
-        if(item.langs && Array.isArray(item.langs) && item.langs.length){
-          const names = item.langs.map(l=>{
-            const v = (l||'').toLowerCase();
-            if(v==='bm' || v==='bokmål' || v==='bokmal') return 'bokmål';
-            if(v==='nn' || v==='nynorsk') return 'nynorsk';
-            return v.toUpperCase();
-          }).filter(Boolean);
-          if(names.length){
-            label = names.join(', ');
-          }
-        }
-        dict.textContent = label;
+        dict.textContent = formatDictLabel(item);
         btn.appendChild(lemma);
         btn.appendChild(dict);
         btn.addEventListener('mousedown', e=>{
