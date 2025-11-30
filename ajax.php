@@ -658,6 +658,7 @@ switch ($action) {
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
         $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
         $helper = new \mod_flashcards\local\ai_helper();
+        $openaiexpr = new \mod_flashcards\local\openai_client();
         $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
             'language' => $language,
             'level' => $level,
@@ -831,15 +832,17 @@ switch ($action) {
                     $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$expression])));
                     $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
                     $seed = !empty($entry['examples']) ? $entry['examples'] : [];
-                    $gen = $this->openai->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
-                    if (!empty($gen['translation'])) {
-                        $data['translation'] = $gen['translation'];
-                    }
-                    if (!empty($gen['definition'])) {
-                        $data['definition'] = $gen['definition'];
-                    }
-                    if (!empty($gen['examples'])) {
-                        $data['examples'] = $gen['examples'];
+                    if ($openaiexpr->is_enabled()) {
+                        $gen = $openaiexpr->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
+                        if (!empty($gen['translation'])) {
+                            $data['translation'] = $gen['translation'];
+                        }
+                        if (!empty($gen['definition'])) {
+                            $data['definition'] = $gen['definition'];
+                        }
+                        if (!empty($gen['examples'])) {
+                            $data['examples'] = $gen['examples'];
+                        }
                     }
                     if (!empty($meaning)) {
                         $data['analysis'] = [
@@ -860,15 +863,17 @@ switch ($action) {
                     $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$fallbackExpr['expression']])));
                     $meaning = !empty($fallbackExpr['meanings'][0]) ? $fallbackExpr['meanings'][0] : '';
                     $seed = !empty($fallbackExpr['examples']) ? $fallbackExpr['examples'] : [];
-                    $gen = $this->openai->generate_expression_content($fallbackExpr['expression'], $meaning, $seed, $fronttext, $language, $level);
-                    if (!empty($gen['translation'])) {
-                        $data['translation'] = $gen['translation'];
-                    }
-                    if (!empty($gen['definition'])) {
-                        $data['definition'] = $gen['definition'];
-                    }
-                    if (!empty($gen['examples'])) {
-                        $data['examples'] = $gen['examples'];
+                    if ($openaiexpr->is_enabled()) {
+                        $gen = $openaiexpr->generate_expression_content($fallbackExpr['expression'], $meaning, $seed, $fronttext, $language, $level);
+                        if (!empty($gen['translation'])) {
+                            $data['translation'] = $gen['translation'];
+                        }
+                        if (!empty($gen['definition'])) {
+                            $data['definition'] = $gen['definition'];
+                        }
+                        if (!empty($gen['examples'])) {
+                            $data['examples'] = $gen['examples'];
+                        }
                     }
                     if (!empty($meaning)) {
                         $data['analysis'] = [
