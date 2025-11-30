@@ -860,6 +860,8 @@ switch ($action) {
             echo json_encode(['ok' => true, 'data' => []]);
             break;
         }
+        $tokens = array_values(array_filter(preg_split('/\s+/u', $query)));
+        $isMultiWord = count($tokens) >= 2;
         $limit = 12;
         $results = [];
         $seen = [];
@@ -951,7 +953,8 @@ switch ($action) {
             }
         }
 
-        if (count($results) >= $limit) {
+        // If this is a single word and local already filled the limit, stop here.
+        if (!$isMultiWord && count($results) >= $limit) {
             echo json_encode(['ok' => true, 'data' => array_slice($results, 0, $limit)]);
             break;
         }
