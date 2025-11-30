@@ -1999,6 +1999,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let frontSuggestActive = '';
     let frontSuggestRendered = '';
     let frontSuggestAbort = null;
+    let frontSuggestScheduledQuery = '';
 
     function currentFrontQuery(){
       if(!frontInput){
@@ -2124,10 +2125,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(!q || q.length < 2){
         hideFrontSuggest();
+        frontSuggestScheduledQuery = '';
         return;
       }
-      // very short debounce to match ordbokene.no responsiveness
-      frontSuggestTimer = setTimeout(()=>fetchFrontSuggest(q), 40);
+      if(q === frontSuggestScheduledQuery && frontSuggestTimer){
+        return;
+      }
+      frontSuggestScheduledQuery = q;
+      // gentle debounce to wait for pauses and avoid repeated requests
+      frontSuggestTimer = setTimeout(()=>{
+        frontSuggestTimer = null;
+        fetchFrontSuggest(q);
+      }, 350);
     }
 
     function setFocusStatus(state, text){
