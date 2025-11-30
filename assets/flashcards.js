@@ -2307,19 +2307,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       if(payload){
-        // Prefer Ordbokene-picked expression/meaning for analysis and examples.
+        // Prefer Ordbokene-picked expression/meaning for analysis, translation, examples.
         if(payload.ordbokene && payload.ordbokene.expression){
           const chosenIdx = Number.isInteger(payload.ordbokene.chosenMeaning) ? payload.ordbokene.chosenMeaning : 0;
           const chosenMeaning = (Array.isArray(payload.ordbokene.meanings) && payload.ordbokene.meanings[chosenIdx]) ? payload.ordbokene.meanings[chosenIdx] : (payload.definition || payload.translation || '');
+          const translationVal = payload.translation || chosenMeaning || '';
           const analysis = [{
             text: payload.ordbokene.expression,
-            translation: chosenMeaning || ''
+            translation: translationVal
           }];
-          renderSentenceAnalysis(analysis);
-          // Force examples to the chosen dictionary examples when available.
+          payload.translation = translationVal;
+          payload.definition = chosenMeaning || payload.definition || '';
           if(Array.isArray(payload.ordbokene.examples) && payload.ordbokene.examples.length){
             payload.examples = payload.ordbokene.examples;
           }
+          renderSentenceAnalysis(analysis);
         } else {
           renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
         }
@@ -2642,18 +2644,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(data.focusBaseform && focusBaseInput){
         const current = (focusBaseInput.value || '').trim();
-        if(!current || /ingen/i.test(current)){
+        if(!current || /ingen/i.test(current) || data.ordbokene){
           focusBaseInput.value = data.focusBaseform;
         }
       }
       if(data.definition){
         const expl = document.getElementById('uExplanation');
-        if(expl && !expl.value.trim()){
+        if(expl && (!expl.value.trim() || data.ordbokene)){
           expl.value = data.definition;
         }
       }
       if(Object.prototype.hasOwnProperty.call(data, 'translation')){
-        if(translationInputLocal && !translationInputLocal.value.trim()){
+        if(translationInputLocal && (!translationInputLocal.value.trim() || data.ordbokene)){
           translationInputLocal.value = data.translation || '';
         }
       }
@@ -2697,8 +2699,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(Array.isArray(data.examples) && data.examples.length){
         const examplesEl = document.getElementById('uExamples');
-        if(examplesEl && !examplesEl.value.trim()){
-          examplesEl.value = data.examples.join('\n');
+        if(examplesEl){
+          // Prefer the latest payload examples (override when ordbokene provided).
+          if(!examplesEl.value.trim() || data.ordbokene){
+            examplesEl.value = data.examples.join('\n');
+          }
         }
       }
       if(data.audio && data.audio.front && data.audio.front.url){

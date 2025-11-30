@@ -3406,12 +3406,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .ordbokene-head {
   font-weight:700;
   margin-bottom:0.35rem;
+  font-size:1.05rem;
 }
 .ordbokene-meaning {
   margin:0.15rem 0;
   line-height:1.35;
   font-style:italic;
-  color:var(--text);
+  color:var(--text-subtle);
+  font-size:0.95rem;
 }
 .ordbokene-meaning--highlight {
   font-weight:700;
