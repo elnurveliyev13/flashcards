@@ -394,6 +394,78 @@ PROMPT;
         ];
     }
 
+    /**
+     * Generate translation/definition/examples for a resolved expression based on a chosen meaning.
+     *
+     * @param string $expression normalized expression (e.g., "handle om")
+     * @param string $meaning Norwegian meaning/definition
+     * @param array $seedExamples optional Norwegian examples
+     * @param string $fronttext original sentence for context
+     * @param string $uilang target UI language code
+     * @param string $level learner level
+     * @return array{translation:string,definition:string,examples:array}
+     */
+    public function generate_expression_content(string $expression, string $meaning, array $seedExamples, string $fronttext, string $uilang, string $level = self::DEFAULT_LEVEL): array {
+        $expression = trim($expression);
+        $meaning = trim($meaning);
+        $fronttext = trim($fronttext);
+        $seedExamples = array_values(array_filter(array_map('trim', $seedExamples)));
+        if ($expression === '' || !$this->is_enabled()) {
+            return ['translation' => '', 'definition' => '', 'examples' => []];
+        }
+        $targetlang = $this->language_name($this->sanitize_language($uilang));
+        $level = $this->sanitize_level($level ?: self::DEFAULT_LEVEL);
+        $system = "You are a Norwegian tutor generating concise explanations for learners.";
+        $user = "Expression (NO): {$expression}\n"
+              . "Chosen meaning (NO): {$meaning}\n"
+              . "Context sentence (NO): {$this->trim_prompt_text($fronttext, 220)}\n"
+              . "Level: {$level}\n"
+              . "Target language: {$targetlang}\n"
+              . "Seed examples (NO): " . ($seedExamples ? implode(' || ', $seedExamples) : '[none]') . "\n\n"
+              . "TASKS:\n"
+              . "1) Give a natural {$targetlang} translation/definition of this expression in THIS context (one sentence, no quotes).\n"
+              . "2) Produce 2-3 simple Norwegian example sentences that USE the expression exactly as above; for each, add a natural {$targetlang} translation after a pipe '|'. Stay with the chosen meaning.\n"
+              . "3) Keep outputs short and level-appropriate.\n\n"
+              . "Return JSON: {\"translation\":\"...\",\"definition\":\"...\",\"examples\":[\"NO | {$targetlang}\", ...]}";
+
+        $payload = [
+            'model' => $this->model,
+            'temperature' => 0.2,
+            'max_tokens' => 220,
+            'messages' => [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $user],
+            ],
+        ];
+        $response = $this->request($payload);
+        $this->record_usage(0, $response->usage ?? null);
+        $content = $response->choices[0]->message->content ?? '';
+        $json = null;
+        if (preg_match('~\{.*\}~s', (string)$content, $m)) {
+            $json = $m[0];
+        }
+        $decoded = $json ? json_decode($json, true) : json_decode((string)$content, true);
+        if (!is_array($decoded)) {
+            return ['translation' => '', 'definition' => '', 'examples' => []];
+        }
+        $translation = trim((string)($decoded['translation'] ?? $decoded['definition'] ?? ''));
+        $definition = trim((string)($decoded['definition'] ?? $translation));
+        $examples = [];
+        if (!empty($decoded['examples']) && is_array($decoded['examples'])) {
+            foreach ($decoded['examples'] as $ex) {
+                $ex = trim((string)$ex);
+                if ($ex !== '') {
+                    $examples[] = $ex;
+                }
+            }
+        }
+        return [
+            'translation' => $translation,
+            'definition' => $definition,
+            'examples' => $examples,
+        ];
+    }
+
     protected function fallback_focus(string $word): array {
         $word = trim($word);
         if ($word === '') {

@@ -765,16 +765,14 @@ switch ($action) {
         if (empty($data['parts']) && !empty($data['focusWord'])) {
             $data['parts'] = [$data['focusWord']];
         }
-        // Always try Ordbokene: fetch all senses (bm/nn) and let AI pick the best meaning for the sentence, prioritizing multi-word expressions.
+        // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
         $debugai = [];
         if ($orbokeneenabled) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
             $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
-            // First try to resolve a multi-word expression in the sentence.
             $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
             $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6);
             if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
-                // Ensure the resolved expression is present as a candidate entry.
                 $entries = array_values(array_merge([[
                     'baseform' => $resolvedExpr['expression'],
                     'meanings' => $resolvedExpr['meanings'] ?? [],
@@ -826,91 +824,69 @@ switch ($action) {
                         'source' => 'ordbokene',
                         'chosenMeaning' => $chosen['meaning'],
                         'url' => $entry['dictmeta']['url'] ?? '',
-                        'citation' => sprintf('«%s». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta %s).', $expression, date('d.m.Y')),
+                        'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
                     ];
-                    // If this is a multi-word expression, keep the single-word baseform in focusBaseform but surface expression in focusWord/Expression.
                     $data['focusExpression'] = $expression;
                     $data['focusWord'] = $expression;
-                    if (empty($data['definition']) && $meaning !== '') {
-                        $data['definition'] = $meaning;
-                    }
-                    if (empty($data['examples']) && !empty($entry['examples'])) {
-                        $data['examples'] = $entry['examples'];
-                    }
-                    if (empty($data['forms']) && !empty($entry['forms'])) {
-                        $data['forms'] = $entry['forms'];
-                    }
-                    if (empty($data['analysis']) || !is_array($data['analysis'])) {
-                        $data['analysis'] = [];
-                    }
-                    if ($meaning !== '') {
-                        $data['analysis'][] = [
-                            'text' => $expression,
-                            'translation' => $meaning,
-                        ];
-                    }
                     $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$expression])));
                     $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
+                    $seed = !empty($entry['examples']) ? $entry['examples'] : [];
+                    $gen = $this->openai->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
+                    if (!empty($gen['translation'])) {
+                        $data['translation'] = $gen['translation'];
+                    }
+                    if (!empty($gen['definition'])) {
+                        $data['definition'] = $gen['definition'];
+                    }
+                    if (!empty($gen['examples'])) {
+                        $data['examples'] = $gen['examples'];
+                    }
+                    if (!empty($meaning)) {
+                        $data['analysis'] = [
+                            [
+                                'text' => $expression,
+                                'translation' => $meaning,
+                            ],
+                        ];
+                    }
                 }
             }
-            // If AI-guided pick failed, fall back to legacy expression resolver/lookup.
             if (!isset($data['ordbokene'])) {
                 $fallbackExpr = $resolvedExpr ?: mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $data['focusBaseform'] ?? '', $lang);
                 if ($fallbackExpr) {
                     $data['ordbokene'] = $fallbackExpr;
                     $data['focusExpression'] = $fallbackExpr['expression'];
                     $data['focusWord'] = $fallbackExpr['expression'];
-                    if (empty($data['definition']) && !empty($fallbackExpr['meanings'])) {
-                        $data['definition'] = $fallbackExpr['meanings'][0];
-                    }
-                    if (empty($data['examples']) && !empty($fallbackExpr['examples'])) {
-                        $data['examples'] = $fallbackExpr['examples'];
-                    }
-                    if (empty($data['forms']) && !empty($fallbackExpr['forms'])) {
-                        $data['forms'] = $fallbackExpr['forms'];
-                    }
                     $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$fallbackExpr['expression']])));
-                    if (empty($data['analysis']) || !is_array($data['analysis'])) {
-                        $data['analysis'] = [];
+                    $meaning = !empty($fallbackExpr['meanings'][0]) ? $fallbackExpr['meanings'][0] : '';
+                    $seed = !empty($fallbackExpr['examples']) ? $fallbackExpr['examples'] : [];
+                    $gen = $this->openai->generate_expression_content($fallbackExpr['expression'], $meaning, $seed, $fronttext, $language, $level);
+                    if (!empty($gen['translation'])) {
+                        $data['translation'] = $gen['translation'];
                     }
-                    if (!empty($fallbackExpr['meanings'][0])) {
-                        $data['analysis'][] = [
-                            'text' => $fallbackExpr['expression'],
-                            'translation' => $fallbackExpr['meanings'][0],
+                    if (!empty($gen['definition'])) {
+                        $data['definition'] = $gen['definition'];
+                    }
+                    if (!empty($gen['examples'])) {
+                        $data['examples'] = $gen['examples'];
+                    }
+                    if (!empty($meaning)) {
+                        $data['analysis'] = [
+                            [
+                                'text' => $fallbackExpr['expression'],
+                                'translation' => $meaning,
+                            ],
                         ];
                     }
                     if (empty($data['ordbokene']['citation'])) {
-                        $data['ordbokene']['citation'] = sprintf('«%s». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta %s).', $fallbackExpr['expression'], date('d.m.Y'));
+                        $data['ordbokene']['citation'] = sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $fallbackExpr['expression'], date('d.m.Y'));
                     }
                     $debugai['ordbokene'] = ['expression' => $fallbackExpr['expression'], 'url' => $fallbackExpr['dictmeta']['url'] ?? ''];
                 } else {
                     $debugai['ordbokene'] = ['expression' => null];
                 }
-                if ((!$fallbackExpr || empty($fallbackExpr['meanings'])) && !empty($data['focusWord'])) {
-                    $fallback = \mod_flashcards\local\ordbokene_client::lookup($data['focusWord'], $lang);
-                    $debugai['ordbokene']['fallback'] = [
-                        'word' => $data['focusWord'],
-                        'ok' => !empty($fallback),
-                        'url' => $fallback['dictmeta']['url'] ?? ''
-                    ];
-                    if (!empty($fallback)) {
-                        if (empty($data['definition']) && !empty($fallback['meanings'])) {
-                            $data['definition'] = $fallback['meanings'][0];
-                        }
-                        if (empty($data['examples']) && !empty($fallback['examples'])) {
-                            $data['examples'] = $fallback['examples'];
-                        }
-                        if (empty($data['forms']) && !empty($fallback['forms'])) {
-                            $data['forms'] = $fallback['forms'];
-                        }
-                        if (empty($data['dictmeta']) && !empty($fallback['dictmeta'])) {
-                            $data['dictmeta'] = $fallback['dictmeta'];
-                        }
-                    }
-                }
             }
         }
-
         // Ensure focus baseform stays on the lemma (not the expression surface form).
         if (!empty($selected['baseform'])) {
             $data['focusBaseform'] = $selected['baseform'];
