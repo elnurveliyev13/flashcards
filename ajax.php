@@ -959,6 +959,8 @@ switch ($action) {
             break;
         }
 
+        // Note: for multi-word queries we keep going to remote to fetch expressions that match all tokens.
+
         // Suggest endpoint (includes expressions/inflections) first.
         if (count($results) < $limit) {
             $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
@@ -1004,6 +1006,38 @@ switch ($action) {
             } catch (\Throwable $e) {
                 // If remote fails, we still fall back to local below.
             }
+        }
+
+        // Re-rank: for multi-word queries prefer lemmas that contain all tokens (and multi-word/ordbokene first).
+        if ($isMultiWord && !empty($results)) {
+            $qlower = core_text::strtolower(trim($query));
+            $tokenLower = array_map(fn($t) => core_text::strtolower($t), $tokens);
+            $idx = 0;
+            $scored = array_map(function($item) use ($qlower, $tokenLower, &$idx) {
+                $lemma = core_text::strtolower((string)($item['lemma'] ?? ''));
+                $containsAll = true;
+                foreach ($tokenLower as $t) {
+                    if ($t === '' || strpos($lemma, $t) === false) {
+                        $containsAll = false;
+                        break;
+                    }
+                }
+                $hasSpace = (bool)preg_match('/\s/u', $lemma);
+                $dictScore = (isset($item['dict']) && core_text::strtolower((string)$item['dict']) === 'ordbokene') ? 0 : 1;
+                $score = [
+                    $lemma === $qlower ? 0 : 1,    // exact match is best
+                    $containsAll ? 0 : 1,         // must contain all tokens
+                    $hasSpace ? 0 : 1,            // multi-word higher
+                    $dictScore,                   // prefer ordbokene over local
+                    (strpos($lemma, $qlower) !== false) ? 0 : 1, // contains full query
+                    $idx++,                       // stable fallback
+                ];
+                return ['score' => $score, 'item' => $item];
+            }, $results);
+            usort($scored, function($a, $b) {
+                return $a['score'] <=> $b['score'];
+            });
+            $results = array_values(array_map(fn($s) => $s['item'], $scored));
         }
 
         echo json_encode(['ok' => true, 'data' => array_slice($results, 0, $limit)]);
