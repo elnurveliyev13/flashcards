@@ -128,6 +128,66 @@ class ordbokene_client {
     }
 
     /**
+     * Fetch multiple dictionary entries for an ambiguous word (e.g. leie has verbs+nouns).
+     * Returns a list of normalized articles with dict/lang/meta to let callers pick best sense.
+     *
+     * @param string $word
+     * @param string $lang bm|nn|begge
+     * @param int $limit total articles to fetch
+     * @return array<int,array<string,mixed>>
+     */
+    public static function lookup_all(string $word, string $lang = 'begge', int $limit = 6): array {
+        $word = trim($word);
+        if ($word === '') {
+            return [];
+        }
+        $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
+        $searchurl = self::SEARCH . '?w=' . rawurlencode($word) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        $out = [];
+        try {
+            $curl = new \curl();
+            $resp = $curl->get($searchurl);
+            $search = json_decode($resp, true);
+            if (!is_array($search) || empty($search['articles'])) {
+                return [];
+            }
+            // Flatten ids per dict preserving order.
+            $dictOrder = ['bm', 'nn'];
+            foreach ($dictOrder as $dict) {
+                if (empty($search['articles'][$dict]) || !is_array($search['articles'][$dict])) {
+                    continue;
+                }
+                foreach (array_slice($search['articles'][$dict], 0, $limit) as $id) {
+                    if (count($out) >= $limit) {
+                        break 2;
+                    }
+                    $articleurl = sprintf(self::ARTICLE, $dict, (int)$id);
+                    try {
+                        $resp2 = $curl->get($articleurl);
+                        $article = json_decode($resp2, true);
+                        if (!is_array($article)) {
+                            continue;
+                        }
+                        $norm = self::normalize_article($article, $dict, $articleurl);
+                        if (!empty($norm)) {
+                            $out[] = array_merge($norm, [
+                                'dict' => $dict,
+                                'id' => (int)$id,
+                                'dictmeta' => ['lang' => $dict, 'url' => $articleurl],
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        continue;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+        return $out;
+    }
+
+    /**
      * Normalize article json to internal structure.
      *
      * @param array $article

@@ -2024,13 +2024,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const formatDictLabel = (item)=>{
         const langs = (item.langs || []).map(l=>{
           const v = (l||'').toLowerCase();
-          if(v==='bm' || v==='bokmål' || v==='bokmal') return 'bokmål';
-          if(v==='nn' || v==='nynorsk') return 'nynorsk';
+          if(v==='bm' || v==='bokmål' || v==='bokmal' || v==='bokmaal') return 'bm';
+          if(v==='nn' || v==='nynorsk') return 'nn';
           return v ? v.toUpperCase() : '';
         }).filter(Boolean);
-        const langLabel = langs.length ? langs.join(' / ') : '';
-        const source = ((item.dict || '').toLowerCase() === 'ordbokene') ? 'Ordbokene' : 'Ordbank';
-        return langLabel ? `${langLabel} · ${source}` : source;
+        const langLabel = langs.length ? langs.join('/') : '';
+        const source = ((item.dict || '').toLowerCase() === 'ordbokene') ? 'ordbøkene' : 'ordbank';
+        return langLabel ? `${langLabel} ? ${source}` : source;
       };
       if(!Array.isArray(list) || !list.length){
         frontSuggest.classList.remove('open');
@@ -2258,6 +2258,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ordbokeneBlock.textContent = aiStrings.ordbokeneEmpty || '';
         return;
       }
+      const chosenIdx = Number.isInteger(info.chosenMeaning) ? info.chosenMeaning : null;
       const head = document.createElement('div');
       head.className = 'ordbokene-head';
       head.textContent = info.expression;
@@ -2266,9 +2267,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(Array.isArray(info.meanings) && info.meanings.length){
         const meaningsWrap = document.createElement('div');
         meaningsWrap.className = 'ordbokene-meanings';
-        info.meanings.slice(0,2).forEach(m => {
+        const meanings = info.meanings.slice();
+        if(chosenIdx !== null && chosenIdx >=0 && chosenIdx < meanings.length){
+          const chosenVal = meanings.splice(chosenIdx,1)[0];
+          meanings.unshift(chosenVal);
+        }
+        meanings.slice(0,2).forEach((m, i) => {
           const p = document.createElement('div');
           p.className = 'ordbokene-meaning';
+          if(i===0 && chosenIdx !== null){
+            p.classList.add('ordbokene-meaning--highlight');
+          }
           p.textContent = m;
           meaningsWrap.appendChild(p);
         });
