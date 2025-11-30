@@ -60,7 +60,51 @@ if ($globalmode) {
     $flashcardsid = $cm->instance;
 }
 
-$userid = $USER->id;
+    $userid = $USER->id;
+    /**
+     * Lightly clean verb forms coming from mixed sources (ordbank/ordbokene) to avoid noisy variants.
+     */
+    function mod_flashcards_prune_verb_forms(array $forms): array {
+        if (empty($forms['verb']) || !is_array($forms['verb'])) {
+            return $forms;
+        }
+        $v = $forms['verb'];
+        $filter = function($list, callable $cb) {
+            if (!is_array($list)) {
+                $list = [$list];
+            }
+            $out = [];
+            foreach ($list as $item) {
+                $item = trim((string)$item);
+                if ($item === '') {
+                    continue;
+                }
+                if ($cb($item)) {
+                    $out[] = $item;
+                }
+            }
+            return array_values(array_unique($out));
+        };
+        $dropS = function($item) {
+            // Drop reflexive-like "handles" noise when we want plain infinitive/presens/imperativ.
+            return !preg_match('~/s$~i', $item);
+        };
+        $v['infinitiv'] = $filter($v['infinitiv'] ?? [], $dropS);
+        $v['presens'] = $filter($v['presens'] ?? [], $dropS);
+        $v['imperativ'] = $filter($v['imperativ'] ?? [], function($item) use ($dropS){
+            return $dropS($item);
+        });
+        // Presens perfektum: drop derived noisy variants with handlede/handlende/handlete.
+        $v['presens_perfektum'] = $filter($v['presens_perfektum'] ?? [], function($item){
+            return !preg_match('/handlede|handlende|handlete/i', $item);
+        });
+        // Perfektum partisipp: drop handlende/handlede/handlete noise; keep core forms.
+        $v['perfektum_partisipp'] = $filter($v['perfektum_partisipp'] ?? [], function($item){
+            return !preg_match('/handlende|handlede|handlete/i', $item);
+        });
+        $forms['verb'] = $v;
+        return $forms;
+    }
 
 /**
  * Fetch lemma suggestions from Ordbøkene (ord.uib.no) API.
@@ -904,8 +948,8 @@ switch ($action) {
                     $debugai['ordbokene'] = ['expression' => null];
                 }
             }
-            // If forms are still missing, try a baseform lookup in Ordbokene to mirror the dictionary table.
-            if (!empty($data['ordbokene']) && (empty($data['forms']) || $data['forms'] === [] || !is_array($data['forms']))) {
+            // Always prefer Ordbokene verb forms to mirror dictionary table.
+            if (!empty($data['ordbokene'])) {
                 $baseLookup = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $lookupWord, $lang);
                 if (!empty($baseLookup['forms'])) {
                     $data['forms'] = $baseLookup['forms'];
@@ -916,6 +960,8 @@ switch ($action) {
         if (!empty($selected['baseform'])) {
             $data['focusBaseform'] = $selected['baseform'];
         }
+        // Final form cleanup for verbs to avoid noisy variants.
+        $data['forms'] = mod_flashcards_prune_verb_forms($data['forms'] ?? []);
         if (empty($data['gender']) && !empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
         }
