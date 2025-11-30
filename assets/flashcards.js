@@ -2310,16 +2310,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         // Prefer Ordbokene-picked expression/meaning for analysis, translation, examples.
         if(payload.ordbokene && payload.ordbokene.expression){
           const chosenIdx = Number.isInteger(payload.ordbokene.chosenMeaning) ? payload.ordbokene.chosenMeaning : 0;
-          const chosenMeaning = (Array.isArray(payload.ordbokene.meanings) && payload.ordbokene.meanings[chosenIdx]) ? payload.ordbokene.meanings[chosenIdx] : (payload.definition || payload.translation || '');
-          const translationVal = payload.translation || chosenMeaning || '';
+          const pickMeaning = (Array.isArray(payload.ordbokene.meanings) && payload.ordbokene.meanings[chosenIdx]) ? payload.ordbokene.meanings[chosenIdx] : '';
+          const cleanMeaning = (pickMeaning || '').replace(/^["']|["']$/g,'').trim();
+          const translationVal = cleanMeaning || (payload.definition || payload.translation || '');
           const analysis = [{
             text: payload.ordbokene.expression,
             translation: translationVal
           }];
           payload.translation = translationVal;
-          payload.definition = chosenMeaning || payload.definition || '';
+          payload.definition = cleanMeaning || payload.definition || '';
           if(Array.isArray(payload.ordbokene.examples) && payload.ordbokene.examples.length){
             payload.examples = payload.ordbokene.examples;
+          } else {
+            payload.examples = [];
           }
           renderSentenceAnalysis(analysis);
         } else {
