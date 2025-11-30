@@ -915,6 +915,47 @@ switch ($action) {
             return true;
         };
 
+        // Use the last token for local ordbank prefix search (handles "dreie s" -> search "s").
+        $parts = preg_split('/\s+/u', $query);
+        $prefix = is_array($parts) && count($parts) ? trim((string)end($parts)) : $query;
+        if (core_text::strlen($prefix) >= 2) {
+            try {
+                $records = $DB->get_records_sql(
+                    "SELECT DISTINCT f.OPPSLAG AS lemma, f.LEMMA_ID, l.GRUNNFORM AS baseform
+                       FROM {ordbank_fullform} f
+                  LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
+                      WHERE f.OPPSLAG LIKE :q
+                   ORDER BY f.OPPSLAG ASC",
+                    ['q' => $prefix . '%'],
+                    0,
+                    $limit
+                );
+                foreach ($records as $rec) {
+                    $key = core_text::strtolower($rec->lemma . '|ordbank');
+                    if (isset($seen[$key])) {
+                        continue;
+                    }
+                    $seen[$key] = true;
+                    $results[] = [
+                        'lemma' => $rec->lemma,
+                        'baseform' => $rec->baseform ?? null,
+                        'dict' => 'ordbank',
+                        'source' => 'ordbank',
+                    ];
+                    if (count($results) >= $limit) {
+                        break;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // DB lookup is best-effort; fall through to remote suggestions.
+            }
+        }
+
+        if (count($results) >= $limit) {
+            echo json_encode(['ok' => true, 'data' => array_slice($results, 0, $limit)]);
+            break;
+        }
+
         // Suggest endpoint (includes expressions/inflections) first.
         if (count($results) < $limit) {
             $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
@@ -959,42 +1000,6 @@ switch ($action) {
                 }
             } catch (\Throwable $e) {
                 // If remote fails, we still fall back to local below.
-            }
-        }
-
-        // Use the last token for local ordbank prefix search (handles "dreie s" -> search "s").
-        $parts = preg_split('/\s+/u', $query);
-        $prefix = is_array($parts) && count($parts) ? trim((string)end($parts)) : $query;
-        if (count($results) < $limit && core_text::strlen($prefix) >= 2) {
-            try {
-                $records = $DB->get_records_sql(
-                    "SELECT DISTINCT f.OPPSLAG AS lemma, f.LEMMA_ID, l.GRUNNFORM AS baseform
-                       FROM {ordbank_fullform} f
-                  LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
-                      WHERE LOWER(f.OPPSLAG) LIKE :q
-                   ORDER BY f.OPPSLAG ASC",
-                    ['q' => core_text::strtolower($prefix) . '%'],
-                    0,
-                    $limit
-                );
-                foreach ($records as $rec) {
-                    $key = core_text::strtolower($rec->lemma . '|ordbank');
-                    if (isset($seen[$key])) {
-                        continue;
-                    }
-                    $seen[$key] = true;
-                    $results[] = [
-                        'lemma' => $rec->lemma,
-                        'baseform' => $rec->baseform ?? null,
-                        'dict' => 'ordbank',
-                        'source' => 'ordbank',
-                    ];
-                    if (count($results) >= $limit) {
-                        break;
-                    }
-                }
-            } catch (\Throwable $e) {
-                // DB lookup is best-effort; fall through to remote suggestions.
             }
         }
 
