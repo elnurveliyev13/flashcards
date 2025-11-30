@@ -733,6 +733,19 @@ switch ($action) {
         $data['focusWord'] = $selected['baseform'] ?? $selected['wordform'] ?? $focuscheck;
         $data['focusBaseform'] = $selected['baseform'] ?? $data['focusWord'];
         $taglower = core_text::strtolower($selected['tag'] ?? '');
+        $aiPos = core_text::strtolower($data['pos'] ?? '');
+        $ordbankpos = '';
+        if ($taglower !== '') {
+            if (str_contains($taglower, 'verb')) {
+                $ordbankpos = 'verb';
+            } else if (str_contains($taglower, 'subst')) {
+                $ordbankpos = 'substantiv';
+            } else if (str_contains($taglower, 'adj')) {
+                $ordbankpos = 'adjektiv';
+            }
+        }
+        // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
+        $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
         if (!$data['pos']) {
             if (str_contains($taglower, 'verb')) {
                 $data['pos'] = 'verb';
@@ -746,15 +759,15 @@ switch ($action) {
         if (!empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
         }
-        $data['forms'] = $ob['forms'] ?? [];
-        if ((empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
+        $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
+        if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
             $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
         }
         if (empty($data['parts']) && !empty($ob['parts'])) {
             $data['parts'] = $ob['parts'];
         }
         // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
-        if ((empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
+        if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
             $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
             if (!empty($tmp['forms'])) {
                 $data['forms'] = $tmp['forms'];
