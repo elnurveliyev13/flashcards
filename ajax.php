@@ -891,6 +891,13 @@ switch ($action) {
                     $debugai['ordbokene'] = ['expression' => null];
                 }
             }
+            // If forms are still missing, try a baseform lookup in Ordbokene to mirror the dictionary table.
+            if (!empty($data['ordbokene']) && (empty($data['forms']) || $data['forms'] === [] || !is_array($data['forms']))) {
+                $baseLookup = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $lookupWord, $lang);
+                if (!empty($baseLookup['forms'])) {
+                    $data['forms'] = $baseLookup['forms'];
+                }
+            }
         }
         // Ensure focus baseform stays on the lemma (not the expression surface form).
         if (!empty($selected['baseform'])) {
