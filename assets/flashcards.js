@@ -2285,7 +2285,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         link.href = info.url;
         link.target = '_blank';
         link.rel = 'noreferrer';
-        link.textContent = info.url.replace(/^https?:\\/\\//, '');
+        let displayUrl = info.url;
+        if (displayUrl.startsWith('https://')) {
+          displayUrl = displayUrl.slice('https://'.length);
+        } else if (displayUrl.startsWith('http://')) {
+          displayUrl = displayUrl.slice('http://'.length);
+        } else if (displayUrl.startsWith('//')) {
+          displayUrl = displayUrl.slice(2);
+        }
+        link.textContent = displayUrl;
         ordbokeneBlock.appendChild(link);
       }
 
