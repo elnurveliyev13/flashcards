@@ -676,26 +676,56 @@ switch ($action) {
         }
         // If still nothing, try a direct lookup to confirm existence.
         if ((!$ob || empty($ob['selected']))) {
-            $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
-            if (!$exists) {
-                echo json_encode(['ok' => false, 'error' => 'Word not found in ordbank']);
-                break;
+            // For multi-word expressions, skip strict ordbank validation.
+            if (str_contains($focuscheck, ' ')) {
+                $ob = [
+                    'selected' => [
+                        'lemma_id' => 0,
+                        'wordform' => $focuscheck,
+                        'baseform' => $focuscheck,
+                        'tag' => '',
+                        'paradigme_id' => null,
+                        'boy_nummer' => 0,
+                        'ipa' => null,
+                        'gender' => '',
+                    ],
+                    'forms' => [],
+                ];
+            } else {
+                $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
+                if (!$exists) {
+                    // Keep processing with minimal stub instead of erroring out.
+                    $ob = [
+                        'selected' => [
+                            'lemma_id' => 0,
+                            'wordform' => $focuscheck,
+                            'baseform' => $focuscheck,
+                            'tag' => '',
+                            'paradigme_id' => null,
+                            'boy_nummer' => 0,
+                            'ipa' => null,
+                            'gender' => '',
+                        ],
+                        'forms' => [],
+                    ];
+                } else {
+                    // Build a minimal selected from first match
+                    $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 1", ['w' => $focuscheck]);
+                    $ob = [
+                        'selected' => [
+                            'lemma_id' => (int)$first->lemma_id,
+                            'wordform' => $first->oppslag,
+                            'baseform' => null,
+                            'tag' => $first->tag,
+                            'paradigme_id' => $first->paradigme_id,
+                            'boy_nummer' => (int)$first->boy_nummer,
+                            'ipa' => null,
+                            'gender' => '',
+                        ],
+                        'forms' => [],
+                    ];
+                }
             }
-            // Build a minimal selected from first match
-            $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 1", ['w' => $focuscheck]);
-            $ob = [
-                'selected' => [
-                    'lemma_id' => (int)$first->lemma_id,
-                    'wordform' => $first->oppslag,
-                    'baseform' => null,
-                    'tag' => $first->tag,
-                    'paradigme_id' => $first->paradigme_id,
-                    'boy_nummer' => (int)$first->boy_nummer,
-                    'ipa' => null,
-                    'gender' => '',
-                ],
-                'forms' => [],
-            ];
         }
         // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
         $selected = $ob['selected'];
@@ -742,8 +772,9 @@ switch ($action) {
             $ordbokene = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $data['focusBaseform'] ?? '', $lang);
             if ($ordbokene) {
                 $data['ordbokene'] = $ordbokene;
+                $data['focusExpression'] = $ordbokene['expression'];
                 $data['focusWord'] = $ordbokene['expression'];
-                $data['focusBaseform'] = $ordbokene['expression'];
+                // Keep baseform as the single-word lemma from ordbank (no change).
                 $data['focusExpression'] = $ordbokene['expression'];
                 if (empty($data['forms']) && !empty($ordbokene['forms'])) {
                     $data['forms'] = $ordbokene['forms'];
