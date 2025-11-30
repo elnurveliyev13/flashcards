@@ -463,6 +463,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       success: dataset.aiSuccess || 'Focus phrase updated',
       error: dataset.aiError || 'Unable to detect an expression',
       notext: dataset.aiNoText || 'Type a sentence to enable the helper',
+      analysisEmpty: dataset.analysisEmpty || 'Select a word to see the grammar breakdown.',
+      ordbokeneEmpty: dataset.ordbokeneEmpty || 'Dictionary info will appear here after lookup.',
+      ordbokeneCitation: dataset.ordbokeneCitation || '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
       focusAudio: dataset.focusAudioLabel || 'Focus audio',
       frontAudio: dataset.frontAudioLabel || 'Audio',
       voicePlaceholder: dataset.voicePlaceholder || 'Default voice',
@@ -1437,6 +1440,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiStrings.aiChatAssistant = t('ai_chat_assistant');
       aiStrings.aiChatError = t('ai_chat_error');
       aiStrings.aiChatLoading = t('ai_chat_loading');
+      aiStrings.analysisEmpty = t('analysis_empty');
+      aiStrings.ordbokeneEmpty = t('ordbokene_empty');
+      aiStrings.ordbokeneCitation = t('ordbokene_citation');
 
       // Update focus hint with new language
       if(typeof updateTranslationModeLabels === 'function'){
@@ -1921,6 +1927,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusStatusEl = document.getElementById('focusHelperStatus');
+    const focusAnalysisList = document.getElementById('focusAnalysisList');
+    const ordbokeneBlock = document.getElementById('ordbokeneBlock');
     const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
@@ -2168,6 +2176,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusWordList.innerHTML = '';
       if(!text || !text.trim()){
         setFocusStatus('', '');
+        renderSentenceAnalysis([]);
+        renderOrdbokeneBlock(null);
       }
       const wordTokens = tokens.filter(t => t.isWord);
       if(!wordTokens.length){
@@ -2206,6 +2216,96 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusWordList.appendChild(span);
         }
       });
+    }
+
+    function renderSentenceAnalysis(items){
+      if(!focusAnalysisList) return;
+      focusAnalysisList.innerHTML = '';
+      const list = Array.isArray(items) ? items.filter(it => it && (it.text || it.token)) : [];
+      if(!list.length){
+        focusAnalysisList.textContent = aiStrings.analysisEmpty || '';
+        return;
+      }
+      list.forEach(entry => {
+        const chip = document.createElement('div');
+        chip.className = 'analysis-item';
+        const textEl = document.createElement('span');
+        textEl.className = 'analysis-text';
+        textEl.textContent = entry.text || entry.token || '';
+        chip.appendChild(textEl);
+        if(entry.translation){
+          const trEl = document.createElement('span');
+          trEl.className = 'analysis-translation';
+          trEl.textContent = entry.translation;
+          chip.appendChild(trEl);
+        }
+        focusAnalysisList.appendChild(chip);
+      });
+    }
+
+    function renderOrdbokeneBlock(info){
+      if(!ordbokeneBlock) return;
+      ordbokeneBlock.innerHTML = '';
+      if(!info || !info.expression){
+        ordbokeneBlock.textContent = aiStrings.ordbokeneEmpty || '';
+        return;
+      }
+      const head = document.createElement('div');
+      head.className = 'ordbokene-head';
+      head.textContent = info.expression;
+      ordbokeneBlock.appendChild(head);
+
+      if(Array.isArray(info.meanings) && info.meanings.length){
+        const meaningsWrap = document.createElement('div');
+        meaningsWrap.className = 'ordbokene-meanings';
+        info.meanings.slice(0,2).forEach(m => {
+          const p = document.createElement('div');
+          p.className = 'ordbokene-meaning';
+          p.textContent = m;
+          meaningsWrap.appendChild(p);
+        });
+        ordbokeneBlock.appendChild(meaningsWrap);
+      }
+
+      if(Array.isArray(info.examples) && info.examples.length){
+        const examplesWrap = document.createElement('div');
+        examplesWrap.className = 'ordbokene-examples';
+        info.examples.slice(0,2).forEach(ex => {
+          const exEl = document.createElement('div');
+          exEl.className = 'ordbokene-example';
+          exEl.textContent = ex;
+          examplesWrap.appendChild(exEl);
+        });
+        ordbokeneBlock.appendChild(examplesWrap);
+      }
+
+      if(info.url){
+        const link = document.createElement('a');
+        link.className = 'ordbokene-link';
+        link.href = info.url;
+        link.target = '_blank';
+        link.rel = 'noreferrer';
+        link.textContent = info.url.replace(/^https?:\\/\\//, '');
+        ordbokeneBlock.appendChild(link);
+      }
+
+      const citation = document.createElement('div');
+      citation.className = 'ordbokene-citation';
+      citation.textContent = info.citation || aiStrings.ordbokeneCitation || '';
+      ordbokeneBlock.appendChild(citation);
+    }
+
+    function applyFocusMeta(payload, opts = {}){
+      if(opts && opts.silent){
+        return;
+      }
+      if(payload){
+        renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
+        renderOrdbokeneBlock(payload.ordbokene || null);
+      } else {
+        renderSentenceAnalysis([]);
+        renderOrdbokeneBlock(null);
+      }
     }
 
     // --- Fokus autocomplete (ordbokene) ---
@@ -2339,8 +2439,93 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!forms || typeof forms !== 'object'){
         return;
       }
-      const addChip = (label, values) => {
-        const vals = Array.isArray(values) ? values : [];
+      const normalizeList = (val) => {
+        if(Array.isArray(val)){
+          return val.map(v => (typeof v === 'string' ? v : String(v || ''))).map(v => v.trim()).filter(Boolean);
+        }
+        if(typeof val === 'string'){
+          return val.split(/[,\\n]/).map(v => v.trim()).filter(Boolean);
+        }
+        return [];
+      };
+      const uniqVals = (val) => Array.from(new Set(normalizeList(val)));
+      const makePills = (values) => {
+        const frag = document.createDocumentFragment();
+        uniqVals(values).forEach(v => {
+          const pill = document.createElement('span');
+          pill.className = 'form-pill';
+          pill.textContent = v;
+          frag.appendChild(pill);
+        });
+        return frag;
+      };
+      const addTableRow = (tbody, label, values) => {
+        const vals = uniqVals(values);
+        if(!vals.length){
+          return;
+        }
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = label;
+        tr.appendChild(th);
+        const td = document.createElement('td');
+        const wrap = document.createElement('div');
+        wrap.className = 'form-value-wrap';
+        wrap.appendChild(makePills(vals));
+        td.appendChild(wrap);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      };
+      const addGroupedRow = (tbody, label, groups, fallback) => {
+        const cleanFallback = uniqVals(fallback);
+        const prepared = (groups || []).map(group => ({
+          label: group.label,
+          values: uniqVals(group.values || [])
+        })).filter(group => group.label && group.values.length);
+        if(!prepared.length && !cleanFallback.length){
+          return;
+        }
+        const tr = document.createElement('tr');
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.textContent = label;
+        tr.appendChild(th);
+        const td = document.createElement('td');
+        const block = document.createElement('div');
+        block.className = 'forms-subgrid';
+        if(cleanFallback.length){
+          const baseLine = document.createElement('div');
+          baseLine.className = 'forms-subline';
+          const baseLabel = document.createElement('span');
+          baseLabel.className = 'sub-label';
+          baseLabel.textContent = 'Generelt';
+          const baseVals = document.createElement('span');
+          baseVals.className = 'sub-values';
+          baseVals.appendChild(makePills(cleanFallback));
+          baseLine.appendChild(baseLabel);
+          baseLine.appendChild(baseVals);
+          block.appendChild(baseLine);
+        }
+        prepared.forEach(group => {
+          const row = document.createElement('div');
+          row.className = 'forms-subline';
+          const subLabel = document.createElement('span');
+          subLabel.className = 'sub-label';
+          subLabel.textContent = group.label;
+          const subValues = document.createElement('span');
+          subValues.className = 'sub-values';
+          subValues.appendChild(makePills(group.values));
+          row.appendChild(subLabel);
+          row.appendChild(subValues);
+          block.appendChild(row);
+        });
+        td.appendChild(block);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      };
+      const addChip = (target, label, values) => {
+        const vals = uniqVals(values);
         if(!vals.length){
           return;
         }
@@ -2350,23 +2535,53 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         title.textContent = label;
         chip.appendChild(title);
         const body = document.createElement('div');
-        body.textContent = vals.join(', ');
+        body.appendChild(makePills(vals));
         chip.appendChild(body);
-        container.appendChild(chip);
+        target.appendChild(chip);
       };
       if(forms.verb){
-        addChip('Infinitiv', forms.verb.infinitiv || []);
-        addChip('Presens', forms.verb.presens || []);
-        addChip('Preteritum', forms.verb.preteritum || []);
-        addChip('Perf. partisipp', forms.verb.perfektum_partisipp || []);
-        addChip('Imperativ', forms.verb.imperativ || []);
+        const tbody = document.createElement('tbody');
+        addTableRow(tbody, 'Infinitiv', forms.verb.infinitiv || []);
+        addTableRow(tbody, 'Presens', forms.verb.presens || []);
+        addTableRow(tbody, 'Preteritum', forms.verb.preteritum || []);
+        const presPerfBase = uniqVals(forms.verb.presens_perfektum || []);
+        const presPerfDerived = uniqVals((forms.verb.perfektum_partisipp || []).map(v => `har ${v}`));
+        const presPerfCombined = Array.from(new Set([...presPerfBase, ...presPerfDerived]));
+        addTableRow(tbody, 'Presens perfektum', presPerfCombined);
+        addTableRow(tbody, 'Imperativ', forms.verb.imperativ || []);
+        const detailed = forms.verb.perfektum_partisipp_detailed || {};
+        const perfGroups = [
+          { label: 'Hankjønn/hunkjønn', values: detailed.masc_fem || detailed.mask_fem || [] },
+          { label: 'Intetkjønn', values: detailed.neuter || [] },
+          { label: 'Bestemt', values: detailed.definite || [] },
+          { label: 'Flertall', values: detailed.plural || [] }
+        ];
+        addGroupedRow(tbody, 'Perfektum partisipp', perfGroups, forms.verb.perfektum_partisipp || []);
+        addTableRow(tbody, 'Presens partisipp', forms.verb.presens_partisipp || []);
+        if(!tbody.children.length){
+          return;
+        }
+        const table = document.createElement('table');
+        table.className = 'forms-table';
+        table.appendChild(tbody);
+        container.appendChild(table);
       } else if(forms.noun){
-        addChip('Indef. sg', forms.noun.indef_sg || []);
-        addChip('Def. sg', forms.noun.def_sg || []);
-        addChip('Indef. pl', forms.noun.indef_pl || []);
-        addChip('Def. pl', forms.noun.def_pl || []);
+        const grid = document.createElement('div');
+        grid.className = 'forms-chip-grid';
+        addChip(grid, 'Indef. sg', forms.noun.indef_sg || []);
+        addChip(grid, 'Def. sg', forms.noun.def_sg || []);
+        addChip(grid, 'Indef. pl', forms.noun.indef_pl || []);
+        addChip(grid, 'Def. pl', forms.noun.def_pl || []);
+        if(grid.childElementCount){
+          container.appendChild(grid);
+        }
       } else if(posVal && Array.isArray(forms)){
-        addChip('Former', forms);
+        const grid = document.createElement('div');
+        grid.className = 'forms-chip-grid';
+        addChip(grid, 'Former', forms);
+        if(grid.childElementCount){
+          container.appendChild(grid);
+        }
       }
     }
 
@@ -2377,6 +2592,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         correctionMessage = data.correction.trim();
       }
       // Try to detect multiword expressions from ordbokene in the original front text.
+      const dictExpressionAi = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
       let matchedExpression = '';
       if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
         const frontLower = frontInput.value.toLowerCase();
@@ -2386,12 +2602,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           .filter(e => frontLower.includes(e.toLowerCase()))
           .sort((a,b) => b.length - a.length)[0] || '';
       }
-      if((data.focusWord || matchedExpression) && fokusInput){
+      const expressionResolvedAi = (dictExpressionAi || matchedExpression || '').trim();
+      if((data.focusWord || expressionResolvedAi) && fokusInput){
         const posVal = resolvePosFromTag(data.pos || '');
-        let focusVal = (matchedExpression || data.focusWord || '').trim();
-        if(!matchedExpression){
+        let focusVal = (expressionResolvedAi || data.focusWord || '').trim();
+        if(!expressionResolvedAi){
           if(posVal === 'verb'){
-            focusVal = `(å) ${focusVal}`;
+            focusVal = `(??) ${focusVal}`;
           } else if(posVal === 'substantiv' && data.gender){
             focusVal = `(${data.gender}) ${focusVal}`;
           }
@@ -2503,6 +2720,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         setTtsStatus('', '');
       }
+      applyFocusMeta(data);
       return correctionMessage;
     }
 
@@ -2515,14 +2733,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       updateChipActiveState();
       // Always prefill via deterministic ordbank, even when AI is enabled.
       let prefilled = false;
+      let prefillData = null;
       try{
         const prefillResp = await triggerOrdbankHelper(token, idx, tokens, {silent:true});
+        prefillData = prefillResp;
         prefilled = !!(prefillResp && prefillResp.selected);
       }catch(_prefillErr){
         // best-effort, continue to AI
       }
       if(!aiEnabled){
         if(prefilled){
+          if(prefillData){
+            applyFocusMeta(prefillData, {silent:false});
+          }
           setFocusStatus('success', aiStrings.success || '');
         } else {
           setFocusStatus('disabled', aiStrings.disabled);
@@ -2629,6 +2852,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.info('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
         }
         // Try to detect multiword expressions
+        const dictExpression = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
         let matchedExpression = '';
         if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
           const frontLower = frontInput.value.toLowerCase();
@@ -2639,10 +2863,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             .sort((a,b) => b.length - a.length)[0] || '';
         }
 
+        const expressionResolved = (dictExpression || matchedExpression || '').trim();
+
         const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
         let focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
-        if(matchedExpression){
-          focusWordResolved = matchedExpression;
+        if(expressionResolved){
+          focusWordResolved = expressionResolved;
         } else {
           // prefix infinitive/article
           if(posVal === 'verb'){
@@ -2671,6 +2897,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         renderCompoundParts(data.parts || [], focusWordResolved);
         renderFormsPreview(data.forms || {}, posVal);
         if(!silent){
+          applyFocusMeta(data, {silent:false});
           setFocusStatus('success', aiStrings.success || '');
         }
         return data;

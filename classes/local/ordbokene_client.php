@@ -174,6 +174,7 @@ class ordbokene_client {
                 }
                 $tags = array_map('strtolower', $inf['tags']);
                 $wf = $inf['word_form'];
+                $isperfpart = in_array('perfect_participle', $tags, true) || in_array('perfektum_partisipp', $tags, true) || in_array('<perfpart>', $tags, true);
                 if (in_array('infinitive', $tags) || in_array('infinitiv', $tags)) {
                     $forms['verb']['infinitiv'][] = $wf;
                 }
@@ -183,8 +184,25 @@ class ordbokene_client {
                 if (in_array('past', $tags) || in_array('preteritum', $tags)) {
                     $forms['verb']['preteritum'][] = $wf;
                 }
-                if (in_array('perfect_participle', $tags) || in_array('perfektum_partisipp', $tags)) {
+                if ($isperfpart) {
                     $forms['verb']['perfektum_partisipp'][] = $wf;
+                    // Capture detailed gender/number variants to mirror ordbokene table.
+                    $details = &$forms['verb']['perfektum_partisipp_detailed'];
+                    if (in_array('masc/fem', $tags, true) || in_array('mask/fem', $tags, true) || in_array('mask', $tags, true) || in_array('fem', $tags, true)) {
+                        $details['masc_fem'][] = $wf;
+                    }
+                    if (in_array('neuter', $tags, true) || in_array('neut', $tags, true)) {
+                        $details['neuter'][] = $wf;
+                    }
+                    if (in_array('def', $tags, true) || in_array('definite', $tags, true) || in_array('best', $tags, true)) {
+                        $details['definite'][] = $wf;
+                    }
+                    if (in_array('plur', $tags, true) || in_array('plural', $tags, true) || in_array('flertall', $tags, true)) {
+                        $details['plural'][] = $wf;
+                    }
+                }
+                if (in_array('<prespart>', $tags, true) || in_array('presens_partisipp', $tags, true) || in_array('prespart', $tags, true)) {
+                    $forms['verb']['presens_partisipp'][] = $wf;
                 }
                 if (in_array('imperative', $tags) || in_array('imperativ', $tags)) {
                     $forms['verb']['imperativ'][] = $wf;
@@ -193,9 +211,27 @@ class ordbokene_client {
         }
         // Deduplicate
         if (!empty($forms['verb'])) {
-            $forms['verb'] = array_map(function($arr){
-                return array_values(array_unique(array_filter($arr)));
-            }, $forms['verb']);
+            foreach ($forms['verb'] as $key => $arr) {
+                if ($key === 'perfektum_partisipp_detailed' && is_array($arr)) {
+                    foreach ($arr as $subkey => $subvals) {
+                        $forms['verb'][$key][$subkey] = array_values(array_unique(array_filter($subvals)));
+                    }
+                    // Drop empty detail buckets to keep payload lean.
+                    $forms['verb'][$key] = array_filter($forms['verb'][$key], fn($v) => !empty($v));
+                    continue;
+                }
+                $forms['verb'][$key] = array_values(array_unique(array_filter($arr)));
+            }
+            // Derive presens perfektum from available participles to match ordbokene layout.
+            $derived = [];
+            foreach ($forms['verb']['perfektum_partisipp'] ?? [] as $part) {
+                $part = trim((string)$part);
+                if ($part !== '') {
+                    $derived[] = 'har ' . $part;
+                }
+            }
+            $existing = $forms['verb']['presens_perfektum'] ?? [];
+            $forms['verb']['presens_perfektum'] = array_values(array_unique(array_filter(array_merge($existing, $derived))));
         }
         return $forms;
     }

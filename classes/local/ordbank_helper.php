@@ -346,6 +346,8 @@ class ordbank_helper {
                 'preteritum' => [],
                 'perfektum_partisipp' => [],
                 'imperativ' => [],
+                'presens_perfektum' => [],
+                'presens_partisipp' => [],
             ];
             foreach ($records as $rec) {
                 $t = core_text::strtolower((string)$rec->tag);
@@ -366,6 +368,9 @@ class ordbank_helper {
                 if ($boy === 5 || str_contains($t, 'perf') || $ispart) {
                     $verb['perfektum_partisipp'][] = $rec->oppslag;
                 }
+                if (preg_match('/pres[^a-z]?part/u', $t)) {
+                    $verb['presens_partisipp'][] = $rec->oppslag;
+                }
                 if ($boy === 3 || str_contains($t, 'imper')) {
                     $verb['imperativ'][] = $rec->oppslag;
                 }
@@ -377,6 +382,12 @@ class ordbank_helper {
                 $arr = array_values(array_unique(array_filter($arr)));
                 return $arr;
             }, $verb);
+            if (!empty($verb['perfektum_partisipp'])) {
+                $derived = array_map(fn($v) => 'har ' . $v, $verb['perfektum_partisipp']);
+                $verb['presens_perfektum'] = array_values(array_unique(array_merge($verb['presens_perfektum'], $derived)));
+            } else {
+                $verb['presens_perfektum'] = array_values(array_unique(array_filter($verb['presens_perfektum'])));
+            }
             if (!empty($verb['presens'])) {
                 $nonende = array_filter($verb['presens'], fn($v) => !preg_match('/ende$/u', $v));
                 if (!empty($nonende)) {

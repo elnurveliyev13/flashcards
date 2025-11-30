@@ -735,90 +735,40 @@ switch ($action) {
         if (empty($data['parts']) && !empty($data['focusWord'])) {
             $data['parts'] = [$data['focusWord']];
         }
-        // Always try Ordbøkene for expressions (and for forms/definition/examples if они пустые).
+        // Always try Ordbokene for expressions (normalized to infinitive without å).
         $debugai = [];
         if ($orbokeneenabled) {
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
-            $candidates = [];
-            $fb = core_text::strtolower(trim($data['focusBaseform'] ?? ''));
-            $fw = core_text::strtolower(trim($data['focusWord'] ?? ''));
-            if ($fb !== '') { $candidates[] = $fb; }
-            if ($fw !== '' && $fw !== $fb) { $candidates[] = $fw; }
-            // Если AI ничего не дал, пробуем глагол + seg + предлог из текста.
-            if (empty($candidates)) {
-                $tokens = array_values(array_filter(preg_split('/\\s+/', core_text::strtolower($fronttext))));
-                $preps = ['om','over','for','med','til','av','på','i'];
-                $segidx = array_search('seg', $tokens, true);
-                if ($segidx !== false) {
-                    foreach ($preps as $p) {
-                        $prepidx = array_search($p, $tokens, true);
-                        if ($prepidx !== false && $segidx < $prepidx) {
-                            $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($clickedword, []);
-                            $lemma = core_text::strtolower($analysis['selected']['baseform'] ?? $clickedword);
-                            $candidates[] = trim($lemma . ' seg ' . $p);
-                            break;
-                        }
-                    }
+            $ordbokene = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $data['focusBaseform'] ?? '', $lang);
+            if ($ordbokene) {
+                $data['ordbokene'] = $ordbokene;
+                $data['focusWord'] = $ordbokene['expression'];
+                $data['focusBaseform'] = $ordbokene['expression'];
+                $data['focusExpression'] = $ordbokene['expression'];
+                if (empty($data['forms']) && !empty($ordbokene['forms'])) {
+                    $data['forms'] = $ordbokene['forms'];
                 }
-            }
-            $candidates = array_values(array_unique(array_filter($candidates)));
-            $debugai['ordbokene'] = ['candidates' => $candidates, 'tries' => []];
-            foreach ($candidates as $cand) {
-                $lookup = \mod_flashcards\local\ordbokene_client::search_expressions($cand, $lang);
-                $debugai['ordbokene']['tries'][] = [
-                    'span' => $cand,
-                    'ok' => !empty($lookup),
-                    'expressions' => $lookup['expressions'] ?? [],
-                    'url' => $lookup['dictmeta']['url'] ?? ''
-                ];
-            if (!empty($lookup)) {
-                if (!empty($lookup['expressions'])) {
-                    $expr = $lookup['expressions'][0];
-                    $data['focusWord'] = $expr;
-                    $data['focusBaseform'] = $expr;
-                    } else if (!empty($lookup['baseform'])) {
-                        $data['focusWord'] = $lookup['baseform'];
-                        $data['focusBaseform'] = $lookup['baseform'];
-                    }
-                    if (empty($data['forms']) && !empty($lookup['forms'])) {
-                        $data['forms'] = $lookup['forms'];
-                    }
-                    // Let AI pick the best-fitting definition from Ordbokene options using context.
-                    $chosenmeaning = null;
-                    if (!empty($lookup['meanings'])) {
-                        if (count($lookup['meanings']) === 1) {
-                            $chosenmeaning = $lookup['meanings'][0];
-                        } else {
-                            try {
-                                $picked = $helper->choose_best_definition($fronttext, $data['focusWord'] ?? $clickedword, $lookup['meanings'], $language, $userid);
-                                if (!empty($picked['definition'])) {
-                                    $chosenmeaning = $picked['definition'];
-                                    $debugai['ordbokene']['chosen_meaning'] = $picked;
-                                }
-                            } catch (\Throwable $pickex) {
-                                $debugai['ordbokene']['chosen_error'] = $pickex->getMessage();
-                            }
-                        }
-                    }
-                    if (empty($data['definition']) && !empty($chosenmeaning)) {
-                        $data['definition'] = $chosenmeaning;
-                    } else if (empty($data['definition']) && !empty($lookup['meanings'])) {
-                        $data['definition'] = $lookup['meanings'][0];
-                    }
-                    if (empty($data['examples']) && !empty($lookup['examples'])) {
-                        $data['examples'] = $lookup['examples'];
-                    }
-                    if (!empty($lookup['expressions'])) {
-                        $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'])));
-                    }
-                    if (empty($data['dictmeta']) && !empty($lookup['dictmeta'])) {
-                        $data['dictmeta'] = $lookup['dictmeta'];
-                    }
-                    break;
+                if (empty($data['definition']) && !empty($ordbokene['meanings'])) {
+                    $data['definition'] = $ordbokene['meanings'][0];
                 }
+                if (empty($data['examples']) && !empty($ordbokene['examples'])) {
+                    $data['examples'] = $ordbokene['examples'];
+                }
+                $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$ordbokene['expression']])));
+                if (empty($data['analysis']) || !is_array($data['analysis'])) {
+                    $data['analysis'] = [];
+                }
+                if (!empty($ordbokene['meanings'][0])) {
+                    $data['analysis'][] = [
+                        'text' => $ordbokene['expression'],
+                        'translation' => $ordbokene['meanings'][0],
+                    ];
+                }
+                $debugai['ordbokene'] = ['expression' => $ordbokene['expression'], 'url' => $ordbokene['dictmeta']['url'] ?? ''];
+            } else {
+                $debugai['ordbokene'] = ['expression' => null];
             }
-            // Fallback: if nothing chosen, try direct lookup of focusWord/baseform.
-            if (empty($data['definition']) && !empty($data['focusWord'])) {
+            if ((!$ordbokene || empty($ordbokene['meanings'])) && !empty($data['focusWord'])) {
                 $fallback = \mod_flashcards\local\ordbokene_client::lookup($data['focusWord'], $lang);
                 $debugai['ordbokene']['fallback'] = [
                     'word' => $data['focusWord'],
@@ -841,6 +791,7 @@ switch ($action) {
                 }
             }
         }
+
         if (empty($data['gender']) && !empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
         }
@@ -851,70 +802,6 @@ switch ($action) {
         }
         echo json_encode($resp);
         break;
-
-// Build expression candidates (n-grams + templates with gaps).
-function mod_flashcards_build_expression_candidates(string $fronttext, string $base): array {
-    $cands = [];
-    $base = trim(core_text::strtolower($base));
-    $front = trim(core_text::strtolower($fronttext));
-    $rawtokens = array_values(array_filter(preg_split('/\\s+/', $front)));
-    // Лемматизируем простейшим способом: если в ordbank есть лемма — берём её, иначе слово как есть.
-    $tokens = [];
-    global $DB;
-    foreach ($rawtokens as $t) {
-        $clean = trim($t, " \t\n\r\0\x0B,.;:!?«»\"'()[]{}");
-        if ($clean === '') {
-            continue;
-        }
-        $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($clean, []);
-        $lemma = $analysis['selected']['baseform'] ?? null;
-        $tokens[] = $lemma ? core_text::strtolower($lemma) : $clean;
-    }
-    // Удаляем стоп-слова/звуки
-    $stop = ['uhm','hva','jeg','du','han','hun','det','som','og','i','på','til','på','av','en','ei','et','er','var','har','hadde','skal','skulle','vil','ville','kan','kunne','må','måtte'];
-    $tokens = array_values(array_filter($tokens, fn($t) => !in_array($t, $stop, true)));
-    // Base candidates
-    if ($base !== '') {
-        $cands[] = $base;
-    }
-    if ($base) {
-        $cands[] = trim($base . ' over');
-        $cands[] = trim('være ' . $base . ' over');
-    }
-    // n-grams length 2..5
-    $len = count($tokens);
-    for ($n = 5; $n >= 2; $n--) {
-        for ($i = 0; $i + $n <= $len; $i++) {
-            $span = trim(implode(' ', array_slice($tokens, $i, $n)));
-            if ($span) {
-                $cands[] = $span;
-            }
-        }
-    }
-    // Templates with up to 2 gaps around the base (если base входит в текст)
-    $positions = [];
-    foreach ($tokens as $i => $t) {
-        if ($t === $base) {
-            $positions[] = $i;
-        }
-    }
-    foreach ($positions as $pos) {
-        for ($gap = 1; $gap <= 2; $gap++) {
-            $start = max(0, $pos - 1);
-            $end = min($len, $pos + 2 + $gap);
-            if ($end > $start) {
-                $slice = array_slice($tokens, $start, $end - $start);
-                $cands[] = trim(implode(' ', $slice));
-            }
-        }
-    }
-    $cands = array_values(array_unique(array_filter($cands)));
-    // Сортируем по длине (длинные сначала)
-    usort($cands, function($a, $b){
-        return strlen($b) <=> strlen($a);
-    });
-    return $cands;
-}
 
     case 'ordbokene_suggest':
         $raw = file_get_contents('php://input');
@@ -945,18 +832,63 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $limit = 12;
         $results = [];
         $seen = [];
+        $ordbokeneindex = [];
+        $mergeordbokene = function(array $item) use (&$results, &$ordbokeneindex, $limit): bool {
+            $lemma = trim((string)($item['lemma'] ?? ''));
+            if ($lemma === '') {
+                return true;
+            }
+            $langparts = [];
+            if (!empty($item['langs']) && is_array($item['langs'])) {
+                $langparts = array_values(array_filter(array_map(function($v){
+                    return core_text::strtolower(trim((string)$v));
+                }, $item['langs'])));
+            }
+            $dictval = trim((string)($item['dict'] ?? ''));
+            if ($dictval !== '') {
+                $langparts[] = core_text::strtolower($dictval);
+            }
+            $langparts = array_values(array_unique(array_filter($langparts)));
+            $lemmakey = core_text::strtolower($lemma);
+            if (isset($ordbokeneindex[$lemmakey])) {
+                $idx = $ordbokeneindex[$lemmakey];
+                $existinglangs = [];
+                if (!empty($results[$idx]['langs']) && is_array($results[$idx]['langs'])) {
+                    $existinglangs = array_values(array_filter(array_map('strval', $results[$idx]['langs'])));
+                }
+                $merged = array_values(array_unique(array_merge($existinglangs, $langparts)));
+                if (!empty($merged)) {
+                    $results[$idx]['langs'] = $merged;
+                }
+                return true;
+            }
+            if (count($results) >= $limit) {
+                return false;
+            }
+            $entry = [
+                'lemma' => $lemma,
+                'dict' => 'ordbokene',
+                'source' => 'ordbokene',
+            ];
+            if (!empty($item['id'])) {
+                $entry['id'] = $item['id'];
+            }
+            if (!empty($item['url'])) {
+                $entry['url'] = $item['url'];
+            }
+            if (!empty($langparts)) {
+                $entry['langs'] = $langparts;
+            }
+            $results[] = $entry;
+            $ordbokeneindex[$lemmakey] = count($results) - 1;
+            return true;
+        };
 
         // Suggest endpoint (includes expressions/inflections) first.
         $suggestRemote = flashcards_fetch_ordbokene_suggest($query, $limit);
         $suggestRemote = flashcards_filter_multiword($suggestRemote, $query);
         foreach ($suggestRemote as $item) {
-            $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
-            if ($key === '|' || isset($seen[$key])) {
-                continue;
-            }
-            $seen[$key] = true;
-            $results[] = $item;
-            if (count($results) >= $limit) {
+            if (!$mergeordbokene($item)) {
                 break;
             }
         }
@@ -965,13 +897,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         $expressions = flashcards_fetch_ordbokene_expressions($query, 6);
         $expressions = flashcards_filter_multiword($expressions, $query);
         foreach ($expressions as $item) {
-            $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
-            if ($key === '|' || isset($seen[$key])) {
-                continue;
-            }
-            $seen[$key] = true;
-            $results[] = $item;
-            if (count($results) >= $limit) {
+            if (!$mergeordbokene($item)) {
                 break;
             }
         }
@@ -980,13 +906,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         if (count($results) < $limit) {
             $lookupspans = flashcards_fetch_ordbokene_lookup_spans($query, $limit);
             foreach ($lookupspans as $item) {
-                $key = core_text::strtolower(($item['lemma'] ?? '') . '|ordbokene');
-                if ($key === '|' || isset($seen[$key])) {
-                    continue;
-                }
-                $seen[$key] = true;
-                $results[] = $item;
-                if (count($results) >= $limit) {
+                if (!$mergeordbokene($item)) {
                     break;
                 }
             }
@@ -997,19 +917,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             $remote = flashcards_fetch_ordbokene_suggestions($query, $limit);
             $remote = flashcards_filter_multiword($remote, $query);
             foreach ($remote as $item) {
-                $key = core_text::strtolower(($item['lemma'] ?? '') . '|' . ($item['dict'] ?? ''));
-                if ($key === '|' || isset($seen[$key])) {
-                    continue;
-                }
-                $seen[$key] = true;
-                $results[] = [
-                    'lemma' => $item['lemma'] ?? '',
-                    'dict' => $item['dict'] ?? 'ordbokene',
-                    'id' => $item['id'] ?? null,
-                    'url' => $item['url'] ?? '',
-                    'source' => 'ordbokene',
-                ];
-                if (count($results) >= $limit) {
+                if (!$mergeordbokene($item)) {
                     break;
                 }
             }
@@ -1150,89 +1058,74 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
                     'ambiguous' => true,
                 ];
             }
-            // Optionally enrich with ordbokene expressions/meanings.
+            // Optionally enrich with ordbokene expressions/meanings (normalized).
             $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
             $ordbokene_debug = [];
             if ($orbokeneenabled) {
                 $lang = 'begge';
                 $ordbokene_debug['enabled'] = true;
-                $wordsfront = preg_split('/\\s+/', core_text::strtolower($fronttext));
-                $lowerword = core_text::strtolower($word);
-                $candidates = [];
-                // base candidates
-                $candidates[] = $lowerword;
-                $candidates[] = trim($lowerword . ' over');
-                $candidates[] = trim('være ' . $lowerword . ' over');
-                // n-grams around the clicked word (length 2-4)
-                if (!empty($wordsfront)) {
-                    $positions = [];
-                    foreach ($wordsfront as $i => $w) {
-                        if ($w === $lowerword) {
-                            $positions[] = $i;
-                        }
+                $ordbokene = mod_flashcards_resolve_ordbokene_expression($fronttext, $word, $data['selected']['baseform'] ?? $word, $lang);
+                if ($ordbokene) {
+                    $ordbokene_debug['expression'] = $ordbokene['expression'];
+                    $ordbokene_debug['url'] = $ordbokene['dictmeta']['url'] ?? '';
+                    $data['ordbokene'] = $ordbokene;
+                    $data['focusExpression'] = $ordbokene['expression'];
+                    $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$ordbokene['expression']])));
+                    if (empty($data['definition']) && !empty($ordbokene['meanings'])) {
+                        $data['definition'] = $ordbokene['meanings'][0];
                     }
-                    foreach ($positions as $idx) {
-                        for ($len = 4; $len >= 2; $len--) {
-                            $start = max(0, $idx - ($len - 1));
-                            for ($i = $start; $i <= $idx; $i++) {
-                                if ($i + $len <= count($wordsfront)) {
-                                    $span = trim(implode(' ', array_slice($wordsfront, $i, $len)));
-                                    if ($span && !in_array($span, $candidates, true)) {
-                                        $candidates[] = $span;
-                                    }
-                                }
-                            }
-                        }
+                    if (empty($data['examples']) && !empty($ordbokene['examples'])) {
+                        $data['examples'] = $ordbokene['examples'];
                     }
-                }
-                $candidates = array_values(array_unique(array_filter($candidates)));
-                $ordbokene_debug['candidates'] = $candidates;
-
-                foreach ($candidates as $cand) {
-                    try {
-                        $lookup = \mod_flashcards\local\ordbokene_client::lookup($cand, $lang);
-                        $ordbokene_debug['tries'][] = [
-                            'span' => $cand,
-                            'ok' => !empty($lookup),
-                            'expressions' => $lookup['expressions'] ?? [],
-                            'url' => $lookup['dictmeta']['url'] ?? ''
-                        ];
-                        if (!empty($lookup)) {
-                            $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], $lookup['expressions'] ?? [$cand])));
-                            if (empty($data['selected']['wordform'])) {
-                                $data['selected']['wordform'] = $cand;
-                            }
-                            if (empty($data['selected']['baseform']) && !empty($lookup['baseform'])) {
-                                $data['selected']['baseform'] = $lookup['baseform'];
-                            }
-                            if (empty($data['forms']) && !empty($lookup['forms'])) {
-                                $data['forms'] = $lookup['forms'];
-                            }
-                            if (empty($data['definition']) && !empty($lookup['meanings'])) {
-                                $data['definition'] = $lookup['meanings'][0];
-                            }
-                            if (empty($data['examples']) && !empty($lookup['examples'])) {
-                                $data['examples'] = $lookup['examples'];
-                            }
-                            $data['dictmeta'] = $lookup['dictmeta'] ?? [];
-                            break;
-                        }
-                    } catch (\Throwable $obex) {
-                        $ordbokene_debug['tries'][] = [
-                            'span' => $cand,
-                            'ok' => false,
-                            'error' => $obex->getMessage()
+                    if (empty($data['forms']) && !empty($ordbokene['forms'])) {
+                        $data['forms'] = $ordbokene['forms'];
+                    }
+                    if (empty($data['selected']['wordform'])) {
+                        $data['selected']['wordform'] = $ordbokene['expression'];
+                    }
+                    if (empty($data['selected']['baseform'])) {
+                        $data['selected']['baseform'] = $ordbokene['expression'];
+                    }
+                    $data['selected']['baseform'] = mod_flashcards_normalize_infinitive($data['selected']['baseform']);
+                    if (empty($data['analysis']) || !is_array($data['analysis'])) {
+                        $data['analysis'] = [];
+                    }
+                    if (!empty($ordbokene['meanings'][0])) {
+                        $data['analysis'][] = [
+                            'text' => $ordbokene['expression'],
+                            'translation' => $ordbokene['meanings'][0],
                         ];
                     }
+                } else {
+                    $ordbokene_debug['expression'] = null;
                 }
-                if (empty($ordbokene_debug['tries'])) {
-                    $ordbokene_debug['tries'] = [];
+                if ((!$ordbokene || empty($ordbokene['meanings'])) && !empty($data['selected']['baseform'])) {
+                    $fallback = \mod_flashcards\local\ordbokene_client::lookup($data['selected']['baseform'], $lang);
+                    $ordbokene_debug['fallback'] = [
+                        'word' => $data['selected']['baseform'],
+                        'ok' => !empty($fallback),
+                        'url' => $fallback['dictmeta']['url'] ?? ''
+                    ];
+                    if (!empty($fallback)) {
+                        if (empty($data['definition']) && !empty($fallback['meanings'])) {
+                            $data['definition'] = $fallback['meanings'][0];
+                        }
+                        if (empty($data['examples']) && !empty($fallback['examples'])) {
+                            $data['examples'] = $fallback['examples'];
+                        }
+                        if (empty($data['forms']) && !empty($fallback['forms'])) {
+                            $data['forms'] = $fallback['forms'];
+                        }
+                        if (empty($data['dictmeta']) && !empty($fallback['dictmeta'])) {
+                            $data['dictmeta'] = $fallback['dictmeta'];
+                        }
+                    }
                 }
             } else {
                 $ordbokene_debug['enabled'] = false;
             }
 
-        if (!empty($ordbokene_debug)) {
+if (!empty($ordbokene_debug)) {
             $debug['ordbokene'] = $ordbokene_debug;
         }
         if (!$data) {

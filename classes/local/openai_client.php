@@ -118,6 +118,7 @@ RULES:
 - IMPORTANT: Only identify the pattern if the clicked word is part of the pattern keywords themselves (e.g., clicking "jo" → "jo ..., jo ..."). If the user clicked a word within the pattern (e.g., "bedre" in "jo bedre"), return just that word, NOT the pattern.
 - Output every verb or verb phrase in infinitive with a leading "å" (unless an article is required instead); never leave it in past/participle form.
 - Prefer the idiomatic/contextual meaning of the expression over literal tense descriptions.
+- Provide a compact grammar+meaning breakdown that lists the key lemmas or fixed expressions in the sentence (including the one that contains the clicked token) and give their translations in the learner's interface language.
 - Always use the entire sentence context (lexical choices, syntax, and speaker intent) to decide the focus word/expression's explanation and translation; point out any contextual nuance that shifts the sense so learners understand why you chose that meaning.
 - Take responsibility as a Norwegian tutor by delivering natural, informative, level-appropriate explanations and examples; polish every sentence so it is grammatically correct and idiomatic before output.
 - IMPORTANT: Carefully check the ENTIRE learner sentence for ALL types of errors (spelling, grammar, word choice, verb forms, prepositions, articles, word order). When you find ANY error, provide a corrected version with ALL mistakes fixed, not just one. List each specific error briefly after the correction IN {$targetlang} LANGUAGE.
@@ -127,6 +128,7 @@ RULES:
 FORMAT:
 WORD: <base form with article or "å">
 BASE-FORM: <lemma without any articles or "å" prefix - just the bare word>
+FOCUS-PHRASE: <if the clicked token belongs to a fixed expression, give the infinitive/lemma expression without "å"; otherwise repeat WORD stripped of articles/å>
 POS: <one of substantiv|adjektiv|pronomen|determinativ|verb|adverb|preposisjon|konjunksjon|subjunksjon|interjeksjon|phrase|other>
 GENDER: <hankjønn|hunkjønn|intetkjønn|-> (nouns only)
 EXPL-NO: <simple Norwegian explanation>
@@ -137,6 +139,7 @@ EX2: <NO sentence that keeps the focus word/expression central in a different co
 EX3: <NO sentence demonstrating another everyday use of the focus word/expression> | <{$targetlang}>
 FORMS: <other useful lexical forms (verb/noun/adj variants) with tiny NO gloss + {$targetlang}>
 CORR: <fully corrected sentence> — <list each error in {$targetlang}: "bruk"→"bruke" (explanation in {$targetlang}); "tit"→"tid" (explanation in {$targetlang}); etc.> (include this line whenever you spot ANY error in the sentence, not just when 90% sure)
+ANALYSIS: <semicolons separated list of key lemmas or fixed expressions with translations, format: token | translation in {$targetlang}; token2 | translation; ...>
 
 NOTES:
 - Focus on everyday, high-frequency uses.
@@ -201,11 +204,13 @@ PROMPT;
         return [
             'focus' => core_text::substr($focus, 0, 200),
             'baseform' => core_text::substr($parsed['baseform'] ?: $focus, 0, 200),
+            'focusphrase' => core_text::substr($parsed['focusphrase'] ?? '', 0, 200),
             'pos' => $this->normalize_pos($parsed['pos'] ?? '', $focus),
             'definition' => core_text::substr($parsed['definition'] ?? '', 0, 600),
             'translation' => core_text::substr($parsed['translation'] ?? '', 0, 400),
             'translation_lang' => $uilang, // Add language code to result
             'gender' => $this->normalize_gender($parsed['gender'] ?? ''),
+            'analysis' => $parsed['analysis'] ?? [],
             'collocations' => $parsed['collocations'] ?? [],
             'examples' => $parsed['examples'] ?? [],
             'forms' => $parsed['forms'] ?? '',
@@ -493,10 +498,12 @@ PROMPT;
         return [
             'word' => $data['WORD'] ?? '',
             'baseform' => $data['BASE-FORM'] ?? '',
+            'focusphrase' => $data['FOCUS-PHRASE'] ?? '',
             'pos' => $data['POS'] ?? '',
             'definition' => $data['EXPL-NO'] ?? '',
             'translation' => $data[$translationlabel] ?? ($data['TR-UK'] ?? ''),
             'gender' => $data['GENDER'] ?? '',
+            'analysis' => $this->parse_analysis_pairs($data['ANALYSIS'] ?? ''),
             'collocations' => $this->parse_collocations($data['COLL'] ?? ''),
             'examples' => $this->collect_examples($data),
             'forms' => $data['FORMS'] ?? '',
@@ -533,6 +540,35 @@ PROMPT;
             $examples[] = core_text::substr(trim($data[$key]), 0, 240);
         }
         return $examples;
+    }
+
+    protected function parse_analysis_pairs(string $text): array {
+        $text = trim($text);
+        if ($text === '') {
+            return [];
+        }
+        $entries = preg_split('/[;\\n]+/u', $text);
+        $out = [];
+        foreach ($entries as $entry) {
+            $entry = trim($entry);
+            if ($entry === '') {
+                continue;
+            }
+            $parts = array_map('trim', explode('|', $entry, 2));
+            $token = core_text::substr($parts[0] ?? '', 0, 160);
+            $translation = core_text::substr($parts[1] ?? '', 0, 160);
+            if ($token === '') {
+                continue;
+            }
+            $out[] = [
+                'text' => $token,
+                'translation' => $translation,
+            ];
+            if (count($out) >= 10) {
+                break;
+            }
+        }
+        return $out;
     }
 
     protected function parse_collocations(string $text): array {

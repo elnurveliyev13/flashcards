@@ -1,9 +1,10 @@
 <?php
-// Utility for Ordbøkene expression candidate building.
+// Utility helpers for Ordbøkene expression discovery.
 
 defined('MOODLE_INTERNAL') || die();
 
 use mod_flashcards\local\ordbank_helper;
+use mod_flashcards\local\ordbokene_client;
 
 /**
  * Build expression candidates (lemmas + constrained n-grams starting with baselemma).
@@ -25,6 +26,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
             $baselemma = $guess;
         }
     }
+    $baselemma = mod_flashcards_normalize_infinitive($baselemma);
 
     $front = trim(core_text::strtolower($fronttext));
 
@@ -37,12 +39,16 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
     }
 
-    // Lemmatize via ordbank_helper; fallback to token; also apply the "er->e" guess.
+    // Lemmatize via ordbank_helper; fallback to token; also apply the "er->e" guess and reflexive normalization.
     $lemmas = [];
+    $reflexives = ['seg', 'meg', 'deg', 'oss', 'dere', 'dem'];
     foreach ($rawtokens as $t) {
         $analysis = ordbank_helper::analyze_token($t, []);
         $lemma = $analysis['selected']['baseform'] ?? null;
         $lem = $lemma ? core_text::strtolower($lemma) : $t;
+        if (in_array($lem, $reflexives, true)) {
+            $lem = 'seg';
+        }
         if ($lem === $t && preg_match('~er$~', $t)) {
             $guess = preg_replace('~er$~', 'e', $t);
             if ($guess && $guess !== $lem) {
@@ -53,7 +59,7 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     }
 
     // Prepositions actually present in text (fallback to om/over).
-    $preplist = ['over','om','for','med','til','av','på','i'];
+    $preplist = ['over','om','for','med','til','av','på','pa','i'];
     $prepsText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
     if (empty($prepsText)) {
         $prepsText = ['om','over'];
@@ -87,8 +93,8 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
     };
     $cands = array_merge($cands, $build_ngrams($rawtokens, $baselemma), $build_ngrams($lemmas, $baselemma));
 
-    // Reflexive patterns: baselemma + ' seg ' + prep (if seg+prep exist in text).
-    $hasSeg = in_array('seg', $rawtokens, true);
+    // Reflexive patterns: baselemma + ' seg ' + prep (if seg-like + prep exist in text).
+    $hasSeg = count(array_intersect($reflexives, $rawtokens)) > 0;
     $prepsInText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
     if ($hasSeg && !empty($prepsInText)) {
         foreach ($prepsInText as $prep) {
@@ -120,4 +126,54 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         return strlen($b) <=> strlen($a);
     });
     return $cands;
+}
+
+/**
+ * Normalize an expression to infinitive (remove leading "å" / whitespace).
+ *
+ * @param string $value
+ * @return string
+ */
+function mod_flashcards_normalize_infinitive(string $value): string {
+    $clean = preg_replace('/^å\s+/iu', '', trim($value));
+    $clean = preg_replace('/\s+/', ' ', $clean);
+    return trim($clean);
+}
+
+/**
+ * Try to resolve a multi-word expression via Ordbøkene.
+ *
+ * @param string $fronttext Full sentence (surface forms)
+ * @param string $clicked Clicked token (surface form)
+ * @param string $base Baseform/lemma if already known
+ * @param string $lang bm|nn|begge
+ * @return array|null
+ */
+function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $clicked, string $base = '', string $lang = 'begge'): ?array {
+    $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
+    $candidates = mod_flashcards_build_expression_candidates($fronttext, $base ?: $clicked);
+    foreach ($candidates as $cand) {
+        $norm = mod_flashcards_normalize_infinitive($cand);
+        if ($norm === '') {
+            continue;
+        }
+        try {
+            $lookup = ordbokene_client::lookup($norm, $lang);
+        } catch (\Throwable $e) {
+            continue;
+        }
+        if (!empty($lookup)) {
+            $expression = mod_flashcards_normalize_infinitive($lookup['baseform'] ?? $norm);
+            return [
+                'expression' => $expression,
+                'meanings' => $lookup['meanings'] ?? [],
+                'examples' => $lookup['examples'] ?? [],
+                'forms' => $lookup['forms'] ?? [],
+                'dictmeta' => $lookup['dictmeta'] ?? [],
+                'source' => 'ordbokene',
+                'citation' => '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+            ];
+        }
+    }
+    return null;
 }

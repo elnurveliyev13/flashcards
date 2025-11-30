@@ -45,11 +45,22 @@ class ai_helper {
             'level' => $level,
         ]);
 
+        $focusphrase = trim($focusdata['focusphrase'] ?? '');
+        if ($focusphrase !== '') {
+            $focusphrase = $this->strip_articles_and_markers($focusphrase);
+        }
+
         $focusword = trim($focusdata['focus'] ?? '') ?: $clickedword;
         $focusword = $this->enforce_clicked_focus($focusword, $clickedword);
+        if ($focusphrase !== '') {
+            $focusword = $focusphrase;
+        }
 
         // Base form: ALWAYS extract single word from clicked word (no articles, no å)
         $baseform = $this->extract_base_form($clickedword, $focusword);
+        if ($focusphrase !== '') {
+            $baseform = $this->strip_articles_and_markers($focusphrase);
+        }
 
         $pos = trim($focusdata['pos'] ?? '');
 
@@ -61,18 +72,26 @@ class ai_helper {
             'translation_lang' => $focusdata['translation_lang'] ?? $language,
         ];
 
-        $result['focusWord'] = $this->build_lemma_focus_word(
-            $result['focusWord'],
-            $result['focusBaseform'],
-            $result['pos'],
-            $result['gender'] ?? ''
-        );
+        if ($focusphrase === '') {
+            $result['focusWord'] = $this->build_lemma_focus_word(
+                $result['focusWord'],
+                $result['focusBaseform'],
+                $result['pos'],
+                $result['gender'] ?? ''
+            );
+        } else {
+            $result['focusWord'] = $focusphrase;
+            $result['focusBaseform'] = $focusphrase;
+        }
 
         if (!empty($focusdata['definition'])) {
             $result['definition'] = $focusdata['definition'];
         }
         if (!empty($focusdata['translation'])) {
             $result['translation'] = $focusdata['translation'];
+        }
+        if (!empty($focusdata['analysis']) && is_array($focusdata['analysis'])) {
+            $result['analysis'] = $focusdata['analysis'];
         }
         if (!empty($focusdata['correction'])) {
             $result['correction'] = $focusdata['correction'];
