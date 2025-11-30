@@ -911,6 +911,10 @@ switch ($action) {
             }
         }
 
+        // Ensure focus baseform stays on the lemma (not the expression surface form).
+        if (!empty($selected['baseform'])) {
+            $data['focusBaseform'] = $selected['baseform'];
+        }
         if (empty($data['gender']) && !empty($selected['gender'])) {
             $data['gender'] = $selected['gender'];
         }

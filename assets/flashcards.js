@@ -2296,24 +2296,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ordbokeneBlock.appendChild(examplesWrap);
       }
 
-      if(info.url){
-        const link = document.createElement('a');
-        link.className = 'ordbokene-link';
-        link.href = info.url;
-        link.target = '_blank';
-        link.rel = 'noreferrer';
-        let displayUrl = info.url;
-        if (displayUrl.startsWith('https://')) {
-          displayUrl = displayUrl.slice('https://'.length);
-        } else if (displayUrl.startsWith('http://')) {
-          displayUrl = displayUrl.slice('http://'.length);
-        } else if (displayUrl.startsWith('//')) {
-          displayUrl = displayUrl.slice(2);
-        }
-        link.textContent = displayUrl;
-        ordbokeneBlock.appendChild(link);
-      }
-
       const citation = document.createElement('div');
       citation.className = 'ordbokene-citation';
       citation.textContent = info.citation || aiStrings.ordbokeneCitation || '';
@@ -2325,7 +2307,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       if(payload){
-        renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
+        // Prefer Ordbokene-picked expression/meaning for analysis and examples.
+        if(payload.ordbokene && payload.ordbokene.expression){
+          const chosenIdx = Number.isInteger(payload.ordbokene.chosenMeaning) ? payload.ordbokene.chosenMeaning : 0;
+          const chosenMeaning = (Array.isArray(payload.ordbokene.meanings) && payload.ordbokene.meanings[chosenIdx]) ? payload.ordbokene.meanings[chosenIdx] : (payload.definition || payload.translation || '');
+          const analysis = [{
+            text: payload.ordbokene.expression,
+            translation: chosenMeaning || ''
+          }];
+          renderSentenceAnalysis(analysis);
+          // Force examples to the chosen dictionary examples when available.
+          if(Array.isArray(payload.ordbokene.examples) && payload.ordbokene.examples.length){
+            payload.examples = payload.ordbokene.examples;
+          }
+        } else {
+          renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
+        }
         renderOrdbokeneBlock(payload.ordbokene || null);
       } else {
         renderSentenceAnalysis([]);
