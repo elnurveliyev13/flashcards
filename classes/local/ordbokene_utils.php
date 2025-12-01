@@ -149,19 +149,43 @@ function mod_flashcards_normalize_infinitive(string $value): string {
 function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $clicked, string $base = '', string $lang = 'begge'): ?array {
     $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
     $candidates = mod_flashcards_build_expression_candidates($fronttext, $base ?: $clicked);
-    $sentTokens = array_filter(preg_split('/\s+/', core_text::strtolower($fronttext)));
+    $tokenize = function(string $text): array {
+        $tokens = [];
+        foreach (array_filter(preg_split('/\s+/', core_text::strtolower($text))) as $tok) {
+            $clean = trim($tok, " \t\n\r\0\x0B,.;:!?<>\"'()[]{}");
+            if ($clean !== '') {
+                $tokens[] = $clean;
+            }
+        }
+        return $tokens;
+    };
+    $tokensInOrder = function(array $needle, array $haystack): bool {
+        if (empty($needle)) {
+            return false;
+        }
+        $pos = 0;
+        $len = count($haystack);
+        foreach ($needle as $tok) {
+            while ($pos < $len && $haystack[$pos] !== $tok) {
+                $pos++;
+            }
+            if ($pos >= $len) {
+                return false;
+            }
+            $pos++;
+        }
+        return true;
+    };
+    $sentTokens = $tokenize($fronttext);
     foreach ($candidates as $cand) {
         $norm = mod_flashcards_normalize_infinitive($cand);
         if ($norm === '') {
             continue;
         }
-        // Skip expressions whose tokens are not present in the sentence to avoid phantom particles (e.g., 'handle om' when no 'om').
-        $exprTokens = array_filter(preg_split('/\s+/', $norm));
-        if (!empty($exprTokens)) {
-            $missing = array_diff($exprTokens, $sentTokens);
-            if (!empty($missing)) {
-                continue;
-            }
+        // Skip expressions whose tokens are not present in the sentence in the same order to avoid phantom combinations (e.g., 'slå til' when 'til' precedes 'slå').
+        $exprTokens = $tokenize($norm);
+        if (!$tokensInOrder($exprTokens, $sentTokens)) {
+            continue;
         }
         try {
             $lookup = ordbokene_client::lookup($norm, $lang);
