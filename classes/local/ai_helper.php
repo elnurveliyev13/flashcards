@@ -482,47 +482,30 @@ class ai_helper {
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher. Review student texts carefully, identify grammatical errors, and assess naturalness. Think step-by-step and double-check your analysis before responding.";
+        // First request: Find errors
+        $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail.";
 
-        $userprompt = "A student wrote this Norwegian sentence:
+        $userprompt1 = "Check this Norwegian sentence for ALL grammatical errors:
 
 \"$text\"
 
-TASK: Analyze this text in two stages:
+Look for:
+- Wrong prepositions in verb-preposition collocations (e.g., 'klar PÅ' should be 'klar OVER')
+- Word order errors in subordinate clauses (e.g., 'ikke' position)
+- Verb forms, tenses, agreement
+- Spelling errors
 
-STAGE 1 - Find grammatical errors:
-Check for: word order, verb forms, prepositions, spelling, agreement
-Rules:
-- Fix ONLY actual grammatical errors
-- Keep all other words unchanged
-- Be precise in explanations (e.g., \"'ikke' must come BEFORE the verb in subordinate clauses\")
+IMPORTANT:
+- Provide ALL explanations in $langname language
+- Fix ONLY grammatical errors - do NOT add/remove/rephrase words
+- Be very careful with verb-preposition combinations
 
-STAGE 2 - Assess naturalness:
-After fixing errors, check if the corrected sentence sounds natural to a native speaker.
-- If it sounds unnatural or awkward, provide a better suggestion in a separate 'suggestion' field
-- Only suggest if there's a CLEARLY better way that natives would use
-- Do NOT suggest minor stylistic changes
-
-STAGE 3 - Self-check:
-Review your corrections:
-- Are all errors actually errors?
-- Did you accidentally add/remove words?
-- Are your explanations clear and accurate?
-- Is your suggestion (if any) truly more natural?
-
-Respond with valid JSON in $langname:
+Respond with valid JSON (all text in $langname):
 {
   \"hasErrors\": true/false,
-  \"errors\": [
-    {
-      \"original\": \"incorrect part\",
-      \"corrected\": \"corrected part\",
-      \"issue\": \"clear explanation in $langname\"
-    }
-  ],
-  \"correctedText\": \"grammatically correct text\",
-  \"explanation\": \"overall explanation in $langname\",
-  \"suggestion\": \"more natural alternative (optional, only if significantly better)\"
+  \"errors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"explanation in $langname\"}],
+  \"correctedText\": \"corrected text\",
+  \"explanation\": \"summary in $langname\"
 }";
 
         $client = new openai_client();
@@ -535,61 +518,114 @@ Respond with valid JSON in $langname:
             ];
         }
 
-        // Use the same pattern as other methods in openai_client
-        $payload = [
+        // STAGE 1: First API call - Find errors
+        $payload1 = [
             'model' => 'gpt-4o-mini',
-            'temperature' => 0.4,
+            'temperature' => 0.3,
             'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $systemprompt,
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $userprompt,
-                ],
+                ['role' => 'system', 'content' => $systemprompt1],
+                ['role' => 'user', 'content' => $userprompt1],
             ],
         ];
 
         try {
-            // Call protected request method via reflection
             $reflection = new \ReflectionClass($client);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
-            $response = $method->invoke($client, $payload);
 
-            // Record usage
+            // First request
+            $response1 = $method->invoke($client, $payload1);
+
             $recordMethod = $reflection->getMethod('record_usage');
             $recordMethod->setAccessible(true);
-            $recordMethod->invoke($client, $userid, $response->usage ?? null);
+            $recordMethod->invoke($client, $userid, $response1->usage ?? null);
 
-            $content = trim($response->choices[0]->message->content ?? '');
-            if ($content === '') {
-                return [
-                    'hasErrors' => false,
-                    'errors' => [],
-                    'correctedText' => $text,
-                    'explanation' => '',
-                ];
+            $content1 = trim($response1->choices[0]->message->content ?? '');
+            if ($content1 === '') {
+                return ['hasErrors' => false, 'errors' => [], 'correctedText' => $text, 'explanation' => ''];
             }
 
-            // Extract JSON from response
-            $json = null;
-            if (preg_match('~\{.*\}~s', $content, $m)) {
-                $json = $m[0];
+            // Parse first response
+            $json1 = null;
+            if (preg_match('~\{.*\}~s', $content1, $m)) {
+                $json1 = $m[0];
             }
-            $result = $json ? json_decode($json, true) : json_decode($content, true);
+            $result1 = $json1 ? json_decode($json1, true) : json_decode($content1, true);
 
-            if (!is_array($result)) {
-                return [
-                    'hasErrors' => false,
-                    'errors' => [],
-                    'correctedText' => $text,
-                    'explanation' => '',
-                ];
+            if (!is_array($result1) || !isset($result1['hasErrors'])) {
+                return ['hasErrors' => false, 'errors' => [], 'correctedText' => $text, 'explanation' => ''];
             }
 
-            return $result;
+            // If no errors found, return immediately
+            if (!$result1['hasErrors']) {
+                return $result1;
+            }
+
+            // STAGE 2: Second API call - Double-check and suggest natural alternative
+            $correctedText = $result1['correctedText'] ?? $text;
+
+            $systemprompt2 = "You are a native Norwegian speaker. Review corrections and assess naturalness.";
+
+            $userprompt2 = "Original sentence: \"$text\"
+Corrected sentence: \"$correctedText\"
+
+TASK:
+1. Double-check: Are there ANY other errors that were missed? If yes, add them.
+2. Is the corrected sentence natural for native speakers? If not, suggest a better alternative.
+
+IMPORTANT:
+- Provide ALL text in $langname language
+- Suggestion should ONLY appear if there's a significantly more natural way to say this
+- Do NOT suggest minor style changes
+
+Respond with valid JSON (all text in $langname):
+{
+  \"additionalErrors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"explanation\"}],
+  \"suggestion\": \"more natural alternative or empty string\"
+}";
+
+            $payload2 = [
+                'model' => 'gpt-4o-mini',
+                'temperature' => 0.5,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemprompt2],
+                    ['role' => 'user', 'content' => $userprompt2],
+                ],
+            ];
+
+            // Second request
+            $response2 = $method->invoke($client, $payload2);
+            $recordMethod->invoke($client, $userid, $response2->usage ?? null);
+
+            $content2 = trim($response2->choices[0]->message->content ?? '');
+            $json2 = null;
+            if (preg_match('~\{.*\}~s', $content2, $m)) {
+                $json2 = $m[0];
+            }
+            $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
+
+            // Merge results
+            $finalResult = $result1;
+
+            if (is_array($result2)) {
+                // Add additional errors if found
+                if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
+                    $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
+                    // Update correctedText if there were additional fixes
+                    foreach ($result2['additionalErrors'] as $err) {
+                        if (isset($err['original']) && isset($err['corrected'])) {
+                            $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                        }
+                    }
+                }
+
+                // Add suggestion if present
+                if (!empty($result2['suggestion'])) {
+                    $finalResult['suggestion'] = $result2['suggestion'];
+                }
+            }
+
+            return $finalResult;
         } catch (\Exception $e) {
             error_log('Error in check_norwegian_text: ' . $e->getMessage());
             return [
