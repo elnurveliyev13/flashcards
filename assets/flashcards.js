@@ -1924,8 +1924,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       frontSuggestToggle.classList.toggle('collapsed', collapsed);
       frontSuggestToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      const icon = collapsed ? '▸' : '▾';
-      frontSuggestToggle.innerHTML = `<span aria-hidden="true">${icon}</span>`;
+      frontSuggestToggle.innerHTML = `<span aria-hidden="true">▲</span>`;
     };
     if(frontSuggest){
       frontSuggest.classList.add('front-suggest-has-toggle');
@@ -2105,7 +2104,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const dict = document.createElement('span');
         dict.className = 'dict';
         const dictInfo = formatDictLabel(item);
-        dict.textContent = dictInfo.source || '';
+        const label = dictInfo.source || '';
+        dict.textContent = dictInfo.langLabel ? `${label} (${dictInfo.langLabel})` : label;
         if(dictInfo.langLabel){
           dict.title = dictInfo.langLabel;
         }else{
