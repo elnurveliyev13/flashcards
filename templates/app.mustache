@@ -447,7 +447,12 @@
           </div>
           <div class="card-toolbar-actions">
             <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">&#128220;</button>
-            <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">&#9998;</button>
+            <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">
+              <svg role="presentation" focusable="false" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0L14.8 4.34l3.75 3.75 2.16-2.16z"/>
+              </svg>
+              <span class="sr-only">{{#str}} title_edit, mod_flashcards {{/str}}</span>
+            </button>
             <button id="btnDel" class="iconbtn cross hidden" title="{{#str}} title_del, mod_flashcards {{/str}}" aria-label="{{#str}} title_del, mod_flashcards {{/str}}">&#128465;</button>
           </div>
         </div>
