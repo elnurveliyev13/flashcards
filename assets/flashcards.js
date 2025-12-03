@@ -9891,8 +9891,8 @@ function renderComparisonResult(resultEl, comparison){
         return;
       }
 
-      const languageSelect = $('#languageSelector');
-      const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
+      // Use interface language for explanations, NOT learning language
+      const language = currentInterfaceLang || 'en';
 
       // Show loading status
       const checkingText = t('checking_text') || 'Checking text...';
@@ -10096,8 +10096,8 @@ function renderComparisonResult(resultEl, comparison){
      * Detect grammatical constructions in sentence
      */
     async function detectConstructions(frontText, focusWord) {
-      const languageSelect = $('#languageSelector');
-      const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
+      // Use interface language for explanations, NOT learning language
+      const language = currentInterfaceLang || 'en';
 
       try {
         const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');

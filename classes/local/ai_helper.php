@@ -490,21 +490,22 @@ class ai_helper {
 \"$text\"
 
 Look for:
-- Wrong prepositions in verb-preposition collocations (e.g., 'klar PÅ' should be 'klar OVER')
-- Word order errors in subordinate clauses (e.g., 'ikke' position)
-- Verb forms, tenses, agreement
-- Spelling errors
+- Wrong prepositions (klar PÅ → klar OVER)
+- Word order in subclauses
+- Verb forms, agreement
+- Spelling
 
 IMPORTANT:
-- You MUST write ALL text in $langname language
-- For each error, provide a detailed explanation with context (e.g., for 'klar på', explain that 'be aware of' translates as 'være klar over', not 'være klar på')
-- Fix ONLY grammatical errors - do NOT add/remove/rephrase words
+- Write in $langname
+- Explain with EXAMPLES, not terms
+  Example: ❌ klar på → ✅ klar over (\"be aware of\" = være klar over)
+- Fix ONLY grammar - do NOT add/remove words
 
-Respond with valid JSON (ALL text MUST be in $langname):
+JSON format (in $langname):
 {
   \"hasErrors\": true/false,
-  \"errors\": [{\"original\": \"incorrect part\", \"corrected\": \"correct part\", \"issue\": \"detailed explanation in $langname with context and examples\"}],
-  \"correctedText\": \"corrected text\",
+  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"short explanation + example in $langname\"}],
+  \"correctedText\": \"fixed text\",
   \"explanation\": \"summary in $langname\"
 }";
 
@@ -566,23 +567,22 @@ Respond with valid JSON (ALL text MUST be in $langname):
 
             $systemprompt2 = "You are a native Norwegian speaker. Review corrections and assess naturalness. You MUST respond in $langname language.";
 
-            $userprompt2 = "Original sentence: \"$text\"
-Corrected sentence: \"$correctedText\"
+            $userprompt2 = "Original: \"$text\"
+Corrected: \"$correctedText\"
 
 TASK:
-1. Double-check: Are there ANY other errors that were missed? If yes, add them with detailed explanations.
-2. Is the corrected sentence natural for native speakers? If not, suggest a better alternative.
+1. Any missed errors? Add with examples.
+2. Is it natural? If not, suggest better version.
 
 IMPORTANT:
-- You MUST write ALL text in $langname language
-- For any additional errors, provide detailed context-rich explanations
-- Suggestion should ONLY appear if there's a significantly more natural way to say this
-- Do NOT suggest minor style changes
+- Write in $langname
+- Show examples, not theory
+- Suggest ONLY if significantly better
 
-Respond with valid JSON (ALL text MUST be in $langname):
+JSON (in $langname):
 {
-  \"additionalErrors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"detailed explanation in $langname\"}],
-  \"suggestion\": \"more natural alternative or empty string\"
+  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"example in $langname\"}],
+  \"suggestion\": \"natural version or empty\"
 }";
 
             $payload2 = [
