@@ -482,8 +482,9 @@ class ai_helper {
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $prompt = "You are an experienced Norwegian language teacher.
-Check the following Norwegian text for errors:
+        $systemprompt = "You are an experienced Norwegian language teacher. Check the text for errors and respond ONLY with valid JSON.";
+
+        $userprompt = "Check the following Norwegian text for errors:
 - Grammar mistakes
 - Word order issues
 - Wrong verb forms or tenses
@@ -517,13 +518,7 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format:
 }";
 
         $client = new openai_client();
-        $response = $client->chat_completion($prompt, $userid, [
-            'model' => 'gpt-4',
-            'temperature' => 0.3,
-        ]);
-
-        $result = json_decode($response, true);
-        if (!is_array($result)) {
+        if (!$client->is_enabled()) {
             return [
                 'hasErrors' => false,
                 'errors' => [],
@@ -532,7 +527,70 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format:
             ];
         }
 
-        return $result;
+        // Use the same pattern as other methods in openai_client
+        $payload = [
+            'model' => 'gpt-4o-mini',
+            'temperature' => 0.3,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemprompt,
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $userprompt,
+                ],
+            ],
+        ];
+
+        try {
+            // Call protected request method via reflection
+            $reflection = new \ReflectionClass($client);
+            $method = $reflection->getMethod('request');
+            $method->setAccessible(true);
+            $response = $method->invoke($client, $payload);
+
+            // Record usage
+            $recordMethod = $reflection->getMethod('record_usage');
+            $recordMethod->setAccessible(true);
+            $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+            $content = trim($response->choices[0]->message->content ?? '');
+            if ($content === '') {
+                return [
+                    'hasErrors' => false,
+                    'errors' => [],
+                    'correctedText' => $text,
+                    'explanation' => '',
+                ];
+            }
+
+            // Extract JSON from response
+            $json = null;
+            if (preg_match('~\{.*\}~s', $content, $m)) {
+                $json = $m[0];
+            }
+            $result = $json ? json_decode($json, true) : json_decode($content, true);
+
+            if (!is_array($result)) {
+                return [
+                    'hasErrors' => false,
+                    'errors' => [],
+                    'correctedText' => $text,
+                    'explanation' => '',
+                ];
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            error_log('Error in check_norwegian_text: ' . $e->getMessage());
+            return [
+                'hasErrors' => false,
+                'errors' => [],
+                'correctedText' => $text,
+                'explanation' => '',
+            ];
+        }
     }
 
     /**
@@ -553,7 +611,9 @@ IMPORTANT: Respond ONLY with valid JSON in this exact format:
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $prompt = "You are an expert Norwegian linguist. Analyze this Norwegian sentence and identify ALL multi-word expressions and grammatical constructions:
+        $systemprompt = "You are an expert Norwegian linguist. Analyze sentences and identify multi-word expressions. Respond ONLY with valid JSON.";
+
+        $userprompt = "Analyze this Norwegian sentence and identify ALL multi-word expressions and grammatical constructions:
 
 Sentence: \"$text\"
 Focus word (clicked by user): \"$focusword\"
@@ -601,19 +661,70 @@ If focus word is NOT part of any construction, set focusConstruction to null.
 If NO constructions found, return empty constructions array.";
 
         $client = new openai_client();
-        $response = $client->chat_completion($prompt, $userid, [
-            'model' => 'gpt-4',
-            'temperature' => 0.2,
-        ]);
-
-        $result = json_decode($response, true);
-        if (!is_array($result)) {
+        if (!$client->is_enabled()) {
             return [
                 'constructions' => [],
                 'focusConstruction' => null,
             ];
         }
 
-        return $result;
+        // Use the same pattern as other methods in openai_client
+        $payload = [
+            'model' => 'gpt-4o-mini',
+            'temperature' => 0.2,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemprompt,
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $userprompt,
+                ],
+            ],
+        ];
+
+        try {
+            // Call protected request method via reflection
+            $reflection = new \ReflectionClass($client);
+            $method = $reflection->getMethod('request');
+            $method->setAccessible(true);
+            $response = $method->invoke($client, $payload);
+
+            // Record usage
+            $recordMethod = $reflection->getMethod('record_usage');
+            $recordMethod->setAccessible(true);
+            $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+            $content = trim($response->choices[0]->message->content ?? '');
+            if ($content === '') {
+                return [
+                    'constructions' => [],
+                    'focusConstruction' => null,
+                ];
+            }
+
+            // Extract JSON from response
+            $json = null;
+            if (preg_match('~\{.*\}~s', $content, $m)) {
+                $json = $m[0];
+            }
+            $result = $json ? json_decode($json, true) : json_decode($content, true);
+
+            if (!is_array($result)) {
+                return [
+                    'constructions' => [],
+                    'focusConstruction' => null,
+                ];
+            }
+
+            return $result;
+        } catch (\Exception $e) {
+            error_log('Error in detect_constructions: ' . $e->getMessage());
+            return [
+                'constructions' => [],
+                'focusConstruction' => null,
+            ];
+        }
     }
 }
