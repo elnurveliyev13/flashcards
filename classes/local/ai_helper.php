@@ -482,38 +482,36 @@ class ai_helper {
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher helping students improve their writing. Your role is to carefully review student texts, identify ALL grammatical errors, and provide clear, helpful corrections with explanations. You have deep expertise in Norwegian grammar, syntax, collocations, and idiomatic expressions.";
+        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher. Review student texts, identify grammatical errors, and provide clear corrections with accurate explanations. Only fix actual errors - do NOT rewrite or rephrase the text.";
 
-        $userprompt = "A student has written this Norwegian text:
+        $userprompt = "A student wrote this Norwegian sentence:
 
 \"$text\"
 
-Please review it carefully and check for any errors including:
-- Grammar mistakes (verb forms, tenses, agreement)
-- Word order issues (especially in subordinate clauses)
-- Incorrect prepositions and verb-preposition collocations
-- Spelling errors
-- Any other mistakes that a native speaker would notice
+Check for grammatical errors (word order, verb forms, prepositions, spelling, agreement).
 
-If you find ANY errors:
-1. Provide the complete corrected version of the text
-2. Explain what was wrong in clear $langname language that a student can understand
-3. List each specific error with its correction
+RULES:
+1. Fix ONLY grammatical errors - keep all other words unchanged
+2. Do NOT add, remove, or rephrase anything
+3. Provide clear, accurate explanations in $langname
 
-If the text is grammatically correct, indicate that no errors were found.
+When explaining errors, be precise:
+- If it's a word order error with 'ikke' (negation), explain that 'ikke' must come BEFORE the verb in subordinate clauses
+- If it's a preposition error, explain which preposition is correct with this verb
+- If it's a verb form error, explain which form is needed and why
 
-Please respond ONLY with valid JSON in this format:
+Respond with valid JSON:
 {
   \"hasErrors\": true/false,
   \"errors\": [
     {
-      \"original\": \"the incorrect part\",
-      \"corrected\": \"the corrected version\",
-      \"issue\": \"clear explanation in $langname\"
+      \"original\": \"incorrect phrase\",
+      \"corrected\": \"corrected phrase\",
+      \"issue\": \"precise explanation in $langname\"
     }
   ],
-  \"correctedText\": \"the full corrected text\",
-  \"explanation\": \"overall explanation of all errors in $langname\"
+  \"correctedText\": \"corrected sentence\",
+  \"explanation\": \"clear overall explanation in $langname\"
 }";
 
         $client = new openai_client();
@@ -529,7 +527,7 @@ Please respond ONLY with valid JSON in this format:
         // Use the same pattern as other methods in openai_client
         $payload = [
             'model' => 'gpt-4o-mini',
-            'temperature' => 0.2,
+            'temperature' => 0.4,
             'messages' => [
                 [
                     'role' => 'system',

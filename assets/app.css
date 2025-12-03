@@ -4584,27 +4584,35 @@ select.inline-prompt-field {
   gap: 8px;
 }
 
+/* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */
 .check-text-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
   font-size: 13px;
-  border-radius: 4px;
-  border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #475569;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  color: #eef2ff;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 6px 15px rgba(3, 7, 18, 0.35);
+  transition: background 0.2s, border 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
-.check-text-btn:hover {
-  background: #f1f5f9;
-  border-color: #94a3b8;
+.check-text-btn:hover,
+.check-text-btn:focus-visible {
+  background: #1a2333;
+  border-color: #3b4b63;
+  color: #f8fafc;
+  box-shadow: 0 10px 25px rgba(5, 10, 25, 0.45);
+  transform: translateY(-1px);
 }
 
 .check-text-btn .btn-icon {
   font-size: 14px;
+  color: inherit;
 }
 
 .error-check-block {
