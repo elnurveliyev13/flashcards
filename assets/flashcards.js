@@ -9858,7 +9858,11 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       try {
-        const response = await fetch('ajax.php', {
+        const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+        url.searchParams.set('action', 'check_text_errors');
+        url.searchParams.set('sesskey', M.cfg.sesskey);
+
+        const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -9980,7 +9984,11 @@ function renderComparisonResult(resultEl, comparison){
       const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
 
       try {
-        const response = await fetch('ajax.php', {
+        const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+        url.searchParams.set('action', 'ai_detect_constructions');
+        url.searchParams.set('sesskey', M.cfg.sesskey);
+
+        const response = await fetch(url.toString(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
