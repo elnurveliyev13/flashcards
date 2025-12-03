@@ -671,6 +671,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Grammar & meaning breakdown',
+        analysis_empty: 'Select a word to see the grammar breakdown.',
+        check_text: 'Check text',
+        checking_text: 'Checking text...',
+        no_errors_found: 'No errors found!',
+        errors_found: 'Errors found!',
+        corrected_version: 'Corrected version:',
+        apply_corrections: 'Apply corrections',
+        keep_as_is: 'Keep as is',
+        error_checking_failed: 'Error checking failed',
       },
       uk: {
         app_title: 'MyMemory',
@@ -771,6 +781,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '\u0432\u0438\u0441\u043b\u043e\u0432\u0438...',
         transcription_placeholder: '[\u041c\u0424\u0410 \u043d\u0430\u043f\u0440. /hu:s/]',
         one_per_line_placeholder: '\u043f\u043e \u043e\u0434\u043d\u043e\u043c\u0443 \u043d\u0430 \u0440\u044f\u0434\u043e\u043a...',
+        sentence_analysis: 'Граматика та значення',
+        analysis_empty: 'Оберіть слово, щоб побачити граматичний розбір.',
+        check_text: 'Перевірити текст',
+        checking_text: 'Перевіряємо текст...',
+        no_errors_found: 'Помилок не знайдено!',
+        errors_found: 'Знайдено помилки!',
+        corrected_version: 'Виправлена версія:',
+        apply_corrections: 'Застосувати виправлення',
+        keep_as_is: 'Залишити як є',
+        error_checking_failed: 'Помилка перевірки',
       },
       ru: {
         app_title: 'MyMemory',
@@ -871,6 +891,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Грамматика и значение',
+        analysis_empty: 'Выберите слово, чтобы увидеть грамматический разбор.',
+        check_text: 'Проверить текст',
+        checking_text: 'Проверяем текст...',
+        no_errors_found: 'Ошибок не найдено!',
+        errors_found: 'Найдены ошибки!',
+        corrected_version: 'Исправленная версия:',
+        apply_corrections: 'Применить исправления',
+        keep_as_is: 'Оставить как есть',
+        error_checking_failed: 'Ошибка проверки',
       },
       fr: {
         app_title: 'MyMemory',
@@ -1171,6 +1201,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Gramatyka i znaczenie',
+        analysis_empty: 'Wybierz słowo, aby zobaczyć analizę gramatyczną.',
+        check_text: 'Sprawdź tekst',
+        checking_text: 'Sprawdzanie tekstu...',
+        no_errors_found: 'Nie znaleziono błędów!',
+        errors_found: 'Znaleziono błędy!',
+        corrected_version: 'Poprawiona wersja:',
+        apply_corrections: 'Zastosuj poprawki',
+        keep_as_is: 'Zostaw jak jest',
+        error_checking_failed: 'Błąd sprawdzania',
       },
       it: {
         app_title: 'MyMemory',
@@ -9851,7 +9891,7 @@ function renderComparisonResult(resultEl, comparison){
       const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
 
       // Show loading status
-      const checkingText = i18n('checking_text') || 'Checking text...';
+      const checkingText = t('checking_text') || 'Checking text...';
       setFocusStatus('loading', checkingText);
       const errorBlock = $('#errorCheckBlock');
       if (errorBlock) {
@@ -9888,7 +9928,7 @@ function renderComparisonResult(resultEl, comparison){
         setFocusStatus('', '');
       } catch (error) {
         console.error('Error checking text:', error);
-        const errorMsg = i18n('error_checking_failed') || 'Error checking failed';
+        const errorMsg = t('error_checking_failed') || 'Error checking failed';
         setFocusStatus('error', errorMsg);
       }
     }
@@ -9900,10 +9940,10 @@ function renderComparisonResult(resultEl, comparison){
       const block = $('#errorCheckBlock');
       if (!block) return;
 
-      const errorsFoundText = i18n('errors_found') || 'Errors found!';
-      const correctedVersionText = i18n('corrected_version') || 'Corrected version:';
-      const applyCorrectionsText = i18n('apply_corrections') || 'Apply corrections';
-      const keepAsIsText = i18n('keep_as_is') || 'Keep as is';
+      const errorsFoundText = t('errors_found') || 'Errors found!';
+      const correctedVersionText = t('corrected_version') || 'Corrected version:';
+      const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
+      const keepAsIsText = t('keep_as_is') || 'Keep as is';
 
       const html = `
         <div class="error-check-header">
@@ -9972,7 +10012,7 @@ function renderComparisonResult(resultEl, comparison){
       const block = $('#errorCheckBlock');
       if (!block) return;
 
-      const noErrorsText = i18n('no_errors_found') || 'No errors found!';
+      const noErrorsText = t('no_errors_found') || 'No errors found!';
       block.innerHTML = `<div class="error-check-success">✓ ${noErrorsText}</div>`;
       block.classList.add('error-check-visible');
       block.style.display = 'block';
