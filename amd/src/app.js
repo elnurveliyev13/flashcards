@@ -175,21 +175,6 @@ define(['core/str'], function(str) {
       if(stageText) stageText.textContent=step===0?"0":String(INTERVALS[Math.min(step,INTERVALS.length)-1]);
       if(stageBadge) stageBadge.classList.remove("hidden");
     }
-    function setCreatedMeta(ts){
-      const badge=$("#createdBadge");
-      const value=$("#createdValue");
-      if(!badge || !value) return;
-      if(!ts){
-        badge.classList.add("hidden");
-        value.textContent="--";
-        try{ value.removeAttribute("datetime"); }catch(_e){}
-        return;
-      }
-      badge.classList.remove("hidden");
-      const dt = new Date(ts);
-      value.textContent = fmtDateTime(ts);
-      try{ value.setAttribute("datetime", dt.toISOString()); }catch(_e){}
-    }
     let audioURL=null;
     let audioTileButton=null;
     const player=new Audio();
@@ -312,7 +297,6 @@ define(['core/str'], function(str) {
         $("#counter").textContent="0/0";
         const stageBadge=$("#stageBadge");
         if(stageBadge) stageBadge.classList.add("hidden");
-        setCreatedMeta(null);
         emptyState.classList.remove("hidden");
         $("#btnRevealNext").disabled=true;
         $("#btnRevealNext").classList.remove("primary");
@@ -327,10 +311,9 @@ define(['core/str'], function(str) {
       $("#btnRevealNext").classList.toggle("primary",!!more);
     }
     async function showCurrent(){
-      if(!currentItem){ updateRevealButton(); setCreatedMeta(null); return; }
+      if(!currentItem){ updateRevealButton(); return; }
       $("#counter").textContent=`${currentItem.index+1}/${queue.length}`;
       setStage(currentItem.rec.step||0);
-      setCreatedMeta(currentItem.rec?.addedAt || 0);
       await renderCard(currentItem.card, visibleSlots);
       updateRevealButton();
     }

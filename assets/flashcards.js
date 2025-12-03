@@ -3634,21 +3634,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       stageBadge.style.color = step > 5 ? "#fff" : "#333"; // White text when >50% filled
       stageBadge.style.justifyContent = "center";
     }
-    function setCreatedMeta(ts){
-      const badge = $("#createdBadge");
-      const value = $("#createdValue");
-      if(!badge || !value) return;
-      if(!ts){
-        badge.classList.add("hidden");
-        value.textContent = "--";
-        try{ value.removeAttribute("datetime"); }catch(_e){}
-        return;
-      }
-      badge.classList.remove("hidden");
-      const dt = new Date(ts);
-      value.textContent = fmtDateTime(ts);
-      try{ value.setAttribute("datetime", dt.toISOString()); }catch(_e){}
-    }
     function setDue(n){
       const el=$("#due");
       if(el) el.textContent = String(n);
@@ -6848,7 +6833,6 @@ function renderComparisonResult(resultEl, comparison){
       if(queue.length===0){
         slotContainer.innerHTML="";
         const sb=$("#stageBadge"); if(sb) sb.classList.add("hidden");
-        setCreatedMeta(null);
         emptyState.classList.remove("hidden");
         const br=$("#btnRevealNext"); if(br){ br.disabled=true; br.classList.remove("primary"); }
         setIconVisibility(false); hidePlayIcons();
@@ -6899,9 +6883,8 @@ function renderComparisonResult(resultEl, comparison){
         updateRevealButton();
         setIconVisibility(false);
         hidePlayIcons();
-        setCreatedMeta(null);
-        updateRatingActionHints(null);
-        return;
+      updateRatingActionHints(null);
+      return;
       }
       if(!forceRender && activeTab!=='study'){
         pendingStudyRender=true;
@@ -6909,7 +6892,6 @@ function renderComparisonResult(resultEl, comparison){
       }
       pendingStudyRender=false;
       setStage(currentItem.rec.step||0);
-      setCreatedMeta(currentItem.rec?.addedAt || 0);
       await renderCard(currentItem.card, visibleSlots, prevSlots);
       setIconVisibility(true);
       updateRevealButton();
@@ -8557,7 +8539,7 @@ function renderComparisonResult(resultEl, comparison){
         cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
-        del.textContent="??";
+        del.textContent="\u{1F5D1}";
         del.title="Delete";
         del.onclick=async()=>{
           if(!confirm("Delete this card?")) return;

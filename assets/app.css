@@ -1054,10 +1054,9 @@ select:focus-visible{
   display:flex;
   gap:var(--space-1);
 }
-.card-stage-chip,
-.card-created-chip{
+.card-stage-chip{
   display:flex;
-  gap:8px;
+  gap:10px;
   padding:0 16px;
   border-radius:var(--radius-lg);
   border:1px solid var(--border);
@@ -1066,39 +1065,17 @@ select:focus-visible{
   min-width:120px;
   min-height:44px;
   align-items:center;
-}
-.card-stage-chip.hidden,
-.card-created-chip.hidden{
-  display:none;
-}
-.card-stage-chip{
   font-size:1rem;
   font-weight:600;
-  gap:10px;
+}
+.card-stage-chip.hidden{
+  display:none;
 }
 .card-stage-chip #stageEmoji{
   font-size:1.25rem;
 }
 .card-stage-chip #stageText{
   font-size:1rem;
-}
-.card-created-chip{
-  flex-direction:row;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-}
-.card-created-label{
-  font-size:0.75rem;
-  font-weight:600;
-  text-transform:uppercase;
-  letter-spacing:0.04em;
-  color:var(--text-muted);
-}
-.card-created-chip time{
-  font-size:0.875rem;
-  color:var(--text);
-  white-space:nowrap;
 }
 .front{font-size:1.5rem;margin-bottom:var(--space-2);} /* 24px */
 .back{color:var(--muted);margin-bottom:var(--space-2);min-height:2.2em}
