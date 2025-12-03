@@ -2113,11 +2113,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         btn.appendChild(lemma);
         btn.appendChild(dict);
-        btn.addEventListener('mousedown', e=>{
-          e.preventDefault();
-          applyFrontSuggestion(item.lemma || '', query);
-          hideFrontSuggest();
-        });
+        btn.style.cursor = 'default';
         container.appendChild(btn);
       });
       frontSuggest.classList.add('open');
