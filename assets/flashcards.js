@@ -9851,7 +9851,8 @@ function renderComparisonResult(resultEl, comparison){
       const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
 
       // Show loading status
-      setFocusStatus('loading', 'Sjekker tekst...');
+      const checkingText = i18n('checking_text') || 'Checking text...';
+      setFocusStatus('loading', checkingText);
       const errorBlock = $('#errorCheckBlock');
       if (errorBlock) {
         errorBlock.style.display = 'none';
@@ -9887,7 +9888,8 @@ function renderComparisonResult(resultEl, comparison){
         setFocusStatus('', '');
       } catch (error) {
         console.error('Error checking text:', error);
-        setFocusStatus('error', 'Feil ved sjekking');
+        const errorMsg = i18n('error_checking_failed') || 'Error checking failed';
+        setFocusStatus('error', errorMsg);
       }
     }
 
@@ -9898,20 +9900,25 @@ function renderComparisonResult(resultEl, comparison){
       const block = $('#errorCheckBlock');
       if (!block) return;
 
+      const errorsFoundText = i18n('errors_found') || 'Errors found!';
+      const correctedVersionText = i18n('corrected_version') || 'Corrected version:';
+      const applyCorrectionsText = i18n('apply_corrections') || 'Apply corrections';
+      const keepAsIsText = i18n('keep_as_is') || 'Keep as is';
+
       const html = `
         <div class="error-check-header">
-          <strong>Feil funnet!</strong>
+          <strong>${errorsFoundText}</strong>
         </div>
         <div class="error-check-explanation">
-          ${result.explanation || 'Feil funnet i teksten.'}
+          ${result.explanation || ''}
         </div>
         <div class="error-check-corrected">
-          <strong>Исправленный вариант:</strong>
+          <strong>${correctedVersionText}</strong>
           <div class="corrected-text">${result.correctedText}</div>
         </div>
         <div class="error-check-actions">
-          <button type="button" id="acceptCorrectionBtn">Применить исправления</button>
-          <button type="button" id="rejectCorrectionBtn">Оставить как есть</button>
+          <button type="button" id="acceptCorrectionBtn">${applyCorrectionsText}</button>
+          <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
       `;
 
@@ -9965,7 +9972,8 @@ function renderComparisonResult(resultEl, comparison){
       const block = $('#errorCheckBlock');
       if (!block) return;
 
-      block.innerHTML = '<div class="error-check-success">✓ Ingen feil funnet! (Ошибок не найдено)</div>';
+      const noErrorsText = i18n('no_errors_found') || 'No errors found!';
+      block.innerHTML = `<div class="error-check-success">✓ ${noErrorsText}</div>`;
       block.classList.add('error-check-visible');
       block.style.display = 'block';
 
