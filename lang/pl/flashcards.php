@@ -37,6 +37,7 @@ $string['focus_baseform'] = 'Forma podstawowa';
 $string['focus_baseform_ph'] = 'Lemat lub bezokolicznik (opcjonalnie)';
 $string['ai_helper_label'] = 'Asystent AI fokusa';
 $string['ai_click_hint'] = 'Dotknij dowolnego słowa powyżej, aby wykryć stałe wyrażenie';
+$string['front_suggest_collapse'] = 'Ukryj sugestie';
 $string['ai_helper_disabled'] = 'Asystent AI wyłączony przez administratora';
 $string['ai_detecting'] = 'Wykrywanie wyrażenia...';
 $string['ai_helper_success'] = 'Fraza fokusowa dodana';

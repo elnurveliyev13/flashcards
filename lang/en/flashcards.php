@@ -37,6 +37,7 @@ $string['focus_baseform'] = 'Base form';
 $string['focus_baseform_ph'] = 'Lemma or infinitive (optional)';
 $string['ai_helper_label'] = 'AI focus helper';
 $string['ai_click_hint'] = 'Tap any word above to detect a fixed expression';
+$string['front_suggest_collapse'] = 'Hide suggestions';
 $string['ai_helper_disabled'] = 'AI helper is disabled by the administrator';
 $string['ai_detecting'] = 'Detecting expression...';
 $string['ai_helper_success'] = 'Focus phrase added';

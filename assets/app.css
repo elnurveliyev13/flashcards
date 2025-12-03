@@ -3605,6 +3605,42 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 4px;
   display: none;
 }
+.fokus-suggest.front-suggest {
+  position: relative;
+  padding-top: 10px;
+}
+.front-suggest-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.front-suggest-toggle {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: #f8fafc;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.front-suggest-toggle.collapsed {
+  color: #9ca3af;
+}
+.front-suggest-toggle:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.7);
+  outline-offset: 2px;
+}
+.front-suggest-toggle span {
+  line-height: 1;
+}
 .fokus-suggest.open {
   display: block;
 }

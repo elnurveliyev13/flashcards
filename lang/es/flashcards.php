@@ -37,6 +37,7 @@ $string['focus_baseform'] = 'Forma base';
 $string['focus_baseform_ph'] = 'Lema o infinitivo (opcional)';
 $string['ai_helper_label'] = 'Asistente IA focal';
 $string['ai_click_hint'] = 'Toca cualquier palabra arriba para detectar una expresión fija';
+$string['front_suggest_collapse'] = 'Ocultar sugerencias';
 $string['ai_helper_disabled'] = 'Asistente IA desactivado por el administrador';
 $string['ai_detecting'] = 'Detectando expresión...';
 $string['ai_helper_success'] = 'Frase focal añadida';

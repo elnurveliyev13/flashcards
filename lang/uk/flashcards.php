@@ -37,6 +37,7 @@ $string['focus_baseform'] = 'Базова форма';
 $string['focus_baseform_ph'] = 'Лема або інфінітив (необов\'язково)';
 $string['ai_helper_label'] = 'AI помічник фокусу';
 $string['ai_click_hint'] = 'Натисніть будь-яке слово вище, щоб виявити сталий вираз';
+$string['front_suggest_collapse'] = 'Згорнути підказки';
 $string['ai_helper_disabled'] = 'AI помічник вимкнено адміністратором';
 $string['ai_detecting'] = 'Виявлення виразу...';
 $string['ai_helper_success'] = 'Фокусну фразу додано';

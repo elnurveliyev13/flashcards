@@ -1212,6 +1212,17 @@ switch ($action) {
             $results = array_values(array_map(fn($s) => $s['item'], $scored));
         }
 
+        $ordered = [];
+        $other = [];
+        foreach ($results as $item) {
+            $dictval = core_text::strtolower(trim((string)($item['dict'] ?? $item['source'] ?? '')));
+            if ($dictval === 'ordbokene') {
+                $ordered[] = $item;
+            } else {
+                $other[] = $item;
+            }
+        }
+        $results = array_merge($ordered, $other);
         echo json_encode(['ok' => true, 'data' => array_slice($results, 0, $limit)]);
         break;
     case 'ordbokene_ping':
@@ -1523,4 +1534,3 @@ if (!empty($ordbokene_debug)) {
     default:
         throw new moodle_exception('invalidaction');
 }
-

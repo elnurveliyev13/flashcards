@@ -1914,6 +1914,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const frontInput = $("#uFront");
     const frontInputWrap = frontInput ? frontInput.closest('.front-input-wrap') : null;
     const frontSuggest = frontInputWrap ? frontInputWrap.querySelector('[data-front-suggest]') : null;
+    let frontSuggestList = null;
+    let frontSuggestToggle = null;
+    let frontSuggestCollapsed = false;
+    const frontSuggestToggleLabel = getModString('front_suggest_collapse') || 'Hide suggestions';
+    const setFrontSuggestToggleState = (collapsed) => {
+      if(!frontSuggestToggle){
+        return;
+      }
+      frontSuggestToggle.classList.toggle('collapsed', collapsed);
+      frontSuggestToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      const icon = collapsed ? '▸' : '▾';
+      frontSuggestToggle.innerHTML = `<span aria-hidden="true">${icon}</span>`;
+    };
+    if(frontSuggest){
+      frontSuggest.classList.add('front-suggest-has-toggle');
+      frontSuggestToggle = document.createElement('button');
+      frontSuggestToggle.type = 'button';
+      frontSuggestToggle.className = 'front-suggest-toggle';
+      frontSuggestToggle.title = frontSuggestToggleLabel;
+      frontSuggestToggle.setAttribute('aria-label', frontSuggestToggleLabel);
+      frontSuggestToggle.addEventListener('click', e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        frontSuggestCollapsed = true;
+        setFrontSuggestToggleState(true);
+        hideFrontSuggest();
+      });
+      frontSuggestList = document.createElement('div');
+      frontSuggestList.className = 'front-suggest-list';
+      frontSuggest.appendChild(frontSuggestToggle);
+      frontSuggest.appendChild(frontSuggestList);
+      setFrontSuggestToggleState(false);
+    }
     const fokusInput = $("#uFokus");
     let fokusSuggest = $("#fokusSuggest");
     // Create suggest container if missing (template cache fallback).
@@ -1954,6 +1987,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     });
     if(frontInput){
       frontInput.addEventListener('input', ()=>{
+        if(frontSuggestCollapsed){
+          frontSuggestCollapsed = false;
+          setFrontSuggestToggleState(false);
+        }
         if(translationDirection === 'no-user'){
           scheduleTranslationRefresh();
         }
@@ -2010,17 +2047,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function hideFrontSuggest(){
-      if(frontSuggest){
-        frontSuggest.innerHTML = '';
-        frontSuggest.classList.remove('open');
+      if(!frontSuggest){
+        return;
       }
+      if(frontSuggestList){
+        frontSuggestList.innerHTML = '';
+      } else {
+        frontSuggest.innerHTML = '';
+      }
+      frontSuggest.classList.remove('open');
     }
 
     function renderFrontSuggest(list, query){
       if(!frontSuggest){
         return;
       }
-      frontSuggest.innerHTML = '';
+      if(frontSuggestCollapsed){
+        return;
+      }
+      const container = frontSuggestList || frontSuggest;
+      container.innerHTML = '';
       const formatDictLabel = (item)=>{
         const langs = (item.langs || []).map(l=>{
           const v = (l||'').toLowerCase();
@@ -2072,9 +2118,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           applyFrontSuggestion(item.lemma || '', query);
           hideFrontSuggest();
         });
-        frontSuggest.appendChild(btn);
+        container.appendChild(btn);
       });
       frontSuggest.classList.add('open');
+      setFrontSuggestToggleState(false);
     }
 
     function applyFrontSuggestion(value, query){
@@ -2135,6 +2182,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function scheduleFrontSuggest(){
+      if(frontSuggestCollapsed){
+        return;
+      }
       if(!frontInput){
         return;
       }

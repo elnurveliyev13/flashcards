@@ -37,6 +37,7 @@ $string['focus_baseform'] = 'Grundform';
 $string['focus_baseform_ph'] = 'Lemma oder Infinitiv (optional)';
 $string['ai_helper_label'] = 'KI-Fokus-Assistent';
 $string['ai_click_hint'] = 'Tippen Sie auf ein beliebiges Wort oben, um einen festen Ausdruck zu erkennen';
+$string['front_suggest_collapse'] = 'Vorschläge ausblenden';
 $string['ai_helper_disabled'] = 'KI-Assistent vom Administrator deaktiviert';
 $string['ai_detecting'] = 'Ausdruck wird erkannt...';
 $string['ai_helper_success'] = 'Fokusphrase hinzugefügt';
