@@ -3102,12 +3102,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   margin-right:0;
 }
 #mod_flashcards_container .translation-header {
-  width: calc(100% + (var(--slot-horizontal-gutter) * 2));
-  margin-left: calc(var(--slot-horizontal-gutter) * -1);
-  margin-right: calc(var(--slot-horizontal-gutter) * -1);
-  margin-top: calc(var(--space-2) / 5);
-  padding-left: 0;
-  padding-right: var(--slot-horizontal-gutter);
+  width: min(100%, var(--slot-content-max-width));
+  margin: calc(var(--space-2) / 5) auto 0;
+  padding: 0;
   box-sizing: border-box;
   display:flex;
   align-items:center;
@@ -3128,7 +3125,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display:flex;
   align-items:center;
   gap:0.35rem;
-  margin-right: calc(var(--slot-horizontal-gutter) * -1);
 }
 .translation-reset{
   border:1px solid var(--border);
@@ -4693,6 +4689,66 @@ select.inline-prompt-field {
   line-height: 1.6;
   color: #0c4a6e;
   font-style: italic;
+}
+
+/* Error details list */
+.error-details-list {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+}
+
+.error-detail-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #fee2e2;
+}
+
+.error-detail-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.error-original {
+  color: #dc2626;
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
+.error-arrow {
+  margin: 0 8px;
+  color: #64748b;
+}
+
+.error-corrected {
+  color: #059669;
+  font-weight: 500;
+}
+
+.error-explanation {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Highlighted corrections in text */
+.text-correction {
+  background: #dcfce7;
+  border-bottom: 2px solid #10b981;
+  padding: 2px 4px;
+  border-radius: 2px;
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.text-correction:hover {
+  background: #bbf7d0;
+  border-bottom-color: #059669;
 }
 
 .error-check-actions {

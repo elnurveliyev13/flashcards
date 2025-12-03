@@ -483,7 +483,7 @@ class ai_helper {
         $langname = $languagemap[$language] ?? 'English';
 
         // First request: Find errors
-        $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail.";
+        $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail. You MUST respond in $langname language.";
 
         $userprompt1 = "Check this Norwegian sentence for ALL grammatical errors:
 
@@ -496,14 +496,14 @@ Look for:
 - Spelling errors
 
 IMPORTANT:
-- Provide ALL explanations in $langname language
+- You MUST write ALL text in $langname language
+- For each error, provide a detailed explanation with context (e.g., for 'klar på', explain that 'be aware of' translates as 'være klar over', not 'være klar på')
 - Fix ONLY grammatical errors - do NOT add/remove/rephrase words
-- Be very careful with verb-preposition combinations
 
-Respond with valid JSON (all text in $langname):
+Respond with valid JSON (ALL text MUST be in $langname):
 {
   \"hasErrors\": true/false,
-  \"errors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"explanation in $langname\"}],
+  \"errors\": [{\"original\": \"incorrect part\", \"corrected\": \"correct part\", \"issue\": \"detailed explanation in $langname with context and examples\"}],
   \"correctedText\": \"corrected text\",
   \"explanation\": \"summary in $langname\"
 }";
@@ -564,23 +564,24 @@ Respond with valid JSON (all text in $langname):
             // STAGE 2: Second API call - Double-check and suggest natural alternative
             $correctedText = $result1['correctedText'] ?? $text;
 
-            $systemprompt2 = "You are a native Norwegian speaker. Review corrections and assess naturalness.";
+            $systemprompt2 = "You are a native Norwegian speaker. Review corrections and assess naturalness. You MUST respond in $langname language.";
 
             $userprompt2 = "Original sentence: \"$text\"
 Corrected sentence: \"$correctedText\"
 
 TASK:
-1. Double-check: Are there ANY other errors that were missed? If yes, add them.
+1. Double-check: Are there ANY other errors that were missed? If yes, add them with detailed explanations.
 2. Is the corrected sentence natural for native speakers? If not, suggest a better alternative.
 
 IMPORTANT:
-- Provide ALL text in $langname language
+- You MUST write ALL text in $langname language
+- For any additional errors, provide detailed context-rich explanations
 - Suggestion should ONLY appear if there's a significantly more natural way to say this
 - Do NOT suggest minor style changes
 
-Respond with valid JSON (all text in $langname):
+Respond with valid JSON (ALL text MUST be in $langname):
 {
-  \"additionalErrors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"explanation\"}],
+  \"additionalErrors\": [{\"original\": \"error\", \"corrected\": \"fix\", \"issue\": \"detailed explanation in $langname\"}],
   \"suggestion\": \"more natural alternative or empty string\"
 }";
 

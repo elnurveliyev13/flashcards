@@ -9938,6 +9938,29 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     /**
+     * Highlight differences between original and corrected text
+     */
+    function highlightDifferences(original, corrected, errors) {
+      let highlighted = corrected;
+
+      // Sort errors by length (longest first) to avoid nested replacements
+      const sortedErrors = (errors || []).sort((a, b) =>
+        (b.corrected || '').length - (a.corrected || '').length
+      );
+
+      sortedErrors.forEach(err => {
+        if (err.corrected && err.corrected.trim()) {
+          // Wrap corrected parts in span with title showing explanation
+          const explanation = err.issue || '';
+          const wrappedCorrection = `<span class="text-correction" title="${explanation}">${err.corrected}</span>`;
+          highlighted = highlighted.replace(err.corrected, wrappedCorrection);
+        }
+      });
+
+      return highlighted;
+    }
+
+    /**
      * Show error check result with corrections
      */
     function showErrorCheckResult(result) {
@@ -9949,6 +9972,29 @@ function renderComparisonResult(resultEl, comparison){
       const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
       const keepAsIsText = t('keep_as_is') || 'Keep as is';
       const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
+
+      // Get original text
+      const originalText = $('#uFront').value || '';
+
+      // Highlight corrections in the corrected text
+      const highlightedText = highlightDifferences(originalText, result.correctedText, result.errors);
+
+      // Build detailed errors list
+      let errorsListHtml = '';
+      if (result.errors && result.errors.length > 0) {
+        errorsListHtml = '<div class="error-details-list">';
+        result.errors.forEach((err, idx) => {
+          errorsListHtml += `
+            <div class="error-detail-item">
+              <span class="error-original">❌ ${err.original || ''}</span>
+              <span class="error-arrow">→</span>
+              <span class="error-corrected">✅ ${err.corrected || ''}</span>
+              ${err.issue ? `<div class="error-explanation">${err.issue}</div>` : ''}
+            </div>
+          `;
+        });
+        errorsListHtml += '</div>';
+      }
 
       // Build suggestion block if present
       let suggestionHtml = '';
@@ -9968,9 +10014,10 @@ function renderComparisonResult(resultEl, comparison){
         <div class="error-check-explanation">
           ${result.explanation || ''}
         </div>
+        ${errorsListHtml}
         <div class="error-check-corrected">
           <strong>${correctedVersionText}</strong>
-          <div class="corrected-text">${result.correctedText}</div>
+          <div class="corrected-text">${highlightedText}</div>
         </div>
         ${suggestionHtml}
         <div class="error-check-actions">
@@ -9996,9 +10043,13 @@ function renderComparisonResult(resultEl, comparison){
           const frontInput = $('#uFront');
           if (frontInput) {
             frontInput.value = correctedText;
+
+            // Trigger input event to activate translation and other listeners
+            const inputEvent = new Event('input', { bubbles: true });
+            frontInput.dispatchEvent(inputEvent);
           }
 
-          // Trigger translation update
+          // Trigger translation update if available
           if (window.onFrontChange) {
             window.onFrontChange();
           }
