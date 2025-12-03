@@ -9842,31 +9842,38 @@ function renderComparisonResult(resultEl, comparison){
      * Check Norwegian text for grammatical errors
      */
     async function checkTextForErrors() {
-      const text = $('#uFront').val().trim();
+      const text = $('#uFront').value.trim();
       if (!text) {
         return;
       }
 
-      const language = $('#languageSelector').val() || 'uk';
+      const languageSelect = $('#languageSelector');
+      const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
 
       // Show loading status
       setFocusStatus('loading', 'Sjekker tekst...');
-      $('#errorCheckBlock').hide();
+      const errorBlock = $('#errorCheckBlock');
+      if (errorBlock) {
+        errorBlock.style.display = 'none';
+      }
 
       try {
-        const response = await $.ajax({
-          url: 'ajax.php',
+        const response = await fetch('ajax.php', {
           method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
             action: 'check_text_errors',
             text: text,
             language: language
           })
         });
 
-        if (response.hasErrors) {
-          showErrorCheckResult(response);
+        const result = await response.json();
+
+        if (result.hasErrors) {
+          showErrorCheckResult(result);
         } else {
           showSuccessMessage();
           // Auto-continue with tokenization
@@ -9885,6 +9892,7 @@ function renderComparisonResult(resultEl, comparison){
      */
     function showErrorCheckResult(result) {
       const block = $('#errorCheckBlock');
+      if (!block) return;
 
       const html = `
         <div class="error-check-header">
@@ -9903,33 +9911,47 @@ function renderComparisonResult(resultEl, comparison){
         </div>
       `;
 
-      block.html(html).addClass('error-check-visible').show();
+      block.innerHTML = html;
+      block.classList.add('error-check-visible');
+      block.style.display = 'block';
 
       // Store corrected text for button handlers
-      block.data('correctedText', result.correctedText);
+      block.dataset.correctedText = result.correctedText;
 
       // Setup button handlers
-      $('#acceptCorrectionBtn').on('click', function() {
-        const correctedText = block.data('correctedText');
-        $('#uFront').val(correctedText);
+      const acceptBtn = document.getElementById('acceptCorrectionBtn');
+      const rejectBtn = document.getElementById('rejectCorrectionBtn');
 
-        // Trigger translation update
-        if (window.onFrontChange) {
-          window.onFrontChange();
-        }
+      if (acceptBtn) {
+        acceptBtn.addEventListener('click', function() {
+          const correctedText = block.dataset.correctedText;
+          const frontInput = $('#uFront');
+          if (frontInput) {
+            frontInput.value = correctedText;
+          }
 
-        // Trigger tokenization
-        renderFocusChips();
+          // Trigger translation update
+          if (window.onFrontChange) {
+            window.onFrontChange();
+          }
 
-        // Hide error block
-        block.removeClass('error-check-visible').hide();
-      });
+          // Trigger tokenization
+          renderFocusChips();
 
-      $('#rejectCorrectionBtn').on('click', function() {
-        // Just hide error block and continue with tokenization
-        block.removeClass('error-check-visible').hide();
-        renderFocusChips();
-      });
+          // Hide error block
+          block.classList.remove('error-check-visible');
+          block.style.display = 'none';
+        });
+      }
+
+      if (rejectBtn) {
+        rejectBtn.addEventListener('click', function() {
+          // Just hide error block and continue with tokenization
+          block.classList.remove('error-check-visible');
+          block.style.display = 'none';
+          renderFocusChips();
+        });
+      }
     }
 
     /**
@@ -9937,13 +9959,16 @@ function renderComparisonResult(resultEl, comparison){
      */
     function showSuccessMessage() {
       const block = $('#errorCheckBlock');
-      block.html('<div class="error-check-success">✓ Ingen feil funnet! (Ошибок не найдено)</div>')
-           .addClass('error-check-visible')
-           .show();
+      if (!block) return;
+
+      block.innerHTML = '<div class="error-check-success">✓ Ingen feil funnet! (Ошибок не найдено)</div>';
+      block.classList.add('error-check-visible');
+      block.style.display = 'block';
 
       // Auto-hide after 3 seconds
       setTimeout(() => {
-        block.removeClass('error-check-visible').hide();
+        block.classList.remove('error-check-visible');
+        block.style.display = 'none';
       }, 3000);
     }
 
@@ -9951,14 +9976,16 @@ function renderComparisonResult(resultEl, comparison){
      * Detect grammatical constructions in sentence
      */
     async function detectConstructions(frontText, focusWord) {
-      const language = $('#languageSelector').val() || 'uk';
+      const languageSelect = $('#languageSelector');
+      const language = languageSelect ? (languageSelect.value || 'uk') : 'uk';
 
       try {
-        const response = await $.ajax({
-          url: 'ajax.php',
+        const response = await fetch('ajax.php', {
           method: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
             action: 'ai_detect_constructions',
             frontText: frontText,
             focusWord: focusWord,
@@ -9966,7 +9993,8 @@ function renderComparisonResult(resultEl, comparison){
           })
         });
 
-        return response;
+        const result = await response.json();
+        return result;
       } catch (error) {
         console.error('Error detecting constructions:', error);
         return {
@@ -9989,11 +10017,11 @@ function renderComparisonResult(resultEl, comparison){
 
         if (constr.tokenIndices && Array.isArray(constr.tokenIndices)) {
           constr.tokenIndices.forEach(tokenIdx => {
-            const chip = $(`.focus-chip[data-index="${tokenIdx}"]`);
-            if (chip.length) {
-              chip.addClass(colorClass);
-              chip.attr('data-construction', index);
-            }
+            const chips = document.querySelectorAll(`.focus-chip[data-index="${tokenIdx}"]`);
+            chips.forEach(chip => {
+              chip.classList.add(colorClass);
+              chip.dataset.construction = index;
+            });
           });
         }
       });
@@ -10047,7 +10075,10 @@ function renderComparisonResult(resultEl, comparison){
         }
       });
 
-      $('#focusAnalysisList').html(html.join(''));
+      const analysisList = $('#focusAnalysisList');
+      if (analysisList) {
+        analysisList.innerHTML = html.join('');
+      }
     }
 
     // ==========================================================================
