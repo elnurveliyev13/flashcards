@@ -4549,7 +4549,9 @@ select.inline-prompt-field {
 .dictation-token-correction { color: #ef4444; font-weight: 700; line-height: 1.2; display: block; margin-bottom: 0; }
 .dictation-token-wrong-text {
   color: #f8fafc;
-  display: inline;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1.2;
   position: relative;
 }
@@ -4559,7 +4561,8 @@ select.inline-prompt-field {
   left: -0.125em;
   right: -0.125em;
   top: 50%;
-  transform: translateY(1px);
+  /* Center the bar on the glyph instead of the padded container */
+  transform: translateY(-50%);
   height: 2px;
   background: #ef4444;
   border: none;
