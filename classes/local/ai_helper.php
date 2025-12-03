@@ -482,36 +482,47 @@ class ai_helper {
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher. Review student texts, identify grammatical errors, and provide clear corrections with accurate explanations. Only fix actual errors - do NOT rewrite or rephrase the text.";
+        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher. Review student texts carefully, identify grammatical errors, and assess naturalness. Think step-by-step and double-check your analysis before responding.";
 
         $userprompt = "A student wrote this Norwegian sentence:
 
 \"$text\"
 
-Check for grammatical errors (word order, verb forms, prepositions, spelling, agreement).
+TASK: Analyze this text in two stages:
 
-RULES:
-1. Fix ONLY grammatical errors - keep all other words unchanged
-2. Do NOT add, remove, or rephrase anything
-3. Provide clear, accurate explanations in $langname
+STAGE 1 - Find grammatical errors:
+Check for: word order, verb forms, prepositions, spelling, agreement
+Rules:
+- Fix ONLY actual grammatical errors
+- Keep all other words unchanged
+- Be precise in explanations (e.g., \"'ikke' must come BEFORE the verb in subordinate clauses\")
 
-When explaining errors, be precise:
-- If it's a word order error with 'ikke' (negation), explain that 'ikke' must come BEFORE the verb in subordinate clauses
-- If it's a preposition error, explain which preposition is correct with this verb
-- If it's a verb form error, explain which form is needed and why
+STAGE 2 - Assess naturalness:
+After fixing errors, check if the corrected sentence sounds natural to a native speaker.
+- If it sounds unnatural or awkward, provide a better suggestion in a separate 'suggestion' field
+- Only suggest if there's a CLEARLY better way that natives would use
+- Do NOT suggest minor stylistic changes
 
-Respond with valid JSON:
+STAGE 3 - Self-check:
+Review your corrections:
+- Are all errors actually errors?
+- Did you accidentally add/remove words?
+- Are your explanations clear and accurate?
+- Is your suggestion (if any) truly more natural?
+
+Respond with valid JSON in $langname:
 {
   \"hasErrors\": true/false,
   \"errors\": [
     {
-      \"original\": \"incorrect phrase\",
-      \"corrected\": \"corrected phrase\",
-      \"issue\": \"precise explanation in $langname\"
+      \"original\": \"incorrect part\",
+      \"corrected\": \"corrected part\",
+      \"issue\": \"clear explanation in $langname\"
     }
   ],
-  \"correctedText\": \"corrected sentence\",
-  \"explanation\": \"clear overall explanation in $langname\"
+  \"correctedText\": \"grammatically correct text\",
+  \"explanation\": \"overall explanation in $langname\",
+  \"suggestion\": \"more natural alternative (optional, only if significantly better)\"
 }";
 
         $client = new openai_client();

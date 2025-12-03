@@ -681,6 +681,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         apply_corrections: 'Apply corrections',
         keep_as_is: 'Keep as is',
         error_checking_failed: 'Error checking failed',
+        naturalness_suggestion: 'More natural alternative:',
       },
       uk: {
         app_title: 'MyMemory',
@@ -791,6 +792,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         apply_corrections: 'Застосувати виправлення',
         keep_as_is: 'Залишити як є',
         error_checking_failed: 'Помилка перевірки',
+        naturalness_suggestion: 'Більш природний варіант:',
       },
       ru: {
         app_title: 'MyMemory',
@@ -901,6 +903,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         apply_corrections: 'Применить исправления',
         keep_as_is: 'Оставить как есть',
         error_checking_failed: 'Ошибка проверки',
+        naturalness_suggestion: 'Более естественный вариант:',
       },
       fr: {
         app_title: 'MyMemory',
@@ -1211,6 +1214,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         apply_corrections: 'Zastosuj poprawki',
         keep_as_is: 'Zostaw jak jest',
         error_checking_failed: 'Błąd sprawdzania',
+        naturalness_suggestion: 'Bardziej naturalna alternatywa:',
       },
       it: {
         app_title: 'MyMemory',
@@ -9944,6 +9948,18 @@ function renderComparisonResult(resultEl, comparison){
       const correctedVersionText = t('corrected_version') || 'Corrected version:';
       const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
       const keepAsIsText = t('keep_as_is') || 'Keep as is';
+      const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
+
+      // Build suggestion block if present
+      let suggestionHtml = '';
+      if (result.suggestion && result.suggestion.trim()) {
+        suggestionHtml = `
+          <div class="error-check-suggestion">
+            <strong>💡 ${suggestionText}</strong>
+            <div class="suggestion-text">${result.suggestion}</div>
+          </div>
+        `;
+      }
 
       const html = `
         <div class="error-check-header">
@@ -9956,6 +9972,7 @@ function renderComparisonResult(resultEl, comparison){
           <strong>${correctedVersionText}</strong>
           <div class="corrected-text">${result.correctedText}</div>
         </div>
+        ${suggestionHtml}
         <div class="error-check-actions">
           <button type="button" id="acceptCorrectionBtn">${applyCorrectionsText}</button>
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
