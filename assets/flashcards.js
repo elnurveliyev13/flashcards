@@ -2024,13 +2024,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const formatDictLabel = (item)=>{
         const langs = (item.langs || []).map(l=>{
           const v = (l||'').toLowerCase();
+          if(v==='ordbokene' || v==='ordbank') return '';
           if(v==='bm' || v==='bokmål' || v==='bokmal' || v==='bokmaal') return 'bm';
           if(v==='nn' || v==='nynorsk') return 'nn';
-          return v ? v.toUpperCase() : '';
+          if(v) return v.toUpperCase();
+          return '';
         }).filter(Boolean);
         const langLabel = langs.length ? langs.join('/') : '';
-        const source = ((item.dict || '').toLowerCase() === 'ordbokene') ? 'ordbøkene' : 'ordbank';
-        return langLabel ? `${langLabel} ? ${source}` : source;
+        const dictKey = ((item.dict || item.source || '')).toLowerCase();
+        let source = '';
+        if(dictKey === 'ordbokene'){
+          source = 'ordbøkene';
+        } else if(dictKey === 'ordbank'){
+          source = 'ordbank';
+        } else if(dictKey){
+          source = dictKey;
+        } else if(item.dict){
+          source = item.dict;
+        } else if(item.source){
+          source = item.source;
+        }
+        return { langLabel, source };
       };
       if(!Array.isArray(list) || !list.length){
         frontSuggest.classList.remove('open');
@@ -2044,7 +2058,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         lemma.textContent = item.lemma || '';
         const dict = document.createElement('span');
         dict.className = 'dict';
-        dict.textContent = formatDictLabel(item);
+        const dictInfo = formatDictLabel(item);
+        dict.textContent = dictInfo.source || '';
+        if(dictInfo.langLabel){
+          dict.title = dictInfo.langLabel;
+        }else{
+          dict.removeAttribute('title');
+        }
         btn.appendChild(lemma);
         btn.appendChild(dict);
         btn.addEventListener('mousedown', e=>{

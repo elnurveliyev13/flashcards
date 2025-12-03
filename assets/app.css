@@ -3625,8 +3625,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-weight: 600;
 }
 .fokus-suggest-item .dict {
-  font-size: 0.82em;
-  opacity: 0.7;
+  font-size: 0.65em;
+  opacity: 0.65;
   white-space: nowrap;
 }
 
