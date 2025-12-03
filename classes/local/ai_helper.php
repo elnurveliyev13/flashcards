@@ -464,4 +464,156 @@ class ai_helper {
                 return 'en';
         }
     }
+
+    /**
+     * Check Norwegian text for grammatical errors
+     *
+     * @param string $text Norwegian text to check
+     * @param string $language User's interface language for explanations
+     * @param int $userid User ID for API tracking
+     * @return array Result with hasErrors, errors, correctedText, explanation
+     */
+    public function check_norwegian_text(string $text, string $language, int $userid): array {
+        $languagemap = [
+            'uk' => 'Ukrainian',
+            'ru' => 'Russian',
+            'en' => 'English',
+            'no' => 'Norwegian',
+        ];
+        $langname = $languagemap[$language] ?? 'English';
+
+        $prompt = "You are an experienced Norwegian language teacher.
+Check the following Norwegian text for errors:
+- Grammar mistakes
+- Word order issues
+- Wrong verb forms or tenses
+- Spelling errors
+- Incorrect prepositions
+- Agreement errors (gender, number)
+
+Text to check: \"$text\"
+
+If you find errors:
+1. Provide corrected version of the entire text
+2. Explain ALL errors found in $langname language
+3. Be specific about WHY each error is wrong
+
+If the text is correct:
+- Set hasErrors to false
+- Return empty explanation
+
+IMPORTANT: Respond ONLY with valid JSON in this exact format:
+{
+  \"hasErrors\": true/false,
+  \"errors\": [
+    {
+      \"original\": \"incorrect part of text\",
+      \"corrected\": \"corrected version\",
+      \"issue\": \"explanation of error in $langname\"
+    }
+  ],
+  \"correctedText\": \"full corrected text or original if no errors\",
+  \"explanation\": \"overall explanation in $langname or empty string if no errors\"
+}";
+
+        $client = new openai_client();
+        $response = $client->chat_completion($prompt, $userid, [
+            'model' => 'gpt-4',
+            'temperature' => 0.3,
+        ]);
+
+        $result = json_decode($response, true);
+        if (!is_array($result)) {
+            return [
+                'hasErrors' => false,
+                'errors' => [],
+                'correctedText' => $text,
+                'explanation' => '',
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Detect grammatical constructions and multi-word expressions in Norwegian sentence
+     *
+     * @param string $text Full Norwegian sentence
+     * @param string $focusword Word that user clicked on
+     * @param string $language User's interface language for translations
+     * @param int $userid User ID for API tracking
+     * @return array Result with constructions and focusConstruction
+     */
+    public function detect_constructions(string $text, string $focusword, string $language, int $userid): array {
+        $languagemap = [
+            'uk' => 'Ukrainian',
+            'ru' => 'Russian',
+            'en' => 'English',
+            'no' => 'Norwegian',
+        ];
+        $langname = $languagemap[$language] ?? 'English';
+
+        $prompt = "You are an expert Norwegian linguist. Analyze this Norwegian sentence and identify ALL multi-word expressions and grammatical constructions:
+
+Sentence: \"$text\"
+Focus word (clicked by user): \"$focusword\"
+
+Identify these types of constructions:
+1. **Verb + preposition** combinations (e.g., \"holde på med\", \"få til\", \"se på\")
+2. **være + adjective/adverb** expressions (e.g., \"være klar over\", \"være glad i\")
+3. **Reflexive verbs** (e.g., \"skamme seg\", \"glede seg til\", \"skaffe seg\")
+4. **Other fixed expressions** and collocations
+
+For EACH construction found:
+- List exact tokens from the sentence (preserving case and form)
+- Provide their indices in the sentence (0-based, counting only word tokens, not punctuation)
+- Give normalized/infinitive form (grunnform): verbs with \"å\", nouns with article, etc.
+- Translate to $langname
+- Classify type: \"expression\", \"reflexive\", \"verb_prep\", or \"other\"
+
+For the focus word \"$focusword\":
+- Determine if it's part of any construction
+- If yes, return that construction details in focusConstruction
+- Include baseForm (the clicked word in base form) and POS (part of speech)
+
+IMPORTANT: Respond ONLY with valid JSON in this exact format:
+{
+  \"constructions\": [
+    {
+      \"tokens\": [\"er\", \"klar\", \"over\"],
+      \"tokenIndices\": [1, 2, 3],
+      \"normalized\": \"være klar over\",
+      \"translation\": \"translation in $langname\",
+      \"type\": \"expression\"
+    }
+  ],
+  \"focusConstruction\": {
+    \"tokens\": [\"er\", \"klar\", \"over\"],
+    \"tokenIndices\": [1, 2, 3],
+    \"normalized\": \"være klar over\",
+    \"translation\": \"translation in $langname\",
+    \"baseForm\": \"klar\",
+    \"pos\": \"adjective\"
+  }
+}
+
+If focus word is NOT part of any construction, set focusConstruction to null.
+If NO constructions found, return empty constructions array.";
+
+        $client = new openai_client();
+        $response = $client->chat_completion($prompt, $userid, [
+            'model' => 'gpt-4',
+            'temperature' => 0.2,
+        ]);
+
+        $result = json_decode($response, true);
+        if (!is_array($result)) {
+            return [
+                'constructions' => [],
+                'focusConstruction' => null,
+            ];
+        }
+
+        return $result;
+    }
 }

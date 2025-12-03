@@ -683,6 +683,43 @@ switch ($action) {
         ]]);
         break;
 
+    case 'check_text_errors':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $text = trim($payload['text'] ?? '');
+        if ($text === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $language = clean_param($payload['language'] ?? 'no', PARAM_ALPHANUMEXT);
+
+        $helper = new \mod_flashcards\local\ai_helper();
+        $result = $helper->check_norwegian_text($text, $language, $userid);
+
+        echo json_encode($result);
+        break;
+
+    case 'ai_detect_constructions':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $fronttext = trim($payload['frontText'] ?? '');
+        $focusword = trim($payload['focusWord'] ?? '');
+        if ($fronttext === '' || $focusword === '') {
+            throw new invalid_parameter_exception('Missing text or focus word');
+        }
+        $language = clean_param($payload['language'] ?? 'no', PARAM_ALPHANUMEXT);
+
+        $helper = new \mod_flashcards\local\ai_helper();
+        $result = $helper->detect_constructions($fronttext, $focusword, $language, $userid);
+
+        echo json_encode($result);
+        break;
+
     case 'ai_focus_helper':
         $raw = file_get_contents('php://input');
         $payload = json_decode($raw, true);

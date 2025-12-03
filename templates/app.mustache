@@ -183,6 +183,13 @@
             <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
+          <div class="front-text-actions">
+            <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
+              <span class="btn-icon">🔍</span>
+              <span data-i18n="check_text">Sjekk teksten</span>
+            </button>
+          </div>
+          <div id="errorCheckBlock" class="error-check-block" style="display:none;" aria-live="polite"></div>
         </div>
         <div class="slot front-translation-slot" id="slot_front_translation">
               <div class="slot-head slot-head-inline">
@@ -232,7 +239,9 @@
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
             </div>
             <div class="slot" id="slot_focus_analysis">
-              <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
+              <div class="analysis-header">
+                <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
+              </div>
               <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
             </div>
             <div class="slot" id="slot_ordbokene">

@@ -4570,3 +4570,197 @@ select.inline-prompt-field {
 }
 /* Final overrides: keep move blocks transparent */
 .dictation-move-block { background: transparent !important; }
+
+/* ========================================
+   ERROR CHECK BLOCK STYLES
+   ======================================== */
+
+.front-text-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.check-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.check-text-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.check-text-btn .btn-icon {
+  font-size: 14px;
+}
+
+.error-check-block {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 6px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+}
+
+.error-check-visible {
+  display: block !important;
+}
+
+.error-check-success {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #065f46;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.error-check-header {
+  margin-bottom: 12px;
+  color: #dc2626;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.error-check-explanation {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fef2f2;
+  border-radius: 4px;
+  color: #991b1b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.error-check-corrected {
+  margin-bottom: 16px;
+}
+
+.error-check-corrected strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #475569;
+  font-size: 14px;
+}
+
+.corrected-text {
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #0f172a;
+}
+
+.error-check-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#acceptCorrectionBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: none;
+  background: #10b981;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+#acceptCorrectionBtn:hover {
+  background: #059669;
+}
+
+#rejectCorrectionBtn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+#rejectCorrectionBtn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* ========================================
+   CONSTRUCTION HIGHLIGHTING STYLES
+   ======================================== */
+
+.focus-chip--construction-1 {
+  border-bottom: 2px solid #2196F3;
+  background: rgba(33, 150, 243, 0.05);
+}
+
+.focus-chip--construction-2 {
+  border-bottom: 2px solid #4CAF50;
+  background: rgba(76, 175, 80, 0.05);
+}
+
+.focus-chip--construction-3 {
+  border-bottom: 2px solid #FF9800;
+  background: rgba(255, 152, 0, 0.05);
+}
+
+.focus-chip--construction-4 {
+  border-bottom: 2px solid #9C27B0;
+  background: rgba(156, 39, 176, 0.05);
+}
+
+.focus-chip--construction-5 {
+  border-bottom: 2px solid #F44336;
+  background: rgba(244, 67, 54, 0.05);
+}
+
+/* ========================================
+   ANALYSIS ITEM - CONSTRUCTION STYLES
+   ======================================== */
+
+.analysis-item--construction {
+  background: rgba(59, 130, 246, 0.05);
+  border-left: 3px solid #3b82f6;
+  padding-left: 12px;
+  margin: 4px 0;
+}
+
+.analysis-item--construction .analysis-text {
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.construction-highlight-1 {
+  color: #2196F3;
+}
+
+.construction-highlight-2 {
+  color: #4CAF50;
+}
+
+.construction-highlight-3 {
+  color: #FF9800;
+}
+
+.construction-highlight-4 {
+  color: #9C27B0;
+}
+
+.construction-highlight-5 {
+  color: #F44336;
+}

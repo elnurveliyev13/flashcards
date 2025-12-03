@@ -9834,5 +9834,236 @@ function renderComparisonResult(resultEl, comparison){
     })();
     // ========== END MOBILE LANGUAGE SELECTOR MODAL ==========
 
+    // ==========================================================================
+    // ERROR CHECKING & CONSTRUCTION DETECTION
+    // ==========================================================================
+
+    /**
+     * Check Norwegian text for grammatical errors
+     */
+    async function checkTextForErrors() {
+      const text = $('#uFront').val().trim();
+      if (!text) {
+        return;
+      }
+
+      const language = $('#languageSelector').val() || 'uk';
+
+      // Show loading status
+      setFocusStatus('loading', 'Sjekker tekst...');
+      $('#errorCheckBlock').hide();
+
+      try {
+        const response = await $.ajax({
+          url: 'ajax.php',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            action: 'check_text_errors',
+            text: text,
+            language: language
+          })
+        });
+
+        if (response.hasErrors) {
+          showErrorCheckResult(response);
+        } else {
+          showSuccessMessage();
+          // Auto-continue with tokenization
+          renderFocusChips();
+        }
+
+        setFocusStatus('', '');
+      } catch (error) {
+        console.error('Error checking text:', error);
+        setFocusStatus('error', 'Feil ved sjekking');
+      }
+    }
+
+    /**
+     * Show error check result with corrections
+     */
+    function showErrorCheckResult(result) {
+      const block = $('#errorCheckBlock');
+
+      const html = `
+        <div class="error-check-header">
+          <strong>Feil funnet!</strong>
+        </div>
+        <div class="error-check-explanation">
+          ${result.explanation || 'Feil funnet i teksten.'}
+        </div>
+        <div class="error-check-corrected">
+          <strong>Исправленный вариант:</strong>
+          <div class="corrected-text">${result.correctedText}</div>
+        </div>
+        <div class="error-check-actions">
+          <button type="button" id="acceptCorrectionBtn">Применить исправления</button>
+          <button type="button" id="rejectCorrectionBtn">Оставить как есть</button>
+        </div>
+      `;
+
+      block.html(html).addClass('error-check-visible').show();
+
+      // Store corrected text for button handlers
+      block.data('correctedText', result.correctedText);
+
+      // Setup button handlers
+      $('#acceptCorrectionBtn').on('click', function() {
+        const correctedText = block.data('correctedText');
+        $('#uFront').val(correctedText);
+
+        // Trigger translation update
+        if (window.onFrontChange) {
+          window.onFrontChange();
+        }
+
+        // Trigger tokenization
+        renderFocusChips();
+
+        // Hide error block
+        block.removeClass('error-check-visible').hide();
+      });
+
+      $('#rejectCorrectionBtn').on('click', function() {
+        // Just hide error block and continue with tokenization
+        block.removeClass('error-check-visible').hide();
+        renderFocusChips();
+      });
+    }
+
+    /**
+     * Show success message when no errors found
+     */
+    function showSuccessMessage() {
+      const block = $('#errorCheckBlock');
+      block.html('<div class="error-check-success">✓ Ingen feil funnet! (Ошибок не найдено)</div>')
+           .addClass('error-check-visible')
+           .show();
+
+      // Auto-hide after 3 seconds
+      setTimeout(() => {
+        block.removeClass('error-check-visible').hide();
+      }, 3000);
+    }
+
+    /**
+     * Detect grammatical constructions in sentence
+     */
+    async function detectConstructions(frontText, focusWord) {
+      const language = $('#languageSelector').val() || 'uk';
+
+      try {
+        const response = await $.ajax({
+          url: 'ajax.php',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            action: 'ai_detect_constructions',
+            frontText: frontText,
+            focusWord: focusWord,
+            language: language
+          })
+        });
+
+        return response;
+      } catch (error) {
+        console.error('Error detecting constructions:', error);
+        return {
+          constructions: [],
+          focusConstruction: null
+        };
+      }
+    }
+
+    /**
+     * Highlight construction tokens with different colors
+     */
+    function highlightConstructionTokens(constructions) {
+      if (!constructions || constructions.length === 0) {
+        return;
+      }
+
+      constructions.forEach((constr, index) => {
+        const colorClass = `focus-chip--construction-${(index % 5) + 1}`;
+
+        if (constr.tokenIndices && Array.isArray(constr.tokenIndices)) {
+          constr.tokenIndices.forEach(tokenIdx => {
+            const chip = $(`.focus-chip[data-index="${tokenIdx}"]`);
+            if (chip.length) {
+              chip.addClass(colorClass);
+              chip.attr('data-construction', index);
+            }
+          });
+        }
+      });
+    }
+
+    /**
+     * Render smart sentence analysis (don't break up constructions)
+     */
+    function renderSmartSentenceAnalysis(constructions, tokens, translations) {
+      const html = [];
+      const processed = new Set();
+
+      tokens.forEach((token, idx) => {
+        if (processed.has(idx)) {
+          return;
+        }
+
+        // Check if this token is part of a construction
+        const construction = constructions.find(c =>
+          c.tokenIndices && c.tokenIndices.includes(idx)
+        );
+
+        if (construction) {
+          // This is part of a construction - show whole construction
+          const constrId = constructions.indexOf(construction) + 1;
+          html.push(`
+            <div class="analysis-item analysis-item--construction">
+              <span class="analysis-text construction-highlight-${constrId}">
+                ${construction.normalized || construction.tokens.join(' ')}
+              </span>
+              <span class="analysis-translation">
+                ${construction.translation || ''}
+              </span>
+            </div>
+          `);
+
+          // Mark all tokens of this construction as processed
+          if (construction.tokenIndices) {
+            construction.tokenIndices.forEach(i => processed.add(i));
+          }
+        } else {
+          // Regular word - show separately
+          const translation = translations[idx] || '';
+          html.push(`
+            <div class="analysis-item">
+              <span class="analysis-text">${token.text || token}</span>
+              <span class="analysis-translation">${translation}</span>
+            </div>
+          `);
+          processed.add(idx);
+        }
+      });
+
+      $('#focusAnalysisList').html(html.join(''));
+    }
+
+    // ==========================================================================
+    // EVENT HANDLERS - SETUP
+    // ==========================================================================
+
+    /**
+     * Setup event handler for check text button
+     */
+    const checkTextBtn = document.getElementById('checkTextBtn');
+    if (checkTextBtn) {
+      checkTextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        checkTextForErrors();
+      });
+    }
+
   }
 export { flashcardsInit };
