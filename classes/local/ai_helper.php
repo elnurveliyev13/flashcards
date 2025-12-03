@@ -482,53 +482,38 @@ class ai_helper {
         ];
         $langname = $languagemap[$language] ?? 'English';
 
-        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher with deep knowledge of Norwegian grammar, collocations, and idiomatic expressions. Your task is to check text for errors and provide accurate corrections. Respond ONLY with valid JSON.";
+        $systemprompt = "You are an experienced Norwegian (Bokmål) language teacher helping students improve their writing. Your role is to carefully review student texts, identify ALL grammatical errors, and provide clear, helpful corrections with explanations. You have deep expertise in Norwegian grammar, syntax, collocations, and idiomatic expressions.";
 
-        $userprompt = "Check the following Norwegian (Bokmål) text for errors:
-- Grammar mistakes
-- Word order issues
-- Wrong verb forms or tenses
+        $userprompt = "A student has written this Norwegian text:
+
+\"$text\"
+
+Please review it carefully and check for any errors including:
+- Grammar mistakes (verb forms, tenses, agreement)
+- Word order issues (especially in subordinate clauses)
+- Incorrect prepositions and verb-preposition collocations
 - Spelling errors
-- Incorrect prepositions and collocation errors (e.g., \"klar på\" instead of \"klar over\")
-- Agreement errors (gender, number)
-- Idiomatic expression errors
-- Double negation issues
+- Any other mistakes that a native speaker would notice
 
-Text to check: \"$text\"
+If you find ANY errors:
+1. Provide the complete corrected version of the text
+2. Explain what was wrong in clear $langname language that a student can understand
+3. List each specific error with its correction
 
-IMPORTANT RULES:
-1. Pay special attention to Norwegian verb-preposition collocations:
-   - \"klar over\" (aware of) NOT \"klar på\"
-   - \"glad i\" (fond of) NOT \"glad for\"
-   - \"redd for\" (afraid of) NOT \"redd på\"
-   - \"fornøyd med\" (satisfied with) NOT \"fornøyd av\"
+If the text is grammatically correct, indicate that no errors were found.
 
-2. Check for double negation errors (\"ikke...ikke\", \"ikke...aldri\")
-
-3. Provide the COMPLETE corrected text, not just the changed part
-
-If you find errors:
-1. List ALL errors in the \"errors\" array with original and corrected parts
-2. Provide the FULL corrected version of the text in \"correctedText\"
-3. Explain ALL errors in $langname language in \"explanation\"
-4. Be specific about WHY each error is wrong
-
-If the text is correct:
-- Set hasErrors to false
-- Return empty arrays and explanation
-
-RESPOND ONLY with valid JSON in this exact format:
+Please respond ONLY with valid JSON in this format:
 {
   \"hasErrors\": true/false,
   \"errors\": [
     {
-      \"original\": \"incorrect part\",
-      \"corrected\": \"correct version\",
-      \"issue\": \"explanation in $langname\"
+      \"original\": \"the incorrect part\",
+      \"corrected\": \"the corrected version\",
+      \"issue\": \"clear explanation in $langname\"
     }
   ],
-  \"correctedText\": \"full corrected text or original if no errors\",
-  \"explanation\": \"overall explanation in $langname or empty string\"
+  \"correctedText\": \"the full corrected text\",
+  \"explanation\": \"overall explanation of all errors in $langname\"
 }";
 
         $client = new openai_client();

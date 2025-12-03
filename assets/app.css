@@ -3586,7 +3586,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .fokus-suggest.front-suggest {
   position: relative;
-  padding-top: 26px;
+  padding-top: 40px;
 }
 .front-suggest-list {
   display: flex;
@@ -3595,9 +3595,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .front-suggest-toggle {
   position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 6px;
+  left: calc(50% - 18px);
   width: 36px;
   height: 36px;
   border: none;
@@ -3609,7 +3608,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  box-sizing: border-box;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .front-suggest-toggle.collapsed {
   color: #9ca3af;
