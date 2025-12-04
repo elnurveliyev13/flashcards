@@ -692,13 +692,20 @@ PROMPT;
     }
 
     protected function request(array $payload) {
-        // Some newer models (e.g. gpt-5-mini) only support the default
-        // temperature. For those, drop any explicit temperature override
-        // to avoid HTTP 400 "unsupported_value" errors.
+        // Some newer models (e.g. gpt-5-mini/gpt-5-nano) only support the
+        // default temperature and expose reasoning controls. For those,
+        // drop any explicit temperature override (to avoid HTTP 400
+        // "unsupported_value") and request minimal reasoning effort to
+        // reduce latency when supported.
         $model = $payload['model'] ?? $this->model ?? '';
         $modelkey = core_text::strtolower(trim((string)$model));
-        if ($modelkey !== '' && $this->requires_default_temperature($modelkey) && array_key_exists('temperature', $payload)) {
-            unset($payload['temperature']);
+        if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
+            if (array_key_exists('temperature', $payload)) {
+                unset($payload['temperature']);
+            }
+            if (!isset($payload['reasoning_effort'])) {
+                $payload['reasoning_effort'] = 'minimal';
+            }
         }
 
         $curl = new \curl();
