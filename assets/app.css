@@ -2053,25 +2053,29 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 /* Mobile: float the tab bar near the bottom for thumb reach */
 @media (max-width: 720px){
+  :root{
+    --fc-tabs-height: 64px;
+  }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
-    padding-bottom: calc(var(--space-3) + 220px);
+    padding-bottom: calc(var(--space-3) + 240px);
   }
   #mod_flashcards_container[data-bottom-visible] .wrap,
   #mod_flashcards_container[data-edit-bar-visible] .wrap{
-    padding-bottom: calc(var(--space-3) + 220px);
+    padding-bottom: calc(var(--space-3) + 240px);
   }
 
-  /* Lift action bars up a bit to leave room for tabs below */
+  /* Lift action bars just enough to sit above tabs */
   .bottom-actions{
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 6px);
   }
 
   .tabs-toolbar .fc-tabs{
+    --fc-tabs-height: 64px;
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(6px + env(safe-area-inset-bottom));
+    bottom: calc(env(safe-area-inset-bottom) + 0px);
     width: min(var(--app-content-max-width), calc(100% - 12px));
     padding: 6px;
     margin: 0;
@@ -2082,6 +2086,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     backdrop-filter: blur(12px);
     gap: 4px;
     z-index: 900;
+    min-height: var(--fc-tabs-height);
   }
 
   .fc-tab{
@@ -4671,6 +4676,10 @@ select.inline-prompt-field {
   width: 100%;
   max-width: var(--slot-content-max-width);
   box-sizing: border-box;
+}
+.front-text-actions .translation-status-inline{
+  margin-left: auto;
+  align-self: center;
 }
 
 /* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */

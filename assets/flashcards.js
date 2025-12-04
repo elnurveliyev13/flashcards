@@ -2015,15 +2015,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
-    const mediaStatusTargetId = 'yui_3_18_1_1_1764888360009_18';
-    const mediaStatusTarget = document.getElementById(mediaStatusTargetId);
+    const translationStatusRow = mediaStatusIndicator ? mediaStatusIndicator.closest('.translation-status-row') : null;
+    const mediaStatusTargetId = 'yui_3_18_1_1_1764889193288_12';
+    const checkTextBtnInline = document.getElementById('checkTextBtn');
+    const mediaStatusTarget = document.getElementById(mediaStatusTargetId) ||
+      (checkTextBtnInline ? checkTextBtnInline.parentElement : null);
     if(mediaStatusIndicator && mediaStatusTarget){
-      // Place the media status indicator inside the requested field if it exists.
-      const host = ['INPUT','TEXTAREA','SELECT'].includes(mediaStatusTarget.tagName)
-        ? mediaStatusTarget.parentElement
-        : mediaStatusTarget;
+      // Place the media status indicator inside the requested field (same row as checkTextBtn, right aligned).
+      mediaStatusIndicator.classList.add('translation-status-inline');
+      const host = mediaStatusTarget;
       if(host && !host.contains(mediaStatusIndicator)){
         host.appendChild(mediaStatusIndicator);
+      }
+      if(translationStatusRow && translationStatusRow !== host){
+        translationStatusRow.remove();
       }
     }
     const focusTranslationText = document.getElementById('focusTranslationText');
