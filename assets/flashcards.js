@@ -2015,6 +2015,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
+    const mediaStatusTargetId = 'yui_3_18_1_1_1764888360009_18';
+    const mediaStatusTarget = document.getElementById(mediaStatusTargetId);
+    if(mediaStatusIndicator && mediaStatusTarget){
+      // Place the media status indicator inside the requested field if it exists.
+      const host = ['INPUT','TEXTAREA','SELECT'].includes(mediaStatusTarget.tagName)
+        ? mediaStatusTarget.parentElement
+        : mediaStatusTarget;
+      if(host && !host.contains(mediaStatusIndicator)){
+        host.appendChild(mediaStatusIndicator);
+      }
+    }
     const focusTranslationText = document.getElementById('focusTranslationText');
     const translationHintDefault = translationModeHint ? translationModeHint.textContent : '';
     let translationDirection = 'no-user';
@@ -4762,8 +4773,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       front.dispatchEvent(new Event('change', {bubbles:true}));
       return { trimmed, previous };
     }
+    // Strip STT stage directions like "(utandning)" or "(3 sekunders pause)" before inserting text.
+    function sanitizeTranscription(text){
+      if(!text) return '';
+      let cleaned = (text || '').trim();
+      const stagePatterns = [
+        /\(\s*(?:utandning|inn?andning|pust|exhale|inhale|breath(?:ing)?|sighs?|laughter|laughs?|hoste?r?|coughs?|pause|paus|sekund(?:er)?\s*pause|second(?:s)?\s*pause|bakgrunns?(?:stoy|stoey)|background\s+noise|st(?:oy|stoey)|noise|musikk|music)[^)]*\)\s*/gi,
+        /\[\s*(?:utandning|inn?andning|pust|exhale|inhale|breath(?:ing)?|sighs?|laughter|laughs?|hoste?r?|coughs?|pause|paus|sekund(?:er)?\s*pause|second(?:s)?\s*pause|bakgrunns?(?:stoy|stoey)|background\s+noise|st(?:oy|stoey)|noise|musikk|music)[^\]]*\]\s*/gi,
+        /\(\s*\d+\s*(?:sekund(?:er)?|second(?:s)?)(?:\s*pause)?\s*\)\s*/gi
+      ];
+      stagePatterns.forEach(re=>{ cleaned = cleaned.replace(re, ' '); });
+      cleaned = cleaned.replace(/\s{2,}/g,' ').trim();
+      cleaned = cleaned.replace(/^[-.,;:]+\s*/, '');
+      return cleaned || (text || '').trim();
+    }
     function applyTranscriptionResult(text){
-      const result = insertFrontText(text);
+      const result = insertFrontText(sanitizeTranscription(text));
       if(!result){
         return;
       }

@@ -2053,44 +2053,47 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 /* Mobile: float the tab bar near the bottom for thumb reach */
 @media (max-width: 720px){
-  /* Make sure content can scroll past the floating bars */
+  /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
-    padding-bottom: calc(var(--space-3) + 150px);
+    padding-bottom: calc(var(--space-3) + 220px);
   }
   #mod_flashcards_container[data-bottom-visible] .wrap,
   #mod_flashcards_container[data-edit-bar-visible] .wrap{
-    padding-bottom: calc(var(--space-3) + 210px);
+    padding-bottom: calc(var(--space-3) + 220px);
+  }
+
+  /* Lift action bars up a bit to leave room for tabs below */
+  .bottom-actions{
+    bottom: calc(72px + env(safe-area-inset-bottom));
   }
 
   .tabs-toolbar .fc-tabs{
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(18px + env(safe-area-inset-bottom));
-    width: min(520px, calc(100% - 18px));
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    width: min(var(--app-content-max-width), calc(100% - 12px));
     padding: 6px;
     margin: 0;
-    border-radius: 18px;
+    border-radius: 16px;
     border: 1px solid var(--border);
     background: rgba(15,23,42,0.94);
     box-shadow: 0 18px 40px rgba(0,0,0,0.45);
     backdrop-filter: blur(12px);
-    gap: 6px;
-    z-index: 1100;
-  }
-  #mod_flashcards_container[data-bottom-visible] .tabs-toolbar .fc-tabs,
-  #mod_flashcards_container[data-edit-bar-visible] .tabs-toolbar .fc-tabs{
-    bottom: calc(100px + env(safe-area-inset-bottom));
+    gap: 4px;
+    z-index: 900;
   }
 
   .fc-tab{
-    border-radius: 14px;
-    padding: 12px 10px;
-    min-height: 56px;
+    border-radius: 12px;
+    padding: 10px 8px;
+    min-height: 52px;
     background: transparent;
     border: 1px solid transparent;
-    font-size: 0.95rem;
-    gap: 8px;
+    font-size: clamp(12px, 3.4vw, 15px);
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 0;
   }
   .fc-tab::after{ display: none; }
   .fc-tab.fc-tab-active{
@@ -2099,7 +2102,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     box-shadow: 0 6px 18px rgba(0,0,0,0.35);
   }
   .fc-tab-icon{
-    font-size: 1.35rem;
+    font-size: 1.3rem;
   }
 }
 
