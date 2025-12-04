@@ -711,13 +711,24 @@ PROMPT;
             'CURLOPT_TIMEOUT' => 30,
             'CURLOPT_CONNECTTIMEOUT' => 10,
         ];
+        $t0 = microtime(true);
         $response = $curl->post($this->baseurl, json_encode($payload, JSON_UNESCAPED_UNICODE), $options);
+        $phpduration = microtime(true) - $t0;
         if ($response === false) {
             $errno = $curl->get_errno();
             $error = $curl->error;
             throw new moodle_exception('ai_http_error', 'mod_flashcards', '', null, "cURL {$errno}: {$error}");
         }
         $info = $curl->get_info();
+        if (!empty($info)) {
+            $httpcode = (int)($info['http_code'] ?? 0);
+            $totaltime = isset($info['total_time']) ? (float)$info['total_time'] : -1.0;
+            debugging('[flashcards][openai] model=' . ($model ?: 'n/a')
+                . ' http=' . $httpcode
+                . ' total_time=' . sprintf('%.3f', $totaltime)
+                . ' php_time=' . sprintf('%.3f', $phpduration),
+                DEBUG_DEVELOPER);
+        }
         if (!empty($info['http_code']) && (int)$info['http_code'] >= 400) {
             throw new moodle_exception('ai_http_error', 'mod_flashcards', '', null, 'HTTP ' . $info['http_code'] . ': ' . $response);
         }

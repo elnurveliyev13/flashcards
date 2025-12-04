@@ -515,6 +515,9 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
             ];
         }
 
+        $config = get_config('mod_flashcards');
+        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
+
         // Use the same model as configured in openai_client (taken from plugin settings).
         $reflection = new \ReflectionClass($client);
         $model = 'gpt-4o-mini';
@@ -525,6 +528,9 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
             if ($value !== '') {
                 $model = $value;
             }
+        }
+        if ($correctionmodel !== '') {
+            $model = $correctionmodel;
         }
 
         // STAGE 1: First API call - Find errors
@@ -571,7 +577,6 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
 
         // Optional STAGE 2: Second API call - Double-check and suggest natural alternative.
         // Controlled by admin setting to keep latency acceptable for slower models.
-        $config = get_config('mod_flashcards');
         $enabledoublecheck = !empty($config->ai_doublecheck_correction);
         if (!$enabledoublecheck) {
             return $result1;
@@ -669,6 +674,9 @@ CRITICAL RULES:
 
         $systemprompt = "You are an experienced Norwegian language teacher. Answer student questions about grammar and corrections clearly and helpfully.";
 
+        $config = get_config('mod_flashcards');
+        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
+
         $reflection = new \ReflectionClass($client);
         $model = 'gpt-4o-mini';
         if ($reflection->hasProperty('model')) {
@@ -678,6 +686,9 @@ CRITICAL RULES:
             if ($value !== '') {
                 $model = $value;
             }
+        }
+        if ($correctionmodel !== '') {
+            $model = $correctionmodel;
         }
 
         $payload = [
@@ -724,6 +735,9 @@ CRITICAL RULES:
 
         // Messages array already includes system prompt from frontend
         // Just pass through to OpenAI
+        $config = get_config('mod_flashcards');
+        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
+
         $reflection = new \ReflectionClass($client);
         $model = 'gpt-4o-mini';
         if ($reflection->hasProperty('model')) {
@@ -733,6 +747,9 @@ CRITICAL RULES:
             if ($value !== '') {
                 $model = $value;
             }
+        }
+        if ($correctionmodel !== '') {
+            $model = $correctionmodel;
         }
 
         $payload = [

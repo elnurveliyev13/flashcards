@@ -41,6 +41,13 @@ if ($hassiteconfig) {
         'https://api.openai.com/v1/chat/completions'
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/openai_correction_model',
+        get_string('settings_openai_correction_model', 'mod_flashcards'),
+        get_string('settings_openai_correction_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
     $settings->add(new admin_setting_configcheckbox(
         'mod_flashcards/ai_doublecheck_correction',
         get_string('settings_ai_doublecheck_correction', 'mod_flashcards'),
