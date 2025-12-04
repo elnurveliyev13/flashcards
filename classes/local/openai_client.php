@@ -692,6 +692,15 @@ PROMPT;
     }
 
     protected function request(array $payload) {
+        // Some newer models (e.g. gpt-5-mini) only support the default
+        // temperature. For those, drop any explicit temperature override
+        // to avoid HTTP 400 "unsupported_value" errors.
+        $model = $payload['model'] ?? $this->model ?? '';
+        $modelkey = core_text::strtolower(trim((string)$model));
+        if ($modelkey !== '' && $this->requires_default_temperature($modelkey) && array_key_exists('temperature', $payload)) {
+            unset($payload['temperature']);
+        }
+
         $curl = new \curl();
         $headers = [
             'Content-Type: application/json',
@@ -717,6 +726,19 @@ PROMPT;
             throw new moodle_exception('ai_invalid_json', 'mod_flashcards');
         }
         return $json;
+    }
+
+    /**
+     * Models that only allow the default temperature (1.0).
+     *
+     * @param string $modelkey lowercased model id
+     */
+    protected function requires_default_temperature(string $modelkey): bool {
+        // gpt-5-mini and its dated variants (e.g. gpt-5-mini-2025-08-07)
+        if (strpos($modelkey, 'gpt-5-mini') === 0) {
+            return true;
+        }
+        return false;
     }
 
     protected function record_usage(int $userid, $usage): void {
