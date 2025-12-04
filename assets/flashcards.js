@@ -10473,7 +10473,11 @@ Regeln:
 Отвечай по-русски.`
         },
         'en': {
-          sure: `Double-check your correction. Analyze all errors and confirm correctness. Answer briefly in English.`,
+          sure: `You are continuing the same chat as above. The user is asking: "Are you sure your correction and explanation above are correct?" Carefully re-check the original Norwegian sentence, your corrected version and your previous explanation.
+
+If everything is correct, answer in 1–2 short sentences like: "Yes, my correction is correct because …". Do NOT repeat the full corrected sentence and do NOT start with "Corrected:".
+
+If you notice any mistake or a better correction, honestly admit it and give a short fix, for example: "No, I would correct it to: \"…\", because …". Keep the answer brief, as a follow-up in the same conversation. Answer in English.`,
           explain: `Explain the grammatical reason for the correction.
 
 IMPORTANT: Show the CONTRAST with examples:
@@ -10659,6 +10663,13 @@ Verwende einfache Sprache, aber halte die Erklärung GENAU.
 Antworte auf Deutsch.`
         }
       };
+
+      // Simplified follow-up behavior for the "Are you sure?" button in English.
+      // The model should just re-check its own correction and explanation,
+      // briefly confirm if they are correct, or correct itself if needed.
+      if (prompts.en) {
+        prompts.en.sure = `Please check again whether your correction and your explanation above are accurate. If they are, briefly confirm that your correction is correct and why. If you see a mistake or a better correction, adjust it and explain briefly. Answer in English.`;
+      }
 
       const langPrompts = prompts[language] || prompts['en'];
 

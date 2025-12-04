@@ -3129,7 +3129,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .slot-head-extra{
   margin-left:auto;
   display:flex;
-  align-items:center;
+  align-items:stretch;
   gap:0.35rem;
 }
 .translation-reset{
@@ -3147,6 +3147,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items:center;
   justify-content:center;
   transition:all 0.15s ease;
+  align-self:stretch;
+  min-height:36px;
+  height:auto;
 }
 .translation-reset:hover{
   border-color:var(--primary);
