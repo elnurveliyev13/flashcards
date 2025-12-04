@@ -10412,51 +10412,251 @@ Regeln:
       const prompts = {
         'uk': {
           sure: `Перепровір своє виправлення. Проаналізуй всі помилки та підтверди правильність. Відповідай коротко українською.`,
-          explain: `Поясни, будь ласка, лише головну граматичну причину своїх виправлень.\n\nФормат відповіді:\n- Дуже коротке правило (1–2 речення).\n- 2–3 приклади норвезькою з перекладом українською.\n\nНе обговорюй розмовні варіанти, діалекти, стилістику і не пропонуй альтернатив, які суперечать твоєму виправленню.\nЯкщо ти не впевнена, напиши чесно, що не впевнена, замість вигадувати.`,
+          explain: `Поясни граматичну причину виправлення.
+
+ВАЖЛИВО: Покажи КОНТРАСТ на прикладах:
+1. Як це працює в ЦЬОМУ типі речення (де була помилка)
+2. Як це ВІДРІЗНЯЄТЬСЯ в інших типах речень
+
+Приклад структури:
+- У підрядних реченнях: "at det ikke er" (заперечення перед дієсловом)
+- У головних реченнях: "det er ikke" (заперечення після дієслова)
+
+Формат:
+- Коротке пояснення (2-3 речення) з фокусом на КОНКРЕТНОМУ контексті
+- 3-4 контрастних приклади норвезькою з перекладом українською
+
+НЕ роби широких узагальнень типу "ikke завжди йде перед дієсловом".
+Поясни КОНКРЕТНЕ правило для КОНКРЕТНОГО контексту.
+
+Відповідай українською.`,
           examples: `Створи, будь ласка, 5–10 коротких норвезьких речень з такою ж граматичною структурою, як у виправленому варіанті. До кожного речення додай переклад українською.`,
-          simpler: `Поясни цю помилку максимально просто, без граматичної термінології, щоб це було зрозуміло початківцю. Відповідай українською.`
+          simpler: `Поясни цю помилку простими словами, без граматичної термінології.
+
+Покажи приклади ПРАВИЛЬНОГО та НЕПРАВИЛЬНОГО використання:
+- Неправильно: [оригінальна помилка]
+- Правильно: [виправлений варіант]
+- Також покажи: Як це було б інакше в іншому типі речення
+
+Використовуй просту мову, але зберігай точність пояснення.
+Відповідай українською.`
         },
         'ru': {
           sure: `Перепроверь свое исправление. Проанализируй все ошибки и подтверди правильность. Отвечай кратко по-русски.`,
-          explain: `Объясни, пожалуйста, только главную грамматическую причину своих исправлений.\n\nФормат ответа:\n- Очень короткое правило (1–2 предложения).\n- 2–3 примера на норвежском с переводом на русский.\n\nНе обсуждай разговорные варианты, диалекты, стилистику и не предлагай альтернатив, противоречащих твоему исправлению.\nЕсли ты не уверен, напиши честно, что не уверен, вместо того чтобы придумывать.`,
+          explain: `Объясни грамматическую причину исправления.
+
+ВАЖНО: Покажи КОНТРАСТ на примерах:
+1. Как это работает в ЭТОМ типе предложения (где была ошибка)
+2. Как это ОТЛИЧАЕТСЯ в других типах предложений
+
+Пример структуры:
+- В придаточных предложениях: "at det ikke er" (отрицание перед глаголом)
+- В главных предложениях: "det er ikke" (отрицание после глагола)
+
+Формат:
+- Краткое объяснение (2-3 предложения) с фокусом на КОНКРЕТНОМ контексте
+- 3-4 контрастных примера на норвежском с переводом на русский
+
+НЕ делай широких обобщений типу "ikke всегда идет перед глаголом".
+Объясни КОНКРЕТНОЕ правило для КОНКРЕТНОГО контекста.
+
+Отвечай по-русски.`,
           examples: `Создай, пожалуйста, 5–10 коротких норвежских предложений с такой же грамматической структурой, как в исправленном варианте. К каждому предложению добавь перевод на русский.`,
-          simpler: `Объясни эту ошибку максимально просто, без грамматической терминологии, чтобы это было понятно начинающему. Отвечай по-русски.`
+          simpler: `Объясни эту ошибку простыми словами, без грамматической терминологии.
+
+Покажи примеры ПРАВИЛЬНОГО и НЕПРАВИЛЬНОГО использования:
+- Неправильно: [оригинальная ошибка]
+- Правильно: [исправленный вариант]
+- Также покажи: Как это было бы иначе в другом типе предложения
+
+Используй простой язык, но сохраняй точность объяснения.
+Отвечай по-русски.`
         },
         'en': {
           sure: `Double-check your correction. Analyze all errors and confirm correctness. Answer briefly in English.`,
-          explain: `Please explain only the main grammatical reason for your corrections.\n\nResponse format:\n- Very short rule (1–2 sentences).\n- 2–3 Norwegian examples with English translation.\n\nDon't discuss colloquial variants, dialects, stylistics, and don't suggest alternatives that contradict your correction.\nIf you're not sure, write honestly that you're not sure, instead of making things up.`,
+          explain: `Explain the grammatical reason for the correction.
+
+IMPORTANT: Show the CONTRAST with examples:
+1. Show how it works in THIS type of sentence (where the error was)
+2. Show how it's DIFFERENT in other types of sentences
+
+Example structure:
+- In subordinate clauses: "at det ikke er" (negation before verb)
+- In main clauses: "det er ikke" (negation after verb)
+
+Format:
+- Brief explanation (2-3 sentences) focusing on the SPECIFIC context
+- 3-4 contrasting Norwegian examples with English translation
+
+Do NOT make broad generalizations like "ikke always comes before the verb".
+Explain the SPECIFIC rule for the SPECIFIC context.
+
+Answer in English.`,
           examples: `Please create 5–10 short Norwegian sentences with the same grammatical structure as in the corrected version. Add English translation to each sentence.`,
-          simpler: `Explain this error as simply as possible, without grammatical terminology, so that it's understandable for a beginner. Answer in English.`
+          simpler: `Explain this error in simple words, without grammatical terminology.
+
+Show examples of RIGHT and WRONG usage:
+- Wrong: [original error]
+- Right: [corrected version]
+- Also show: How it would be different in a different type of sentence
+
+Use simple language but keep the explanation ACCURATE.
+Answer in English.`
         },
         'pl': {
           sure: `Sprawdź ponownie swoją poprawkę. Przeanalizuj wszystkie błędy i potwierdź poprawność. Odpowiadaj krótko po polsku.`,
-          explain: `Wyjaśnij proszę tylko główny powód gramatyczny swoich poprawek.\n\nFormat odpowiedzi:\n- Bardzo krótka zasada (1–2 zdania).\n- 2–3 przykłady po norwesku z tłumaczeniem na polski.\n\nNie omawiaj wariantów potocznych, dialektów, stylistyki i nie proponuj alternatyw sprzecznych z twoją poprawką.\nJeśli nie jesteś pewien, napisz uczciwie, że nie jesteś pewien, zamiast wymyślać.`,
+          explain: `Wyjaśnij powód gramatyczny poprawki.
+
+WAŻNE: Pokaż KONTRAST na przykładach:
+1. Jak to działa w TYM typie zdania (gdzie był błąd)
+2. Jak to się RÓŻNI w innych typach zdań
+
+Przykład struktury:
+- W zdaniach podrzędnych: "at det ikke er" (przeczenie przed czasownikiem)
+- W zdaniach głównych: "det er ikke" (przeczenie po czasowniku)
+
+Format:
+- Krótkie wyjaśnienie (2-3 zdania) skupiające się na KONKRETNYM kontekście
+- 3-4 kontrastujące przykłady po norwesku z tłumaczeniem na polski
+
+NIE rób szerokich uogólnień typu "ikke zawsze idzie przed czasownikiem".
+Wyjaśnij KONKRETNĄ zasadę dla KONKRETNEGO kontekstu.
+
+Odpowiadaj po polsku.`,
           examples: `Stwórz proszę 5–10 krótkich norweskich zdań z taką samą strukturą gramatyczną jak w poprawionej wersji. Do każdego zdania dodaj tłumaczenie na polski.`,
-          simpler: `Wyjaśnij ten błąd maksymalnie prosto, bez terminologii gramatycznej, żeby było to zrozumiałe dla początkującego. Odpowiadaj po polsku.`
+          simpler: `Wyjaśnij ten błąd prostymi słowami, bez terminologii gramatycznej.
+
+Pokaż przykłady PRAWIDŁOWEGO i NIEPRAWIDŁOWEGO użycia:
+- Nieprawidłowo: [oryginalny błąd]
+- Prawidłowo: [poprawiona wersja]
+- Pokaż też: Jak to byłoby inaczej w innym typie zdania
+
+Używaj prostego języka, ale zachowaj dokładność wyjaśnienia.
+Odpowiadaj po polsku.`
         },
         'fr': {
           sure: `Revérifie ta correction. Analyse toutes les erreurs et confirme l'exactitude. Réponds brièvement en français.`,
-          explain: `Explique s'il te plaît uniquement la raison grammaticale principale de tes corrections.\n\nFormat de réponse:\n- Règle très courte (1–2 phrases).\n- 2–3 exemples norvégiens avec traduction en français.\n\nNe discute pas des variantes familières, dialectes, stylistique et ne propose pas d'alternatives qui contredisent ta correction.\nSi tu n'es pas sûr, écris honnêtement que tu n'es pas sûr, au lieu d'inventer.`,
+          explain: `Explique la raison grammaticale de la correction.
+
+IMPORTANT : Montre le CONTRASTE avec des exemples :
+1. Comment cela fonctionne dans CE type de phrase (où était l'erreur)
+2. Comment c'est DIFFÉRENT dans d'autres types de phrases
+
+Exemple de structure :
+- Dans les propositions subordonnées : "at det ikke er" (négation avant le verbe)
+- Dans les propositions principales : "det er ikke" (négation après le verbe)
+
+Format :
+- Explication brève (2-3 phrases) se concentrant sur le contexte SPÉCIFIQUE
+- 3-4 exemples contrastés en norvégien avec traduction en français
+
+Ne fais PAS de généralisations larges comme "ikke vient toujours avant le verbe".
+Explique la règle SPÉCIFIQUE pour le contexte SPÉCIFIQUE.
+
+Réponds en français.`,
           examples: `Crée s'il te plaît 5–10 phrases norvégiennes courtes avec la même structure grammaticale que dans la version corrigée. Ajoute une traduction en français à chaque phrase.`,
-          simpler: `Explique cette erreur de manière aussi simple que possible, sans terminologie grammaticale, pour qu'un débutant puisse comprendre. Réponds en français.`
+          simpler: `Explique cette erreur avec des mots simples, sans terminologie grammaticale.
+
+Montre des exemples d'utilisation CORRECTE et INCORRECTE :
+- Incorrect : [erreur originale]
+- Correct : [version corrigée]
+- Montre aussi : Comment ce serait différent dans un autre type de phrase
+
+Utilise un langage simple mais garde l'explication PRÉCISE.
+Réponds en français.`
         },
         'es': {
           sure: `Verifica nuevamente tu corrección. Analiza todos los errores y confirma la exactitud. Responde brevemente en español.`,
-          explain: `Explica por favor solo la razón gramatical principal de tus correcciones.\n\nFormato de respuesta:\n- Regla muy corta (1–2 oraciones).\n- 2–3 ejemplos en noruego con traducción al español.\n\nNo discutas variantes coloquiales, dialectos, estilística y no sugieras alternativas que contradigan tu corrección.\nSi no estás seguro, escribe honestamente que no estás seguro, en lugar de inventar.`,
+          explain: `Explica la razón gramatical de la corrección.
+
+IMPORTANTE: Muestra el CONTRASTE con ejemplos:
+1. Cómo funciona en ESTE tipo de oración (donde estaba el error)
+2. Cómo es DIFERENTE en otros tipos de oraciones
+
+Ejemplo de estructura:
+- En oraciones subordinadas: "at det ikke er" (negación antes del verbo)
+- En oraciones principales: "det er ikke" (negación después del verbo)
+
+Formato:
+- Explicación breve (2-3 oraciones) enfocándose en el contexto ESPECÍFICO
+- 3-4 ejemplos contrastantes en noruego con traducción al español
+
+NO hagas generalizaciones amplias como "ikke siempre va antes del verbo".
+Explica la regla ESPECÍFICA para el contexto ESPECÍFICO.
+
+Responde en español.`,
           examples: `Crea por favor 5–10 oraciones noruegas cortas con la misma estructura gramatical que en la versión corregida. Añade traducción al español a cada oración.`,
-          simpler: `Explica este error de la manera más simple posible, sin terminología gramatical, para que sea comprensible para un principiante. Responde en español.`
+          simpler: `Explica este error con palabras simples, sin terminología gramatical.
+
+Muestra ejemplos de uso CORRECTO e INCORRECTO:
+- Incorrecto: [error original]
+- Correcto: [versión corregida]
+- También muestra: Cómo sería diferente en otro tipo de oración
+
+Usa lenguaje simple pero mantén la explicación PRECISA.
+Responde en español.`
         },
         'it': {
           sure: `Ricontrolla la tua correzione. Analizza tutti gli errori e conferma la correttezza. Rispondi brevemente in italiano.`,
-          explain: `Spiega per favore solo la ragione grammaticale principale delle tue correzioni.\n\nFormato di risposta:\n- Regola molto breve (1–2 frasi).\n- 2–3 esempi in norvegese con traduzione in italiano.\n\nNon discutere varianti colloquiali, dialetti, stilistica e non suggerire alternative che contraddicono la tua correzione.\nSe non sei sicuro, scrivi onestamente che non sei sicuro, invece di inventare.`,
+          explain: `Spiega la ragione grammaticale della correzione.
+
+IMPORTANTE: Mostra il CONTRASTO con esempi:
+1. Come funziona in QUESTO tipo di frase (dove c'era l'errore)
+2. Come è DIVERSO in altri tipi di frasi
+
+Esempio di struttura:
+- Nelle proposizioni subordinate: "at det ikke er" (negazione prima del verbo)
+- Nelle proposizioni principali: "det er ikke" (negazione dopo il verbo)
+
+Formato:
+- Spiegazione breve (2-3 frasi) concentrandosi sul contesto SPECIFICO
+- 3-4 esempi contrastanti in norvegese con traduzione in italiano
+
+NON fare generalizzazioni ampie come "ikke va sempre prima del verbo".
+Spiega la regola SPECIFICA per il contesto SPECIFICO.
+
+Rispondi in italiano.`,
           examples: `Crea per favore 5–10 frasi norvegesi brevi con la stessa struttura grammaticale della versione corretta. Aggiungi traduzione in italiano a ogni frase.`,
-          simpler: `Spiega questo errore nel modo più semplice possibile, senza terminologia grammaticale, in modo che sia comprensibile per un principiante. Rispondi in italiano.`
+          simpler: `Spiega questo errore con parole semplici, senza terminologia grammaticale.
+
+Mostra esempi di uso CORRETTO e SCORRETTO:
+- Scorretto: [errore originale]
+- Corretto: [versione corretta]
+- Mostra anche: Come sarebbe diverso in un altro tipo di frase
+
+Usa un linguaggio semplice ma mantieni la spiegazione ACCURATA.
+Rispondi in italiano.`
         },
         'de': {
           sure: `Überprüfe deine Korrektur erneut. Analysiere alle Fehler und bestätige die Richtigkeit. Antworte kurz auf Deutsch.`,
-          explain: `Erkläre bitte nur den grammatikalischen Hauptgrund für deine Korrekturen.\n\nAntwortformat:\n- Sehr kurze Regel (1–2 Sätze).\n- 2–3 Beispiele auf Norwegisch mit deutscher Übersetzung.\n\nDiskutiere keine umgangssprachlichen Varianten, Dialekte, Stilistik und schlage keine Alternativen vor, die deiner Korrektur widersprechen.\nWenn du nicht sicher bist, schreibe ehrlich, dass du nicht sicher bist, anstatt zu erfinden.`,
+          explain: `Erkläre den grammatikalischen Grund für die Korrektur.
+
+WICHTIG: Zeige den KONTRAST mit Beispielen:
+1. Wie es in DIESEM Satztyp funktioniert (wo der Fehler war)
+2. Wie es sich in anderen Satztypen UNTERSCHEIDET
+
+Beispiel Struktur:
+- In Nebensätzen: "at det ikke er" (Verneinung vor dem Verb)
+- In Hauptsätzen: "det er ikke" (Verneinung nach dem Verb)
+
+Format:
+- Kurze Erklärung (2-3 Sätze) mit Fokus auf den SPEZIFISCHEN Kontext
+- 3-4 kontrastierende Beispiele auf Norwegisch mit deutscher Übersetzung
+
+Mache KEINE breiten Verallgemeinerungen wie "ikke kommt immer vor dem Verb".
+Erkläre die SPEZIFISCHE Regel für den SPEZIFISCHEN Kontext.
+
+Antworte auf Deutsch.`,
           examples: `Erstelle bitte 5–10 kurze norwegische Sätze mit derselben grammatischen Struktur wie in der korrigierten Version. Füge zu jedem Satz eine deutsche Übersetzung hinzu.`,
-          simpler: `Erkläre diesen Fehler so einfach wie möglich, ohne grammatikalische Terminologie, damit es für einen Anfänger verständlich ist. Antworte auf Deutsch.`
+          simpler: `Erkläre diesen Fehler mit einfachen Worten, ohne grammatikalische Terminologie.
+
+Zeige Beispiele für RICHTIGEN und FALSCHEN Gebrauch:
+- Falsch: [ursprünglicher Fehler]
+- Richtig: [korrigierte Version]
+- Zeige auch: Wie es in einem anderen Satztyp anders wäre
+
+Verwende einfache Sprache, aber halte die Erklärung GENAU.
+Antworte auf Deutsch.`
         }
       };
 
