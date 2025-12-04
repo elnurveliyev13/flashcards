@@ -554,8 +554,12 @@ Return STRICT JSON:
             ];
 
             $t1 = microtime(true);
-            $responses = $this->request_parallel_curlmulti($requests, $systemprompt1, $userprompt1, $model, $userid);
+            $multisamplingResult = $this->request_parallel_curlmulti($requests, $systemprompt1, $userprompt1, $model, $userid);
             $debugtiming['api_stage1_multisampling'] = microtime(true) - $t1;
+
+            // Extract responses and errors
+            $responses = $multisamplingResult['responses'] ?? [];
+            $multisamplingErrors = $multisamplingResult['errors'] ?? [];
 
             // Add debug info about model detection
             $modelkey = core_text::strtolower(trim((string)$model));
@@ -563,6 +567,11 @@ Return STRICT JSON:
             $debugtiming['multisampling_model'] = $model;
             $debugtiming['multisampling_detected_as_reasoning'] = $usesReasoningModel;
             $debugtiming['multisampling_responses_count'] = count($responses);
+
+            // Add error details to debug output (visible in browser console)
+            if (!empty($multisamplingErrors)) {
+                $debugtiming['multisampling_errors'] = $multisamplingErrors;
+            }
 
             // Merge responses by consensus
             $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
@@ -1129,7 +1138,7 @@ If NO constructions found, return empty constructions array.";
      * @param string $userprompt User prompt
      * @param string $model Model to use
      * @param int $userid User ID for usage tracking
-     * @return array Array of parsed responses
+     * @return array Array with 'responses' (parsed responses) and 'errors' (error details for debugging)
      */
     protected function request_parallel_curlmulti(array $requests, string $systemprompt, string $userprompt, string $model, int $userid): array {
         $client = new openai_client();
@@ -1159,6 +1168,7 @@ If NO constructions found, return empty constructions array.";
         $mh = curl_multi_init();
         $handles = [];
         $payloads = [];
+        $errors = []; // Collect error details for debugging
 
         // Check if model supports custom temperature
         $modelkey = core_text::strtolower(trim((string)$model));
@@ -1233,8 +1243,16 @@ If NO constructions found, return empty constructions array.";
 
                 // Check HTTP status
                 if (!empty($info['http_code']) && $info['http_code'] >= 400) {
+                    $errorDetail = [
+                        'request_index' => $idx,
+                        'http_code' => $info['http_code'],
+                        'error_body' => substr($response, 0, 500), // First 500 chars
+                        'payload' => $payloads[$idx],
+                    ];
+                    $errors[] = $errorDetail;
+
                     error_log('Error in request_parallel_curlmulti (request ' . $idx . '): HTTP ' . $info['http_code']);
-                    error_log('Error response body: ' . substr($response, 0, 500)); // Log first 500 chars of error
+                    error_log('Error response body: ' . substr($response, 0, 500));
                     error_log('Request payload was: ' . json_encode($payloads[$idx], JSON_UNESCAPED_UNICODE));
                     curl_multi_remove_handle($mh, $ch);
                     curl_close($ch);
@@ -1242,6 +1260,14 @@ If NO constructions found, return empty constructions array.";
                 }
 
                 if ($response === false || empty($response)) {
+                    $errorDetail = [
+                        'request_index' => $idx,
+                        'error_type' => 'empty_response',
+                        'curl_error' => curl_error($ch),
+                        'payload' => $payloads[$idx],
+                    ];
+                    $errors[] = $errorDetail;
+
                     error_log('Error in request_parallel_curlmulti (request ' . $idx . '): Empty response');
                     curl_multi_remove_handle($mh, $ch);
                     curl_close($ch);
@@ -1251,6 +1277,14 @@ If NO constructions found, return empty constructions array.";
                 // Parse JSON response
                 $json = json_decode($response);
                 if (!$json) {
+                    $errorDetail = [
+                        'request_index' => $idx,
+                        'error_type' => 'invalid_json',
+                        'response_preview' => substr($response, 0, 200),
+                        'payload' => $payloads[$idx],
+                    ];
+                    $errors[] = $errorDetail;
+
                     error_log('Error in request_parallel_curlmulti (request ' . $idx . '): Invalid JSON');
                     curl_multi_remove_handle($mh, $ch);
                     curl_close($ch);
@@ -1281,6 +1315,15 @@ If NO constructions found, return empty constructions array.";
                     $responses[$idx] = $parsed;
                 }
             } catch (\Exception $e) {
+                $errorDetail = [
+                    'request_index' => $idx,
+                    'error_type' => 'exception',
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'payload' => $payloads[$idx] ?? null,
+                ];
+                $errors[] = $errorDetail;
+
                 error_log('Error in request_parallel_curlmulti (request ' . $idx . '): ' . $e->getMessage());
             } finally {
                 curl_multi_remove_handle($mh, $ch);
@@ -1290,9 +1333,12 @@ If NO constructions found, return empty constructions array.";
 
         curl_multi_close($mh);
 
-        error_log('request_parallel_curlmulti: Returning ' . count($responses) . ' valid responses');
+        error_log('request_parallel_curlmulti: Returning ' . count($responses) . ' valid responses and ' . count($errors) . ' errors');
 
-        return $responses;
+        return [
+            'responses' => $responses,
+            'errors' => $errors,
+        ];
     }
 
     /**

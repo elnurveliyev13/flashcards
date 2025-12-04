@@ -321,6 +321,36 @@ For issues or questions:
 
 ## Recent Changes
 
+### 2025-12-05 (Version 1.1.2)
+**Fixed**: Error diagnostics now visible in browser DevTools
+- Previously errors were only logged to PHP error logs (invisible to user)
+- Now all API errors are returned in `debugTiming.multisampling_errors` field
+- User can see exact error messages, HTTP codes, and payloads in browser console
+- Makes debugging multi-sampling issues much easier
+
+**Changes**:
+- Modified `request_parallel_curlmulti()` to collect all errors in `$errors` array
+- Returns `['responses' => ..., 'errors' => ...]` instead of just responses
+- Modified `check_norwegian_text()` to extract errors and add to `debugTiming`
+- Error types captured: HTTP errors (400, 500), empty responses, invalid JSON, exceptions
+- Each error includes: request_index, error details, payload that caused error
+
+**Example error output**:
+```json
+{
+  "debugTiming": {
+    "multisampling_errors": [
+      {
+        "request_index": 0,
+        "http_code": 400,
+        "error_body": "{\"error\":{\"message\":\"Invalid parameter: 'temperature' is not supported for this model\"}}",
+        "payload": {"model": "gpt-5-nano", "temperature": 0.2, ...}
+      }
+    ]
+  }
+}
+```
+
 ### 2025-12-04 (Version 1.1.1)
 **Fixed**: Support for reasoning models (gpt-5-mini, gpt-5-nano, 5-mini, 5-nano, o1-mini, o1-preview)
 - These models don't support the `temperature` parameter
@@ -337,6 +367,6 @@ For issues or questions:
 
 ---
 
-**Last Updated**: 2025-12-04
-**Version**: 1.1.1
-**Feature Status**: ✅ Fully Implemented with curl_multi + Reasoning Model Support
+**Last Updated**: 2025-12-05
+**Version**: 1.1.2
+**Feature Status**: ✅ Fully Implemented with curl_multi + Reasoning Model Support + Error Diagnostics
