@@ -701,6 +701,24 @@ switch ($action) {
         echo json_encode($result);
         break;
 
+    case 'ai_answer_question':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $prompt = trim($payload['prompt'] ?? '');
+        if ($prompt === '') {
+            throw new invalid_parameter_exception('Missing prompt');
+        }
+        $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
+
+        $helper = new \mod_flashcards\local\ai_helper();
+        $result = $helper->answer_ai_question($prompt, $language, $userid);
+
+        echo json_encode($result);
+        break;
+
     case 'ai_detect_constructions':
         $raw = file_get_contents('php://input');
         $payload = json_decode($raw, true);

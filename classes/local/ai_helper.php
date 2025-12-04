@@ -631,6 +631,51 @@ Leave \"issue\" EMPTY (\"\").";
     }
 
     /**
+     * Answer AI question about text correction
+     *
+     * @param string $prompt Full user prompt with context
+     * @param string $language User's interface language
+     * @param int $userid User ID for API tracking
+     * @return array Result with answer
+     */
+    public function answer_ai_question(string $prompt, string $language, int $userid): array {
+        $client = new openai_client();
+        if (!$client->is_enabled()) {
+            return ['answer' => ''];
+        }
+
+        $systemprompt = "You are an experienced Norwegian language teacher. Answer student questions about grammar and corrections clearly and helpfully.";
+
+        $payload = [
+            'model' => 'gpt-4o-mini',
+            'temperature' => 0.4,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt],
+                ['role' => 'user', 'content' => $prompt],
+            ],
+        ];
+
+        try {
+            $reflection = new \ReflectionClass($client);
+            $method = $reflection->getMethod('request');
+            $method->setAccessible(true);
+
+            $response = $method->invoke($client, $payload);
+
+            $recordMethod = $reflection->getMethod('record_usage');
+            $recordMethod->setAccessible(true);
+            $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+            $answer = trim($response->choices[0]->message->content ?? '');
+
+            return ['answer' => $answer];
+        } catch (\Exception $e) {
+            error_log('Error in answer_ai_question: ' . $e->getMessage());
+            return ['answer' => ''];
+        }
+    }
+
+    /**
      * Detect grammatical constructions and multi-word expressions in Norwegian sentence
      *
      * @param string $text Full Norwegian sentence

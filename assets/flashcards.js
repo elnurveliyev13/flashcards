@@ -679,9 +679,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         errors_found: 'Errors found!',
         corrected_version: 'Corrected version:',
         apply_corrections: 'Apply corrections',
-        keep_as_is: 'Keep as is',
+        keep_as_is: 'Keep it as it is',
         error_checking_failed: 'Error checking failed',
         naturalness_suggestion: 'More natural alternative:',
+        ask_ai_about_correction: 'Ask AI',
+        ai_explain: 'Explain',
+        ai_examples: 'Give examples',
+        ai_sure: 'Are you sure?',
+        ai_thinking: 'Thinking...',
       },
       uk: {
         app_title: 'MyMemory',
@@ -793,6 +798,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         keep_as_is: 'Залишити як є',
         error_checking_failed: 'Помилка перевірки',
         naturalness_suggestion: 'Більш природний варіант:',
+        ask_ai_about_correction: 'Запитати AI',
+        ai_explain: 'Поясни',
+        ai_examples: 'Приклади',
+        ai_sure: 'Ти впевнений?',
+        ai_thinking: 'Думаю...',
       },
       ru: {
         app_title: 'MyMemory',
@@ -904,6 +914,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         keep_as_is: 'Оставить как есть',
         error_checking_failed: 'Ошибка проверки',
         naturalness_suggestion: 'Более естественный вариант:',
+        ask_ai_about_correction: 'Спросить AI',
+        ai_explain: 'Объясни',
+        ai_examples: 'Примеры',
+        ai_sure: 'Ты уверен?',
+        ai_thinking: 'Думаю...',
       },
       fr: {
         app_title: 'MyMemory',
@@ -1215,6 +1230,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         keep_as_is: 'Zostaw jak jest',
         error_checking_failed: 'Błąd sprawdzania',
         naturalness_suggestion: 'Bardziej naturalna alternatywa:',
+        ask_ai_about_correction: 'Zapytaj AI',
+        ai_explain: 'Wyjaśnij',
+        ai_examples: 'Przykłady',
+        ai_sure: 'Jesteś pewien?',
+        ai_thinking: 'Myślę...',
       },
       it: {
         app_title: 'MyMemory',
@@ -9978,7 +9998,7 @@ function renderComparisonResult(resultEl, comparison){
       const errorsFoundText = t('errors_found') || 'Errors found!';
       const correctedVersionText = t('corrected_version') || 'Corrected version:';
       const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
-      const keepAsIsText = t('keep_as_is') || 'Keep as is';
+      const keepAsIsText = t('keep_as_is') || 'Keep it as it is';
       const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
 
       // Get original text
@@ -10019,6 +10039,11 @@ function renderComparisonResult(resultEl, comparison){
         `;
       }
 
+      const askAiText = t('ask_ai_about_correction') || 'Ask AI';
+      const explainText = t('ai_explain') || 'Explain';
+      const examplesText = t('ai_examples') || 'Give examples';
+      const sureText = t('ai_sure') || 'Are you sure?';
+
       const html = `
         <div class="error-check-header">
           <strong>${errorsFoundText}</strong>
@@ -10032,6 +10057,15 @@ function renderComparisonResult(resultEl, comparison){
           <div class="corrected-text">${highlightedText}</div>
         </div>
         ${suggestionHtml}
+        <div class="ai-question-section">
+          <div style="margin-bottom: 8px; font-weight: 500; color: #475569;">💬 ${askAiText}:</div>
+          <div class="ai-quick-questions">
+            <button type="button" class="ai-quick-btn" data-type="explain">${explainText}</button>
+            <button type="button" class="ai-quick-btn" data-type="examples">${examplesText}</button>
+            <button type="button" class="ai-quick-btn" data-type="sure">${sureText}</button>
+          </div>
+          <div id="aiAnswerBlock" class="ai-answer-block" style="display: none;"></div>
+        </div>
         <div class="error-check-actions">
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
@@ -10086,7 +10120,7 @@ function renderComparisonResult(resultEl, comparison){
         });
       }
 
-      // Keep as is button
+      // Keep it as it is button
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
           // Just hide error block and continue with tokenization
@@ -10094,6 +10128,101 @@ function renderComparisonResult(resultEl, comparison){
           block.style.display = 'none';
           renderFocusChips();
         });
+      }
+
+      // AI quick question buttons
+      const aiQuickBtns = block.querySelectorAll('.ai-quick-btn');
+      aiQuickBtns.forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const questionType = this.getAttribute('data-type');
+          await askAIAboutCorrection(questionType, originalText, result);
+        });
+      });
+
+      // Store context for AI questions
+      block.dataset.originalText = originalText;
+      block.dataset.correctedText = result.correctedText;
+      if (result.suggestion) {
+        block.dataset.suggestion = result.suggestion;
+      }
+    }
+
+    /**
+     * Ask AI about the correction
+     */
+    async function askAIAboutCorrection(questionType, originalText, result) {
+      const answerBlock = document.getElementById('aiAnswerBlock');
+      if (!answerBlock) return;
+
+      const language = currentInterfaceLang || 'en';
+      const thinkingText = t('ai_thinking') || 'Thinking...';
+
+      // Show loading
+      answerBlock.style.display = 'block';
+      answerBlock.innerHTML = `<div class="ai-answer-loading">${thinkingText}</div>`;
+
+      // Build prompt based on question type
+      let userPrompt = '';
+      const languageMap = {
+        'uk': 'Ukrainian',
+        'ru': 'Russian',
+        'en': 'English',
+        'no': 'Norwegian',
+        'pl': 'Polish'
+      };
+      const langName = languageMap[language] || 'English';
+
+      if (questionType === 'explain') {
+        userPrompt = `Original text: "${originalText}"
+Corrected text: "${result.correctedText}"
+${result.suggestion ? `More natural alternative: "${result.suggestion}"` : ''}
+
+Please explain the errors and corrections in detail. Answer in ${langName}.`;
+      } else if (questionType === 'examples') {
+        userPrompt = `Original text: "${originalText}"
+Corrected text: "${result.correctedText}"
+
+Give 3 clear examples demonstrating the grammar rule that was violated. Answer in ${langName}. Format:
+1. Example sentence
+2. Example sentence
+3. Example sentence`;
+      } else if (questionType === 'sure') {
+        userPrompt = `Original text: "${originalText}"
+Corrected text: "${result.correctedText}"
+${result.suggestion ? `More natural alternative: "${result.suggestion}"` : ''}
+
+Please double-check your corrections. Are you absolutely sure these corrections are correct? Explain your confidence level. Answer in ${langName}.`;
+      }
+
+      try {
+        const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+        url.searchParams.set('action', 'ai_answer_question');
+        url.searchParams.set('sesskey', M.cfg.sesskey);
+
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            action: 'ai_answer_question',
+            prompt: userPrompt,
+            language: language
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.answer) {
+          answerBlock.innerHTML = `<div class="ai-answer-content">${data.answer}</div>`;
+        } else {
+          const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
+          answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
+        }
+      } catch (error) {
+        console.error('Error asking AI:', error);
+        const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
+        answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
       }
     }
 
