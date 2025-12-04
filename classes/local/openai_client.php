@@ -723,10 +723,20 @@ PROMPT;
         if (!empty($info)) {
             $httpcode = (int)($info['http_code'] ?? 0);
             $totaltime = isset($info['total_time']) ? (float)$info['total_time'] : -1.0;
+            $namelookup = isset($info['namelookup_time']) ? (float)$info['namelookup_time'] : -1.0;
+            $connecttime = isset($info['connect_time']) ? (float)$info['connect_time'] : -1.0;
+            $appconnect = isset($info['appconnect_time']) ? (float)$info['appconnect_time'] : -1.0;
+            $pretransfer = isset($info['pretransfer_time']) ? (float)$info['pretransfer_time'] : -1.0;
+            $starttransfer = isset($info['starttransfer_time']) ? (float)$info['starttransfer_time'] : -1.0;
             debugging('[flashcards][openai] model=' . ($model ?: 'n/a')
                 . ' http=' . $httpcode
-                . ' total_time=' . sprintf('%.3f', $totaltime)
-                . ' php_time=' . sprintf('%.3f', $phpduration),
+                . ' nl=' . sprintf('%.3f', $namelookup)
+                . ' conn=' . sprintf('%.3f', $connecttime)
+                . ' app=' . sprintf('%.3f', $appconnect)
+                . ' pre=' . sprintf('%.3f', $pretransfer)
+                . ' start=' . sprintf('%.3f', $starttransfer)
+                . ' total=' . sprintf('%.3f', $totaltime)
+                . ' php=' . sprintf('%.3f', $phpduration),
                 DEBUG_DEVELOPER);
         }
         if (!empty($info['http_code']) && (int)$info['http_code'] >= 400) {
