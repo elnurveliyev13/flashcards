@@ -734,8 +734,11 @@ PROMPT;
      * @param string $modelkey lowercased model id
      */
     protected function requires_default_temperature(string $modelkey): bool {
-        // gpt-5-mini and its dated variants (e.g. gpt-5-mini-2025-08-07)
+        // gpt-5-mini / gpt-5-nano and their dated variants
         if (strpos($modelkey, 'gpt-5-mini') === 0) {
+            return true;
+        }
+        if (strpos($modelkey, 'gpt-5-nano') === 0) {
             return true;
         }
         return false;
