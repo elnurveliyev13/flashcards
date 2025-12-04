@@ -561,25 +561,30 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
             // STAGE 2: Second API call - Double-check and suggest natural alternative
             $correctedText = $result1['correctedText'] ?? $text;
 
-            $systemprompt2 = "You are a native Norwegian speaker. Review corrections and assess naturalness. You MUST respond in $langname language.";
+            $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
 
             $userprompt2 = "Original: \"$text\"
 Corrected: \"$correctedText\"
 
-1. Any missed errors?
-2. More natural alternative?
+Tasks:
+1. Check if any grammatical errors were missed in the correction
+2. ONLY if the corrected text sounds unnatural or awkward, suggest a more natural alternative
 
 JSON:
 {
   \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"\"}],
-  \"suggestion\": \"better version or empty\"
+  \"suggestion\": \"\"
 }
 
-Leave \"issue\" EMPTY (\"\").";
+CRITICAL RULES:
+- Leave \"suggestion\" EMPTY if corrected text is already natural
+- Do NOT suggest synonym replacements (like changing \"lett\" to \"enkelt\")
+- Only suggest if there's a clear naturalness or style improvement
+- Leave \"issue\" EMPTY (\"\")";
 
             $payload2 = [
                 'model' => 'gpt-4o-mini',
-                'temperature' => 0.5,
+                'temperature' => 0.2,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
                     ['role' => 'user', 'content' => $userprompt2],

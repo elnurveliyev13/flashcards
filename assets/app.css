@@ -3135,14 +3135,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .translation-reset{
   border:1px solid var(--border);
   border-radius:999px;
-  padding:0.35rem 0.95rem;
   background:rgba(15,23,42,0.8);
   color:var(--text-subtle);
   font-size:0.936rem;
   font-weight:600;
   cursor:pointer;
-  min-height:34px;
-  height:auto;
+  padding:0.2rem 0.65rem;
+  min-height:30px;
+  height:30px;
   display:inline-flex;
   align-items:center;
   justify-content:center;

@@ -2105,6 +2105,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
 
     // Front-side autocomplete (ordbokene + local ordbank)
+    const FRONT_SUGGEST_DEBOUNCE = 170;
     const frontSuggestCache = {};
     let frontSuggestTimer = null;
     let frontSuggestRequestSeq = 0;
@@ -2274,10 +2275,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       frontSuggestScheduledQuery = q;
       // gentle debounce to wait for pauses and avoid repeated requests
-      frontSuggestTimer = setTimeout(()=>{
-        frontSuggestTimer = null;
-        fetchFrontSuggest(q);
-      }, 350);
+        frontSuggestTimer = setTimeout(()=>{
+          frontSuggestTimer = null;
+          fetchFrontSuggest(q);
+        }, FRONT_SUGGEST_DEBOUNCE);
     }
 
     function setFocusStatus(state, text){
