@@ -322,15 +322,17 @@ For issues or questions:
 ## Recent Changes
 
 ### 2025-12-04 (Version 1.1.1)
-**Fixed**: Support for reasoning models (gpt-5-mini, gpt-5-nano, o1-mini, o1-preview)
+**Fixed**: Support for reasoning models (gpt-5-mini, gpt-5-nano, 5-mini, 5-nano, o1-mini, o1-preview)
 - These models don't support the `temperature` parameter
 - System now automatically detects model type and uses `reasoning_effort: "medium"` instead
 - All 3 multi-sampling requests use the same reasoning_effort value
 - Consensus still works because reasoning models are non-deterministic by design
+- **Important**: Works with both "gpt-5-nano" and "5-nano" model naming formats
 
 **Changes**:
-- Added `requires_default_temperature()` method to detect reasoning models
+- Added `requires_default_temperature()` method to detect reasoning models (both in ai_helper.php and openai_client.php)
 - Modified `request_parallel_curlmulti()` to conditionally use temperature vs reasoning_effort
+- Updated model detection to work with abbreviated model names ("5-nano" instead of "gpt-5-nano")
 - Added extensive logging for debugging
 
 ---

@@ -557,6 +557,13 @@ Return STRICT JSON:
             $responses = $this->request_parallel_curlmulti($requests, $systemprompt1, $userprompt1, $model, $userid);
             $debugtiming['api_stage1_multisampling'] = microtime(true) - $t1;
 
+            // Add debug info about model detection
+            $modelkey = core_text::strtolower(trim((string)$model));
+            $usesReasoningModel = $this->requires_default_temperature($modelkey);
+            $debugtiming['multisampling_model'] = $model;
+            $debugtiming['multisampling_detected_as_reasoning'] = $usesReasoningModel;
+            $debugtiming['multisampling_responses_count'] = count($responses);
+
             // Merge responses by consensus
             $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
 
@@ -1296,15 +1303,16 @@ If NO constructions found, return empty constructions array.";
      * @return bool True if model doesn't support temperature parameter
      */
     private function requires_default_temperature(string $modelkey): bool {
-        // gpt-5-mini / gpt-5-nano and their dated variants
-        if (strpos($modelkey, 'gpt-5-mini') === 0) {
+        // gpt-5-mini / gpt-5-nano and their dated variants (with or without "gpt-" prefix)
+        // Check for "5-mini" or "5-nano" anywhere in the string to catch both "gpt-5-mini" and "5-mini"
+        if (strpos($modelkey, '5-mini') !== false) {
             return true;
         }
-        if (strpos($modelkey, 'gpt-5-nano') === 0) {
+        if (strpos($modelkey, '5-nano') !== false) {
             return true;
         }
         // o1-mini and o1-preview also don't support temperature
-        if (strpos($modelkey, 'o1-mini') === 0 || strpos($modelkey, 'o1-preview') === 0) {
+        if (strpos($modelkey, 'o1-mini') !== false || strpos($modelkey, 'o1-preview') !== false) {
             return true;
         }
         return false;
