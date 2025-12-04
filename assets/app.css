@@ -236,7 +236,8 @@ button:focus-visible,
   max-width: 100%;
   box-sizing: border-box;
   padding: calc(var(--space-1) / 2) var(--space-2) calc(var(--space-1) / 2) var(--space-2);
-  background: var(--surface-1);
+  /* Match the OS status bar color on mobile for a seamless top edge */
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   overflow-x: hidden;
   overflow-y: visible;
@@ -2717,6 +2718,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+}
+
+.fc-stat-card-clickable {
+  cursor: pointer;
+}
+
+.fc-stat-card-clickable:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .fc-stat-card:hover {

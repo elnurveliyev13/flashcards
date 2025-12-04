@@ -8620,11 +8620,27 @@ function renderComparisonResult(resultEl, comparison){
         tbody.appendChild(tr);
       });
     }
-    $$("#btnList").forEach(function(_el){ _el.addEventListener("click",()=>{
+    function openCardsListModal(){
       listCurrentPage = 1; // Reset to page 1 when opening modal
       $("#listModal").style.display="flex";
       buildListRows();
-    }); });
+    }
+
+    $$("#btnList").forEach(function(_el){ _el.addEventListener("click", openCardsListModal); });
+    const statCardTotal = $("#statCardTotal");
+    if (statCardTotal) {
+      statCardTotal.addEventListener("click", ()=>{
+        debugLog('[Dashboard] Total cards stat clicked -> opening list');
+        openCardsListModal();
+      });
+      statCardTotal.addEventListener("keydown", (e)=>{
+        if(e.key==="Enter" || e.key===" "){
+          e.preventDefault();
+          openCardsListModal();
+        }
+      });
+    }
+
     $("#btnCloseList").addEventListener("click",()=>{ $("#listModal").style.display="none"; });
     $("#listSearch").addEventListener("input", ()=>{
       listCurrentPage = 1; // Reset to page 1 when searching

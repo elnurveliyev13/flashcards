@@ -750,7 +750,11 @@
     <div class="fc-dashboard-wrap">
       <!-- Stats Cards -->
       <div class="fc-stats-grid">
-        <div class="fc-stat-card">
+        <div class="fc-stat-card fc-stat-card-clickable"
+             id="statCardTotal"
+             role="button"
+             tabindex="0"
+             aria-label="{{#str}} dashboard_total_cards, mod_flashcards {{/str}}">
           <div class="fc-stat-icon icon-plus">&#10133;</div>
           <div class="fc-stat-value" id="statTotalCards">0</div>
           <div class="fc-stat-label" id="t_stat_total" data-i18n="dashboard_total_cards">{{#str}} dashboard_total_cards, mod_flashcards {{/str}}</div>
