@@ -9965,6 +9965,8 @@ function renderComparisonResult(resultEl, comparison){
           'uk': `Ти — дуже строгий і обережний коректор норвезької мови (bokmål).
 
 Правила:
+- Коли аналізуєш текст, фокусуйся на ВСІХ помилках, не тільки на одній.
+- Пояснюй природною мовою, чітко і по суті — головне це ясність для студента, а не дотримання формату.
 - Якщо не впевнена у граматичному правилі на 100%, прямо пиши що не впевнена.
 - Не вигадуй різницю між "розмовною" та "письмовою" норвезькою, не посилайся на діалекти.
 - Пояснення мають бути короткими, конкретними й стосуватися лише bokmål.
@@ -9974,6 +9976,8 @@ function renderComparisonResult(resultEl, comparison){
           'ru': `Ты — очень строгий и осторожный корректор норвежского языка (bokmål).
 
 Правила:
+- Когда анализируешь текст, фокусируйся на ВСЕХ ошибках, не только на одной.
+- Объясняй естественным языком, четко и по делу — главное это ясность для студента, а не следование формату.
 - Если не уверен в грамматическом правиле на 100%, прямо пиши что не уверен.
 - Не выдумывай разницу между "разговорным" и "письменным" норвежским, не ссылайся на диалекты.
 - Объяснения должны быть короткими, конкретными и касаться только bokmål.
@@ -9983,6 +9987,8 @@ function renderComparisonResult(resultEl, comparison){
           'en': `You are a very strict and careful Norwegian (bokmål) corrector.
 
 Rules:
+- When analyzing text, focus on ALL errors, not just one.
+- Explain in natural language, clearly and to the point — clarity for the student is key, not format adherence.
 - If not 100% sure about a grammar rule, state that you're not sure.
 - Don't invent spoken/written differences, don't refer to dialects.
 - Explanations must be short, specific, bokmål only.
@@ -9992,6 +9998,8 @@ Rules:
           'pl': `Jesteś bardzo surowym i ostrożnym korektorem norweskiego (bokmål).
 
 Zasady:
+- Analizując tekst, skup się na WSZYSTKICH błędach, nie tylko na jednym.
+- Wyjaśniaj naturalnym językiem, jasno i konkretnie — ważna jest jasność dla studenta, nie trzymanie się formatu.
 - Jeśli nie jesteś pewien zasady na 100%, napisz że nie jesteś pewien.
 - Nie wymyślaj różnic potoczny/pisany, nie odwołuj się do dialektów.
 - Wyjaśnienia krótkie, konkretne, tylko bokmål.
@@ -10001,6 +10009,8 @@ Zasady:
           'fr': `Tu es un correcteur très strict et prudent du norvégien (bokmål).
 
 Règles:
+- En analysant le texte, concentre-toi sur TOUTES les erreurs, pas qu'une seule.
+- Explique en langage naturel, clairement et précisément — la clarté pour l'étudiant est l'essentiel, pas l'adhésion au format.
 - Si pas sûr à 100% d'une règle, dis-le directement.
 - N'invente pas de différences parlé/écrit, ne réfère pas aux dialectes.
 - Explications courtes, concrètes, bokmål uniquement.
@@ -10010,6 +10020,8 @@ Règles:
           'es': `Eres un corrector muy estricto y cuidadoso del noruego (bokmål).
 
 Reglas:
+- Al analizar el texto, enfócate en TODOS los errores, no solo en uno.
+- Explica en lenguaje natural, claro y al grano — la claridad para el estudiante es lo principal, no seguir un formato.
 - Si no estás 100% seguro de una regla, dilo directamente.
 - No inventes diferencias hablado/escrito, no refieras dialectos.
 - Explicaciones breves, concretas, solo bokmål.
@@ -10019,6 +10031,8 @@ Reglas:
           'it': `Sei un correttore molto rigoroso e attento del norvegese (bokmål).
 
 Regole:
+- Analizzando il testo, concentrati su TUTTI gli errori, non solo su uno.
+- Spiega in linguaggio naturale, chiaramente e al punto — la chiarezza per lo studente è fondamentale, non l'aderenza al formato.
 - Se non sei sicuro al 100% di una regola, dillo direttamente.
 - Non inventare differenze parlato/scritto, non riferire dialetti.
 - Spiegazioni brevi, concrete, solo bokmål.
@@ -10028,6 +10042,8 @@ Regole:
           'de': `Du bist ein sehr strenger und vorsichtiger Korrektor des Norwegischen (bokmål).
 
 Regeln:
+- Wenn du Text analysierst, konzentriere dich auf ALLE Fehler, nicht nur auf einen.
+- Erkläre in natürlicher Sprache, klar und auf den Punkt — Klarheit für den Studenten ist das Wichtigste, nicht die Einhaltung eines Formats.
 - Wenn nicht 100% sicher über eine Regel, sage es direkt.
 - Erfinde keine Unterschiede gesprochen/geschrieben, verweise nicht auf Dialekte.
 - Erklärungen kurz, konkret, nur bokmål.
@@ -10357,64 +10373,53 @@ Regeln:
       // Build prompt based on question type (strict format per spec)
       let userPrompt = '';
 
-      // Build context with original text and correction
-      const contextInfo = {
-        'uk': `КОНТЕКСТ:\nОригінал: "${originalText}"\nВиправлення: "${result.corrected}"${result.suggestion ? `\nПриродніший варіант: "${result.suggestion}"` : ''}\n\n`,
-        'ru': `КОНТЕКСТ:\nОригинал: "${originalText}"\nИсправление: "${result.corrected}"${result.suggestion ? `\nБолее естественный вариант: "${result.suggestion}"` : ''}\n\n`,
-        'en': `CONTEXT:\nOriginal: "${originalText}"\nCorrection: "${result.corrected}"${result.suggestion ? `\nMore natural: "${result.suggestion}"` : ''}\n\n`,
-        'pl': `KONTEKST:\nOryginał: "${originalText}"\nPoprawka: "${result.corrected}"${result.suggestion ? `\nBardziej naturalny: "${result.suggestion}"` : ''}\n\n`,
-        'fr': `CONTEXTE:\nOriginal: "${originalText}"\nCorrection: "${result.corrected}"${result.suggestion ? `\nPlus naturel: "${result.suggestion}"` : ''}\n\n`,
-        'es': `CONTEXTO:\nOriginal: "${originalText}"\nCorrección: "${result.corrected}"${result.suggestion ? `\nMás natural: "${result.suggestion}"` : ''}\n\n`,
-        'it': `CONTESTO:\nOriginale: "${originalText}"\nCorrezione: "${result.corrected}"${result.suggestion ? `\nPiù naturale: "${result.suggestion}"` : ''}\n\n`,
-        'de': `KONTEXT:\nOriginal: "${originalText}"\nKorrektur: "${result.corrected}"${result.suggestion ? `\nNatürlicher: "${result.suggestion}"` : ''}\n\n`
-      };
-      const context = contextInfo[language] || contextInfo['en'];
+      // No need to prepend context - AI already has it in message history
 
       const prompts = {
         'uk': {
-          sure: `Перевір ще раз своє виправлення. Проаналізуй конкретно:\n\n1. Чи є помилка в оригіналі? Яка саме?\n2. Чи правильне твоє виправлення? Чому?\n3. Чи можливі інші коректні варіанти (які НЕ суперечать твоєму виправленню)?\n\nВідповідай КОРОТКО та КОНКРЕТНО. Без загальних фраз про «контекст» і «нюанси». Якщо не впевнена на 100% — так і напиши. Відповідай українською.`,
+          sure: `Перевір ще раз своє виправлення. Наскільки ти впевнена у ньому?\n\nПоясни коротко і природно: чи правильне виправлення і чому. Якщо бачиш інші можливі коректні варіанти - також наведи їх.\n\nЯкщо не впевнена на 100% - так і напиши. Відповідай українською.`,
           explain: `Поясни, будь ласка, лише головну граматичну причину своїх виправлень.\n\nФормат відповіді:\n- Дуже коротке правило (1–2 речення).\n- 2–3 приклади норвезькою з перекладом українською.\n\nНе обговорюй розмовні варіанти, діалекти, стилістику і не пропонуй альтернатив, які суперечать твоєму виправленню.\nЯкщо ти не впевнена, напиши чесно, що не впевнена, замість вигадувати.`,
           examples: `Створи, будь ласка, 5–10 коротких норвезьких речень з такою ж граматичною структурою, як у виправленому варіанті. До кожного речення додай переклад українською.`,
           simpler: `Поясни цю помилку максимально просто, без граматичної термінології, щоб це було зрозуміло початківцю. Відповідай українською.`
         },
         'ru': {
-          sure: `Проверь еще раз свое исправление. Проанализируй конкретно:\n\n1. Есть ли ошибка в оригинале? Какая именно?\n2. Правильно ли твое исправление? Почему?\n3. Возможны ли другие корректные варианты (которые НЕ противоречат твоему исправлению)?\n\nОтвечай КОРОТКО и КОНКРЕТНО. Без общих фраз о «контексте» и «нюансах». Если не уверен на 100% — так и напиши. Отвечай по-русски.`,
+          sure: `Проверь еще раз свое исправление. Насколько ты уверен в нем?\n\nОбъясни коротко и естественно: правильно ли исправление и почему. Если видишь другие возможные корректные варианты - также приведи их.\n\nЕсли не уверен на 100% - так и напиши. Отвечай по-русски.`,
           explain: `Объясни, пожалуйста, только главную грамматическую причину своих исправлений.\n\nФормат ответа:\n- Очень короткое правило (1–2 предложения).\n- 2–3 примера на норвежском с переводом на русский.\n\nНе обсуждай разговорные варианты, диалекты, стилистику и не предлагай альтернатив, противоречащих твоему исправлению.\nЕсли ты не уверен, напиши честно, что не уверен, вместо того чтобы придумывать.`,
           examples: `Создай, пожалуйста, 5–10 коротких норвежских предложений с такой же грамматической структурой, как в исправленном варианте. К каждому предложению добавь перевод на русский.`,
           simpler: `Объясни эту ошибку максимально просто, без грамматической терминологии, чтобы это было понятно начинающему. Отвечай по-русски.`
         },
         'en': {
-          sure: `Double-check your correction. Analyze specifically:\n\n1. Is there an error in the original? What exactly?\n2. Is your correction correct? Why?\n3. Are other correct variants possible (that do NOT contradict your correction)?\n\nAnswer BRIEFLY and SPECIFICALLY. No general phrases about "context" and "nuances". If not 100% sure — say so. Answer in English.`,
+          sure: `Double-check your correction. How confident are you in it?\n\nExplain briefly and naturally: is the correction correct and why. If you see other possible correct variants - mention them too.\n\nIf not 100% sure - say so. Answer in English.`,
           explain: `Please explain only the main grammatical reason for your corrections.\n\nResponse format:\n- Very short rule (1–2 sentences).\n- 2–3 Norwegian examples with English translation.\n\nDon't discuss colloquial variants, dialects, stylistics, and don't suggest alternatives that contradict your correction.\nIf you're not sure, write honestly that you're not sure, instead of making things up.`,
           examples: `Please create 5–10 short Norwegian sentences with the same grammatical structure as in the corrected version. Add English translation to each sentence.`,
           simpler: `Explain this error as simply as possible, without grammatical terminology, so that it's understandable for a beginner. Answer in English.`
         },
         'pl': {
-          sure: `Sprawdź jeszcze raz swoją poprawkę. Przeanalizuj konkretnie:\n\n1. Czy w oryginale jest błąd? Jaki dokładnie?\n2. Czy twoja poprawka jest prawidłowa? Dlaczego?\n3. Czy możliwe są inne poprawne warianty (które NIE są sprzeczne z twoją poprawką)?\n\nOdpowiadaj KRÓTKO i KONKRETNIE. Bez ogólnych fraz o „kontekście" i „niuansach". Jeśli nie jesteś pewien na 100% — napisz to wprost. Odpowiadaj po polsku.`,
+          sure: `Sprawdź jeszcze raz swoją poprawkę. Na ile jesteś pewien?\n\nWyjaśnij krótko i naturalnie: czy poprawka jest prawidłowa i dlaczego. Jeśli widzisz inne możliwe poprawne warianty - wymień je również.\n\nJeśli nie jesteś pewien na 100% - napisz to wprost. Odpowiadaj po polsku.`,
           explain: `Wyjaśnij proszę tylko główny powód gramatyczny swoich poprawek.\n\nFormat odpowiedzi:\n- Bardzo krótka zasada (1–2 zdania).\n- 2–3 przykłady po norwesku z tłumaczeniem na polski.\n\nNie omawiaj wariantów potocznych, dialektów, stylistyki i nie proponuj alternatyw sprzecznych z twoją poprawką.\nJeśli nie jesteś pewien, napisz uczciwie, że nie jesteś pewien, zamiast wymyślać.`,
           examples: `Stwórz proszę 5–10 krótkich norweskich zdań z taką samą strukturą gramatyczną jak w poprawionej wersji. Do każdego zdania dodaj tłumaczenie na polski.`,
           simpler: `Wyjaśnij ten błąd maksymalnie prosto, bez terminologii gramatycznej, żeby było to zrozumiałe dla początkującego. Odpowiadaj po polsku.`
         },
         'fr': {
-          sure: `Revérifie ta correction. Analyse spécifiquement :\n\n1. Y a-t-il une erreur dans l'original ? Laquelle exactement ?\n2. Ta correction est-elle correcte ? Pourquoi ?\n3. D'autres variantes correctes sont-elles possibles (qui NE contredisent PAS ta correction) ?\n\nRéponds BRIÈVEMENT et SPÉCIFIQUEMENT. Pas de phrases générales sur le « contexte » et les « nuances ». Si tu n'es pas sûr à 100% — dis-le. Réponds en français.`,
+          sure: `Revérifie ta correction. À quel point es-tu sûr?\n\nExplique brièvement et naturellement : la correction est-elle correcte et pourquoi. Si tu vois d'autres variantes correctes possibles - mentionne-les aussi.\n\nSi tu n'es pas sûr à 100% - dis-le. Réponds en français.`,
           explain: `Explique s'il te plaît uniquement la raison grammaticale principale de tes corrections.\n\nFormat de réponse:\n- Règle très courte (1–2 phrases).\n- 2–3 exemples norvégiens avec traduction en français.\n\nNe discute pas des variantes familières, dialectes, stylistique et ne propose pas d'alternatives qui contredisent ta correction.\nSi tu n'es pas sûr, écris honnêtement que tu n'es pas sûr, au lieu d'inventer.`,
           examples: `Crée s'il te plaît 5–10 phrases norvégiennes courtes avec la même structure grammaticale que dans la version corrigée. Ajoute une traduction en français à chaque phrase.`,
           simpler: `Explique cette erreur de manière aussi simple que possible, sans terminologie grammaticale, pour qu'un débutant puisse comprendre. Réponds en français.`
         },
         'es': {
-          sure: `Verifica de nuevo tu corrección. Analiza específicamente:\n\n1. ¿Hay un error en el original? ¿Cuál exactamente?\n2. ¿Tu corrección es correcta? ¿Por qué?\n3. ¿Son posibles otras variantes correctas (que NO contradigan tu corrección)?\n\nResponde BREVEMENTE y ESPECÍFICAMENTE. Sin frases generales sobre "contexto" y "matices". Si no estás 100% seguro — dilo. Responde en español.`,
+          sure: `Verifica de nuevo tu corrección. ¿Qué tan seguro estás?\n\nExplica brevemente y naturalmente: ¿es correcta la corrección y por qué? Si ves otras variantes correctas posibles - menciónalas también.\n\nSi no estás 100% seguro - dilo. Responde en español.`,
           explain: `Explica por favor solo la razón gramatical principal de tus correcciones.\n\nFormato de respuesta:\n- Regla muy corta (1–2 oraciones).\n- 2–3 ejemplos en noruego con traducción al español.\n\nNo discutas variantes coloquiales, dialectos, estilística y no sugieras alternativas que contradigan tu corrección.\nSi no estás seguro, escribe honestamente que no estás seguro, en lugar de inventar.`,
           examples: `Crea por favor 5–10 oraciones noruegas cortas con la misma estructura gramatical que en la versión corregida. Añade traducción al español a cada oración.`,
           simpler: `Explica este error de la manera más simple posible, sin terminología gramatical, para que sea comprensible para un principiante. Responde en español.`
         },
         'it': {
-          sure: `Ricontrolla la tua correzione. Analizza specificamente:\n\n1. C'è un errore nell'originale? Quale esattamente?\n2. La tua correzione è corretta? Perché?\n3. Sono possibili altre varianti corrette (che NON contraddicono la tua correzione)?\n\nRispondi BREVEMENTE e SPECIFICAMENTE. Niente frasi generali su "contesto" e "sfumature". Se non sei sicuro al 100% — dillo. Rispondi in italiano.`,
+          sure: `Ricontrolla la tua correzione. Quanto sei sicuro?\n\nSpiega brevemente e naturalmente: la correzione è corretta e perché. Se vedi altre varianti corrette possibili - menzionale anche.\n\nSe non sei sicuro al 100% - dillo. Rispondi in italiano.`,
           explain: `Spiega per favore solo la ragione grammaticale principale delle tue correzioni.\n\nFormato di risposta:\n- Regola molto breve (1–2 frasi).\n- 2–3 esempi in norvegese con traduzione in italiano.\n\nNon discutere varianti colloquiali, dialetti, stilistica e non suggerire alternative che contraddicono la tua correzione.\nSe non sei sicuro, scrivi onestamente che non sei sicuro, invece di inventare.`,
           examples: `Crea per favore 5–10 frasi norvegesi brevi con la stessa struttura grammaticale della versione corretta. Aggiungi traduzione in italiano a ogni frase.`,
           simpler: `Spiega questo errore nel modo più semplice possibile, senza terminologia grammaticale, in modo che sia comprensibile per un principiante. Rispondi in italiano.`
         },
         'de': {
-          sure: `Überprüfe deine Korrektur noch einmal. Analysiere konkret:\n\n1. Gibt es einen Fehler im Original? Welcher genau?\n2. Ist deine Korrektur richtig? Warum?\n3. Sind andere korrekte Varianten möglich (die NICHT deiner Korrektur widersprechen)?\n\nAntworte KURZ und KONKRET. Keine allgemeinen Phrasen über „Kontext" und „Nuancen". Wenn nicht 100% sicher — sag es. Antworte auf Deutsch.`,
+          sure: `Überprüfe deine Korrektur noch einmal. Wie sicher bist du?\n\nErkläre kurz und natürlich: Ist die Korrektur richtig und warum. Wenn du andere mögliche korrekte Varianten siehst - erwähne sie auch.\n\nWenn nicht 100% sicher - sag es. Antworte auf Deutsch.`,
           explain: `Erkläre bitte nur den grammatikalischen Hauptgrund für deine Korrekturen.\n\nAntwortformat:\n- Sehr kurze Regel (1–2 Sätze).\n- 2–3 Beispiele auf Norwegisch mit deutscher Übersetzung.\n\nDiskutiere keine umgangssprachlichen Varianten, Dialekte, Stilistik und schlage keine Alternativen vor, die deiner Korrektur widersprechen.\nWenn du nicht sicher bist, schreibe ehrlich, dass du nicht sicher bist, anstatt zu erfinden.`,
           examples: `Erstelle bitte 5–10 kurze norwegische Sätze mit derselben grammatischen Struktur wie in der korrigierten Version. Füge zu jedem Satz eine deutsche Übersetzung hinzu.`,
           simpler: `Erkläre diesen Fehler so einfach wie möglich, ohne grammatikalische Terminologie, damit es für einen Anfänger verständlich ist. Antworte auf Deutsch.`
@@ -10423,15 +10428,15 @@ Regeln:
 
       const langPrompts = prompts[language] || prompts['en'];
 
-      // Build full prompt with context prepended
+      // Use prompts directly without context duplication - AI has it in message history
       if (questionType === 'sure') {
-        userPrompt = context + langPrompts.sure;
+        userPrompt = langPrompts.sure;
       } else if (questionType === 'explain') {
-        userPrompt = context + langPrompts.explain;
+        userPrompt = langPrompts.explain;
       } else if (questionType === 'examples') {
-        userPrompt = context + langPrompts.examples;
+        userPrompt = langPrompts.examples;
       } else if (questionType === 'simpler') {
-        userPrompt = context + langPrompts.simpler;
+        userPrompt = langPrompts.simpler;
       }
 
       // Add user message to chat history
