@@ -414,39 +414,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       retry: dataset.ocrRetry || 'Retry',
       undo: dataset.ocrUndo || 'Undo replace'
     };
-    let mediaUsageSummary = buildMediaUsageSummary(runtimeConfig.usage);
-
-    function buildMediaUsageSummary(usage){
-      if(!usage || typeof usage !== 'object'){
-        return '';
-      }
-      const parts = [];
-      const addPart = (label, rawValue, unit)=>{
-        if(rawValue === undefined || rawValue === null){
-          return;
-        }
-        const value = Number(rawValue);
-        if(!Number.isFinite(value)){
-          return;
-        }
-        const suffix = unit ? ` ${unit}` : '';
-        parts.push(`${label} ${value}${suffix}`);
-      };
-      addPart('OA', usage.openaiTokens, 'tok');
-      addPart('OCR', usage.ocrTokens, 'img');
-      addPart('EL TTS', usage.elevenlabsTtsTokens, 'chr');
-      addPart('EL STT', usage.elevenlabsSttTokens, 's');
-      return parts.join('  ');
-    }
-    function updateUsageFromResponse(data){
-      if(data && data.usage && typeof data.usage === 'object'){
-        mediaUsageSummary = buildMediaUsageSummary(data.usage);
-        // Refresh status display with new usage
-        if(mediaStatusIndicator){
-          const currentText = mediaStatusIndicator.textContent.split('  ')[0] || aiStrings.translationIdle;
-          mediaStatusIndicator.textContent = mediaUsageSummary ? `${currentText}  ${mediaUsageSummary}` : currentText;
-        }
-      }
+    function updateUsageFromResponse(_data){
+      // Token usage is no longer displayed in the media status indicator.
     }
     const cropModal = $("#ocrCropModal");
     const cropStage = $("#ocrCropStage");
@@ -1694,8 +1663,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       const text = label || aiStrings.translationIdle;
-      const summary = mediaUsageSummary;
-      mediaStatusIndicator.textContent = summary ? `${text}  ${summary}` : text;
+      mediaStatusIndicator.textContent = text;
       mediaStatusIndicator.dataset.state = state || '';
       mediaStatusIndicator.classList.remove('error','success');
       if(state === 'error'){
