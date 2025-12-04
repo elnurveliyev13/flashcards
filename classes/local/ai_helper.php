@@ -1234,6 +1234,8 @@ If NO constructions found, return empty constructions array.";
                 // Check HTTP status
                 if (!empty($info['http_code']) && $info['http_code'] >= 400) {
                     error_log('Error in request_parallel_curlmulti (request ' . $idx . '): HTTP ' . $info['http_code']);
+                    error_log('Error response body: ' . substr($response, 0, 500)); // Log first 500 chars of error
+                    error_log('Request payload was: ' . json_encode($payloads[$idx], JSON_UNESCAPED_UNICODE));
                     curl_multi_remove_handle($mh, $ch);
                     curl_close($ch);
                     continue;
