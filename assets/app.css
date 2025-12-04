@@ -1507,7 +1507,7 @@ audio{max-width:260px}
 #mod_flashcards_container .front-slot .slot-head,
 #mod_flashcards_container .front-slot .slot-head .slot-head-row,
 #mod_flashcards_container .front-translation-slot .slot-head{
-  margin-bottom: var(--space-1);
+  margin-bottom: calc(var(--space-1) / 2);
   width: 100%;
   max-width: none;
   padding: 0;
