@@ -340,6 +340,8 @@ $string['settings_openai_model'] = 'OpenAI model';
 $string['settings_openai_model_desc'] = 'For example gpt-4o-mini. The helper uses chat-completions.';
 $string['settings_openai_url'] = 'OpenAI endpoint';
 $string['settings_openai_url_desc'] = 'Override only when using a proxy-compatible endpoint.';
+$string['settings_ai_doublecheck_correction'] = 'Double-check corrections';
+$string['settings_ai_doublecheck_correction_desc'] = 'Run a second AI pass to verify the suggested correction and optionally propose a more natural alternative. Disable to reduce latency with slower models.';
 
 $string['settings_tts_section'] = 'Text-to-Speech';
 $string['settings_tts_section_desc'] = 'Configure speech providers for full sentences (ElevenLabs) and short focus phrases (Amazon Polly).';

@@ -569,12 +569,19 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
                 return $result1;
             }
 
-            // STAGE 2: Second API call - Double-check and suggest natural alternative
-            $correctedText = $result1['correctedText'] ?? $text;
+        // Optional STAGE 2: Second API call - Double-check and suggest natural alternative.
+        // Controlled by admin setting to keep latency acceptable for slower models.
+        $config = get_config('mod_flashcards');
+        $enabledoublecheck = !empty($config->ai_doublecheck_correction);
+        if (!$enabledoublecheck) {
+            return $result1;
+        }
 
-            $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
+        $correctedText = $result1['correctedText'] ?? $text;
 
-            $userprompt2 = "Original: \"$text\"
+        $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
+
+        $userprompt2 = "Original: \"$text\"
 Corrected: \"$correctedText\"
 
 Tasks:

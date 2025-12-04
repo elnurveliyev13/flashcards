@@ -41,6 +41,13 @@ if ($hassiteconfig) {
         'https://api.openai.com/v1/chat/completions'
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_flashcards/ai_doublecheck_correction',
+        get_string('settings_ai_doublecheck_correction', 'mod_flashcards'),
+        get_string('settings_ai_doublecheck_correction_desc', 'mod_flashcards'),
+        1
+    ));
+
     // ElevenLabs TTS
     $settings->add(new admin_setting_heading(
         'mod_flashcards/tts_heading',
