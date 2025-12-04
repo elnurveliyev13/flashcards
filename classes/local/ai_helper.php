@@ -487,25 +487,26 @@ class ai_helper {
         // First request: Find errors
         $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail. You MUST respond in $langname language.";
 
-        $userprompt1 = "Check this Norwegian sentence for grammatical errors:
+        $userprompt1 = "You will receive ONE Norwegian sentence written by a learner.
 
+Sentence:
 \"$text\"
+
+Follow these steps:
+1) First, rewrite the sentence with ONLY grammar corrections (no new words, no removed words). This is the main corrected version.
+2) If there is a clearly more natural alternative (not just a synonym swap or tiny style change), produce exactly ONE additional corrected version. If not needed, use the same text as the main correction.
+3) After you have the corrected version(s), list each learner error separately.
 
 Look for: prepositions, word order, verb forms, agreement, spelling.
 
-Rules:
-- Fix ONLY grammar errors
-- Do NOT add/remove words
-
-JSON:
+Return STRICT JSON:
 {
   \"hasErrors\": true/false,
-  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"\"}],
-  \"correctedText\": \"fixed text\",
-  \"explanation\": \"\"
-}
-
-IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
+  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"short explanation in $langname\"}],
+  \"correctedText\": \"main corrected sentence (step 1)\",
+  \"alternativeText\": \"more natural alternative if you found one in step 2, otherwise repeat correctedText\",
+  \"explanation\": \"very short overall explanation in $langname\"
+}";
 
         $client = new openai_client();
         if (!$client->is_enabled()) {
