@@ -9987,17 +9987,18 @@ function renderComparisonResult(resultEl, comparison){
       // Highlight corrections in the corrected text
       const highlightedText = highlightDifferences(originalText, result.correctedText, result.errors);
 
-      // Build detailed errors list
+      // Build compact errors list
       let errorsListHtml = '';
       if (result.errors && result.errors.length > 0) {
         errorsListHtml = '<div class="error-details-list">';
         result.errors.forEach((err, idx) => {
           errorsListHtml += `
             <div class="error-detail-item">
-              <span class="error-original">❌ ${err.original || ''}</span>
+              <span class="error-icon">❌</span>
+              <span class="error-original-text">${err.original || ''}</span>
               <span class="error-arrow">→</span>
-              <span class="error-corrected">✅ ${err.corrected || ''}</span>
-              ${err.issue ? `<div class="error-explanation">${err.issue}</div>` : ''}
+              <span class="error-icon">✅</span>
+              <span class="error-corrected-text">${err.corrected || ''}</span>
             </div>
           `;
         });
@@ -10009,7 +10010,10 @@ function renderComparisonResult(resultEl, comparison){
       if (result.suggestion && result.suggestion.trim()) {
         suggestionHtml = `
           <div class="error-check-suggestion">
-            <strong>💡 ${suggestionText}</strong>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <strong>💡 ${suggestionText}</strong>
+              <button type="button" class="apply-suggestion-btn" data-text="${result.suggestion.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>
+            </div>
             <div class="suggestion-text">${result.suggestion}</div>
           </div>
         `;
@@ -10019,17 +10023,16 @@ function renderComparisonResult(resultEl, comparison){
         <div class="error-check-header">
           <strong>${errorsFoundText}</strong>
         </div>
-        <div class="error-check-explanation">
-          ${result.explanation || ''}
-        </div>
         ${errorsListHtml}
         <div class="error-check-corrected">
-          <strong>${correctedVersionText}</strong>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <strong>${correctedVersionText}</strong>
+            <button type="button" class="apply-corrected-btn" data-text="${result.correctedText.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>
+          </div>
           <div class="corrected-text">${highlightedText}</div>
         </div>
         ${suggestionHtml}
         <div class="error-check-actions">
-          <button type="button" id="acceptCorrectionBtn">${applyCorrectionsText}</button>
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
       `;
@@ -10038,39 +10041,52 @@ function renderComparisonResult(resultEl, comparison){
       block.classList.add('error-check-visible');
       block.style.display = 'block';
 
-      // Store corrected text for button handlers
-      block.dataset.correctedText = result.correctedText;
-
       // Setup button handlers
-      const acceptBtn = document.getElementById('acceptCorrectionBtn');
+      const applyCorrectedBtn = block.querySelector('.apply-corrected-btn');
+      const applySuggestionBtn = block.querySelector('.apply-suggestion-btn');
       const rejectBtn = document.getElementById('rejectCorrectionBtn');
 
-      if (acceptBtn) {
-        acceptBtn.addEventListener('click', function() {
-          const correctedText = block.dataset.correctedText;
-          const frontInput = $('#uFront');
-          if (frontInput) {
-            frontInput.value = correctedText;
+      // Helper function to apply text
+      function applyText(text) {
+        const frontInput = $('#uFront');
+        if (frontInput) {
+          frontInput.value = text;
 
-            // Trigger input event to activate translation and other listeners
-            const inputEvent = new Event('input', { bubbles: true });
-            frontInput.dispatchEvent(inputEvent);
-          }
+          // Trigger input event to activate translation and other listeners
+          const inputEvent = new Event('input', { bubbles: true });
+          frontInput.dispatchEvent(inputEvent);
+        }
 
-          // Trigger translation update if available
-          if (window.onFrontChange) {
-            window.onFrontChange();
-          }
+        // Trigger translation update if available
+        if (window.onFrontChange) {
+          window.onFrontChange();
+        }
 
-          // Trigger tokenization
-          renderFocusChips();
+        // Trigger tokenization
+        renderFocusChips();
 
-          // Hide error block
-          block.classList.remove('error-check-visible');
-          block.style.display = 'none';
+        // Hide error block
+        block.classList.remove('error-check-visible');
+        block.style.display = 'none';
+      }
+
+      // Apply corrected version button
+      if (applyCorrectedBtn) {
+        applyCorrectedBtn.addEventListener('click', function() {
+          const text = this.getAttribute('data-text');
+          applyText(text);
         });
       }
 
+      // Apply suggestion button
+      if (applySuggestionBtn) {
+        applySuggestionBtn.addEventListener('click', function() {
+          const text = this.getAttribute('data-text');
+          applyText(text);
+        });
+      }
+
+      // Keep as is button
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
           // Just hide error block and continue with tokenization

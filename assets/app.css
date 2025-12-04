@@ -4713,8 +4713,8 @@ select.inline-prompt-field {
 .error-details-list {
   margin-bottom: 16px;
   padding: 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
 }
 
@@ -4732,22 +4732,25 @@ select.inline-prompt-field {
 .error-icon {
   font-size: 16px;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .error-original-text {
-  color: #dc2626;
-  font-weight: 500;
+  color: #991b1b;
+  font-weight: 600;
   text-decoration: line-through;
 }
 
 .error-arrow {
-  color: #64748b;
+  color: #374151;
   font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .error-corrected-text {
-  color: #059669;
-  font-weight: 500;
+  color: #065f46;
+  font-weight: 600;
 }
 
 /* Highlighted corrections in text */
@@ -4768,11 +4771,15 @@ select.inline-prompt-field {
 .error-check-actions {
   display: flex;
   gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 
-#acceptCorrectionBtn {
-  padding: 8px 16px;
-  font-size: 14px;
+/* Apply buttons for corrected and suggestion */
+.apply-corrected-btn,
+.apply-suggestion-btn {
+  padding: 6px 12px;
+  font-size: 13px;
   border-radius: 4px;
   border: none;
   background: #10b981;
@@ -4780,9 +4787,11 @@ select.inline-prompt-field {
   cursor: pointer;
   font-weight: 500;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
-#acceptCorrectionBtn:hover {
+.apply-corrected-btn:hover,
+.apply-suggestion-btn:hover {
   background: #059669;
 }
 
@@ -4800,6 +4809,22 @@ select.inline-prompt-field {
 #rejectCorrectionBtn:hover {
   background: #f8fafc;
   border-color: #94a3b8;
+}
+
+.error-check-corrected {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.error-check-suggestion {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
 }
 
 /* ========================================
