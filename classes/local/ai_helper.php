@@ -550,7 +550,7 @@ Return STRICT JSON:
             ];
 
             $t1 = microtime(true);
-            $responses = $this->request_parallel_fallback($requests, $systemprompt1, $userprompt1, $model, $userid);
+            $responses = $this->request_parallel_curlmulti($requests, $systemprompt1, $userprompt1, $model, $userid);
             $debugtiming['api_stage1_multisampling'] = microtime(true) - $t1;
 
             // Merge responses by consensus
@@ -1106,6 +1106,141 @@ If NO constructions found, return empty constructions array.";
                 // Continue with other requests even if one fails
             }
         }
+
+        return $responses;
+    }
+
+    /**
+     * Execute multiple parallel requests with curl_multi (TRUE parallelism)
+     *
+     * @param array $requests Array of ['temperature' => float, 'weight' => float]
+     * @param string $systemprompt System prompt
+     * @param string $userprompt User prompt
+     * @param string $model Model to use
+     * @param int $userid User ID for usage tracking
+     * @return array Array of parsed responses
+     */
+    protected function request_parallel_curlmulti(array $requests, string $systemprompt, string $userprompt, string $model, int $userid): array {
+        $client = new openai_client();
+        $reflection = new \ReflectionClass($client);
+
+        // Get API key and base URL
+        $apiKeyProp = $reflection->getProperty('apikey');
+        $apiKeyProp->setAccessible(true);
+        $apikey = $apiKeyProp->getValue($client);
+
+        $baseUrlProp = $reflection->getProperty('baseurl');
+        $baseUrlProp->setAccessible(true);
+        $baseurl = $baseUrlProp->getValue($client);
+
+        // Initialize curl_multi handle
+        $mh = curl_multi_init();
+        $handles = [];
+        $payloads = [];
+
+        // Create all curl handles
+        foreach ($requests as $idx => $req) {
+            $payload = [
+                'model' => $model,
+                'temperature' => $req['temperature'],
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemprompt],
+                    ['role' => 'user', 'content' => $userprompt],
+                ],
+            ];
+            $payloads[$idx] = $payload;
+
+            $ch = curl_init($baseurl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_UNICODE));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $apikey,
+            ]);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+
+            curl_multi_add_handle($mh, $ch);
+            $handles[$idx] = $ch;
+        }
+
+        // Execute all requests in parallel
+        $active = null;
+        do {
+            $status = curl_multi_exec($mh, $active);
+            if ($active) {
+                // Wait for activity on any curl connection
+                curl_multi_select($mh);
+            }
+        } while ($active && $status == CURLM_OK);
+
+        // Collect responses
+        $responses = [];
+        $recordMethod = $reflection->getMethod('record_usage');
+        $recordMethod->setAccessible(true);
+
+        foreach ($handles as $idx => $ch) {
+            try {
+                $response = curl_multi_getcontent($ch);
+                $info = curl_getinfo($ch);
+
+                // Check HTTP status
+                if (!empty($info['http_code']) && $info['http_code'] >= 400) {
+                    error_log('Error in request_parallel_curlmulti (request ' . $idx . '): HTTP ' . $info['http_code']);
+                    curl_multi_remove_handle($mh, $ch);
+                    curl_close($ch);
+                    continue;
+                }
+
+                if ($response === false || empty($response)) {
+                    error_log('Error in request_parallel_curlmulti (request ' . $idx . '): Empty response');
+                    curl_multi_remove_handle($mh, $ch);
+                    curl_close($ch);
+                    continue;
+                }
+
+                // Parse JSON response
+                $json = json_decode($response);
+                if (!$json) {
+                    error_log('Error in request_parallel_curlmulti (request ' . $idx . '): Invalid JSON');
+                    curl_multi_remove_handle($mh, $ch);
+                    curl_close($ch);
+                    continue;
+                }
+
+                // Record usage
+                if (isset($json->usage)) {
+                    $recordMethod->invoke($client, $userid, $json->usage);
+                }
+
+                // Extract content
+                $content = trim($json->choices[0]->message->content ?? '');
+                if ($content === '') {
+                    curl_multi_remove_handle($mh, $ch);
+                    curl_close($ch);
+                    continue;
+                }
+
+                // Parse JSON from content
+                $jsonMatch = null;
+                if (preg_match('~\{.*\}~s', $content, $m)) {
+                    $jsonMatch = $m[0];
+                }
+                $parsed = $jsonMatch ? json_decode($jsonMatch, true) : json_decode($content, true);
+
+                if (is_array($parsed) && isset($parsed['hasErrors'])) {
+                    $responses[$idx] = $parsed;
+                }
+            } catch (\Exception $e) {
+                error_log('Error in request_parallel_curlmulti (request ' . $idx . '): ' . $e->getMessage());
+            } finally {
+                curl_multi_remove_handle($mh, $ch);
+                curl_close($ch);
+            }
+        }
+
+        curl_multi_close($mh);
 
         return $responses;
     }
