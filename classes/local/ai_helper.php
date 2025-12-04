@@ -539,9 +539,13 @@ Return STRICT JSON:
         // Check if multi-sampling is enabled
         $enableMultisampling = !empty($config->ai_multisampling_enabled);
 
+        error_log('check_norwegian_text: multi-sampling enabled = ' . ($enableMultisampling ? 'YES' : 'NO'));
+
         if ($enableMultisampling) {
             // === MULTI-SAMPLING STRATEGY ===
             // Generate 3 parallel requests with different temperatures
+
+            error_log('check_norwegian_text: Starting multi-sampling for text: ' . substr($text, 0, 50));
 
             $requests = [
                 ['temperature' => 0.2, 'weight' => 1.5],  // Conservative
@@ -1122,32 +1126,65 @@ If NO constructions found, return empty constructions array.";
      */
     protected function request_parallel_curlmulti(array $requests, string $systemprompt, string $userprompt, string $model, int $userid): array {
         $client = new openai_client();
+
+        // Check if client is enabled
+        if (!$client->is_enabled()) {
+            error_log('request_parallel_curlmulti: Client not enabled');
+            return [];
+        }
+
         $reflection = new \ReflectionClass($client);
 
-        // Get API key and base URL
-        $apiKeyProp = $reflection->getProperty('apikey');
-        $apiKeyProp->setAccessible(true);
-        $apikey = $apiKeyProp->getValue($client);
+        // Get API key and base URL directly from config (same as openai_client constructor)
+        $config = get_config('mod_flashcards');
+        $apikey = trim($config->openai_apikey ?? '') ?: getenv('FLASHCARDS_OPENAI_KEY') ?: null;
+        $baseurl = trim($config->openai_baseurl ?? '');
+        if ($baseurl === '') {
+            $baseurl = 'https://api.openai.com/v1/chat/completions';
+        }
 
-        $baseUrlProp = $reflection->getProperty('baseurl');
-        $baseUrlProp->setAccessible(true);
-        $baseurl = $baseUrlProp->getValue($client);
+        if (empty($apikey)) {
+            error_log('request_parallel_curlmulti: No API key available');
+            return [];
+        }
 
         // Initialize curl_multi handle
         $mh = curl_multi_init();
         $handles = [];
         $payloads = [];
 
+        // Check if model supports custom temperature
+        $modelkey = core_text::strtolower(trim((string)$model));
+        $useDefaultTemp = ($modelkey !== '' && $this->requires_default_temperature($modelkey));
+
+        error_log('request_parallel_curlmulti: Starting with ' . count($requests) . ' requests');
+        error_log('request_parallel_curlmulti: API URL = ' . $baseurl);
+        error_log('request_parallel_curlmulti: Model ' . $model . ' requires default temperature = ' .
+                  ($useDefaultTemp ? 'YES (will use reasoning_effort)' : 'NO (will use temperature)'));
+
         // Create all curl handles
         foreach ($requests as $idx => $req) {
+            // Build base payload
             $payload = [
                 'model' => $model,
-                'temperature' => $req['temperature'],
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt],
                     ['role' => 'user', 'content' => $userprompt],
                 ],
             ];
+
+            // Add temperature OR reasoning_effort depending on model type
+            if ($useDefaultTemp) {
+                // Reasoning models (gpt-5-mini, gpt-5-nano, o1-mini) don't support temperature
+                // Use reasoning_effort instead
+                $payload['reasoning_effort'] = 'medium';
+                error_log('request_parallel_curlmulti [req ' . $idx . ']: reasoning_effort=medium (reasoning model)');
+            } else {
+                // Regular models (gpt-4o-mini etc.) support temperature
+                $payload['temperature'] = $req['temperature'];
+                error_log('request_parallel_curlmulti [req ' . $idx . ']: temperature=' . $req['temperature']);
+            }
+
             $payloads[$idx] = $payload;
 
             $ch = curl_init($baseurl);
@@ -1174,6 +1211,8 @@ If NO constructions found, return empty constructions array.";
                 curl_multi_select($mh);
             }
         } while ($active && $status == CURLM_OK);
+
+        error_log('request_parallel_curlmulti: All requests completed, status = ' . $status);
 
         // Collect responses
         $responses = [];
@@ -1242,7 +1281,33 @@ If NO constructions found, return empty constructions array.";
 
         curl_multi_close($mh);
 
+        error_log('request_parallel_curlmulti: Returning ' . count($responses) . ' valid responses');
+
         return $responses;
+    }
+
+    /**
+     * Check if model requires default temperature (no custom temperature support)
+     *
+     * Some models like gpt-5-mini, gpt-5-nano, o1-mini don't support the temperature
+     * parameter and instead use reasoning_effort.
+     *
+     * @param string $modelkey Lowercase model name
+     * @return bool True if model doesn't support temperature parameter
+     */
+    private function requires_default_temperature(string $modelkey): bool {
+        // gpt-5-mini / gpt-5-nano and their dated variants
+        if (strpos($modelkey, 'gpt-5-mini') === 0) {
+            return true;
+        }
+        if (strpos($modelkey, 'gpt-5-nano') === 0) {
+            return true;
+        }
+        // o1-mini and o1-preview also don't support temperature
+        if (strpos($modelkey, 'o1-mini') === 0 || strpos($modelkey, 'o1-preview') === 0) {
+            return true;
+        }
+        return false;
     }
 
     /**

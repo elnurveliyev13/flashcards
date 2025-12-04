@@ -283,7 +283,11 @@ Track and display:
 **A**: The system continues with remaining requests. If at least 1 request succeeds, result is returned (even without full consensus).
 
 ### Q: Does it work with all OpenAI models?
-**A**: Yes, including gpt-4o-mini, gpt-4, gpt-5-mini, etc. Temperature settings are handled automatically.
+**A**: Yes, including:
+- **Standard models** (gpt-4o-mini, gpt-4, etc.): Use temperature parameter (0.2, 0.3, 0.35)
+- **Reasoning models** (gpt-5-mini, gpt-5-nano, o1-mini): Use reasoning_effort=medium (these models don't support temperature)
+
+The system automatically detects model type and adjusts parameters accordingly.
 
 ### Q: How do I measure improvement?
 **A**:
@@ -315,6 +319,22 @@ For issues or questions:
 
 ---
 
+## Recent Changes
+
+### 2025-12-04 (Version 1.1.1)
+**Fixed**: Support for reasoning models (gpt-5-mini, gpt-5-nano, o1-mini, o1-preview)
+- These models don't support the `temperature` parameter
+- System now automatically detects model type and uses `reasoning_effort: "medium"` instead
+- All 3 multi-sampling requests use the same reasoning_effort value
+- Consensus still works because reasoning models are non-deterministic by design
+
+**Changes**:
+- Added `requires_default_temperature()` method to detect reasoning models
+- Modified `request_parallel_curlmulti()` to conditionally use temperature vs reasoning_effort
+- Added extensive logging for debugging
+
+---
+
 **Last Updated**: 2025-12-04
-**Version**: 1.1.0
-**Feature Status**: ✅ Fully Implemented with curl_multi (Parallel requests)
+**Version**: 1.1.1
+**Feature Status**: ✅ Fully Implemented with curl_multi + Reasoning Model Support
