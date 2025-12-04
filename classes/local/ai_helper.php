@@ -481,6 +481,8 @@ class ai_helper {
             'no' => 'Norwegian',
         ];
         $langname = $languagemap[$language] ?? 'English';
+        $debugtiming = [];
+        $overallstart = microtime(true);
 
         // First request: Find errors
         $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail. You MUST respond in $langname language.";
@@ -548,7 +550,9 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
             $method->setAccessible(true);
 
             // First request
+            $t1 = microtime(true);
             $response1 = $method->invoke($client, $payload1);
+            $debugtiming['api_stage1'] = microtime(true) - $t1;
 
             $recordMethod = $reflection->getMethod('record_usage');
             $recordMethod->setAccessible(true);
@@ -572,6 +576,8 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
 
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $result1['debugTiming'] = $debugtiming;
                 return $result1;
             }
 
@@ -579,6 +585,8 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
         // Controlled by admin setting to keep latency acceptable for slower models.
         $enabledoublecheck = !empty($config->ai_doublecheck_correction);
         if (!$enabledoublecheck) {
+            $debugtiming['overall'] = microtime(true) - $overallstart;
+            $result1['debugTiming'] = $debugtiming;
             return $result1;
         }
 
@@ -615,7 +623,9 @@ CRITICAL RULES:
             ];
 
             // Second request
+            $t2 = microtime(true);
             $response2 = $method->invoke($client, $payload2);
+            $debugtiming['api_stage2'] = microtime(true) - $t2;
             $recordMethod->invoke($client, $userid, $response2->usage ?? null);
 
             $content2 = trim($response2->choices[0]->message->content ?? '');
@@ -645,6 +655,9 @@ CRITICAL RULES:
                     $finalResult['suggestion'] = $result2['suggestion'];
                 }
             }
+
+            $debugtiming['overall'] = microtime(true) - $overallstart;
+            $finalResult['debugTiming'] = $debugtiming;
 
             return $finalResult;
         } catch (\Exception $e) {
