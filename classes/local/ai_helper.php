@@ -485,29 +485,25 @@ class ai_helper {
         // First request: Find errors
         $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail. You MUST respond in $langname language.";
 
-        $userprompt1 = "Check this Norwegian sentence for ALL grammatical errors:
+        $userprompt1 = "Check this Norwegian sentence for grammatical errors:
 
 \"$text\"
 
-Look for:
-- Wrong prepositions (klar PÅ → klar OVER)
-- Word order in subclauses
-- Verb forms, agreement
-- Spelling
+Look for: prepositions, word order, verb forms, agreement, spelling.
 
-IMPORTANT:
-- Write in $langname
-- Explain with EXAMPLES, not terms
-  Example: ❌ klar på → ✅ klar over (\"be aware of\" = være klar over)
-- Fix ONLY grammar - do NOT add/remove words
+Rules:
+- Fix ONLY grammar errors
+- Do NOT add/remove words
 
-JSON format (in $langname):
+JSON:
 {
   \"hasErrors\": true/false,
-  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"short explanation + example in $langname\"}],
+  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"\"}],
   \"correctedText\": \"fixed text\",
-  \"explanation\": \"summary in $langname\"
-}";
+  \"explanation\": \"\"
+}
+
+IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
 
         $client = new openai_client();
         if (!$client->is_enabled()) {
@@ -570,20 +566,16 @@ JSON format (in $langname):
             $userprompt2 = "Original: \"$text\"
 Corrected: \"$correctedText\"
 
-TASK:
-1. Any missed errors? Add with examples.
-2. Is it natural? If not, suggest better version.
+1. Any missed errors?
+2. More natural alternative?
 
-IMPORTANT:
-- Write in $langname
-- Show examples, not theory
-- Suggest ONLY if significantly better
-
-JSON (in $langname):
+JSON:
 {
-  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"example in $langname\"}],
-  \"suggestion\": \"natural version or empty\"
-}";
+  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"\"}],
+  \"suggestion\": \"better version or empty\"
+}
+
+Leave \"issue\" EMPTY (\"\").";
 
             $payload2 = [
                 'model' => 'gpt-4o-mini',

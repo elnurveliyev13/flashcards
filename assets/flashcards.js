@@ -1960,6 +1960,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const frontSuggest = frontInputWrap ? frontInputWrap.querySelector('[data-front-suggest]') : null;
     let frontSuggestList = null;
     let frontSuggestToggle = null;
+    let frontSuggestPanel = null;
     let frontSuggestCollapsed = false;
     const frontSuggestToggleLabel = getModString('front_suggest_collapse') || 'Hide suggestions';
     const setFrontSuggestToggleState = (collapsed) => {
@@ -1968,7 +1969,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       frontSuggestToggle.classList.toggle('collapsed', collapsed);
       frontSuggestToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      frontSuggestToggle.innerHTML = `<span aria-hidden="true">▲</span>`;
+      const icon = collapsed ? '▼' : '▲';
+      frontSuggestToggle.innerHTML = `
+        <span aria-hidden="true" class="front-suggest-toggle-icon">${icon}</span>
+        <span class="front-suggest-toggle-text">${frontSuggestToggleLabel}</span>
+      `;
     };
     if(frontSuggest){
       frontSuggest.classList.add('front-suggest-has-toggle');
@@ -1986,8 +1991,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       frontSuggestList = document.createElement('div');
       frontSuggestList.className = 'front-suggest-list';
-      frontSuggest.appendChild(frontSuggestToggle);
-      frontSuggest.appendChild(frontSuggestList);
+      frontSuggestPanel = document.createElement('div');
+      frontSuggestPanel.className = 'front-suggest-panel';
+      frontSuggestPanel.appendChild(frontSuggestToggle);
+      frontSuggestPanel.appendChild(frontSuggestList);
+      frontSuggest.appendChild(frontSuggestPanel);
       setFrontSuggestToggleState(false);
     }
     const fokusInput = $("#uFokus");
