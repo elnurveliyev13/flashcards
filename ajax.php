@@ -707,14 +707,30 @@ switch ($action) {
         if (!is_array($payload)) {
             throw new invalid_parameter_exception('Invalid payload');
         }
-        $prompt = trim($payload['prompt'] ?? '');
-        if ($prompt === '') {
-            throw new invalid_parameter_exception('Missing prompt');
+
+        // Support both old format (prompt) and new format (messages[])
+        if (isset($payload['messages']) && is_array($payload['messages'])) {
+            // New format: messages array for chat context
+            $messages = $payload['messages'];
+            if (empty($messages)) {
+                throw new invalid_parameter_exception('Missing messages');
+            }
+        } else {
+            // Legacy format: single prompt (for backwards compatibility)
+            $prompt = trim($payload['prompt'] ?? '');
+            if ($prompt === '') {
+                throw new invalid_parameter_exception('Missing prompt');
+            }
+            // Convert to messages format
+            $messages = [
+                ['role' => 'user', 'content' => $prompt]
+            ];
         }
+
         $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
 
         $helper = new \mod_flashcards\local\ai_helper();
-        $result = $helper->answer_ai_question($prompt, $language, $userid);
+        $result = $helper->answer_ai_question_with_context($messages, $language, $userid);
 
         echo json_encode($result);
         break;
