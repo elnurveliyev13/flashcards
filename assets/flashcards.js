@@ -10394,7 +10394,9 @@ Regeln:
         const correctedLabel = correctedLabels[language] || correctedLabels['en'];
         const naturalLabel = naturalLabels[language] || naturalLabels['en'];
 
-        let correctionMsg = `${correctedLabel}: "${result.corrected}"`;
+        // Start the chat history with the corrected sentence itself,
+        // without a rigid "Corrected:" prefix so the AI can answer more naturally.
+        let correctionMsg = `"${result.corrected}"`;
         if (result.suggestion) {
           correctionMsg += `\n\n${naturalLabel}: "${result.suggestion}"`;
         }

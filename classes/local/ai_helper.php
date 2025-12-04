@@ -515,9 +515,21 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
             ];
         }
 
+        // Use the same model as configured in openai_client (taken from plugin settings).
+        $reflection = new \ReflectionClass($client);
+        $model = 'gpt-4o-mini';
+        if ($reflection->hasProperty('model')) {
+            $prop = $reflection->getProperty('model');
+            $prop->setAccessible(true);
+            $value = trim((string)$prop->getValue($client));
+            if ($value !== '') {
+                $model = $value;
+            }
+        }
+
         // STAGE 1: First API call - Find errors
         $payload1 = [
-            'model' => 'gpt-4o-mini',
+            'model' => $model,
             'temperature' => 0.3,
             'messages' => [
                 ['role' => 'system', 'content' => $systemprompt1],
@@ -526,7 +538,6 @@ IMPORTANT: Leave \"issue\" and \"explanation\" EMPTY (\"\").";
         ];
 
         try {
-            $reflection = new \ReflectionClass($client);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
 
@@ -583,7 +594,7 @@ CRITICAL RULES:
 - Leave \"issue\" EMPTY (\"\")";
 
             $payload2 = [
-                'model' => 'gpt-4o-mini',
+                'model' => $model,
                 'temperature' => 0.2,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
@@ -651,8 +662,19 @@ CRITICAL RULES:
 
         $systemprompt = "You are an experienced Norwegian language teacher. Answer student questions about grammar and corrections clearly and helpfully.";
 
+        $reflection = new \ReflectionClass($client);
+        $model = 'gpt-4o-mini';
+        if ($reflection->hasProperty('model')) {
+            $prop = $reflection->getProperty('model');
+            $prop->setAccessible(true);
+            $value = trim((string)$prop->getValue($client));
+            if ($value !== '') {
+                $model = $value;
+            }
+        }
+
         $payload = [
-            'model' => 'gpt-4o-mini',
+            'model' => $model,
             'temperature' => 0.4,
             'messages' => [
                 ['role' => 'system', 'content' => $systemprompt],
@@ -661,7 +683,6 @@ CRITICAL RULES:
         ];
 
         try {
-            $reflection = new \ReflectionClass($client);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
 
@@ -696,14 +717,24 @@ CRITICAL RULES:
 
         // Messages array already includes system prompt from frontend
         // Just pass through to OpenAI
+        $reflection = new \ReflectionClass($client);
+        $model = 'gpt-4o-mini';
+        if ($reflection->hasProperty('model')) {
+            $prop = $reflection->getProperty('model');
+            $prop->setAccessible(true);
+            $value = trim((string)$prop->getValue($client));
+            if ($value !== '') {
+                $model = $value;
+            }
+        }
+
         $payload = [
-            'model' => 'gpt-4o-mini',
+            'model' => $model,
             'temperature' => 0.4,
             'messages' => $messages,
         ];
 
         try {
-            $reflection = new \ReflectionClass($client);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
 
@@ -798,8 +829,19 @@ If NO constructions found, return empty constructions array.";
         }
 
         // Use the same pattern as other methods in openai_client
+        $reflection = new \ReflectionClass($client);
+        $model = 'gpt-4o-mini';
+        if ($reflection->hasProperty('model')) {
+            $prop = $reflection->getProperty('model');
+            $prop->setAccessible(true);
+            $value = trim((string)$prop->getValue($client));
+            if ($value !== '') {
+                $model = $value;
+            }
+        }
+
         $payload = [
-            'model' => 'gpt-4o-mini',
+            'model' => $model,
             'temperature' => 0.2,
             'messages' => [
                 [
@@ -815,7 +857,6 @@ If NO constructions found, return empty constructions array.";
 
         try {
             // Call protected request method via reflection
-            $reflection = new \ReflectionClass($client);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
             $response = $method->invoke($client, $payload);
