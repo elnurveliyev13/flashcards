@@ -704,7 +704,7 @@ PROMPT;
                 unset($payload['temperature']);
             }
             if (!isset($payload['reasoning_effort'])) {
-                $payload['reasoning_effort'] = 'minimal';
+                $payload['reasoning_effort'] = 'medium';
             }
         }
 
