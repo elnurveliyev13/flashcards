@@ -344,6 +344,8 @@ $string['settings_openai_correction_model'] = 'Correction model (Check text)';
 $string['settings_openai_correction_model_desc'] = 'Optional model used for grammar checking and explanations (e.g. gpt-4o-mini). Leave empty to reuse the main OpenAI model.';
 $string['settings_ai_doublecheck_correction'] = 'Double-check corrections';
 $string['settings_ai_doublecheck_correction_desc'] = 'Run a second AI pass to verify the suggested correction and optionally propose a more natural alternative. Disable to reduce latency with slower models.';
+$string['settings_ai_multisampling'] = 'Multi-sampling (Self-Consistency)';
+$string['settings_ai_multisampling_desc'] = 'Generate 3 variants of text checking with different temperatures and select by consensus (weighted voting). Reduces false positives and hallucinations, but increases API cost ~3x. Recommended for maximum quality.';
 
 $string['settings_tts_section'] = 'Text-to-Speech';
 $string['settings_tts_section_desc'] = 'Configure speech providers for full sentences (ElevenLabs) and short focus phrases (Amazon Polly).';

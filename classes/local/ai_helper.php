@@ -536,6 +536,123 @@ Return STRICT JSON:
             $model = $correctionmodel;
         }
 
+        // Check if multi-sampling is enabled
+        $enableMultisampling = !empty($config->ai_multisampling_enabled);
+
+        if ($enableMultisampling) {
+            // === MULTI-SAMPLING STRATEGY ===
+            // Generate 3 parallel requests with different temperatures
+
+            $requests = [
+                ['temperature' => 0.2, 'weight' => 1.5],  // Conservative
+                ['temperature' => 0.3, 'weight' => 1.0],  // Base
+                ['temperature' => 0.35, 'weight' => 0.8], // Creative
+            ];
+
+            $t1 = microtime(true);
+            $responses = $this->request_parallel_fallback($requests, $systemprompt1, $userprompt1, $model, $userid);
+            $debugtiming['api_stage1_multisampling'] = microtime(true) - $t1;
+
+            // Merge responses by consensus
+            $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
+
+            // If no errors found, return immediately
+            if (!$result1['hasErrors']) {
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $result1['debugTiming'] = $debugtiming;
+                return $result1;
+            }
+
+            // Continue to STAGE 2 if enabled
+            $enabledoublecheck = !empty($config->ai_doublecheck_correction);
+            if (!$enabledoublecheck) {
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $result1['debugTiming'] = $debugtiming;
+                return $result1;
+            }
+
+            // STAGE 2 with multisampling result
+            $correctedText = $result1['correctedText'] ?? $text;
+
+            $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
+
+            $userprompt2 = "Original: \"$text\"
+Corrected: \"$correctedText\"
+
+Tasks:
+1. Check if any grammatical errors were missed in the correction
+2. ONLY if the corrected text sounds unnatural or awkward, suggest a more natural alternative
+
+JSON:
+{
+  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"\"}],
+  \"suggestion\": \"\"
+}
+
+CRITICAL RULES:
+- Leave \"suggestion\" EMPTY if corrected text is already natural
+- Do NOT suggest synonym replacements (like changing \"lett\" to \"enkelt\")
+- Only suggest if there's a clear naturalness or style improvement
+- Leave \"issue\" EMPTY (\"\")";
+
+            $payload2 = [
+                'model' => $model,
+                'temperature' => 0.2,
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemprompt2],
+                    ['role' => 'user', 'content' => $userprompt2],
+                ],
+            ];
+
+            try {
+                $method = $reflection->getMethod('request');
+                $method->setAccessible(true);
+                $recordMethod = $reflection->getMethod('record_usage');
+                $recordMethod->setAccessible(true);
+
+                $t2 = microtime(true);
+                $response2 = $method->invoke($client, $payload2);
+                $debugtiming['api_stage2'] = microtime(true) - $t2;
+                $recordMethod->invoke($client, $userid, $response2->usage ?? null);
+
+                $content2 = trim($response2->choices[0]->message->content ?? '');
+                $json2 = null;
+                if (preg_match('~\{.*\}~s', $content2, $m)) {
+                    $json2 = $m[0];
+                }
+                $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
+
+                // Merge STAGE 2 results
+                $finalResult = $result1;
+
+                if (is_array($result2)) {
+                    if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
+                        $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
+                        foreach ($result2['additionalErrors'] as $err) {
+                            if (isset($err['original']) && isset($err['corrected'])) {
+                                $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                            }
+                        }
+                    }
+
+                    if (!empty($result2['suggestion'])) {
+                        $finalResult['suggestion'] = $result2['suggestion'];
+                    }
+                }
+
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $finalResult['debugTiming'] = $debugtiming;
+
+                return $finalResult;
+            } catch (\Exception $e) {
+                error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $result1['debugTiming'] = $debugtiming;
+                return $result1;
+            }
+        }
+
+        // === ORIGINAL STRATEGY (single request) ===
         // STAGE 1: First API call - Find errors
         $payload1 = [
             'model' => $model,
@@ -934,5 +1051,172 @@ If NO constructions found, return empty constructions array.";
                 'focusConstruction' => null,
             ];
         }
+    }
+
+    /**
+     * Execute multiple parallel requests with different temperatures (fallback: sequential)
+     *
+     * @param array $requests Array of ['temperature' => float, 'weight' => float]
+     * @param string $systemprompt System prompt
+     * @param string $userprompt User prompt
+     * @param string $model Model to use
+     * @param int $userid User ID for usage tracking
+     * @return array Array of parsed responses
+     */
+    protected function request_parallel_fallback(array $requests, string $systemprompt, string $userprompt, string $model, int $userid): array {
+        $client = new openai_client();
+        $reflection = new \ReflectionClass($client);
+        $method = $reflection->getMethod('request');
+        $method->setAccessible(true);
+        $recordMethod = $reflection->getMethod('record_usage');
+        $recordMethod->setAccessible(true);
+
+        $responses = [];
+        foreach ($requests as $idx => $req) {
+            $payload = [
+                'model' => $model,
+                'temperature' => $req['temperature'],
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemprompt],
+                    ['role' => 'user', 'content' => $userprompt],
+                ],
+            ];
+
+            try {
+                $response = $method->invoke($client, $payload);
+                $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+                $content = trim($response->choices[0]->message->content ?? '');
+                if ($content === '') {
+                    continue;
+                }
+
+                // Parse JSON from content
+                $json = null;
+                if (preg_match('~\{.*\}~s', $content, $m)) {
+                    $json = $m[0];
+                }
+                $parsed = $json ? json_decode($json, true) : json_decode($content, true);
+
+                if (is_array($parsed) && isset($parsed['hasErrors'])) {
+                    $responses[$idx] = $parsed;
+                }
+            } catch (\Exception $e) {
+                error_log('Error in request_parallel_fallback (request ' . $idx . '): ' . $e->getMessage());
+                // Continue with other requests even if one fails
+            }
+        }
+
+        return $responses;
+    }
+
+    /**
+     * Merge multiple responses by consensus (weighted voting)
+     *
+     * @param array $responses Array of parsed API responses
+     * @param array $requests Array of request configs with weights
+     * @param string $originalText Original text for correction reconstruction
+     * @return array Merged result with consensus errors
+     */
+    protected function merge_responses_by_consensus(array $responses, array $requests, string $originalText): array {
+        if (empty($responses)) {
+            return [
+                'hasErrors' => false,
+                'errors' => [],
+                'correctedText' => $originalText,
+                'explanation' => '',
+            ];
+        }
+
+        // If only one response, return it as-is
+        if (count($responses) === 1) {
+            return reset($responses);
+        }
+
+        // Collect all errors from all responses
+        $allErrors = [];
+        foreach ($responses as $idx => $response) {
+            $weight = $requests[$idx]['weight'] ?? 1.0;
+
+            if (empty($response['errors']) || !is_array($response['errors'])) {
+                continue;
+            }
+
+            foreach ($response['errors'] as $error) {
+                if (!isset($error['original']) || !isset($error['corrected'])) {
+                    continue;
+                }
+
+                $key = $error['original']; // Use original word as key
+
+                if (!isset($allErrors[$key])) {
+                    $allErrors[$key] = [
+                        'votes' => 0,
+                        'weightedVotes' => 0,
+                        'corrections' => [],
+                        'issues' => [],
+                    ];
+                }
+
+                $allErrors[$key]['votes']++;
+                $allErrors[$key]['weightedVotes'] += $weight;
+                $allErrors[$key]['corrections'][] = $error['corrected'];
+
+                if (!empty($error['issue'])) {
+                    $allErrors[$key]['issues'][] = $error['issue'];
+                }
+            }
+        }
+
+        // Filter errors by consensus (minimum 2 votes)
+        $confirmedErrors = [];
+        foreach ($allErrors as $original => $data) {
+            if ($data['votes'] >= 2) {
+                // Choose most common correction
+                $correctionCounts = array_count_values($data['corrections']);
+                arsort($correctionCounts);
+                $mostCommonCorrection = key($correctionCounts);
+
+                // Choose most common issue explanation
+                $issue = '';
+                if (!empty($data['issues'])) {
+                    $issueCounts = array_count_values($data['issues']);
+                    arsort($issueCounts);
+                    $issue = key($issueCounts);
+                }
+
+                $confirmedErrors[] = [
+                    'original' => $original,
+                    'corrected' => $mostCommonCorrection,
+                    'issue' => $issue,
+                    'confidence' => $data['weightedVotes'], // For debugging
+                ];
+            }
+        }
+
+        // Use base response (temperature 0.3, index 1) as foundation
+        $baseResponse = $responses[1] ?? $responses[array_key_first($responses)];
+
+        // Replace errors with confirmed ones
+        $baseResponse['errors'] = $confirmedErrors;
+
+        // Reconstruct correctedText based on confirmed errors
+        $correctedText = $originalText;
+        foreach ($confirmedErrors as $err) {
+            $correctedText = str_replace($err['original'], $err['corrected'], $correctedText);
+        }
+        $baseResponse['correctedText'] = $correctedText;
+
+        // Update hasErrors flag
+        $baseResponse['hasErrors'] = !empty($confirmedErrors);
+
+        // Add consensus metadata for debugging
+        $baseResponse['consensusInfo'] = [
+            'totalResponses' => count($responses),
+            'confirmedErrors' => count($confirmedErrors),
+            'discardedErrors' => count($allErrors) - count($confirmedErrors),
+        ];
+
+        return $baseResponse;
     }
 }

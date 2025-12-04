@@ -55,6 +55,13 @@ if ($hassiteconfig) {
         1
     ));
 
+    $settings->add(new admin_setting_configcheckbox(
+        'mod_flashcards/ai_multisampling_enabled',
+        get_string('settings_ai_multisampling', 'mod_flashcards'),
+        get_string('settings_ai_multisampling_desc', 'mod_flashcards'),
+        0
+    ));
+
     // ElevenLabs TTS
     $settings->add(new admin_setting_heading(
         'mod_flashcards/tts_heading',
