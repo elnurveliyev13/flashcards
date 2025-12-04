@@ -2103,6 +2103,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     setFocusTranslation('');
     applyTranslationDirection('no-user');
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
+    const countWords = (text)=> (text.match(wordRegex) || []).length;
 
     // Front-side autocomplete (ordbokene + local ordbank)
     const FRONT_SUGGEST_DEBOUNCE = 170;
@@ -2259,6 +2260,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       if(!frontInput){
+        return;
+      }
+      const wordCount = countWords(frontInput.value || '');
+      if(wordCount > 4){
+        if(frontSuggestAbort){
+          try{ frontSuggestAbort.abort(); }catch(_e){}
+          frontSuggestAbort = null;
+        }
+        hideFrontSuggest();
+        frontSuggestScheduledQuery = '';
         return;
       }
       const q = currentFrontQuery();

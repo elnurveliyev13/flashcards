@@ -4600,7 +4600,7 @@ select.inline-prompt-field {
    ======================================== */
 
 .front-text-actions {
-  margin: var(--space-1) auto 0;
+  margin: var(--space-1) auto var(--space-1);
   display: flex;
   gap: var(--space-1);
   width: 100%;
