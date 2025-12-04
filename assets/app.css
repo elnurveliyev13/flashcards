@@ -1504,10 +1504,10 @@ audio{max-width:260px}
 .front-translation-slot + .front-slot{
   margin-top: 0;
 }
-.front-slot .slot-head,
-.front-slot .slot-head .slot-head-row,
-.front-translation-slot .slot-head{
-  margin-bottom: 0.35rem;
+#mod_flashcards_container .front-slot .slot-head,
+#mod_flashcards_container .front-slot .slot-head .slot-head-row,
+#mod_flashcards_container .front-translation-slot .slot-head{
+  margin-bottom: var(--space-1);
   width: 100%;
   max-width: none;
   padding: 0;
@@ -2286,7 +2286,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items:flex-start;
   justify-content:space-between;
   gap:0.35rem;
-  margin:0 auto;
+  margin: var(--space-1) auto 0;
   width: 100%;
   max-width: var(--slot-content-max-width);
   box-sizing: border-box;
@@ -2415,7 +2415,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   overflow-wrap: anywhere;
 }
 .front-translation-slot .slot-head{
-  margin-bottom: 0.2rem;
+  margin-bottom: var(--space-1);
 }
 .front-translation-slot .slot-head-row{
   align-items:flex-start;
@@ -4600,9 +4600,12 @@ select.inline-prompt-field {
    ======================================== */
 
 .front-text-actions {
-  margin-top: 8px;
+  margin: var(--space-1) auto 0;
   display: flex;
-  gap: 8px;
+  gap: var(--space-1);
+  width: 100%;
+  max-width: var(--slot-content-max-width);
+  box-sizing: border-box;
 }
 
 /* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */
