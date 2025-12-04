@@ -10396,7 +10396,9 @@ Regeln:
 
         // Start the chat history with the corrected sentence itself,
         // without a rigid "Corrected:" prefix so the AI can answer more naturally.
-        let correctionMsg = `"${result.corrected}"`;
+        // Use correctedText (the field returned from the backend); fall back to original text if needed.
+        const correctedSentence = result.correctedText || result.corrected || originalText || '';
+        let correctionMsg = correctedSentence ? `"${correctedSentence}"` : '';
         if (result.suggestion) {
           correctionMsg += `\n\n${naturalLabel}: "${result.suggestion}"`;
         }
