@@ -683,9 +683,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         error_checking_failed: 'Error checking failed',
         naturalness_suggestion: 'More natural alternative:',
         ask_ai_about_correction: 'Ask AI',
-        ai_explain: 'Explain',
-        ai_examples: 'Give examples',
         ai_sure: 'Are you sure?',
+        ai_explain_more: 'Explain in detail',
+        ai_more_examples: 'Give more examples',
+        ai_explain_simpler: 'Explain simpler',
         ai_thinking: 'Thinking...',
       },
       uk: {
@@ -799,9 +800,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         error_checking_failed: 'Помилка перевірки',
         naturalness_suggestion: 'Більш природний варіант:',
         ask_ai_about_correction: 'Запитати AI',
-        ai_explain: 'Поясни',
-        ai_examples: 'Приклади',
         ai_sure: 'Ти впевнений?',
+        ai_explain_more: 'Поясни детальніше',
+        ai_more_examples: 'Дай більше прикладів',
+        ai_explain_simpler: 'Поясни простіше',
         ai_thinking: 'Думаю...',
       },
       ru: {
@@ -915,9 +917,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         error_checking_failed: 'Ошибка проверки',
         naturalness_suggestion: 'Более естественный вариант:',
         ask_ai_about_correction: 'Спросить AI',
-        ai_explain: 'Объясни',
-        ai_examples: 'Примеры',
         ai_sure: 'Ты уверен?',
+        ai_explain_more: 'Объясни подробнее',
+        ai_more_examples: 'Дай больше примеров',
+        ai_explain_simpler: 'Объясни проще',
         ai_thinking: 'Думаю...',
       },
       fr: {
@@ -1231,9 +1234,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         error_checking_failed: 'Błąd sprawdzania',
         naturalness_suggestion: 'Bardziej naturalna alternatywa:',
         ask_ai_about_correction: 'Zapytaj AI',
-        ai_explain: 'Wyjaśnij',
-        ai_examples: 'Przykłady',
         ai_sure: 'Jesteś pewien?',
+        ai_explain_more: 'Wyjaśnij szczegółowo',
+        ai_more_examples: 'Daj więcej przykładów',
+        ai_explain_simpler: 'Wyjaśnij prościej',
         ai_thinking: 'Myślę...',
       },
       it: {
@@ -9909,6 +9913,100 @@ function renderComparisonResult(resultEl, comparison){
     // ==========================================================================
     // ERROR CHECKING & CONSTRUCTION DETECTION
     // ==========================================================================
+
+    /**
+     * Chat Session Manager (in-memory storage with localStorage backup)
+     */
+    const ChatSessionManager = {
+      currentSession: null,
+
+      createSession(originalText) {
+        const sessionId = 'correction_' + Date.now();
+        this.currentSession = {
+          id: sessionId,
+          originalText: originalText,
+          messages: [],
+          createdAt: new Date().toISOString()
+        };
+        this.saveToLocalStorage();
+        return this.currentSession;
+      },
+
+      addMessage(role, content) {
+        if (!this.currentSession) return;
+        const message = {
+          id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          role: role, // 'system' | 'user' | 'assistant'
+          content: content,
+          createdAt: new Date().toISOString()
+        };
+        this.currentSession.messages.push(message);
+        this.saveToLocalStorage();
+        return message;
+      },
+
+      getMessagesForAPI(maxMessages = 10) {
+        if (!this.currentSession) return [];
+
+        // Always include system message
+        const systemMsg = {
+          role: 'system',
+          content: this.getSystemPrompt()
+        };
+
+        // Take last N messages (user/assistant pairs)
+        const recentMessages = this.currentSession.messages.slice(-maxMessages);
+
+        return [systemMsg, ...recentMessages];
+      },
+
+      getSystemPrompt() {
+        const langMap = {
+          'uk': 'Ти — уважний коректор норвезького тексту для студентів. Твоя задача — лише перевіряти норвезькі речення, виправляти помилки та пояснювати їх українською максимально чітко й нейтрально.',
+          'ru': 'Ты — внимательный корректор норвежского текста для студентов. Твоя задача — только проверять норвежские предложения, исправлять ошибки и объяснять их на русском максимально четко и нейтрально.',
+          'en': 'You are a careful Norwegian text corrector for students. Your task is to check Norwegian sentences, correct errors, and explain them in English as clearly and neutrally as possible.',
+          'pl': 'Jesteś uważnym korektorem tekstu norweskiego dla studentów. Twoim zadaniem jest sprawdzanie norweskich zdań, poprawianie błędów i wyjaśnianie ich po polsku w sposób jak najbardziej jasny i neutralny.',
+          'fr': 'Tu es un correcteur attentif de textes norvégiens pour étudiants. Ta tâche consiste à vérifier les phrases norvégiennes, corriger les erreurs et les expliquer en français de manière claire et neutre.',
+          'es': 'Eres un corrector cuidadoso de textos noruegos para estudiantes. Tu tarea es verificar oraciones noruegas, corregir errores y explicarlos en español de manera clara y neutral.',
+          'it': 'Sei un correttore attento di testi norvegesi per studenti. Il tuo compito è controllare frasi norvegesi, correggere errori e spiegarli in italiano in modo chiaro e neutrale.',
+          'de': 'Du bist ein aufmerksamer Korrektor norwegischer Texte für Studenten. Deine Aufgabe ist es, norwegische Sätze zu überprüfen, Fehler zu korrigieren und sie auf Deutsch so klar und neutral wie möglich zu erklären.'
+        };
+
+        const language = currentInterfaceLang || 'en';
+        return langMap[language] || langMap['en'];
+      },
+
+      saveToLocalStorage() {
+        if (!this.currentSession) return;
+        try {
+          localStorage.setItem('flashcards_chat_session', JSON.stringify(this.currentSession));
+        } catch (e) {
+          console.warn('Could not save chat session to localStorage:', e);
+        }
+      },
+
+      loadFromLocalStorage() {
+        try {
+          const saved = localStorage.getItem('flashcards_chat_session');
+          if (saved) {
+            this.currentSession = JSON.parse(saved);
+            return this.currentSession;
+          }
+        } catch (e) {
+          console.warn('Could not load chat session from localStorage:', e);
+        }
+        return null;
+      },
+
+      clearSession() {
+        this.currentSession = null;
+        try {
+          localStorage.removeItem('flashcards_chat_session');
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
 
     /**
      * Check Norwegian text for grammatical errors
