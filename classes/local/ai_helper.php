@@ -1173,11 +1173,13 @@ If NO constructions found, return empty constructions array.";
         // Check if model supports custom temperature
         $modelkey = core_text::strtolower(trim((string)$model));
         $useDefaultTemp = ($modelkey !== '' && $this->requires_default_temperature($modelkey));
+        $timeout = $useDefaultTemp ? 90 : 30; // Reasoning models are MUCH slower
 
         error_log('request_parallel_curlmulti: Starting with ' . count($requests) . ' requests');
         error_log('request_parallel_curlmulti: API URL = ' . $baseurl);
         error_log('request_parallel_curlmulti: Model ' . $model . ' requires default temperature = ' .
                   ($useDefaultTemp ? 'YES (will use reasoning_effort)' : 'NO (will use temperature)'));
+        error_log('request_parallel_curlmulti: Timeout set to ' . $timeout . ' seconds');
 
         // Create all curl handles
         foreach ($requests as $idx => $req) {
@@ -1212,7 +1214,9 @@ If NO constructions found, return empty constructions array.";
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . $apikey,
             ]);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            // Reasoning models are MUCH slower - need longer timeout
+            $timeout = $useDefaultTemp ? 90 : 30;
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
             curl_multi_add_handle($mh, $ch);

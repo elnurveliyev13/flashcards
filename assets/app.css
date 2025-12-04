@@ -2055,19 +2055,20 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 @media (max-width: 720px){
   :root{
     --fc-tabs-height: 64px;
+    --fc-tabs-offset: 48px; /* lift tabs above iOS bottom toolbar */
   }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
-    padding-bottom: calc(var(--space-3) + 240px);
+    padding-bottom: calc(var(--space-3) + 260px);
   }
   #mod_flashcards_container[data-bottom-visible] .wrap,
   #mod_flashcards_container[data-edit-bar-visible] .wrap{
-    padding-bottom: calc(var(--space-3) + 240px);
+    padding-bottom: calc(var(--space-3) + 260px);
   }
 
   /* Lift action bars just enough to sit above tabs */
   .bottom-actions{
-    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 12px);
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-offset) + var(--fc-tabs-height) + 8px);
     z-index: 2200;
   }
 
@@ -2077,7 +2078,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     position: fixed !important;
     left: 0;
     right: 0;
-    bottom: calc(env(safe-area-inset-bottom) + 4px);
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-offset));
     width: 100%;
     max-width: var(--app-content-max-width);
     padding: 8px 10px;

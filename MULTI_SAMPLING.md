@@ -59,8 +59,10 @@ User Text → ──────┼─→ AI Check (temp 0.3, base, weight 1.0)
 
 ### ✅ Latency (OPTIMIZED)
 - **Implementation**: Parallel requests with curl_multi
-- **Performance**: ~10-15 seconds (same as single request time)
-- **No timeout issues**: Completes within standard HTTP timeout (30 sec)
+- **Performance**:
+  - Standard models (gpt-4o-mini): ~10-15 seconds (timeout 30 sec)
+  - Reasoning models (gpt-5-nano, o1-mini): ~30-60 seconds (timeout 90 sec)
+- **No timeout issues**: Adaptive timeout based on model type
 
 ---
 
@@ -321,6 +323,18 @@ For issues or questions:
 
 ## Recent Changes
 
+### 2025-12-05 (Version 1.1.3)
+**Fixed**: Adaptive timeout for reasoning models
+- Standard models (gpt-4o-mini): 30 seconds timeout (unchanged)
+- Reasoning models (gpt-5-nano, o1-mini): 90 seconds timeout (increased from 30)
+- Previously: 2 of 3 requests timed out with reasoning models (empty_response)
+- Now: All 3 requests should complete successfully
+
+**Changes**:
+- Modified `request_parallel_curlmulti()` to set timeout based on model type
+- Added `$timeout` variable: 90 for reasoning models, 30 for standard models
+- Added logging of timeout value to error_log
+
 ### 2025-12-05 (Version 1.1.2)
 **Fixed**: Error diagnostics now visible in browser DevTools
 - Previously errors were only logged to PHP error logs (invisible to user)
@@ -368,5 +382,5 @@ For issues or questions:
 ---
 
 **Last Updated**: 2025-12-05
-**Version**: 1.1.2
-**Feature Status**: ✅ Fully Implemented with curl_multi + Reasoning Model Support + Error Diagnostics
+**Version**: 1.1.3
+**Feature Status**: ✅ Fully Implemented with curl_multi + Reasoning Model Support + Error Diagnostics + Adaptive Timeout
