@@ -549,6 +549,10 @@ If the sentence is fully correct and natural for Bokm?l:
 - alternativeText = the original sentence
 - explanation = a very short confirmation in $langname (for example: "??????????? ????????? ? ?????? ???????????." / ?????? ?? ?????? ?????)
 
+IMPORTANT:
+- Never create an error item if the "original" and "corrected" text are exactly the same.
+- For every change you make between the learner sentence and "correctedText", you MUST include at least one corresponding error item that describes this change.
+
 JSON FORMAT (STRICT):
 {
   "hasErrors": true/false,
@@ -748,11 +752,29 @@ USERPROMPT2;
 
                     if (is_array($result2)) {
                         if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
-                            $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
+                            $cleanAdditional = [];
+
                             foreach ($result2['additionalErrors'] as $err) {
-                                if (isset($err['original']) && isset($err['corrected'])) {
-                                    $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                                if (!isset($err['original']) || !isset($err['corrected'])) {
+                                    continue;
                                 }
+
+                                // 🔹 Новый фильтр: пропускаем «ошибки», которые ничего не меняют
+                                if (trim($err['original']) === trim($err['corrected'])) {
+                                    continue;
+                                }
+
+                                $cleanAdditional[] = $err;
+
+                                $finalResult['correctedText'] = str_replace(
+                                    $err['original'],
+                                    $err['corrected'],
+                                    $finalResult['correctedText']
+                                );
+                            }
+
+                            if (!empty($cleanAdditional)) {
+                                $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $cleanAdditional);
                             }
                         }
 
@@ -935,12 +957,29 @@ USERPROMPT2;
             if (is_array($result2)) {
                 // Add additional errors if found
                 if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
-                    $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
-                    // Update correctedText if there were additional fixes
+                    $cleanAdditional = [];
+
                     foreach ($result2['additionalErrors'] as $err) {
-                        if (isset($err['original']) && isset($err['corrected'])) {
-                            $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                        if (!isset($err['original']) || !isset($err['corrected'])) {
+                            continue;
                         }
+
+                        // 🔹 Новый фильтр
+                        if (trim($err['original']) === trim($err['corrected'])) {
+                            continue;
+                        }
+
+                        $cleanAdditional[] = $err;
+
+                        $finalResult['correctedText'] = str_replace(
+                            $err['original'],
+                            $err['corrected'],
+                            $finalResult['correctedText']
+                        );
+                    }
+
+                    if (!empty($cleanAdditional)) {
+                        $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $cleanAdditional);
                     }
                 }
 
@@ -1591,6 +1630,11 @@ If NO constructions found, return empty constructions array.";
 
             foreach ($response['errors'] as $error) {
                 if (!isset($error['original']) || !isset($error['corrected'])) {
+                    continue;
+                }
+
+                // 🔹 Новый фильтр: игнорируем «ошибки», которые ничего не меняют
+                if (trim($error['original']) === trim($error['corrected'])) {
                     continue;
                 }
 
