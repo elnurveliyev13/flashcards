@@ -497,7 +497,13 @@ Follow these steps:
 2) If there is a clearly more natural alternative (not just a synonym swap or tiny style change), produce exactly ONE additional corrected version. If not needed, use the same text as the main correction.
 3) After you have the corrected version(s), list each learner error separately.
 
-Look for: prepositions, word order, verb forms, agreement, spelling.
+Check ALL of these:
+- Capitalization (first word, proper nouns)
+- Word order (subject-verb-object, adverb placement, negation position)
+- Verb forms (tense, agreement)
+- Prepositions (correct usage, collocations like 'klar over' not 'klar på')
+- Articles and agreement (gender, number)
+- Spelling
 
 Return STRICT JSON:
 {
