@@ -637,6 +637,10 @@ USERPROMPT;
                 $debugtiming['multisampling_errors'] = $multisamplingErrors;
             }
 
+            if (empty($responses)) {
+                error_log('check_norwegian_text: multisampling returned no valid responses, falling back to single request');
+                $enableMultisampling = false;
+            } else {
             // Merge responses by consensus
             $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
 
@@ -714,7 +718,7 @@ USERPROMPT2;
 
             $payload2 = [
                 'model' => $model,
-                'temperature' => 0.25,
+                'temperature' => 0.0,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
                     ['role' => 'user', 'content' => $userprompt2],
@@ -752,6 +756,26 @@ USERPROMPT2;
                         }
                     }
 
+                    if (!empty($finalResult['errors']) && is_array($finalResult['errors'])) {
+                        $seen = [];
+                        $deduped = [];
+
+                        foreach ($finalResult['errors'] as $err) {
+                            if (!isset($err['original']) || !isset($err['corrected'])) {
+                                $deduped[] = $err;
+                                continue;
+                            }
+                            $key = $err['original'] . '||' . $err['corrected'];
+                            if (isset($seen[$key])) {
+                                continue;
+                            }
+                            $seen[$key] = true;
+                            $deduped[] = $err;
+                        }
+
+                        $finalResult['errors'] = $deduped;
+                    }
+
                     if (!empty($result2['suggestion'])) {
                         $finalResult['suggestion'] = $result2['suggestion'];
                     }
@@ -768,8 +792,10 @@ USERPROMPT2;
                 return $result1;
             }
         }
+        }
 
-        // === ORIGINAL STRATEGY (single request) ===
+        if (!$enableMultisampling) {
+            // === ORIGINAL STRATEGY (single request) ===
         // STAGE 1: First API call - Find errors
         $payload1 = [
             'model' => $model,
@@ -883,7 +909,7 @@ USERPROMPT2;
 
             $payload2 = [
                 'model' => $model,
-                'temperature' => 0.25,
+                'temperature' => 0.0,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
                     ['role' => 'user', 'content' => $userprompt2],
@@ -918,6 +944,26 @@ USERPROMPT2;
                     }
                 }
 
+                if (!empty($finalResult['errors']) && is_array($finalResult['errors'])) {
+                    $seen = [];
+                    $deduped = [];
+
+                    foreach ($finalResult['errors'] as $err) {
+                        if (!isset($err['original']) || !isset($err['corrected'])) {
+                            $deduped[] = $err;
+                            continue;
+                        }
+                        $key = $err['original'] . '||' . $err['corrected'];
+                        if (isset($seen[$key])) {
+                            continue;
+                        }
+                        $seen[$key] = true;
+                        $deduped[] = $err;
+                    }
+
+                    $finalResult['errors'] = $deduped;
+                }
+
                 // Add suggestion if present
                 if (!empty($result2['suggestion'])) {
                     $finalResult['suggestion'] = $result2['suggestion'];
@@ -937,6 +983,8 @@ USERPROMPT2;
                 'explanation' => '',
             ];
         }
+    }
+
     }
 
     /**
