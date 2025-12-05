@@ -3636,7 +3636,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         form = pluralRulesCache[locale].select(days);
       }catch(_e){}
       const word = labels[form] || labels.other || labels.one || ratingHintLocaleMap.en.other;
-      return `+${days}\u00A0${word}`;
+      return `+${days} ${word}`;
     }
     function updateRatingActionHints(rec){
       const mappings = [
