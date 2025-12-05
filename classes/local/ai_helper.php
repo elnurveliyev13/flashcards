@@ -485,35 +485,93 @@ class ai_helper {
         $overallstart = microtime(true);
 
         // First request: Find errors
-        $systemprompt1 = "You are an experienced Norwegian (Bokmål) language teacher. Check student texts for grammatical errors with high attention to detail. You MUST respond in $langname language.";
+        $systemprompt1 = <<<"SYSTEMPROMPT"
+You are an experienced teacher of Norwegian (Bokm?l) for adult learners (levels A2-B2).
 
-        $userprompt1 = "You will receive ONE Norwegian sentence written by a learner.
+Your job:
+- Carefully check ONE learner sentence in Norwegian.
+- Correct ONLY clear grammatical, spelling and obvious word order mistakes.
+- Avoid false corrections. If you are not sure something is wrong in standard Bokm?l, treat it as correct.
+- Do NOT change the meaning of the sentence.
+- Do NOT freely replace correct words with synonyms or stylistic alternatives.
+
+Priorities:
+1) Grammar and correctness
+2) Naturalness, but ONLY when the improvement is clearly better and still simple for a learner
+
+Important:
+- You MUST follow the JSON schema given in the user message.
+- You MUST respond only in $langname (for all explanations and descriptions).
+- You MUST output ONLY valid JSON that can be parsed by a strict JSON parser (no comments, no extra text).
+SYSTEMPROMPT;
+
+        $userprompt1 = <<<"USERPROMPT"
+You will receive ONE Norwegian sentence written by a learner.
 
 Sentence:
-\"$text\"
+"$text"
 
-Follow these steps:
-1) First, rewrite the sentence with ONLY grammar corrections (no new words, no removed words). This is the main corrected version.
-2) If there is a clearly more natural alternative (not just a synonym swap or tiny style change), produce exactly ONE additional corrected version. If not needed, use the same text as the main correction.
-3) After you have the corrected version(s), list each learner error separately.
+Your tasks (do them in this order):
+
+1) Create the MAIN CORRECTED VERSION:
+   - Correct ONLY clear grammar, spelling, agreement, word order and preposition errors.
+   - Do NOT add new words.
+   - Do NOT remove words.
+   - Do NOT change the meaning.
+   - Keep the sentence as close as possible to the original.
+
+2) Create an ALTERNATIVE, MORE NATURAL VERSION (optional):
+   - ONLY if there is a clearly more natural and typical way to say the same thing in simple, learner-friendly Bokm?l.
+   - Do NOT change meaning.
+   - Do NOT introduce advanced structures that are too difficult for A2-B2 learners.
+   - If you do NOT see a clear improvement, set the alternative equal to the main corrected sentence.
+
+3) List EACH learner error separately:
+   - For each error, show:
+     - the original fragment from the learner sentence
+     - your corrected version
+     - a SHORT explanation in $langname
+     - a simple category and certainty level
 
 Check ALL of these:
-- Capitalization (first word, proper nouns)
-- Word order (subject-verb-object, adverb placement, negation position)
+- Capitalization (first word, proper names)
+- Word order (subject-verb-object, adverb placement, position of "ikke" and other negations)
 - Verb forms (tense, agreement)
-- Prepositions (correct usage, collocations like 'klar over' not 'klar på')
-- Articles and agreement (gender, number)
-- Spelling
+- Prepositions (correct prepositions and collocations, e.g. "klar over", not "klar p?")
+- Articles and agreement (gender, number, definite/indefinite)
+- Spelling (typical mistakes by learners)
+- Punctuation ONLY if it affects understanding
 
-Return STRICT JSON:
+If the sentence is fully correct and natural for Bokm?l:
+- hasErrors = false
+- errors = []
+- correctedText = the original sentence
+- alternativeText = the original sentence
+- explanation = a very short confirmation in $langname (for example: "??????????? ????????? ? ?????? ???????????." / ?????? ?? ?????? ?????)
+
+JSON FORMAT (STRICT):
 {
-  \"hasErrors\": true/false,
-  \"errors\": [{\"original\": \"wrong\", \"corrected\": \"correct\", \"issue\": \"short explanation in $langname\"}],
-  \"correctedText\": \"main corrected sentence (step 1)\",
-  \"alternativeText\": \"more natural alternative if you found one in step 2, otherwise repeat correctedText\",
-  \"explanation\": \"very short overall explanation in $langname\"
-}";
+  "hasErrors": true/false,
+  "errors": [
+    {
+      "original": "wrong fragment",
+      "corrected": "correct fragment",
+      "issue": "very short explanation in $langname",
+      "category": "spelling | grammar | word order | preposition | article | capitalization | other",
+      "certainty": "high | medium | low"
+    }
+  ],
+  "correctedText": "main corrected sentence (from step 1)",
+  "alternativeText": "more natural alternative from step 2, or same as correctedText",
+  "explanation": "very short global explanation in $langname (1?3 sentences)"
+}
 
+Rules for JSON:
+- Use ONLY double quotes for strings.
+- Do NOT use trailing commas.
+- Booleans must be: true or false (not strings).
+- No comments, no extra text, no markdown, no backticks.
+USERPROMPT;
         $client = new openai_client();
         if (!$client->is_enabled()) {
             return [
@@ -554,9 +612,9 @@ Return STRICT JSON:
             error_log('check_norwegian_text: Starting multi-sampling for text: ' . substr($text, 0, 50));
 
             $requests = [
-                ['temperature' => 0.2, 'weight' => 1.5],  // Conservative
-                ['temperature' => 0.3, 'weight' => 1.0],  // Base
-                ['temperature' => 0.35, 'weight' => 0.8], // Creative
+                ['temperature' => 0.1, 'weight' => 1.5],  // Conservative
+                ['temperature' => 0.15, 'weight' => 1.0], // Base
+                ['temperature' => 0.2, 'weight' => 0.8],  // Creative
             ];
 
             $t1 = microtime(true);
@@ -600,30 +658,63 @@ Return STRICT JSON:
             // STAGE 2 with multisampling result
             $correctedText = $result1['correctedText'] ?? $text;
 
-            $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
+            $systemprompt2 = <<<"SYSTEMPROMPT2"
+You are a native speaker of Norwegian (Bokmål) and an experienced editor for learner texts.
 
-            $userprompt2 = "Original: \"$text\"
-Corrected: \"$correctedText\"
+Task:
+- Review an ALREADY CORRECTED learner sentence.
+- Find ONLY clear remaining mistakes (if any).
+- Optionally suggest a slightly more natural version.
 
-Tasks:
-1. Check if any grammatical errors were missed in the correction
-2. ONLY if the corrected text sounds unnatural or awkward, suggest a more natural alternative
+Important:
+- Be conservative. If you are not sure something is wrong, treat it as correct.
+- Do NOT change the meaning.
+- Do NOT introduce unnecessary synonyms or advanced constructions.
+- All explanations must be in $langname.
+- Output ONLY valid JSON in the exact schema from the user message.
+SYSTEMPROMPT2;
+
+            $userprompt2 = <<<"USERPROMPT2"
+Original (learner sentence): "$text"
+Corrected (first pass): "$correctedText"
+
+Your tasks:
+
+1) Check if the corrected sentence still contains ANY clear errors in Norwegian (Bokmål):
+   - grammar
+   - spelling
+   - agreement
+   - word order
+   - prepositions
+   - obvious wrong word choice
+
+2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
+   - suggest ONE more natural alternative
+   - keep the language simple (A2-B2)
+   - do NOT change the meaning
 
 JSON:
 {
-  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"\"}],
-  \"suggestion\": \"\"
+  "additionalErrors": [
+    {
+      "original": "wrong fragment",
+      "corrected": "correct fragment",
+      "issue": "very short explanation in $langname"
+    }
+  ],
+  "suggestion": "more natural version OR empty string if you keep the corrected sentence"
 }
 
 CRITICAL RULES:
-- Leave \"suggestion\" EMPTY if corrected text is already natural
-- Do NOT suggest synonym replacements (like changing \"lett\" to \"enkelt\")
-- Only suggest if there's a clear naturalness or style improvement
-- Leave \"issue\" EMPTY (\"\")";
+- Leave "additionalErrors" as an empty array if you are not sure about any mistake.
+- Leave "suggestion" as an EMPTY string ("") if the corrected sentence is already natural enough.
+- Do NOT propose pure synonym changes (e.g. "lett" -> "enkelt") unless the original is clearly unnatural.
+- Do NOT output anything outside the JSON object.
+USERPROMPT2;
 
             $payload2 = [
                 'model' => $model,
-                'temperature' => 0.2,
+                'temperature' => 0.25,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
                     ['role' => 'user', 'content' => $userprompt2],
@@ -736,30 +827,63 @@ CRITICAL RULES:
 
         $correctedText = $result1['correctedText'] ?? $text;
 
-        $systemprompt2 = "You are a native Norwegian speaker. Review corrections critically. Do NOT suggest synonyms or minor word changes - only suggest if there's a REAL naturalness improvement. You MUST respond in $langname language.";
+        $systemprompt2 = <<<"SYSTEMPROMPT2"
+You are a native speaker of Norwegian (Bokmål) and an experienced editor for learner texts.
 
-        $userprompt2 = "Original: \"$text\"
-Corrected: \"$correctedText\"
+Task:
+- Review an ALREADY CORRECTED learner sentence.
+- Find ONLY clear remaining mistakes (if any).
+- Optionally suggest a slightly more natural version.
 
-Tasks:
-1. Check if any grammatical errors were missed in the correction
-2. ONLY if the corrected text sounds unnatural or awkward, suggest a more natural alternative
+Important:
+- Be conservative. If you are not sure something is wrong, treat it as correct.
+- Do NOT change the meaning.
+- Do NOT introduce unnecessary synonyms or advanced constructions.
+- All explanations must be in $langname.
+- Output ONLY valid JSON in the exact schema from the user message.
+SYSTEMPROMPT2;
+
+        $userprompt2 = <<<"USERPROMPT2"
+Original (learner sentence): "$text"
+Corrected (first pass): "$correctedText"
+
+Your tasks:
+
+1) Check if the corrected sentence still contains ANY clear errors in Norwegian (Bokmål):
+   - grammar
+   - spelling
+   - agreement
+   - word order
+   - prepositions
+   - obvious wrong word choice
+
+2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
+   - suggest ONE more natural alternative
+   - keep the language simple (A2-B2)
+   - do NOT change the meaning
 
 JSON:
 {
-  \"additionalErrors\": [{\"original\": \"wrong\", \"corrected\": \"right\", \"issue\": \"\"}],
-  \"suggestion\": \"\"
+  "additionalErrors": [
+    {
+      "original": "wrong fragment",
+      "corrected": "correct fragment",
+      "issue": "very short explanation in $langname"
+    }
+  ],
+  "suggestion": "more natural version OR empty string if you keep the corrected sentence"
 }
 
 CRITICAL RULES:
-- Leave \"suggestion\" EMPTY if corrected text is already natural
-- Do NOT suggest synonym replacements (like changing \"lett\" to \"enkelt\")
-- Only suggest if there's a clear naturalness or style improvement
-- Leave \"issue\" EMPTY (\"\")";
+- Leave "additionalErrors" as an empty array if you are not sure about any mistake.
+- Leave "suggestion" as an EMPTY string ("") if the corrected sentence is already natural enough.
+- Do NOT propose pure synonym changes (e.g. "lett" -> "enkelt") unless the original is clearly unnatural.
+- Do NOT output anything outside the JSON object.
+USERPROMPT2;
 
             $payload2 = [
                 'model' => $model,
-                'temperature' => 0.2,
+                'temperature' => 0.25,
                 'messages' => [
                     ['role' => 'system', 'content' => $systemprompt2],
                     ['role' => 'user', 'content' => $userprompt2],
