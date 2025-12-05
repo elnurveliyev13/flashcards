@@ -308,12 +308,12 @@ $string['achievement_level_b1'] = 'Уровень B1 - Средний';
 $string['achievement_level_b2'] = 'Уровень B2 - Выше среднего';
 
 // Placeholders
-$string['collocations_ph'] = 'По одному на строку...';
-$string['examples_ph'] = 'Примеры предложений...';
+$string['collocations_ph'] = '_ _ _';
+$string['examples_ph'] = '_ _ _';
 $string['front_placeholder'] = '_ _ _';
-$string['translation_placeholder'] = 'Я тебя люблю';
-$string['translation_en_placeholder'] = 'I love you';
-$string['translation_in_phrase'] = 'Перевод на ';
+$string['translation_placeholder'] = '_ _ _';
+$string['translation_en_placeholder'] = '_ _ _';
+$string['translation_in_phrase'] = '_ _ _';
 $string['explanation_placeholder'] = '_ _ _';
 $string['focus_placeholder'] = '_ _ _';
 $string['collocations_placeholder'] = '_ _ _';
