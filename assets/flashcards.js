@@ -3602,7 +3602,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return Math.max(1, capped);
     }
     const ratingHintLocaleMap = {
-      en:{one:'day', other:'days'},
+      en:{one:'dag', other:'dager'},
       nb:{one:'dag', other:'dager'},
       no:{one:'dag', other:'dager'},
       nn:{one:'dag', other:'dager'},
@@ -3636,7 +3636,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         form = pluralRulesCache[locale].select(days);
       }catch(_e){}
       const word = labels[form] || labels.other || labels.one || ratingHintLocaleMap.en.other;
-      return `${days} ${word}`;
+      return `+${days} ${word}`;
     }
     function updateRatingActionHints(rec){
       const mappings = [

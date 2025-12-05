@@ -239,7 +239,7 @@ $string['progress_label'] = 'Progression de révision';
 // Tab navigation (v0.7.0)
 $string['tab_quickinput'] = 'Créer';
 $string['tab_study'] = 'Étudier';
-$string['tab_dashboard'] = 'Tableau de bord';
+$string['tab_dashboard'] = 'Tableau';
 
 // Quick Input
 $string['quickinput_title'] = 'Ajouter une nouvelle carte';
@@ -329,9 +329,9 @@ $string['ai_http_error'] = 'Le service IA est indisponible. Veuillez réessayer 
 $string['ai_invalid_json'] = 'Réponse inattendue du service IA.';
 $string['ai_disabled'] = 'L\'assistant IA n\'est pas encore configuré.';
 $string['tts_http_error'] = 'La synthèse vocale est temporairement indisponible.';
-$string[''whisper_status_idle''] = 'Speech-to-text ready';
-$string[''whisper_status_uploading''] = 'Uploading Private audio...';
-$string[''whisper_status_transcribing''] = 'Transcribing...';
+$string['whisper_status_idle'] = 'Speech-to-text ready';
+$string['whisper_status_uploading'] = 'Uploading Private audio...';
+$string['whisper_status_transcribing'] = 'Transcribing...';
 $string[''whisper_status_success''] = 'Transcription inserted';
 $string[''whisper_status_error''] = 'Could not transcribe audio';
 $string[''whisper_status_limit''] = 'Clip is too long';
