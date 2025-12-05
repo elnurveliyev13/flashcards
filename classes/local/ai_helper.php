@@ -1393,6 +1393,15 @@ If NO constructions found, return empty constructions array.";
             return reset($responses);
         }
 
+        // DEBUG: Log raw responses before consensus
+        $rawResponsesDebug = [];
+        foreach ($responses as $idx => $response) {
+            $rawResponsesDebug["response_$idx"] = [
+                'hasErrors' => $response['hasErrors'] ?? false,
+                'errors' => $response['errors'] ?? [],
+            ];
+        }
+
         // Collect all errors from all responses
         $allErrors = [];
         foreach ($responses as $idx => $response) {
@@ -1475,6 +1484,8 @@ If NO constructions found, return empty constructions array.";
             'totalResponses' => count($responses),
             'confirmedErrors' => count($confirmedErrors),
             'discardedErrors' => count($allErrors) - count($confirmedErrors),
+            'rawResponses' => $rawResponsesDebug, // DEBUG: Show what each model returned
+            'allErrorsGrouped' => $allErrors, // DEBUG: Show how errors were grouped and voted
         ];
 
         return $baseResponse;
