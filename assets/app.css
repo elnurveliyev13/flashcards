@@ -2076,14 +2076,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     position: fixed !important;
     left: 0;
     right: 0;
-    bottom: calc(max(2px, env(safe-area-inset-bottom) + 1px));
+    bottom: calc(env(safe-area-inset-bottom));
     width: 100vw;
     transform: none;
     padding: 4px 6px;
     margin: 0;
     border-radius: 0;
-    border: 1px solid var(--border);
-    border-top: 1px solid rgba(255,255,255,0.08);
+    border: 0;
+    border-top: 1px solid rgba(255,255,255,0.12);
     background: rgba(15,23,42,0.94);
     box-shadow: 0 18px 40px rgba(0,0,0,0.45);
     backdrop-filter: blur(12px);
@@ -2135,7 +2135,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     z-index: 2250 !important;
     box-sizing: border-box;
     margin: 0;
-    border-top: 1px solid rgba(255,255,255,0.1);
+    border-top: 1px solid rgba(255,255,255,0.14);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     border-radius: 0;
   }
 
