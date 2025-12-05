@@ -2055,7 +2055,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 @media (max-width: 720px){
   :root{
     --fc-tabs-height: 64px;
-    --fc-tabs-offset: 56px; /* lift tabs above mobile browser toolbar */
   }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
@@ -2068,7 +2067,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
   /* Lift action bars just enough to sit above tabs */
   .bottom-actions{
-    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-offset) + var(--fc-tabs-height) + 10px);
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 8px);
     z-index: 2200;
   }
 
@@ -2078,7 +2077,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     position: fixed !important;
     left: 50%;
     right: auto;
-    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-offset));
+    bottom: calc(env(safe-area-inset-bottom) + 8px);
     width: min(var(--app-content-max-width), 100%);
     transform: translateX(-50%);
     padding: 8px 10px;
