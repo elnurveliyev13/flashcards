@@ -2054,7 +2054,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 /* Mobile: float the tab bar near the bottom for thumb reach */
 @media (max-width: 720px){
   :root{
-    --fc-tabs-height: 64px;
+    --fc-tabs-height: 68px; /* actual visible height including padding */
   }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
@@ -2067,12 +2067,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
   /* Lift action bars just enough to sit above tabs */
   .bottom-actions{
-    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 8px);
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 20px);
     z-index: 2200;
   }
 
   .tabs-toolbar .fc-tabs{
-    --fc-tabs-height: 64px;
+    --fc-tabs-height: 68px;
     display: flex;
     position: fixed !important;
     left: 50%;
