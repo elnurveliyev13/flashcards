@@ -639,29 +639,30 @@ USERPROMPT;
 
             if (empty($responses)) {
                 error_log('check_norwegian_text: multisampling returned no valid responses, falling back to single request');
+                $enableMultisampling = false;
             } else {
-            // Merge responses by consensus
-            $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
+                // Merge responses by consensus
+                $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
 
-            // If no errors found, return immediately
-            if (!$result1['hasErrors']) {
-                $debugtiming['overall'] = microtime(true) - $overallstart;
-                $result1['debugTiming'] = $debugtiming;
-                return $result1;
-            }
+                // If no errors found, return immediately
+                if (!$result1['hasErrors']) {
+                    $debugtiming['overall'] = microtime(true) - $overallstart;
+                    $result1['debugTiming'] = $debugtiming;
+                    return $result1;
+                }
 
-            // Continue to STAGE 2 if enabled
-            $enabledoublecheck = !empty($config->ai_doublecheck_correction);
-            if (!$enabledoublecheck) {
-                $debugtiming['overall'] = microtime(true) - $overallstart;
-                $result1['debugTiming'] = $debugtiming;
-                return $result1;
-            }
+                // Continue to STAGE 2 if enabled
+                $enabledoublecheck = !empty($config->ai_doublecheck_correction);
+                if (!$enabledoublecheck) {
+                    $debugtiming['overall'] = microtime(true) - $overallstart;
+                    $result1['debugTiming'] = $debugtiming;
+                    return $result1;
+                }
 
-            // STAGE 2 with multisampling result
-            $correctedText = $result1['correctedText'] ?? $text;
+                // STAGE 2 with multisampling result
+                $correctedText = $result1['correctedText'] ?? $text;
 
-            $systemprompt2 = <<<"SYSTEMPROMPT2"
+                $systemprompt2 = <<<"SYSTEMPROMPT2"
 You are a native speaker of Norwegian (Bokmål) and an experienced editor for learner texts.
 
 Task:
@@ -677,7 +678,7 @@ Important:
 - Output ONLY valid JSON in the exact schema from the user message.
 SYSTEMPROMPT2;
 
-            $userprompt2 = <<<"USERPROMPT2"
+                $userprompt2 = <<<"USERPROMPT2"
 Original (learner sentence): "$text"
 Corrected (first pass): "$correctedText"
 
@@ -715,82 +716,82 @@ CRITICAL RULES:
 - Do NOT output anything outside the JSON object.
 USERPROMPT2;
 
-            $payload2 = [
-                'model' => $model,
-                'temperature' => 0.0,
-                'messages' => [
-                    ['role' => 'system', 'content' => $systemprompt2],
-                    ['role' => 'user', 'content' => $userprompt2],
-                ],
-            ];
+                $payload2 = [
+                    'model' => $model,
+                    'temperature' => 0.0,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemprompt2],
+                        ['role' => 'user', 'content' => $userprompt2],
+                    ],
+                ];
 
-            try {
-                $method = $reflection->getMethod('request');
-                $method->setAccessible(true);
-                $recordMethod = $reflection->getMethod('record_usage');
-                $recordMethod->setAccessible(true);
+                try {
+                    $method = $reflection->getMethod('request');
+                    $method->setAccessible(true);
+                    $recordMethod = $reflection->getMethod('record_usage');
+                    $recordMethod->setAccessible(true);
 
-                $t2 = microtime(true);
-                $response2 = $method->invoke($client, $payload2);
-                $debugtiming['api_stage2'] = microtime(true) - $t2;
-                $recordMethod->invoke($client, $userid, $response2->usage ?? null);
+                    $t2 = microtime(true);
+                    $response2 = $method->invoke($client, $payload2);
+                    $debugtiming['api_stage2'] = microtime(true) - $t2;
+                    $recordMethod->invoke($client, $userid, $response2->usage ?? null);
 
-                $content2 = trim($response2->choices[0]->message->content ?? '');
-                $json2 = null;
-                if (preg_match('~\{.*\}~s', $content2, $m)) {
-                    $json2 = $m[0];
-                }
-                $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
+                    $content2 = trim($response2->choices[0]->message->content ?? '');
+                    $json2 = null;
+                    if (preg_match('~\{.*\}~s', $content2, $m)) {
+                        $json2 = $m[0];
+                    }
+                    $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
 
-                // Merge STAGE 2 results
-                $finalResult = $result1;
+                    // Merge STAGE 2 results
+                    $finalResult = $result1;
 
-                if (is_array($result2)) {
-                    if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
-                        $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
-                        foreach ($result2['additionalErrors'] as $err) {
-                            if (isset($err['original']) && isset($err['corrected'])) {
-                                $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                    if (is_array($result2)) {
+                        if (!empty($result2['additionalErrors']) && is_array($result2['additionalErrors'])) {
+                            $finalResult['errors'] = array_merge($finalResult['errors'] ?? [], $result2['additionalErrors']);
+                            foreach ($result2['additionalErrors'] as $err) {
+                                if (isset($err['original']) && isset($err['corrected'])) {
+                                    $finalResult['correctedText'] = str_replace($err['original'], $err['corrected'], $finalResult['correctedText']);
+                                }
                             }
                         }
-                    }
 
-                    if (!empty($finalResult['errors']) && is_array($finalResult['errors'])) {
-                        $seen = [];
-                        $deduped = [];
+                        if (!empty($finalResult['errors']) && is_array($finalResult['errors'])) {
+                            $seen = [];
+                            $deduped = [];
 
-                        foreach ($finalResult['errors'] as $err) {
-                            if (!isset($err['original']) || !isset($err['corrected'])) {
+                            foreach ($finalResult['errors'] as $err) {
+                                if (!isset($err['original']) || !isset($err['corrected'])) {
+                                    $deduped[] = $err;
+                                    continue;
+                                }
+                                $key = $err['original'] . '||' . $err['corrected'];
+                                if (isset($seen[$key])) {
+                                    continue;
+                                }
+                                $seen[$key] = true;
                                 $deduped[] = $err;
-                                continue;
                             }
-                            $key = $err['original'] . '||' . $err['corrected'];
-                            if (isset($seen[$key])) {
-                                continue;
-                            }
-                            $seen[$key] = true;
-                            $deduped[] = $err;
+
+                            $finalResult['errors'] = $deduped;
                         }
 
-                        $finalResult['errors'] = $deduped;
+                        if (!empty($result2['suggestion'])) {
+                            $finalResult['suggestion'] = $result2['suggestion'];
+                        }
                     }
 
-                    if (!empty($result2['suggestion'])) {
-                        $finalResult['suggestion'] = $result2['suggestion'];
-                    }
+                    $debugtiming['overall'] = microtime(true) - $overallstart;
+                    $finalResult['debugTiming'] = $debugtiming;
+
+                    return $finalResult;
+                } catch (\Exception $e) {
+                    error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
+                    $debugtiming['overall'] = microtime(true) - $overallstart;
+                    $result1['debugTiming'] = $debugtiming;
+                    return $result1;
                 }
-
-                $debugtiming['overall'] = microtime(true) - $overallstart;
-                $finalResult['debugTiming'] = $debugtiming;
-
-                return $finalResult;
-            } catch (\Exception $e) {
-                error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
-                $debugtiming['overall'] = microtime(true) - $overallstart;
-                $result1['debugTiming'] = $debugtiming;
-                return $result1;
             }
-        }
         }
 
         if (!$enableMultisampling) {
