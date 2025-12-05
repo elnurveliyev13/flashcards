@@ -639,7 +639,6 @@ USERPROMPT;
 
             if (empty($responses)) {
                 error_log('check_norwegian_text: multisampling returned no valid responses, falling back to single request');
-                $enableMultisampling = false;
             } else {
             // Merge responses by consensus
             $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
