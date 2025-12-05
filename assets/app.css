@@ -2055,6 +2055,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 @media (max-width: 720px){
   :root{
     --fc-tabs-height: 68px; /* actual visible height including padding */
+    --fc-tabs-gap: 4px;
   }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
   .wrap{
@@ -2065,19 +2066,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     padding-bottom: calc(var(--space-3) + 260px);
   }
 
-  /* Lift action bars just enough to sit above tabs */
-  .bottom-actions{
-    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 20px);
-    z-index: 2200;
-  }
-
   .tabs-toolbar .fc-tabs{
     --fc-tabs-height: 68px;
     display: flex;
     position: fixed !important;
     left: 50%;
     right: auto;
-    bottom: calc(env(safe-area-inset-bottom) + 8px);
+    bottom: calc(env(safe-area-inset-bottom) + 6px);
     width: min(var(--app-content-max-width), 100%);
     transform: translateX(-50%);
     padding: 8px 10px;
@@ -2115,6 +2110,25 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
   .fc-tab-icon{
     font-size: 1.3rem;
+  }
+
+  /* Force editActionsBar above tabs (overrides inline styles) */
+  #editActionsBar{
+    position: fixed !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(var(--app-content-max-width), 100%) !important;
+    max-width: var(--app-content-max-width);
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 20px) !important;
+    z-index: 2250 !important;
+    box-sizing: border-box;
+    margin: 0 auto;
+  }
+
+  /* Rating bar stays just above tabs (different element, same class) */
+  #bottomActions{
+    bottom: calc(env(safe-area-inset-bottom) + var(--fc-tabs-height) + 16px);
+    z-index: 2200;
   }
 }
 
