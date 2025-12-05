@@ -898,7 +898,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Taille du texte',
         tab_quickinput: 'Creer',
         tab_study: 'Pratique',
-        tab_dashboard: 'Tableau de bord',
+        tab_dashboard: 'Tableau',
         quick_audio: 'Enregistrer l\'audio',
         quick_photo: 'Prendre une photo',
         choosefile: 'Choisir un fichier',
@@ -3636,7 +3636,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         form = pluralRulesCache[locale].select(days);
       }catch(_e){}
       const word = labels[form] || labels.other || labels.one || ratingHintLocaleMap.en.other;
-      return `+${days} ${word}`;
+      return `+${days}\u00A0${word}`;
     }
     function updateRatingActionHints(rec){
       const mappings = [
