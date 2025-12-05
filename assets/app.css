@@ -2108,6 +2108,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     gap: 4px;
     min-width: 0;
     flex: 1 1 0;
+    margin-top: -1px; /* lift buttons 1px inside the container */
+    margin-bottom: 1px;
   }
   .fc-tab::after{ display: none; }
   .fc-tab.fc-tab-active{
