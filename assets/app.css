@@ -2037,10 +2037,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 2px 8px;
-  font-size: 0.75rem; /* 12px */
-  font-weight: 600;
-  min-width: 20px;
-  text-align: center;
+  font-size: 0.78rem; /* ~12.5px for better fit */
+  font-weight: 700;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 .fc-tab-content {
@@ -2054,7 +2058,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 /* Mobile: float the tab bar near the bottom for thumb reach */
 @media (max-width: 720px){
   :root{
-    --fc-tabs-height: 68px; /* actual visible height including padding */
+    --fc-tabs-height: 46px; /* compact mobile tabs */
     --fc-tabs-gap: 4px;
   }
   /* Make sure content can scroll past both the rating bar and the floating tabs */
@@ -2067,7 +2071,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
 
   .tabs-toolbar .fc-tabs{
-    --fc-tabs-height: 68px;
+    --fc-tabs-height: 46px;
     display: flex;
     position: fixed !important;
     left: 50%;
@@ -2075,7 +2079,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     bottom: calc(env(safe-area-inset-bottom) + 6px);
     width: min(var(--app-content-max-width), 100%);
     transform: translateX(-50%);
-    padding: 8px 10px;
+    padding: 6px 8px;
     margin: 0 auto;
     border-radius: 16px;
     border: 1px solid var(--border);
@@ -2093,12 +2097,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
   .fc-tab{
     border-radius: 12px;
-    padding: 10px 8px;
-    min-height: 52px;
+    padding: 8px 6px;
+    min-height: 38px;
     background: transparent;
     border: 1px solid transparent;
-    font-size: clamp(12px, 3.4vw, 15px);
-    gap: 6px;
+    font-size: clamp(12px, 3.2vw, 14px);
+    gap: 5px;
     min-width: 0;
     flex: 1 1 0;
   }
