@@ -3553,7 +3553,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .translation-mode-label {
   font-weight:600;
   word-break:break-word;
-  font-size:14.04px;
+  font-size:14.04px !important;
 }
 .translation-mode-hint {
   font-size:0.78rem;
@@ -3561,7 +3561,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .translation-reset,
 #btnQuickFormReset {
-  font-size:14.04px;
+  font-size:14.04px !important;
 }
 .focus-translation-pill {
   margin-top:0.5rem;
