@@ -914,7 +914,7 @@ button[data-role="update"]:disabled::before {
   min-width:64px;
   line-height:1.2;
   position:absolute;
-  top:-1.6rem;
+  top:-1.75rem;
   left:50%;
   transform:translateX(-50%);
   pointer-events:none;
@@ -1874,7 +1874,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .meta-panel #metaRecorder .rec-timer{
   position:absolute;
-  top:-1.35rem;
+  top:-1.5rem;
   left:50%;
   transform:translateX(-50%);
   box-shadow:0 4px 10px rgba(15,23,42,0.35);
