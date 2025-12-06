@@ -1833,6 +1833,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   color:var(--text);
   box-shadow:0 2px 6px rgba(0,0,0,0.3), inset 0 0 0 0.3px rgba(255,255,255,0.05);
   transition:border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+  opacity: 1;
+}
+.meta-panel #btnRevealNext:disabled{
+  opacity: 1;
 }
 .meta-panel #metaRecorder{
   flex:1;
@@ -1865,7 +1869,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .meta-panel #btnRevealNext:focus-visible{
   border-color:rgba(99,102,241,0.9);
   box-shadow:0 6px 16px rgba(5,7,16,0.65), 0 0 0 1px rgba(99,102,241,0.2);
-  color:var(--primary);
+  color:var(--text); /* keep label color stable on hover */
 }
 .meta-panel #metaRecorder .iconbtn.recording{
   background:linear-gradient(145deg, rgba(127,29,29,0.95), rgba(88,18,18,0.95));
@@ -2140,6 +2144,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
       + var(--meta-panel-height, 0px)
       + var(--edit-actions-bar-height, 0px)
     );
+  }
+
+  /* Keep dashboard content clear of the fixed bottom tabs on mobile. */
+  .fc-dashboard-wrap {
+    padding-bottom: calc(var(--space-2) + var(--fc-tabs-height) + env(safe-area-inset-bottom, 0px));
   }
 
   .tabs-toolbar .fc-tabs{
