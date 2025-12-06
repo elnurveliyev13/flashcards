@@ -1997,7 +1997,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   border-bottom: 1px solid var(--border);
   margin-bottom: calc(var(--space-1) / 2);
   margin-top: 0;
-  background: var(--bg-elevated);
+  background: rgb(31, 31, 31);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   overflow: hidden;
 }
@@ -2005,7 +2005,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-tab {
   flex: 1;
   border: none;
-  background: var(--bg-elevated);
+  background: rgb(31, 31, 31);
   color: var(--text-muted);
   padding: calc(var(--space-1) + 2px) var(--space-1);
   cursor: pointer;
@@ -2048,7 +2048,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-tab.fc-tab-active {
   color: var(--text);
-  background: var(--surface-1);
+  background: rgb(31, 31, 31);
 }
 
 .fc-tab.fc-tab-active::after {

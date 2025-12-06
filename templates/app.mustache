@@ -130,11 +130,11 @@
         </div>
       </div>
       <nav class="fc-tabs" role="tablist">
-        <button class="fc-tab" id="tabQuickInput" role="tab" aria-selected="false" aria-controls="quickInputSection">
+        <button class="fc-tab fc-tab-active" id="tabQuickInput" role="tab" aria-selected="true" aria-controls="quickInputSection">
           <span class="fc-tab-icon icon-plus">&#10133;</span>
           <span class="fc-tab-label" id="t_tab_quickinput">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
         </button>
-        <button class="fc-tab fc-tab-active" id="tabStudy" role="tab" aria-selected="true" aria-controls="studySection">
+        <button class="fc-tab" id="tabStudy" role="tab" aria-selected="false" aria-controls="studySection">
           <span class="fc-tab-icon">&#128218;</span>
           <span class="fc-tab-label" id="t_tab_study">{{#str}} tab_study, mod_flashcards {{/str}}</span>
           <span class="fc-tab-badge hidden" id="studyBadge"></span>
@@ -155,7 +155,7 @@
     </div>
 
     <!-- Quick Input Section (Default) -->
-    <div class="fc-tab-content" id="quickInputSection" role="tabpanel" aria-labelledby="tabQuickInput">
+    <div class="fc-tab-content fc-tab-active" id="quickInputSection" role="tabpanel" aria-labelledby="tabQuickInput">
       <div class="fc-editor-wrap">
         <div class="card" id="cardCreationFormWrap">
           <div class="card-form-content" id="cardCreationForm">
@@ -438,7 +438,7 @@
     </div>
 
     <!-- Study Section -->
-    <div class="fc-tab-content fc-tab-active" id="studySection" role="tabpanel" aria-labelledby="tabStudy">
+    <div class="fc-tab-content" id="studySection" role="tabpanel" aria-labelledby="tabStudy">
     <div class="grid">
       <div class="card">
         <div class="actionTop card-toolbar">
