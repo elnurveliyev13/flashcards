@@ -749,27 +749,30 @@
   <div class="fc-tab-content" id="dashboardSection" role="tabpanel" aria-labelledby="tabDashboard">
     <div class="fc-dashboard-wrap">
       <!-- Stats Cards -->
-      <div class="fc-stats-grid">
-        <div class="fc-stat-card fc-stat-card-clickable"
-             id="statCardTotal"
-             role="button"
-             tabindex="0"
-             aria-label="{{#str}} dashboard_total_cards, mod_flashcards {{/str}}">
-          <div class="fc-stat-icon icon-plus">&#10133;</div>
-          <div class="fc-stat-value" id="statTotalCards">0</div>
-          <div class="fc-stat-label" id="t_stat_total" data-i18n="dashboard_total_cards">{{#str}} dashboard_total_cards, mod_flashcards {{/str}}</div>
+        <div class="fc-stats-grid">
+          <div class="fc-stat-card fc-stat-card-clickable fc-stat-card-combo"
+               id="statCardTotal"
+               role="button"
+               tabindex="0"
+               aria-label="{{#str}} dashboard_total_cards, mod_flashcards {{/str}} / {{#str}} dashboard_active_vocab, mod_flashcards {{/str}}">
+            <div class="fc-stat-combo-row">
+              <span class="fc-stat-chip icon-plus" aria-hidden="true"></span>
+              <span class="fc-stat-value" id="statTotalCards">0</span>
+              <span class="fc-stat-sep" aria-hidden="true">(</span>
+              <span class="fc-stat-chip" aria-hidden="true">&#128483;&#65038;</span>
+              <span class="fc-stat-value fc-stat-value-secondary" id="statActiveVocab">0</span>
+              <span class="fc-stat-sep" aria-hidden="true">)</span>
+            </div>
+            <div class="fc-stat-label" id="t_stat_total_active">
+              {{#str}} dashboard_total_cards, mod_flashcards {{/str}} / {{#str}} dashboard_active_vocab, mod_flashcards {{/str}}
+            </div>
+          </div>
+          <div class="fc-stat-card fc-stat-streak">
+            <div class="fc-stat-icon">&#128293;</div>
+            <div class="fc-stat-value" id="statStreak">0</div>
+            <div class="fc-stat-label" id="t_stat_streak" data-i18n="dashboard_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
+          </div>
         </div>
-        <div class="fc-stat-card">
-          <div class="fc-stat-icon">&#128483;&#65038;</div>
-          <div class="fc-stat-value" id="statActiveVocab">0</div>
-          <div class="fc-stat-label" id="t_stat_active_vocab" data-i18n="dashboard_active_vocab">{{#str}} dashboard_active_vocab, mod_flashcards {{/str}}</div>
-        </div>
-        <div class="fc-stat-card fc-stat-streak">
-          <div class="fc-stat-icon">&#128293;</div>
-          <div class="fc-stat-value" id="statStreak">0</div>
-          <div class="fc-stat-label" id="t_stat_streak" data-i18n="dashboard_streak">{{#str}} dashboard_streak, mod_flashcards {{/str}}</div>
-        </div>
-      </div>
 
       <!-- Charts -->
       <div class="fc-charts-grid">

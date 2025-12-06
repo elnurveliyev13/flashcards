@@ -889,6 +889,7 @@ button[data-role="update"]:disabled::before {
   opacity: 0.85;
 }
 .iconbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-lg);font-size:20px;padding:0;line-height:1;transition:transform 0.18s ease, background 0.18s ease, border-color 0.18s ease}
+#btnRec.iconbtn{width:40px;height:40px;font-size:18px}
 .iconbtn svg{width:60%;height:60%;display:block;fill:currentColor}
 .iconbtn.ghost{background:var(--surface-2);border:1px solid var(--border)}
 .iconbtn .rot{display:inline-block; transform:rotate(-25deg)}
@@ -1834,8 +1835,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .bottom-actions .rating-hint:empty{display:none}
 .bottom-actions #saveBarUpdate,
 .bottom-actions #saveBarAdd{
-  padding-top:3px;
-  padding-bottom:3px;
+  padding:8px 20px;
 }
 .bottom-actions button:active{transform:scale(0.92)}
 .bottom-actions .ok{background:rgba(34,197,94,0.22);border:2px solid rgba(34,197,94,0.6);color:#4ade80}
@@ -2401,12 +2401,22 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   min-height:52px;
   gap: 0 !important;
 }
+#btnImagePicker.fc-media-inline,
+#btnRec.fc-media-inline{
+  padding:0 9px !important;
+  min-width:81px;
+  min-height:47px;
+}
 .fc-quick-media-btn.fc-media-inline .fc-media-icon{
   font-size:1.25rem;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+#btnImagePicker .fc-media-icon,
+#btnRec .fc-media-icon{
+  font-size:1.125rem;
 }
 .slot-inline-controls .fc-quick-media-btn.fc-media-inline{
   width:56px;
@@ -2896,6 +2906,51 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+.fc-stat-card-combo {
+  align-items: center;
+}
+
+.fc-stat-card-combo .fc-stat-combo-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+
+.fc-stat-card-combo .fc-stat-label {
+  text-align: center;
+}
+
+.fc-stat-chip {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: var(--icon-muted);
+  flex-shrink: 0;
+}
+
+.fc-stat-chip.icon-plus {
+  width: 24px;
+  height: 24px;
+  background-size: 120%;
+}
+
+.fc-stat-card-combo .fc-stat-value-secondary {
+  color: var(--text-dim);
+  font-size: 2rem;
+}
+
+.fc-stat-sep {
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 1.1rem;
 }
 
 .fc-stat-value {
