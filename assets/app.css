@@ -4964,10 +4964,11 @@ select.inline-prompt-field {
 }
 
 /* Subdue the inline media/status chip host so it visually recedes vs the bottom actions bar */
-#mod_flashcards_container #yui_3_18_1_1_1764889193288_12,
-#mod_flashcards_container [id^="yui_3_18_1_1_"][id$="_12"]{
+#mod_flashcards_container .front-text-actions [id^="yui_3_18_1_1_"][id$="_12"],
+#mod_flashcards_container .translation-status-row [id^="yui_3_18_1_1_"][id$="_12"]{
   background: rgba(10, 12, 24, 0.35);
   border: 1px solid rgba(255,255,255,0.04);
+  border-top: 3px groove rgba(168,143,89,0.31);
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.45);
   filter: saturate(0.55);
   opacity: 1;
@@ -4977,6 +4978,12 @@ select.inline-prompt-field {
   padding: 6px 10px;
   border-radius: 12px;
   margin-top: 4px;
+}
+
+/* Keep the tabs panel fully opaque (YUI-generated id) */
+#mod_flashcards_container #yui_3_18_1_1_1765055326563_12{
+  background: rgba(10, 14, 22, 0.98);
+  opacity: 1;
 }
 
 /* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */
