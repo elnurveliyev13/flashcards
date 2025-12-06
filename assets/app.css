@@ -3103,6 +3103,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items: center;
 }
 
+.fc-stat-card-combo#statCardTotal,
+#statCardTotal.fc-stat-card-combo {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
 .fc-stat-card-combo .fc-stat-combo-row {
   display: flex;
   align-items: center;
@@ -3142,7 +3148,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-stat-card-combo .fc-stat-value-secondary {
   color: var(--text-dim);
-  font-size: 2.2rem;
+  font-size: 1.54rem; /* ~70% of 2.2rem */
   font-weight: 700;
 }
 
@@ -3153,7 +3159,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-stat-value {
-  font-size: 2.2rem;
+  font-size: 1.54rem; /* ~70% of 2.2rem */
   font-weight: 700;
   color: var(--text);
   margin-bottom: 8px;

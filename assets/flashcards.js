@@ -1549,13 +1549,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           option.textContent = opt.label || opt.voice;
           voiceSelectEl.appendChild(option);
         });
-        // Set default voice after DOM updates (ensure visual selection)
-        requestAnimationFrame(() => {
-          if(selectedVoice){
-            voiceSelectEl.value = selectedVoice;
+        // Ensure a visible default selection on first load.
+        const initialVoice = selectedVoice;
+        if(initialVoice){
+          voiceSelectEl.value = initialVoice;
+          if(!savedVoiceChoice){
+            // Persist the default so it stays selected next time.
+            saveVoice(initialVoice);
           }
+        } else {
+          // No saved/default voice – keep the placeholder selected.
+          voiceSelectEl.value = '';
+        }
+        voiceSelectEl.addEventListener('change', ()=>{
+          selectedVoice = voiceSelectEl.value;
+          saveVoice(selectedVoice);
+          setTtsStatus('', '');
         });
-        voiceSelectEl.addEventListener('change', ()=>{ selectedVoice = voiceSelectEl.value; saveVoice(selectedVoice); setTtsStatus('', ''); });
         if(voiceSlotEl) voiceSlotEl.classList.remove('hidden');
         if(!aiConfig.ttsEnabled){
           setTtsStatus(aiStrings.voiceDisabled, 'warn');
