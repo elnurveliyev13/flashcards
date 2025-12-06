@@ -194,7 +194,7 @@ body {
 .wrap{
   max-width: var(--app-content-max-width);
   margin: 0 auto;
-  padding: 0 var(--space-2) var(--space-2);
+  padding: 0 var(--space-2) 0;
   display: grid;
   gap: var(--space-2);
 }
@@ -1068,6 +1068,7 @@ select:focus-visible{
 #studySection .card,
 #studySection #cardCreationFormWrap .card,
 #dashboardSection .card {
+  padding-top: var(--space-1);
   padding-left: 12px;
   padding-right: 12px;
 }
@@ -2183,13 +2184,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
 
   .wrap{
-    padding-bottom: calc(
-      var(--space-2)
-      + env(safe-area-inset-bottom, 0px)
-      + var(--bottom-actions-stack-offset, 0px)
-      + var(--meta-panel-height, 0px)
-      + var(--edit-actions-bar-height, 0px)
-    );
+    padding-bottom: 0;
   }
 
   /* Keep dashboard content clear of the fixed bottom tabs on mobile. */
