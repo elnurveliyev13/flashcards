@@ -1819,7 +1819,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .meta-panel #btnRevealNext{
   flex:1;
-  min-height:56px;
+  min-height:51px;
+  height:51px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -1833,8 +1834,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .meta-panel #metaRecorder .iconbtn{
   width:100%;
-  height:100%;
-  min-height:56px;
+  height:51px;
+  min-height:51px;
   border-radius:16px;
   font-size:1.3rem;
   display:flex;
