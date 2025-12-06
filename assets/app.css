@@ -4962,6 +4962,18 @@ select.inline-prompt-field {
   align-self: center;
 }
 
+/* Subdue the inline media/status chip host so it visually recedes vs the bottom actions bar */
+#mod_flashcards_container #yui_3_18_1_1_1764889193288_12{
+  background: rgba(12, 17, 28, 0.45);
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.35);
+  filter: saturate(0.65);
+  opacity: 0.8;
+  backdrop-filter: blur(3px);
+  color: rgba(255,255,255,0.8);
+  font-weight: 500;
+}
+
 /* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */
 .check-text-btn {
   display: inline-flex;
