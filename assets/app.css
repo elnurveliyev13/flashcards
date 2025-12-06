@@ -2132,8 +2132,6 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     padding-bottom: calc(
       var(--space-2)
       + env(safe-area-inset-bottom, 0px)
-      + var(--fc-tabs-height, 0px)
-      + 10px
       + var(--bottom-actions-stack-offset, 0px)
       + var(--meta-panel-height, 0px)
       + var(--edit-actions-bar-height, 0px)
