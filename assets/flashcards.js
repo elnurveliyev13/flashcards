@@ -3667,6 +3667,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const DEFAULT_ORDER=["audio_text","transcription","audio","text","translation"];
     let state,registry,queue=[],current=-1,visibleSlots=1,currentItem=null;
     let activeTab='quickInput';
+    let pendingShowMoreScroll=false;
+    let studyBottomActions=null;
+    let studyMetaPanel=null;
     let tabSwitcher=null;
     let pendingStudyRender=false;
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
@@ -6982,7 +6985,37 @@ function renderComparisonResult(resultEl, comparison){
       setIconVisibility(true);
       updateRevealButton();
       updateRatingActionHints(currentItem.rec || null);
+      if(pendingShowMoreScroll){
+        pendingShowMoreScroll=false;
+        ensureStudyLayerVisible();
+      }
       // Note: maybePromptForStage() replaced by inline prompt in renderCard
+    }
+
+    function ensureStudyLayerVisible(){
+      if(activeTab!=='study') return;
+      const container = root.querySelector('#slotContainer');
+      if(!container) return;
+      const rect = container.getBoundingClientRect();
+      const metaHeight = (studyMetaPanel && !studyMetaPanel.classList.contains('hidden'))
+        ? studyMetaPanel.getBoundingClientRect().height : 0;
+      const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
+        ? studyBottomActions.getBoundingClientRect().height : 0;
+      const safeGap = 12;
+      const floor = window.innerHeight - metaHeight - bottomHeight - safeGap;
+      const overshoot = rect.bottom - floor;
+      if(overshoot > 8){
+        const scrollTarget = overshoot + safeGap;
+        if('scrollBy' in window){
+          try{
+            window.scrollBy({top: scrollTarget, behavior: 'smooth'});
+          }catch(_e){
+            window.scrollBy(0, scrollTarget);
+          }
+        }else{
+          window.scrollBy(0, scrollTarget);
+        }
+      }
     }
 
     async function syncProgressToServer(deckId, cardId, rec){
@@ -7065,7 +7098,7 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
     }
 
-    $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; const prevSlots=visibleSlots; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(false, prevSlots); });
+    $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; pendingShowMoreScroll=true; const prevSlots=visibleSlots; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(false, prevSlots); });
 
     // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
     const _btnEasyBottom = $("#btnEasyBottom");
@@ -9439,6 +9472,8 @@ function renderComparisonResult(resultEl, comparison){
 
       const bottomActions = document.getElementById('bottomActions');
       const metaPanel = document.getElementById('metaPanel');
+      studyBottomActions = bottomActions;
+      studyMetaPanel = metaPanel;
 
       function refreshBottomPanelStackMetrics() {
         if (!root) {
