@@ -465,13 +465,6 @@
           <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">&#128266;</button>
           <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">&#128034;</button>
         </div>
-        <div class="meta">
-          <button id="btnRevealNext" class="primary" data-i18n="showmore">{{#str}} showmore, mod_flashcards {{/str}}</button>
-          <div id="metaRecorder" class="rec-control rec-control-inline hidden">
-            <span id="recTimerStudy" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
-            <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
-          </div>
-        </div>
         <button id="btnInstallApp" class="hidden install-btn install-btn-block" title="{{#str}} install_app, mod_flashcards {{/str}}">
           📱 {{#str}} install_app, mod_flashcards {{/str}}
         </button>
@@ -668,19 +661,28 @@
   </div>
   
   <!-- Fixed bottom action bar (feature-flagged via data-ux-bottom="1") -->
-  <div id="bottomActions" class="bottom-actions hidden" role="toolbar" aria-label="{{#str}} rating_actions, mod_flashcards {{/str}}">
-    <button id="btnEasyBottom" class="ok">
-      <span class="rating-label" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</span>
-      <span class="rating-hint" id="btnEasyHint" aria-live="polite"></span>
-    </button>
-    <button id="btnNormalBottom" class="mid">
-      <span class="rating-label" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</span>
-      <span class="rating-hint" id="btnNormalHint" aria-live="polite"></span>
-    </button>
-    <button id="btnHardBottom" class="hard">
-      <span class="rating-label" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</span>
-      <span class="rating-hint" id="btnHardHint" aria-live="polite"></span>
-    </button>
+  <div id="bottomDock">
+    <div id="metaActionsBar" class="bottom-panel meta-panel hidden" role="toolbar" aria-label="{{#str}} showmore, mod_flashcards {{/str}}">
+      <button id="btnRevealNext" class="primary" data-i18n="showmore">{{#str}} showmore, mod_flashcards {{/str}}</button>
+      <div id="metaRecorder" class="rec-control rec-control-inline hidden">
+        <span id="recTimerStudy" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
+        <button id="btnRecordStudy" class="iconbtn hidden micbtn" title="{{#str}} title_record_practice, mod_flashcards {{/str}}" aria-label="{{#str}} title_record_practice, mod_flashcards {{/str}}">&#127897;&#65039;</button>
+      </div>
+    </div>
+    <div id="bottomActions" class="bottom-actions hidden" role="toolbar" aria-label="{{#str}} rating_actions, mod_flashcards {{/str}}">
+      <button id="btnEasyBottom" class="ok">
+        <span class="rating-label" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</span>
+        <span class="rating-hint" id="btnEasyHint" aria-live="polite"></span>
+      </button>
+      <button id="btnNormalBottom" class="mid">
+        <span class="rating-label" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</span>
+        <span class="rating-hint" id="btnNormalHint" aria-live="polite"></span>
+      </button>
+      <button id="btnHardBottom" class="hard">
+        <span class="rating-label" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</span>
+        <span class="rating-hint" id="btnHardHint" aria-live="polite"></span>
+      </button>
+    </div>
   </div>
   <div id="ocrCropModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ocrCropTitle">
     <div class="box ocr-crop-box">
