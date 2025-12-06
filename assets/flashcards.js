@@ -4791,6 +4791,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         /\(\s*\d+\s*(?:sekund(?:er)?|second(?:s)?)(?:\s*pause)?\s*\)\s*/gi
       ];
       stagePatterns.forEach(re=>{ cleaned = cleaned.replace(re, ' '); });
+      cleaned = cleaned.replace(/\([^)]*\)\s*/g, ' '); // drop any remaining parenthetical notes
       cleaned = cleaned.replace(/\s{2,}/g,' ').trim();
       cleaned = cleaned.replace(/^[-.,;:]+\s*/, '');
       return cleaned || (text || '').trim();
