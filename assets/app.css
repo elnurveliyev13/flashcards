@@ -1828,6 +1828,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   justify-content:center;
   padding:0;
   border-radius:16px;
+  position: relative;
+  overflow: hidden;
   background:rgba(7,9,13,0.65);
   border:1px solid rgba(147,197,253,0.18);
   color:var(--text);
@@ -1837,6 +1839,22 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .meta-panel #btnRevealNext:disabled{
   opacity: 1;
+  background: rgba(15,23,42,0.85);
+  border: 2px dashed rgba(148,163,184,0.55);
+  color: rgba(226,232,240,0.85);
+  box-shadow: none;
+}
+.meta-panel #btnRevealNext:disabled::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(148,163,184,0.15) 0 12px,
+    transparent 12px 24px
+  );
+  pointer-events: none;
+  opacity: 0.85;
 }
 .meta-panel #metaRecorder{
   flex:1;
