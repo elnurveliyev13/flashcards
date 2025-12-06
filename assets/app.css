@@ -2157,6 +2157,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
   .wrap{
     padding-bottom: calc(
+      var(--space-2)
       + env(safe-area-inset-bottom, 0px)
       + var(--bottom-actions-stack-offset, 0px)
       + var(--meta-panel-height, 0px)
@@ -2166,7 +2167,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
   /* Keep dashboard content clear of the fixed bottom tabs on mobile. */
   .fc-dashboard-wrap {
-    padding-bottom: calc(var(--space-2) + var(--fc-tabs-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(
+      var(--space-2)
+      + var(--fc-tabs-height)
+      + env(safe-area-inset-bottom, 0px)
+      + var(--bottom-actions-stack-offset, 0px)
+      + var(--meta-panel-height, 0px)
+    );
   }
 
   .tabs-toolbar .fc-tabs{
