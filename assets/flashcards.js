@@ -9437,6 +9437,37 @@ function renderComparisonResult(resultEl, comparison){
         return;
       }
 
+      const bottomActions = document.getElementById('bottomActions');
+      const metaPanel = document.getElementById('metaPanel');
+
+      function refreshBottomActionsStackOffset() {
+        if (!bottomActions || !root || bottomActions.classList.contains('hidden')) {
+          return;
+        }
+        const height = bottomActions.getBoundingClientRect().height;
+        if (height > 0) {
+          root.style.setProperty('--bottom-actions-stack-offset', `${Math.round(height)}px`);
+        }
+      }
+
+      function queueBottomActionsStackOffsetRefresh() {
+        if (!bottomActions) {
+          return;
+        }
+        requestAnimationFrame(refreshBottomActionsStackOffset);
+      }
+
+      window.addEventListener('resize', () => {
+        if (activeTab === 'study') {
+          queueBottomActionsStackOffsetRefresh();
+        }
+      });
+      window.addEventListener('orientationchange', () => {
+        if (activeTab === 'study') {
+          queueBottomActionsStackOffsetRefresh();
+        }
+      });
+
       // Helper: Switch to a tab
       function switchTab(tabName) {
         console.log('[Tabs] switchTab called with:', tabName);
@@ -9526,17 +9557,22 @@ function renderComparisonResult(resultEl, comparison){
           loadDashboard();
         }
 
-        // Show/hide bottom action bar based on active tab
-        const bottomActions = document.getElementById('bottomActions');
+        // Show/hide bottom action and meta panels based on active tab
         if (bottomActions) {
           if (tabName === 'study') {
-            // Show rating buttons on Study tab
             bottomActions.classList.remove('hidden');
+            queueBottomActionsStackOffsetRefresh();
             if (root) root.setAttribute('data-bottom-visible', '1');
           } else {
-            // Hide on Quick Input and Dashboard tabs
             bottomActions.classList.add('hidden');
             if (root) root.removeAttribute('data-bottom-visible');
+          }
+        }
+        if (metaPanel) {
+          if (tabName === 'study') {
+            metaPanel.classList.remove('hidden');
+          } else {
+            metaPanel.classList.add('hidden');
           }
         }
 

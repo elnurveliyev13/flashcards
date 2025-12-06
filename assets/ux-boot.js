@@ -16,8 +16,13 @@
       root.setAttribute('data-ux-bottom','1');
       // Hide only the in-card rating buttons (keep edit form buttons visible)
       // If the bar exists, make sure it’s not hidden by default class
-      var bar = root.querySelector('#bottomActions');
-      if(bar){ bar.classList.remove('hidden'); bar.style.display=''; }
+      ['#bottomActions', '#metaPanel'].forEach(function(selector){
+        var element = root.querySelector(selector);
+        if(element){
+          element.classList.remove('hidden');
+          element.style.display='';
+        }
+      });
       return true;
     }catch(_e){ return false; }
   }
@@ -27,4 +32,3 @@
   }
   if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
 })();
-
