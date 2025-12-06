@@ -3102,8 +3102,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-stat-card-combo#statCardTotal,
 #statCardTotal.fc-stat-card-combo {
-  padding-left: 3px;
-  padding-right: 3px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .fc-stat-card-combo .fc-stat-combo-row {

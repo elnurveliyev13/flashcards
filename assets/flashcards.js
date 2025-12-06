@@ -6889,11 +6889,15 @@ function renderComparisonResult(resultEl, comparison){
       }
       card._availableSlots=allSlots.length;
 
-      // Show inline field prompt when all slots are revealed
+      // Show inline field prompt only when user clicks "Show More" AFTER all slots are revealed
       const allRevealed = count >= allSlots.length;
-      if(allRevealed && currentItem){
+      const promptIsVisible = slotContainer.querySelector('.inline-field-prompt');
+
+      // If all slots are revealed and user clicked "Show More" again (prevCount === count)
+      if(allRevealed && prevCount === count && currentItem && !promptIsVisible){
         showInlineFieldPrompt();
-      } else {
+      } else if(!allRevealed || prevCount < count){
+        // Hide prompt if not all slots revealed, or if we're still revealing slots
         hideInlineFieldPrompt();
       }
     }
@@ -6976,7 +6980,17 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
       return true;
     }
-    function updateRevealButton(){ const more = currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots; const br=$("#btnRevealNext"); if(br){ br.disabled=!more; br.classList.toggle("primary",!!more); } }
+    function updateRevealButton(){
+      const allSlotsRevealed = currentItem && currentItem.card._availableSlots && visibleSlots >= currentItem.card._availableSlots;
+      const promptIsVisible = slotContainer.querySelector('.inline-field-prompt');
+      const canShowPrompt = allSlotsRevealed && !promptIsVisible && currentItem && currentItem.card && currentItem.card.scope === 'private';
+      const more = (currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots) || canShowPrompt;
+      const br=$("#btnRevealNext");
+      if(br){
+        br.disabled=!more;
+        br.classList.toggle("primary",!!more);
+      }
+    }
     async function showCurrent(forceRender=false, prevSlots=0){
       if(!currentItem){
         pendingStudyRender=false;
@@ -7110,7 +7124,16 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
     }
 
-    $("#btnRevealNext").addEventListener("click",()=>{ if(!currentItem)return; pendingShowMoreScroll=true; const prevSlots=visibleSlots; visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1); showCurrent(false, prevSlots); });
+    $("#btnRevealNext").addEventListener("click",()=>{
+      if(!currentItem)return;
+      pendingShowMoreScroll=true;
+      const prevSlots=visibleSlots;
+      // Only increase visibleSlots if we haven't revealed all slots yet
+      if(visibleSlots < currentItem.card._availableSlots){
+        visibleSlots=Math.min(currentItem.card.order.length, visibleSlots+1);
+      }
+      showCurrent(false, prevSlots);
+    });
 
     // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
     const _btnEasyBottom = $("#btnEasyBottom");
@@ -9168,6 +9191,7 @@ function renderComparisonResult(resultEl, comparison){
         }
 
         hideInlineFieldPrompt();
+        updateRevealButton();
       });
 
       const btnSkip = document.createElement('button');
@@ -9175,6 +9199,7 @@ function renderComparisonResult(resultEl, comparison){
       btnSkip.textContent = t('skip');
       btnSkip.addEventListener('click', () => {
         hideInlineFieldPrompt();
+        updateRevealButton();
       });
 
       btnRow.appendChild(btnSave);
