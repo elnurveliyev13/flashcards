@@ -7001,11 +7001,12 @@ function renderComparisonResult(resultEl, comparison){
         ? studyMetaPanel.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
-      const safeGap = 12;
+      const safeGap = 14;
       const floor = window.innerHeight - metaHeight - bottomHeight - safeGap;
       const overshoot = rect.bottom - floor;
       if(overshoot > 8){
-        const scrollTarget = overshoot + safeGap;
+        const extraScroll = Math.max(16, metaHeight * 0.3);
+        const scrollTarget = overshoot + safeGap + extraScroll;
         if('scrollBy' in window){
           try{
             window.scrollBy({top: scrollTarget, behavior: 'smooth'});
