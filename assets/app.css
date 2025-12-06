@@ -914,7 +914,7 @@ button[data-role="update"]:disabled::before {
   min-width:64px;
   line-height:1.2;
   position:absolute;
-  top:-1.45rem;
+  top:-1.6rem;
   left:50%;
   transform:translateX(-50%);
   pointer-events:none;
