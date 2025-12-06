@@ -252,7 +252,7 @@ $string['quickinput_created_today'] = '{$a} heute erstellt';
 
 // Dashboard
 $string['dashboard_cards_due'] = 'Heute fällige Karten';
-$string['dashboard_total_cards'] = 'Gesamt erstellte Karten';
+$string['dashboard_total_cards'] = 'Gesamt Karten';
 $string['dashboard_active_vocab'] = 'Aktiver Wortschatz';
 $string['dashboard_streak'] = 'Aktuelle Serie (Tage)';
 $string['dashboard_study_time'] = 'Lernzeit diese Woche';

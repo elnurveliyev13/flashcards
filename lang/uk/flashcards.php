@@ -285,7 +285,7 @@ $string['quickinput_created_today'] = '{$a} створено сьогодні';
 
 // Dashboard
 $string['dashboard_cards_due'] = 'Картки на сьогодні';
-$string['dashboard_total_cards'] = 'Всього створено карток';
+$string['dashboard_total_cards'] = 'Всього карток';
 $string['dashboard_active_vocab'] = 'Активний словник';
 $string['dashboard_streak'] = 'Поточна серія (днів)';
 $string['dashboard_study_time'] = 'Час навчання цього тижня';

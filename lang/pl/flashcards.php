@@ -252,7 +252,7 @@ $string['quickinput_created_today'] = '{$a} utworzono dzisiaj';
 
 // Dashboard
 $string['dashboard_cards_due'] = 'Fiszki do nauki dzisiaj';
-$string['dashboard_total_cards'] = 'Łączna liczba utworzonych fiszek';
+$string['dashboard_total_cards'] = 'Łączna liczba fiszek';
 $string['dashboard_active_vocab'] = 'Aktywne słownictwo';
 $string['dashboard_streak'] = 'Obecna seria (dni)';
 $string['dashboard_study_time'] = 'Czas nauki w tym tygodniu';
