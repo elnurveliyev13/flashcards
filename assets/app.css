@@ -113,7 +113,8 @@ html[data-font-size="extra-large"] {
   --radius-xl: 16px;
 
   --header-row-height: 34px;
-  --app-content-max-width: 960px;
+  /* Keep a 960px minimum but let desktop stretch with a small viewport gutter */
+  --app-content-max-width: max(960px, calc(100vw - (var(--space-2) * 2)));
   --bottom-actions-stack-offset: 72px;
   --meta-panel-height: 0px;
   --edit-actions-bar-height: 0px;
