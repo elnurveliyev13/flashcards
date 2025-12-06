@@ -9594,17 +9594,25 @@ function renderComparisonResult(resultEl, comparison){
         if (bottomActions) {
           if (tabName === 'study') {
             bottomActions.classList.remove('hidden');
+            bottomActions.removeAttribute('hidden');
+            bottomActions.style.display = '';
             if (root) root.setAttribute('data-bottom-visible', '1');
           } else {
             bottomActions.classList.add('hidden');
+            bottomActions.setAttribute('hidden', 'hidden');
+            bottomActions.style.display = 'none';
             if (root) root.removeAttribute('data-bottom-visible');
           }
         }
         if (metaPanel) {
           if (tabName === 'study') {
             metaPanel.classList.remove('hidden');
+            metaPanel.removeAttribute('hidden');
+            metaPanel.style.display = '';
           } else {
             metaPanel.classList.add('hidden');
+            metaPanel.setAttribute('hidden', 'hidden');
+            metaPanel.style.display = 'none';
           }
         }
         queueBottomPanelStackRefresh();
