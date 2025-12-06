@@ -2928,6 +2928,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-dashboard-wrap {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 20px 0;
 }
 
 .fc-stats-grid {
@@ -3041,7 +3042,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 
 .fc-stat-card-combo .fc-stat-value-secondary {
   color: var(--text-dim);
-  font-size: 2rem;
+  font-size: inherit;
 }
 
 .fc-stat-sep {
@@ -3051,7 +3052,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .fc-stat-value {
-  font-size: 2.25rem; /* 36px */
+  font-size: 2.1rem;
   font-weight: 700;
   color: var(--text);
   margin-bottom: 8px;
