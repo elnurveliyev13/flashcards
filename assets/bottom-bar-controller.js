@@ -13,6 +13,7 @@
       dueCount: 0,
       updateDisabled: false
     };
+    this._stackSpacingFrame = null;
   }
 
   BottomBarController.prototype.init = function(){
@@ -184,6 +185,7 @@
       this.editBar.classList.remove('hidden');
       if(this.root){ this.root.setAttribute('data-edit-bar-visible','1'); }
     }
+    this._queueStackSpacingRefresh();
   };
 
   BottomBarController.prototype._updateRatingButtons = function(){
@@ -201,6 +203,24 @@
         console.log('[BottomBarController]', id, 'state =', btn.disabled ? 'disabled' : 'enabled');
       }
     });
+  };
+
+  BottomBarController.prototype._queueStackSpacingRefresh = function(){
+    var self = this;
+    if(this._stackSpacingFrame || typeof requestAnimationFrame === 'undefined') return;
+    this._stackSpacingFrame = requestAnimationFrame(function(){
+      self._stackSpacingFrame = null;
+      self._refreshStackSpacing();
+    });
+  };
+
+  BottomBarController.prototype._refreshStackSpacing = function(){
+    if(!this.root) return;
+    var height = 0;
+    if(this.editBar && !this.editBar.classList.contains('hidden')){
+      height = Math.round(this.editBar.getBoundingClientRect().height);
+    }
+    this.root.style.setProperty('--edit-actions-bar-height', height ? height + 'px' : '0px');
   };
 
   // Helper to wait for DOM and retry init

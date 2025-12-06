@@ -115,6 +115,8 @@ html[data-font-size="extra-large"] {
   --header-row-height: 34px;
   --app-content-max-width: 960px;
   --bottom-actions-stack-offset: 72px;
+  --meta-panel-height: 0px;
+  --edit-actions-bar-height: 0px;
 
 
   /* Legacy support */
@@ -2109,7 +2111,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   }
   #mod_flashcards_container[data-bottom-visible] .wrap,
   #mod_flashcards_container[data-edit-bar-visible] .wrap{
-    /* no extra bottom offset needed anymore */
+    padding-bottom: calc(
+      var(--space-2)
+      + env(safe-area-inset-bottom, 0px)
+      + var(--bottom-actions-stack-offset, 0px)
+      + var(--meta-panel-height, 0px)
+      + var(--edit-actions-bar-height, 0px)
+      + var(--fc-tabs-height, 0px)
+      + 10px
+    );
   }
 
   .tabs-toolbar .fc-tabs{

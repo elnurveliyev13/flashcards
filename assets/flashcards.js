@@ -9440,32 +9440,28 @@ function renderComparisonResult(resultEl, comparison){
       const bottomActions = document.getElementById('bottomActions');
       const metaPanel = document.getElementById('metaPanel');
 
-      function refreshBottomActionsStackOffset() {
-        if (!bottomActions || !root || bottomActions.classList.contains('hidden')) {
+      function refreshBottomPanelStackMetrics() {
+        if (!root) {
           return;
         }
-        const height = bottomActions.getBoundingClientRect().height;
-        if (height > 0) {
-          root.style.setProperty('--bottom-actions-stack-offset', `${Math.round(height)}px`);
-        }
+        const bottomHeight = (bottomActions && !bottomActions.classList.contains('hidden'))
+          ? Math.round(bottomActions.getBoundingClientRect().height) : 0;
+        root.style.setProperty('--bottom-actions-stack-offset', `${bottomHeight}px`);
+
+        const metaHeight = (metaPanel && !metaPanel.classList.contains('hidden'))
+          ? Math.round(metaPanel.getBoundingClientRect().height) : 0;
+        root.style.setProperty('--meta-panel-height', `${metaHeight}px`);
       }
 
-      function queueBottomActionsStackOffsetRefresh() {
-        if (!bottomActions) {
-          return;
-        }
-        requestAnimationFrame(refreshBottomActionsStackOffset);
+      function queueBottomPanelStackRefresh() {
+        requestAnimationFrame(refreshBottomPanelStackMetrics);
       }
 
       window.addEventListener('resize', () => {
-        if (activeTab === 'study') {
-          queueBottomActionsStackOffsetRefresh();
-        }
+        queueBottomPanelStackRefresh();
       });
       window.addEventListener('orientationchange', () => {
-        if (activeTab === 'study') {
-          queueBottomActionsStackOffsetRefresh();
-        }
+        queueBottomPanelStackRefresh();
       });
 
       // Helper: Switch to a tab
@@ -9561,7 +9557,6 @@ function renderComparisonResult(resultEl, comparison){
         if (bottomActions) {
           if (tabName === 'study') {
             bottomActions.classList.remove('hidden');
-            queueBottomActionsStackOffsetRefresh();
             if (root) root.setAttribute('data-bottom-visible', '1');
           } else {
             bottomActions.classList.add('hidden');
@@ -9575,6 +9570,7 @@ function renderComparisonResult(resultEl, comparison){
             metaPanel.classList.add('hidden');
           }
         }
+        queueBottomPanelStackRefresh();
 
         activeTab = tabName;
         if (tabName === 'study') {
