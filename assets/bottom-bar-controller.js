@@ -64,9 +64,9 @@
       if(updateTitle){
         updateAttrs += ' title="' + escapeAttr(updateTitle) + '"';
       }
-      this.editBar = document.createElement('div');
-      this.editBar.id = 'editActionsBar';
-      this.editBar.className = 'bottom-actions hidden';
+    this.editBar = document.createElement('div');
+    this.editBar.id = 'editActionsBar';
+    this.editBar.className = 'bottom-panel bottom-actions hidden';
       this.editBar.style.zIndex = '1001';
       this.editBar.style.bottom = '0';
       this.editBar.setAttribute('role','toolbar');
