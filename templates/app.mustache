@@ -744,25 +744,26 @@
   <div id="listModal" class="modal modal-fullscreen" role="dialog" aria-modal="true">
     <div class="box">
       <div class="row" style="justify-content:space-between;align-items:center;padding-left:12px">
-        <strong id="t_listTitle">{{#str}} cards, mod_flashcards {{/str}}</strong>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;flex:1;min-width:0">
+          <select id="listFilterDue" style="padding:6px">
+            <option value="all">All cards</option>
+            <option value="due">Due only</option>
+          </select>
+          <span id="listCount" class="badge">0</span>
+        </div>
         <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:12px">
-        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="width:340px">
-        <select id="listFilterDue" style="padding:6px">
-          <option value="all">All cards</option>
-          <option value="due">Due only</option>
-        </select>
-        <span id="listCount" class="badge">0</span>
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;padding-left:12px;justify-content:flex-start;">
+        <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="width:100%;max-width:420px">
       </div>
       <div style="overflow:auto;margin-top:10px">
         <table class="table" id="listTable">
           <thead>
             <tr>
               <th id="thFront">Focus</th>
-              <th id="thStage">Stage</th>
-              <th id="thDue">Next due</th>
-              <th id="thActions">Actions</th>
+              <th id="thStage" style="width:80px;text-align:center;">Stage</th>
+              <th id="thDue" style="width:120px;text-align:center;">Due</th>
+              <th id="thActions" style="width:70px;text-align:center;">Actions</th>
             </tr>
           </thead>
           <tbody></tbody>

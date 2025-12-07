@@ -8793,28 +8793,8 @@ function renderComparisonResult(resultEl, comparison){
       // Render paginated rows
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
-        const langs = Object.keys(r.card?.translations||{});
-        tr.innerHTML=`<td>${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell" style="gap:6px"></td>`;
+        tr.innerHTML=`<td>${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell actions-cell"></td>`;
         const cell=tr.lastElementChild;
-        // Audio buttons removed per new UX
-        const edit=document.createElement("button");
-        edit.className="iconbtn";
-        edit.textContent="\u270E";
-        edit.title="Edit";
-        edit.onclick=()=>{
-          const pack=registry[r.deckId];
-          const card=pack.cards.find(x=>x.id===r.id);
-          if(card){
-            // Set up for editing this card
-            currentItem={deckId:r.deckId,card:normalizeLessonCard({...card}),rec:state.decks[r.deckId][r.id],index:0};
-            visibleSlots=initialVisibleSlots(currentItem.card);
-            showCurrent();
-            $("#listModal").style.display="none";
-            // Trigger edit button to populate form
-            $("#btnEdit").click();
-          }
-        };
-        cell.appendChild(edit);
         const del=document.createElement("button");
         del.className="iconbtn";
         del.textContent="\u{1F5D1}";
