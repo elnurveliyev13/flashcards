@@ -1318,22 +1318,27 @@ input[type=text]::placeholder {
   display:inline-flex;
   align-items:flex-end;
   gap:2px;
-  opacity:0;
-  transform:translateY(0);
-  animation-duration:320ms;
-  animation-fill-mode:forwards;
-  animation-timing-function:cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: opacity, transform;
+  opacity:1;
+  transform:none;
+  animation:none;
 }
 .transcription-piece--stress{
   font-size:0.9em;
   line-height:1;
   align-items:center;
 }
-.transcription-piece--rise{
+.transcription-animate .transcription-piece{
+  opacity:0;
+  transform:translateY(0);
+  animation-duration:960ms;
+  animation-fill-mode:forwards;
+  animation-timing-function:cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: opacity, transform;
+}
+.transcription-animate .transcription-piece--rise{
   animation-name: transcription-rise;
 }
-.transcription-piece--drop{
+.transcription-animate .transcription-piece--drop{
   animation-name: transcription-drop-piece;
 }
 

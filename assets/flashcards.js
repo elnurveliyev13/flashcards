@@ -6761,7 +6761,7 @@ function renderComparisonResult(resultEl, comparison){
       pushSyllable(false);
 
       const pieces=tokens.map((t,i)=>{
-        const delay=i*160; // staggered a bit slower than previous single animation
+        const delay=i*480; // slowed down ~3x
         if(t.type==='stress'){
           return `<span class="transcription-piece transcription-piece--stress" style="animation-delay:${delay}ms">${escapeHtml(t.text)}</span>`;
         }
@@ -6894,6 +6894,18 @@ function renderComparisonResult(resultEl, comparison){
         items.push(d);
       }
       items.forEach(x=>slotContainer.appendChild(x));
+
+      // Trigger transcription animation only once, when it first becomes visible
+      if(!card._transcriptionAnimated){
+        const transEl = items.find(el => el.dataset && el.dataset.slotType === 'transcription');
+        if(transEl){
+          const inner = transEl.querySelector('.transcription-text');
+          if(inner){
+            inner.classList.add('transcription-animate');
+            card._transcriptionAnimated = true;
+          }
+        }
+      }
       // Autoplay audio: first slot when opening card, or newly revealed slot when clicking Show More
       let autoplayUrl = null;
       let autoplayRate = 1;
