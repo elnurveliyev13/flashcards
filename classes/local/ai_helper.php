@@ -165,6 +165,11 @@ class ai_helper {
             $result['errors'] = $errors;
         }
 
+        // Include token usage information if available
+        if (!empty($focusdata['usage'])) {
+            $result['usage'] = $focusdata['usage'];
+        }
+
         return $result;
     }
 
@@ -173,11 +178,18 @@ class ai_helper {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
         $translation = $this->openai->translate_text($userid, $text, $source, $target, $options);
-        return [
+        $result = [
             'translation' => $translation['translation'] ?? '',
             'sourceLang' => $translation['source'] ?? $source,
             'targetLang' => $translation['target'] ?? $target,
         ];
+
+        // Include token usage information if available
+        if (!empty($translation['usage'])) {
+            $result['usage'] = $translation['usage'];
+        }
+
+        return $result;
     }
 
     public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {
@@ -192,7 +204,14 @@ class ai_helper {
         }
 
         $language = clean_param($options['language'] ?? 'uk', PARAM_ALPHANUMEXT);
-        return $this->openai->answer_question($userid, $fronttext, $question, $language);
+        $result = $this->openai->answer_question($userid, $fronttext, $question, $language);
+
+        // Include token usage information if available
+        if (!empty($result['usage'])) {
+            // Usage is already in the result from openai->answer_question
+        }
+
+        return $result;
     }
 
     /**
@@ -473,6 +492,19 @@ class ai_helper {
      * @param int $userid User ID for API tracking
      * @return array Result with hasErrors, errors, correctedText, explanation
      */
+    /**
+     * Helper to accumulate token usage from multiple API calls
+     */
+    private function accumulate_usage(?object $responseUsage, array &$totalUsage): void {
+        if (empty($responseUsage)) {
+            return;
+        }
+        $usage = (array) $responseUsage;
+        $totalUsage['prompt_tokens'] = ($totalUsage['prompt_tokens'] ?? 0) + ($usage['prompt_tokens'] ?? 0);
+        $totalUsage['completion_tokens'] = ($totalUsage['completion_tokens'] ?? 0) + ($usage['completion_tokens'] ?? 0);
+        $totalUsage['total_tokens'] = ($totalUsage['total_tokens'] ?? 0) + ($usage['total_tokens'] ?? 0);
+    }
+
     public function check_norwegian_text(string $text, string $language, int $userid): array {
         $languagemap = [
             'uk' => 'Ukrainian',
@@ -483,6 +515,7 @@ class ai_helper {
         $langname = $languagemap[$language] ?? 'English';
         $debugtiming = [];
         $overallstart = microtime(true);
+        $totalUsage = []; // Accumulate token usage across all API calls
 
         // First request: Find errors
         $systemprompt1 = <<<"SYSTEMPROMPT"
@@ -629,6 +662,12 @@ USERPROMPT;
             $responses = $multisamplingResult['responses'] ?? [];
             $multisamplingErrors = $multisamplingResult['errors'] ?? [];
 
+            // Accumulate usage from multi-sampling (handled internally in request_parallel_curlmulti)
+            // But we need to sum it up for the totalUsage
+            // Note: usage is recorded per response in request_parallel_curlmulti, but we need to accumulate here
+            // For simplicity, since multi-sampling responses don't have usage in them,
+            // we'll rely on record_usage being called internally
+
             // Add debug info about model detection
             $modelkey = core_text::strtolower(trim((string)$model));
             $usesReasoningModel = $this->requires_default_temperature($modelkey);
@@ -648,18 +687,26 @@ USERPROMPT;
                 // Merge responses by consensus
                 $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
 
-                // If no errors found, return immediately
-                if (!$result1['hasErrors']) {
-                    $debugtiming['overall'] = microtime(true) - $overallstart;
-                    $result1['debugTiming'] = $debugtiming;
-                    return $result1;
+            // If no errors found, return immediately
+            if (!$result1['hasErrors']) {
+                $debugtiming['overall'] = microtime(true) - $overallstart;
+                $result1['debugTiming'] = $debugtiming;
+                // Include token usage information if available
+                if (!empty($totalUsage)) {
+                    $result1['usage'] = $totalUsage;
                 }
+                return $result1;
+            }
 
                 // Continue to STAGE 2 if enabled
                 $enabledoublecheck = !empty($config->ai_doublecheck_correction);
                 if (!$enabledoublecheck) {
                     $debugtiming['overall'] = microtime(true) - $overallstart;
                     $result1['debugTiming'] = $debugtiming;
+                    // Include token usage information if available
+                    if (!empty($totalUsage)) {
+                        $result1['usage'] = $totalUsage;
+                    }
                     return $result1;
                 }
 
@@ -740,6 +787,9 @@ USERPROMPT2;
                     $debugtiming['api_stage2'] = microtime(true) - $t2;
                     $recordMethod->invoke($client, $userid, $response2->usage ?? null);
 
+                    // Accumulate usage from STAGE 2
+                    $this->accumulate_usage($response2->usage ?? null, $totalUsage);
+
                     $content2 = trim($response2->choices[0]->message->content ?? '');
                     $json2 = null;
                     if (preg_match('~\{.*\}~s', $content2, $m)) {
@@ -806,6 +856,11 @@ USERPROMPT2;
                     $debugtiming['overall'] = microtime(true) - $overallstart;
                     $finalResult['debugTiming'] = $debugtiming;
 
+                    // Include token usage information if available
+                    if (!empty($totalUsage)) {
+                        $finalResult['usage'] = $totalUsage;
+                    }
+
                     return $finalResult;
                 } catch (\Exception $e) {
                     error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
@@ -840,6 +895,9 @@ USERPROMPT2;
             $recordMethod = $reflection->getMethod('record_usage');
             $recordMethod->setAccessible(true);
             $recordMethod->invoke($client, $userid, $response1->usage ?? null);
+
+            // Accumulate usage from STAGE 1
+            $this->accumulate_usage($response1->usage ?? null, $totalUsage);
 
             $content1 = trim($response1->choices[0]->message->content ?? '');
             if ($content1 === '') {
@@ -1020,6 +1078,7 @@ USERPROMPT2;
                 'errors' => [],
                 'correctedText' => $text,
                 'explanation' => '',
+                'usage' => $totalUsage,
             ];
         }
     }

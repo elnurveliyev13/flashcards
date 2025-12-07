@@ -201,7 +201,7 @@ PROMPT;
             return $this->fallback_focus($clickedword);
         }
 
-        return [
+        $result = [
             'focus' => core_text::substr($focus, 0, 200),
             'baseform' => core_text::substr($parsed['baseform'] ?: $focus, 0, 200),
             'focusphrase' => core_text::substr($parsed['focusphrase'] ?? '', 0, 200),
@@ -216,6 +216,13 @@ PROMPT;
             'forms' => $parsed['forms'] ?? '',
             'correction' => core_text::substr($parsed['correction'] ?? '', 0, 400),
         ];
+
+        // Include token usage information if available
+        if (isset($response->usage)) {
+            $result['usage'] = (array) $response->usage;
+        }
+
+        return $result;
     }
 
     /**
@@ -272,11 +279,18 @@ PROMPT;
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
         }
 
-        return [
+        $result = [
             'translation' => core_text::substr($content, 0, 800),
             'source' => $sourcecode,
             'target' => $targetcode,
         ];
+
+        // Include token usage information if available
+        if (isset($response->usage)) {
+            $result['usage'] = (array) $response->usage;
+        }
+
+        return $result;
     }
 
     /**
@@ -388,10 +402,17 @@ PROMPT;
             throw new moodle_exception('ai_empty_response', 'mod_flashcards');
         }
 
-        return [
+        $result = [
             'answer' => core_text::substr($content, 0, 1200),
             'language' => $languageCode,
         ];
+
+        // Include token usage information if available
+        if (isset($response->usage)) {
+            $result['usage'] = (array) $response->usage;
+        }
+
+        return $result;
     }
 
     /**
