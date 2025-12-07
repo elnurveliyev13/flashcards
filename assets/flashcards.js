@@ -9098,9 +9098,9 @@ function renderComparisonResult(resultEl, comparison){
         if (Math.abs(deltaX) > 30 || Math.abs(deltaY) > 30) {
           isSwiping = true;
 
-          // Apply transform
+          // Apply transform (horizontal movement only)
           const rotation = deltaX * 0.05; // Subtle rotation
-          container.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+          container.style.transform = `translate(${deltaX}px, 0px) rotate(${rotation}deg)`;
 
           // Show preview based on direction
           if (Math.abs(deltaX) > Math.abs(deltaY)) {
