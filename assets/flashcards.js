@@ -6729,19 +6729,62 @@ function renderComparisonResult(resultEl, comparison){
       return div.innerHTML;
     }
 
+    function renderTranscriptionHTML(text){
+      if(!text) return '';
+      const stressMarks=new Set(["'", "ˌ", "ˈ"]);
+      const tokens=[];
+      let buffer='';
+      let lastDelimiter='dot'; // default: first syllable drops from top
+
+      const pushSyllable=(trailingDot=false)=>{
+        if(!buffer && !trailingDot) return;
+        const pieceText=buffer+(trailingDot?'.':'');
+        const direction=lastDelimiter==='stress' ? 'up' : 'down';
+        tokens.push({type:'syllable', text: pieceText, direction});
+        buffer='';
+      };
+
+      for(const ch of text){
+        if(ch==='.' ){
+          pushSyllable(true);
+          lastDelimiter='dot';
+          continue;
+        }
+        if(stressMarks.has(ch)){
+          pushSyllable(false);
+          tokens.push({type:'stress', text: ch});
+          lastDelimiter='stress';
+          continue;
+        }
+        buffer+=ch;
+      }
+      pushSyllable(false);
+
+      const pieces=tokens.map((t,i)=>{
+        const delay=i*160; // staggered a bit slower than previous single animation
+        if(t.type==='stress'){
+          return `<span class="transcription-piece transcription-piece--stress" style="animation-delay:${delay}ms">${escapeHtml(t.text)}</span>`;
+        }
+        const dirClass=t.direction==='up' ? 'transcription-piece--rise' : 'transcription-piece--drop';
+        return `<span class="transcription-piece ${dirClass}" style="animation-delay:${delay}ms">${escapeHtml(t.text)}</span>`;
+      }).join('');
+
+      return `<div class="transcription-text">${pieces}</div>`;
+    }
+
 
     async function buildSlot(kind, card){
       const el=document.createElement("div");
       el.className="slot";
       const cardOrder = Array.isArray(card.order) ? card.order : [];
       if(kind==="transcription" && card.transcription){
-        el.innerHTML=`<div class="transcription-text">${card.transcription}</div>`;
+        el.innerHTML=renderTranscriptionHTML(card.transcription);
         el.dataset.slotType = 'transcription';
         return el;
       }
       if(kind==="text" && card.text){
         const showInlineTranscription = card.transcription && !cardOrder.includes('transcription');
-        const tr = showInlineTranscription ? `<div class="transcription-text">${card.transcription}</div>` : "";
+        const tr = showInlineTranscription ? renderTranscriptionHTML(card.transcription) : "";
 
         // DICTATION EXERCISE: Create interactive text input exercise
         const dictationId = 'dictation-' + Math.random().toString(36).substr(2, 9);
