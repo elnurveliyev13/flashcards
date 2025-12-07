@@ -5619,27 +5619,12 @@ select.inline-prompt-field {
   }
 }
 
-@keyframes swipe-down {
-  0% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(100vh);
-    opacity: 0;
-  }
-}
-
 .swipe-right {
   animation: swipe-right 0.3s ease-out forwards;
 }
 
 .swipe-left {
   animation: swipe-left 0.3s ease-out forwards;
-}
-
-.swipe-down {
-  animation: swipe-down 0.3s ease-out forwards;
 }
 
 /* Card transform during swipe */
@@ -5652,17 +5637,6 @@ select.inline-prompt-field {
    GESTURE CONTROLS - RATING PREVIEW
    ======================================== */
 
-@keyframes preview-pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(0.8);
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 1;
-  }
-}
-
 .rating-preview {
   position: fixed;
   top: 50%;
@@ -5674,8 +5648,13 @@ select.inline-prompt-field {
   border-radius: 12px;
   z-index: 10000;
   pointer-events: none;
-  animation: preview-pulse 0.2s ease;
+  opacity: 0;
+  transition: opacity 0.2s ease;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.rating-preview[data-visible="true"] {
+  opacity: 1;
 }
 
 .rating-preview.easy {
@@ -5789,14 +5768,13 @@ select.inline-prompt-field {
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
   .swipe-right,
-  .swipe-left,
-  .swipe-down {
+  .swipe-left {
     animation: none;
     transition: opacity 0.2s ease;
   }
 
   .rating-preview {
-    animation: none;
+    transition: none;
   }
 
   .gesture-actions-menu {

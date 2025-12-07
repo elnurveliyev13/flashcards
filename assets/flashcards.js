@@ -8883,8 +8883,7 @@ function renderComparisonResult(resultEl, comparison){
         // Fixed swipe directions (not customizable)
         const FIXED_SETTINGS = {
           swipeRight: 'hard',
-          swipeLeft: 'easy',
-          swipeDown: 'normal'
+          swipeLeft: 'easy'
         };
 
         if (FIXED_SETTINGS.hasOwnProperty(key)) {
@@ -8906,17 +8905,30 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       // Helper: Show rating preview badge
+      const RATING_PREVIEW_LABELS = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
+      let previewBadge = null;
+      let previewHideTimeout = null;
+
       function showPreview(rating) {
-        const existing = document.querySelector('.rating-preview');
-        if (existing) existing.remove();
+        if (!previewBadge) {
+          previewBadge = document.createElement('div');
+          previewBadge.className = 'rating-preview';
+          previewBadge.dataset.visible = 'false';
+          document.body.appendChild(previewBadge);
+        }
 
-        const badge = document.createElement('div');
-        badge.className = `rating-preview ${rating}`;
-        const labels = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
-        badge.textContent = labels[rating] || rating.toUpperCase();
-        document.body.appendChild(badge);
+        previewBadge.textContent = RATING_PREVIEW_LABELS[rating] || rating.toUpperCase();
+        previewBadge.className = `rating-preview ${rating}`;
+        previewBadge.dataset.visible = 'true';
 
-        setTimeout(() => badge.remove(), 200);
+        if (previewHideTimeout) {
+          clearTimeout(previewHideTimeout);
+        }
+        previewHideTimeout = setTimeout(() => {
+          if (previewBadge) {
+            previewBadge.dataset.visible = 'false';
+          }
+        }, 300);
       }
 
       // Helper: Animate swipe
@@ -8929,8 +8941,7 @@ function renderComparisonResult(resultEl, comparison){
         // Visual feedback colors
         const colors = {
           right: '0 0 40px rgba(76, 175, 80, 0.6)',
-          left: '0 0 40px rgba(244, 67, 54, 0.6)',
-          down: '0 0 40px rgba(33, 150, 243, 0.6)'
+          left: '0 0 40px rgba(244, 67, 54, 0.6)'
         };
         container.style.boxShadow = colors[direction] || '';
 
@@ -9086,12 +9097,6 @@ function renderComparisonResult(resultEl, comparison){
               const action = getGestureSetting('swipeLeft', 'hard');
               if (action !== 'disabled') showPreview(action);
             }
-          } else {
-            // Vertical swipe
-            if (deltaY > 50) {
-              const action = getGestureSetting('swipeDown', 'normal');
-              if (action !== 'disabled') showPreview(action);
-            }
           }
         }
       }, { passive: true });
@@ -9150,18 +9155,6 @@ function renderComparisonResult(resultEl, comparison){
             } else {
               resetCardPosition();
             }
-          } else {
-            resetCardPosition();
-          }
-        } else if (velocity > velocityThreshold && deltaY > 100) {
-          // Swipe down
-          const action = getGestureSetting('swipeDown', 'normal');
-          if (action === 'easy') {
-            animateSwipe('down', () => rateEasy());
-          } else if (action === 'normal') {
-            animateSwipe('down', () => rateNormal());
-          } else if (action === 'hard') {
-            animateSwipe('down', () => rateHard());
           } else {
             resetCardPosition();
           }
