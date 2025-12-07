@@ -8793,8 +8793,23 @@ function renderComparisonResult(resultEl, comparison){
       // Render paginated rows
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell actions-cell"></td>`;
+        tr.innerHTML=`<td class="clickable-word">${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell actions-cell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
+        const wordCell=tr.firstElementChild;
+        wordCell.style.cursor="pointer";
+        wordCell.title="Open card";
+        wordCell.onclick=()=>{
+          const pack=registry[r.deckId];
+          if(!pack) return;
+          const card=pack.cards.find(x=>x.id===r.id);
+          if(card){
+            currentItem={deckId:r.deckId,card:normalizeLessonCard({...card}),rec:state.decks[r.deckId][r.id],index:0};
+            visibleSlots=1;
+            showCurrent();
+            $("#listModal").style.display="none";
+            $("#btnEdit").click();
+          }
+        };
         const del=document.createElement("button");
         del.className="iconbtn";
         del.textContent="\u{1F5D1}";

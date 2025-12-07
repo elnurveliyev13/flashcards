@@ -1720,24 +1720,36 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 
 #listTable{
   table-layout:fixed;
+  width:100%;
 }
 #listTable thead th{
   text-transform:none;
   letter-spacing:0.01em;
+  font-size:0.8rem;
 }
 #listTable th:nth-child(2),
-#listTable td:nth-child(2),
+#listTable td:nth-child(2){
+  text-align:center;
+  width:80px;
+}
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
   text-align:center;
+  width:110px;
 }
 #listTable th:nth-child(4),
 #listTable td:nth-child(4){
-  width:70px;
   text-align:center;
+  width:70px;
+  border-bottom:none;
+}
+#listTable td:first-child{
+  white-space:normal;
+  word-break:break-word;
 }
 #listTable td.actions-cell{
   justify-content:center;
+  border-bottom:none;
 }
 #listTable td{
   vertical-align:middle;
