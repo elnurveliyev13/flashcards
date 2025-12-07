@@ -7086,7 +7086,17 @@ function renderComparisonResult(resultEl, comparison){
         ? studyMetaRecorder.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
-      const safeGap = 14;
+      const timerEl = $("#recTimerStudy");
+      let recTimerGap = 0;
+      if(timerEl && !timerEl.classList.contains('hidden')){
+        const timerStyle = window.getComputedStyle(timerEl);
+        const timerTopValue = parseFloat(timerStyle.top || '0');
+        if(Number.isFinite(timerTopValue) && timerTopValue < 0){
+          recTimerGap = Math.abs(timerTopValue);
+        }
+      }
+      // Keep the Study timer bubble from overlapping the active slot.
+      const safeGap = 14 + recTimerGap;
       const floor = window.innerHeight - metaHeight - bottomHeight - safeGap;
       const overshoot = rect.bottom - floor;
       if(overshoot > 8){

@@ -4416,6 +4416,10 @@ select.inline-prompt-field {
   border: 2px solid rgba(100, 116, 139, 0.3);
   border-radius: 16px;
   backdrop-filter: blur(8px);
+  border-left: none;
+  border-right: none;
+  margin-left: -8px;
+  margin-right: -8px;
 }
 
 .dictation-input-wrapper {
@@ -4564,7 +4568,7 @@ select.inline-prompt-field {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0;
-  padding: 0 0 0 0.75rem;
+  padding: 3 0 0 0.75rem;
 }
 
 .dictation-comparison-text {
@@ -4797,7 +4801,6 @@ select.inline-prompt-field {
   line-height: 1.6 !important;
   font-weight: 500 !important;
   white-space: normal !important;
-  margin-top: 0.25rem !important;
 }
 
 .dictation-token-warn {
