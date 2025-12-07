@@ -1955,8 +1955,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 
 .bottom-recorder #btnRecordStudy{
-  width:56px;
-  height:56px;
+  width:112px;
+  height:112px;
   min-width:auto;
   min-height:auto;
   border-radius:50%;
@@ -1965,20 +1965,24 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   border:1px solid rgba(255,255,255,0.45);
   background:linear-gradient(145deg, rgba(99,102,241,0.32), rgba(15,23,42,0.85));
   box-shadow:
-    0 8px 24px rgba(13,23,45,0.65),
-    inset 0 0 0 0.8px rgba(255,255,255,0.4);
+    0 12px 32px rgba(13,23,45,0.65),
+    inset 0 0 0 1px rgba(255,255,255,0.45);
   display:inline-flex;
   justify-content:center;
   align-items:center;
   transition:opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  font-size:2.6rem;
 }
 .bottom-recorder #btnRecordStudy:hover,
 .bottom-recorder #btnRecordStudy:focus-visible{
   opacity:0.85;
   transform:translateY(-2px);
   box-shadow:
-    0 10px 30px rgba(15,23,42,0.75),
-    inset 0 0 0 1px rgba(255,255,255,0.5);
+    0 14px 36px rgba(15,23,42,0.85),
+    inset 0 0 0 1px rgba(255,255,255,0.55);
+}
+.bottom-recorder #btnRecordStudy::before{
+  content:'';
 }
 .bottom-recorder #metaRecorder .iconbtn:hover,
 .bottom-recorder #metaRecorder .iconbtn:focus-visible{
