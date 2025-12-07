@@ -7039,7 +7039,16 @@ function renderComparisonResult(resultEl, comparison){
     function updateRevealButton(){
       const allSlotsRevealed = currentItem && currentItem.card._availableSlots && visibleSlots >= currentItem.card._availableSlots;
       const promptIsVisible = slotContainer.querySelector('.inline-field-prompt');
-      const canShowPrompt = allSlotsRevealed && !promptIsVisible && currentItem && currentItem.card && currentItem.card.scope === 'private';
+
+      // Check if prompt was already shown for this card at this step
+      let promptAlreadyShown = false;
+      if(currentItem && typeof promptKey === 'function' && typeof shownPrompts !== 'undefined'){
+        const step = currentItem.rec?.step || 0;
+        const pkey = promptKey(currentItem.deckId, currentItem.card.id, step);
+        promptAlreadyShown = shownPrompts.has(pkey);
+      }
+
+      const canShowPrompt = allSlotsRevealed && !promptIsVisible && !promptAlreadyShown && currentItem && currentItem.card && currentItem.card.scope === 'private';
       const more = (currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots) || canShowPrompt;
       const hasCard = !!currentItem;
       const showReveal = hasCard && !!more;
