@@ -16,7 +16,7 @@
       root.setAttribute('data-ux-bottom','1');
       // Hide only the in-card rating buttons (keep edit form buttons visible)
       // If the bar exists, make sure it’s not hidden by default class
-      ['#bottomActions', '#studyRecorderPanel'].forEach(function(selector){
+      ['#bottomActions', '#metaRecorder'].forEach(function(selector){
         var element = root.querySelector(selector);
         if(element){
           element.classList.remove('hidden');

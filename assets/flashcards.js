@@ -3678,7 +3678,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let activeTab='quickInput';
     let pendingShowMoreScroll=false;
     let studyBottomActions=null;
-    let studyRecorderPanel=null;
+    let studyMetaRecorder=null;
     let tabSwitcher=null;
     let pendingStudyRender=false;
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
@@ -7082,8 +7082,8 @@ function renderComparisonResult(resultEl, comparison){
       const container = root.querySelector('#slotContainer');
       if(!container) return;
       const rect = container.getBoundingClientRect();
-      const metaHeight = (studyRecorderPanel && !studyRecorderPanel.classList.contains('hidden'))
-        ? studyRecorderPanel.getBoundingClientRect().height : 0;
+      const metaHeight = (studyMetaRecorder && !studyMetaRecorder.classList.contains('hidden'))
+        ? studyMetaRecorder.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
       const safeGap = 14;
@@ -9568,9 +9568,9 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       const bottomActions = document.getElementById('bottomActions');
-      const recorderPanel = document.getElementById('studyRecorderPanel');
+      const metaRecorderEl = document.getElementById('metaRecorder');
       studyBottomActions = bottomActions;
-      studyRecorderPanel = recorderPanel;
+      studyMetaRecorder = metaRecorderEl;
 
       function refreshBottomPanelStackMetrics() {
         if (!root) {
@@ -9580,8 +9580,8 @@ function renderComparisonResult(resultEl, comparison){
           ? Math.round(bottomActions.getBoundingClientRect().height) : 0;
         root.style.setProperty('--bottom-actions-stack-offset', `${bottomHeight}px`);
 
-         const metaHeight = (recorderPanel && !recorderPanel.classList.contains('hidden'))
-           ? Math.round(recorderPanel.getBoundingClientRect().height) : 0;
+         const metaHeight = (metaRecorderEl && !metaRecorderEl.classList.contains('hidden'))
+           ? Math.round(metaRecorderEl.getBoundingClientRect().height) : 0;
         root.style.setProperty('--meta-panel-height', `${metaHeight}px`);
       }
 
@@ -9699,17 +9699,17 @@ function renderComparisonResult(resultEl, comparison){
             if (root) root.removeAttribute('data-bottom-visible');
           }
         }
-         if (recorderPanel) {
-           if (tabName === 'study') {
-             recorderPanel.classList.remove('hidden');
-             recorderPanel.removeAttribute('hidden');
-             recorderPanel.style.display = '';
-           } else {
-             recorderPanel.classList.add('hidden');
-             recorderPanel.setAttribute('hidden', 'hidden');
-             recorderPanel.style.display = 'none';
-           }
-         }
+        if (studyMetaRecorder) {
+          if (tabName === 'study') {
+            studyMetaRecorder.classList.remove('hidden');
+            studyMetaRecorder.removeAttribute('hidden');
+            studyMetaRecorder.style.display = '';
+          } else {
+            studyMetaRecorder.classList.add('hidden');
+            studyMetaRecorder.setAttribute('hidden', 'hidden');
+            studyMetaRecorder.style.display = 'none';
+          }
+        }
         queueBottomPanelStackRefresh();
 
         activeTab = tabName;
