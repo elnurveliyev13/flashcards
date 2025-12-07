@@ -6731,29 +6731,18 @@ function renderComparisonResult(resultEl, comparison){
 
     function renderTranscriptionHTML(text){
       if(!text) return '';
-      const stressMarks=new Set(["'", "ˌ", "ˈ"]);
       const tokens=[];
       let buffer='';
-      let lastDelimiter='dot'; // default: first syllable drops from top
 
       const pushSyllable=(trailingDot=false)=>{
         if(!buffer && !trailingDot) return;
-        const pieceText=buffer+(trailingDot?'.':'');
-        const direction=lastDelimiter==='stress' ? 'up' : 'down';
-        tokens.push({type:'syllable', text: pieceText, direction});
+        tokens.push(buffer + (trailingDot?'.':''));
         buffer='';
       };
 
       for(const ch of text){
-        if(ch==='.' ){
+        if(ch === '.'){
           pushSyllable(true);
-          lastDelimiter='dot';
-          continue;
-        }
-        if(stressMarks.has(ch)){
-          pushSyllable(false);
-          tokens.push({type:'stress', text: ch});
-          lastDelimiter='stress';
           continue;
         }
         buffer+=ch;
@@ -6761,12 +6750,8 @@ function renderComparisonResult(resultEl, comparison){
       pushSyllable(false);
 
       const pieces=tokens.map((t,i)=>{
-        const delay=i*480; // slowed down ~3x
-        if(t.type==='stress'){
-          return `<span class="transcription-piece transcription-piece--stress" style="animation-delay:${delay}ms">${escapeHtml(t.text)}</span>`;
-        }
-        const dirClass=t.direction==='up' ? 'transcription-piece--rise' : 'transcription-piece--drop';
-        return `<span class="transcription-piece ${dirClass}" style="animation-delay:${delay}ms">${escapeHtml(t.text)}</span>`;
+        const delay=i*2000; // 2s pause between syllables
+        return `<span class="transcription-piece transcription-piece--drop" style="animation-delay:${delay}ms">${escapeHtml(t)}</span>`;
       }).join('');
 
       return `<div class="transcription-text">${pieces}</div>`;
