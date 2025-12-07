@@ -46,26 +46,30 @@ The Study tab now supports intuitive touch gestures for a more natural mobile le
 
 ---
 
-## Fixed Settings
+## Settings
 
-All gesture controls are **always enabled** with optimized defaults. No configuration needed!
+Access gesture settings via the **⚙ Settings** button in the header.
+
+### Global Toggle
+- **Enable swipe gestures** - Master switch for all gesture controls
 
 ### Swipe Mapping (Fixed)
-- **Swipe Right** → Hard (retry later)
-- **Swipe Left** → Easy (advance with full interval)
-- **Swipe Down** → Normal (advance with half interval)
+- **Swipe Right** → Hard (retry later) - **Cannot be changed**
+- **Swipe Left** → Easy (advance with full interval) - **Cannot be changed**
+- **Swipe Down** → Normal (advance with half interval) - **Cannot be changed**
 
-### Additional Features (Always On)
-- **Tap card to reveal next** - Show next slot with single tap ✅
-- **Long press for menu** - Access Edit/Delete/List actions ✅
-- **Double tap to replay audio** - Quick audio replay ✅
+*Note: Swipe directions are fixed for consistency and optimal learning workflow.*
+
+### Customizable Options
+- **Tap card to reveal next** - Show next slot with single tap (Default: ✅ Enabled)
+- **Long press for menu** - Access Edit/Delete/List actions (Default: ✅ Enabled)
+- **Double tap to replay audio** - Quick audio replay (Default: ✅ Enabled)
 
 ### Swipe Sensitivity
-- **Fixed at Medium (0.5)** - Optimal for most users
-- Fast enough to prevent accidental swipes
-- Easy enough for natural gestures
-
-*Note: All settings are fixed for the best learning experience. No customization available.*
+- **Adjustable slider (0.3 - 1.0)** - Customize how fast swipes need to be
+  - **0.3** = Very Easy (gentle swipes trigger)
+  - **0.5** = Medium (default)
+  - **1.0** = Very Hard (fast swipes required)
 
 ---
 
@@ -135,23 +139,23 @@ Gestures are **ignored** when touching:
 ## Troubleshooting
 
 ### Gestures not working?
-1. Gestures are always enabled - no settings to check
+1. Check if gestures are enabled in Settings (⚙)
 2. Verify you're touching the card content (not buttons)
 3. Try increasing swipe distance (>100px)
-4. Ensure you're swiping fast enough (velocity > 0.5)
+4. Lower sensitivity threshold in Settings if swipes too fast
 
 ### Accidental swipes?
-- Sensitivity is fixed at optimal level (0.5)
-- Try swiping more deliberately with faster motion
-- Avoid dragging your finger slowly across the card
+1. Increase sensitivity threshold (0.7 - 1.0) in Settings
+2. Try swiping more deliberately with faster motion
+3. Disable tap-to-reveal if tapping accidentally
 
 ### Long press triggers too early?
 - Currently fixed at 500ms (cannot be changed)
 - Ensure you're not moving finger (movement cancels long press)
 
 ### Double tap conflicts with zoom?
-- Double tap audio is **always enabled**
-- Cannot be disabled (optimized for learning workflow)
+- Double tap audio is **enabled by default**
+- Can be disabled in Settings if needed
 - Most modern mobile browsers handle this correctly
 
 ---
@@ -159,17 +163,19 @@ Gestures are **ignored** when touching:
 ## Code Structure
 
 ### Files Modified
-1. **`assets/flashcards.js`** (lines 8834-9190)
+1. **`assets/flashcards.js`** (lines 8834-9322)
    - `initGestures()` - Touch event handlers
-   - `GESTURE_SETTINGS` - Fixed configuration object
+   - `getGestureSetting()` - Returns fixed swipe directions, customizable others
+   - `initGestureSettings()` - Settings UI management
 
 2. **`assets/app.css`** (lines 5558-5872)
    - Swipe animations
    - Rating preview styles
    - Long press menu styles
+   - Settings UI styles
 
-3. **`templates/app.mustache`**
-   - No UI for gesture settings (all fixed)
+3. **`templates/app.mustache`** (lines 129-162)
+   - Gesture settings panel (without swipe direction selectors)
 
 ### Key Functions
 ```javascript

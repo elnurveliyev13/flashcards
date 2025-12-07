@@ -6756,35 +6756,51 @@ function renderComparisonResult(resultEl, comparison){
       return `<div class="transcription-text">${pieces}</div>`;
     }
 
-    function sequenceTranscriptionAutoplay(card, transSlot, audioUrl, rate){
-      if(card._transcriptionAnimated || !transSlot || !audioUrl){
-        return false;
+    function ensureTranscriptionAnimation(card, slot){
+      if(!slot) return Promise.resolve();
+      const inner = slot.querySelector('.transcription-text');
+      if(!inner) return Promise.resolve();
+      if(card._transcriptionAnimated){
+        return Promise.resolve();
       }
-      const inner = transSlot.querySelector('.transcription-text');
-      if(!inner){
-        return false;
-      }
-      const playbackRate = rate || 1;
-      const playAudio = () => {
-        try{
-          player.src = audioUrl;
-          player.playbackRate = playbackRate;
-          player.currentTime = 0;
-          player.play().catch(()=>{});
-        }catch(_e){}
-      };
-      const startAnimationAndReplay = () => {
-        if(!card._transcriptionAnimated){
-          inner.classList.add('transcription-animate');
+      return new Promise(resolve => {
+        const pieces = Array.from(inner.querySelectorAll('.transcription-piece'));
+        let resolved=false;
+        const finalize = () => {
+          if(resolved) return;
+          resolved=true;
           card._transcriptionAnimated = true;
+          resolve();
+        };
+        let fallback=null;
+        const cleanup = () => {
+          if(fallback){
+            clearTimeout(fallback);
+            fallback=null;
+          }
+          finalize();
+        };
+        if(pieces.length===0){
+          inner.classList.add('transcription-animate');
+          finalize();
+          return;
         }
-        playAudio();
-      };
-      player.addEventListener('ended', () => {
-        startAnimationAndReplay();
-      }, {once:true});
-      playAudio();
-      return true;
+        const totalDuration = ((pieces.length - 1) * 1500) + 1400 + 200;
+        let remaining = pieces.length;
+        const onPieceAnimationEnd = () => {
+          remaining--;
+          if(remaining <= 0){
+            pieces.forEach(piece => piece.removeEventListener('animationend', onPieceAnimationEnd));
+            cleanup();
+          }
+        };
+        fallback = setTimeout(() => {
+          pieces.forEach(piece => piece.removeEventListener('animationend', onPieceAnimationEnd));
+          cleanup();
+        }, totalDuration);
+        pieces.forEach(piece => piece.addEventListener('animationend', onPieceAnimationEnd));
+        inner.classList.add('transcription-animate');
+      });
     }
 
 
@@ -6910,11 +6926,12 @@ function renderComparisonResult(resultEl, comparison){
       }
       items.forEach(x=>slotContainer.appendChild(x));
 
+      const transSlot = items.find(el => el.dataset && el.dataset.slotType === 'transcription');
+      const transcriptionAnimationPromise = ensureTranscriptionAnimation(card, transSlot);
       const newSlot = (prevCount > 0 && count > prevCount) ? items[count - 1] : null;
       let autoplayUrl = null;
       let autoplayRate = 1;
       let handledTranscriptionAutoplay = false;
-      let delayTranscriptionAnimation = false;
       if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
         // First opening - play first slot's audio
         autoplayUrl = items[0].dataset.autoplay;
@@ -6928,10 +6945,15 @@ function renderComparisonResult(resultEl, comparison){
           const prevSlot = items[count - 2];
           const prevAutoplay = prevSlot && prevSlot.dataset && prevSlot.dataset.autoplay;
           if(prevAutoplay){
-            if(sequenceTranscriptionAutoplay(card, newSlot, prevAutoplay, 0.7)){
-              handledTranscriptionAutoplay = true;
-              delayTranscriptionAnimation = true;
-            }
+            handledTranscriptionAutoplay = true;
+            transcriptionAnimationPromise.then(() => {
+              try{
+                player.src=prevAutoplay;
+                player.playbackRate=0.7;
+                player.currentTime=0;
+                player.play().catch(()=>{});
+              }catch(_e){}
+            });
           }
         }
         if(!handledTranscriptionAutoplay && newSlotData.autoplay){
@@ -6940,16 +6962,6 @@ function renderComparisonResult(resultEl, comparison){
           // Check if new slot is dictation - play at 0.85 speed
           if(newSlotData.slotType === 'dictation'){
             autoplayRate = 0.85;
-          }
-        }
-      }
-      if(!delayTranscriptionAnimation && !card._transcriptionAnimated){
-        const transEl = items.find(el => el.dataset && el.dataset.slotType === 'transcription');
-        if(transEl){
-          const inner = transEl.querySelector('.transcription-text');
-          if(inner){
-            inner.classList.add('transcription-animate');
-            card._transcriptionAnimated = true;
           }
         }
       }
@@ -8886,21 +8898,31 @@ function renderComparisonResult(resultEl, comparison){
       const studySection = $("#studySection");
       if (!studySection) return;
 
-      // Fixed gesture settings (not customizable by users)
-      const GESTURE_SETTINGS = {
-        enabled: true,
-        swipeRight: 'hard',
-        swipeLeft: 'easy',
-        swipeDown: 'normal',
-        tapToReveal: true,
-        longPressMenu: true,
-        doubleTapAudio: true,
-        velocityThreshold: 0.5
-      };
-
-      // Get gesture setting (returns fixed values)
+      // Get gesture settings (swipe directions are fixed, others are customizable)
       function getGestureSetting(key, defaultValue) {
-        return GESTURE_SETTINGS[key] ?? defaultValue;
+        // Fixed swipe directions (not customizable)
+        const FIXED_SETTINGS = {
+          swipeRight: 'hard',
+          swipeLeft: 'easy',
+          swipeDown: 'normal'
+        };
+
+        if (FIXED_SETTINGS.hasOwnProperty(key)) {
+          return FIXED_SETTINGS[key];
+        }
+
+        // Customizable settings from localStorage
+        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
+        if (!settings.gestures) {
+          settings.gestures = {
+            enabled: true,
+            tapToReveal: true,
+            longPressMenu: true,
+            doubleTapAudio: true,
+            velocityThreshold: 0.5
+          };
+        }
+        return settings.gestures[key] ?? defaultValue;
       }
 
       // Helper: Show rating preview badge
@@ -9198,6 +9220,117 @@ function renderComparisonResult(resultEl, comparison){
         isSwiping = false;
       }, { passive: true });
 
+    })();
+
+    // ========== GESTURE SETTINGS MANAGEMENT ==========
+    (function initGestureSettings() {
+      // Load saved settings or use defaults
+      function loadGestureSettings() {
+        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
+        if (!settings.gestures) {
+          settings.gestures = {
+            enabled: true,
+            tapToReveal: true,
+            longPressMenu: true,
+            doubleTapAudio: true,
+            velocityThreshold: 0.5
+          };
+        }
+        return settings;
+      }
+
+      // Save settings to localStorage
+      function saveGestureSettings(settings) {
+        localStorage.setItem('flashcards_settings', JSON.stringify(settings));
+      }
+
+      // Update sensitivity value display
+      function updateSensitivityDisplay(value) {
+        const display = $("#sensitivityValue");
+        if (!display) return;
+
+        let label = 'Medium';
+        if (value <= 0.3) label = 'Very Easy';
+        else if (value <= 0.4) label = 'Easy';
+        else if (value <= 0.6) label = 'Medium';
+        else if (value <= 0.8) label = 'Hard';
+        else label = 'Very Hard';
+
+        display.textContent = label;
+      }
+
+      // Initialize settings UI
+      const settings = loadGestureSettings();
+
+      // Set checkbox states
+      const enabledCheckbox = $("#settingGesturesEnabled");
+      const tapRevealCheckbox = $("#settingTapToReveal");
+      const longPressCheckbox = $("#settingLongPressMenu");
+      const doubleTapCheckbox = $("#settingDoubleTapAudio");
+
+      if (enabledCheckbox) {
+        enabledCheckbox.checked = settings.gestures.enabled;
+
+        // Toggle gesture config panel visibility
+        const configPanel = $("#gestureConfigPanel");
+        if (configPanel && !settings.gestures.enabled) {
+          configPanel.classList.add('disabled');
+        }
+
+        enabledCheckbox.addEventListener('change', (e) => {
+          settings.gestures.enabled = e.target.checked;
+          saveGestureSettings(settings);
+
+          if (configPanel) {
+            if (e.target.checked) {
+              configPanel.classList.remove('disabled');
+            } else {
+              configPanel.classList.add('disabled');
+            }
+          }
+        });
+      }
+
+      if (tapRevealCheckbox) {
+        tapRevealCheckbox.checked = settings.gestures.tapToReveal;
+        tapRevealCheckbox.addEventListener('change', (e) => {
+          settings.gestures.tapToReveal = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (longPressCheckbox) {
+        longPressCheckbox.checked = settings.gestures.longPressMenu;
+        longPressCheckbox.addEventListener('change', (e) => {
+          settings.gestures.longPressMenu = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (doubleTapCheckbox) {
+        doubleTapCheckbox.checked = settings.gestures.doubleTapAudio;
+        doubleTapCheckbox.addEventListener('change', (e) => {
+          settings.gestures.doubleTapAudio = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      // Set sensitivity slider
+      const sensitivitySlider = $("#settingSensitivity");
+      if (sensitivitySlider) {
+        sensitivitySlider.value = settings.gestures.velocityThreshold;
+        updateSensitivityDisplay(settings.gestures.velocityThreshold);
+
+        sensitivitySlider.addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          updateSensitivityDisplay(value);
+        });
+
+        sensitivitySlider.addEventListener('change', (e) => {
+          settings.gestures.velocityThreshold = parseFloat(e.target.value);
+          saveGestureSettings(settings);
+        });
+      }
     })();
 
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
