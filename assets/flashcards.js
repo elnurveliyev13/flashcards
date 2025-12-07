@@ -6756,6 +6756,37 @@ function renderComparisonResult(resultEl, comparison){
       return `<div class="transcription-text">${pieces}</div>`;
     }
 
+    function sequenceTranscriptionAutoplay(card, transSlot, audioUrl, rate){
+      if(card._transcriptionAnimated || !transSlot || !audioUrl){
+        return false;
+      }
+      const inner = transSlot.querySelector('.transcription-text');
+      if(!inner){
+        return false;
+      }
+      const playbackRate = rate || 1;
+      const playAudio = () => {
+        try{
+          player.src = audioUrl;
+          player.playbackRate = playbackRate;
+          player.currentTime = 0;
+          player.play().catch(()=>{});
+        }catch(_e){}
+      };
+      const startAnimationAndReplay = () => {
+        if(!card._transcriptionAnimated){
+          inner.classList.add('transcription-animate');
+          card._transcriptionAnimated = true;
+        }
+        playAudio();
+      };
+      player.addEventListener('ended', () => {
+        startAnimationAndReplay();
+      }, {once:true});
+      playAudio();
+      return true;
+    }
+
 
     async function buildSlot(kind, card){
       const el=document.createElement("div");
@@ -6879,8 +6910,40 @@ function renderComparisonResult(resultEl, comparison){
       }
       items.forEach(x=>slotContainer.appendChild(x));
 
-      // Trigger transcription animation only once, when it first becomes visible
-      if(!card._transcriptionAnimated){
+      const newSlot = (prevCount > 0 && count > prevCount) ? items[count - 1] : null;
+      let autoplayUrl = null;
+      let autoplayRate = 1;
+      let handledTranscriptionAutoplay = false;
+      let delayTranscriptionAnimation = false;
+      if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
+        // First opening - play first slot's audio
+        autoplayUrl = items[0].dataset.autoplay;
+        // Check if first slot is dictation - play at 0.85 speed
+        if(items[0].dataset.slotType === 'dictation'){
+          autoplayRate = 0.85;
+        }
+      } else if(newSlot){
+        const newSlotData = newSlot.dataset || {};
+        if(newSlotData.slotType === 'transcription'){
+          const prevSlot = items[count - 2];
+          const prevAutoplay = prevSlot && prevSlot.dataset && prevSlot.dataset.autoplay;
+          if(prevAutoplay){
+            if(sequenceTranscriptionAutoplay(card, newSlot, prevAutoplay, 0.7)){
+              handledTranscriptionAutoplay = true;
+              delayTranscriptionAnimation = true;
+            }
+          }
+        }
+        if(!handledTranscriptionAutoplay && newSlotData.autoplay){
+          // Play newly revealed slot's audio if it has one
+          autoplayUrl = newSlotData.autoplay;
+          // Check if new slot is dictation - play at 0.85 speed
+          if(newSlotData.slotType === 'dictation'){
+            autoplayRate = 0.85;
+          }
+        }
+      }
+      if(!delayTranscriptionAnimation && !card._transcriptionAnimated){
         const transEl = items.find(el => el.dataset && el.dataset.slotType === 'transcription');
         if(transEl){
           const inner = transEl.querySelector('.transcription-text');
@@ -6890,37 +6953,7 @@ function renderComparisonResult(resultEl, comparison){
           }
         }
       }
-      // Autoplay audio: first slot when opening card, or newly revealed slot when clicking Show More
-      let autoplayUrl = null;
-      let autoplayRate = 1;
-      if(count===1 && items[0] && items[0].dataset && items[0].dataset.autoplay){
-        // First opening - play first slot's audio
-        autoplayUrl = items[0].dataset.autoplay;
-        // Check if first slot is dictation - play at 0.85 speed
-        if(items[0].dataset.slotType === 'dictation'){
-          autoplayRate = 0.85;
-        }
-      } else if(prevCount > 0 && count > prevCount){
-        // Show More clicked
-        const newSlot = items[count - 1];
-        // Check if new slot is transcription - play previous slot's audio at 0.7 speed
-        if(newSlot && newSlot.dataset && newSlot.dataset.slotType === 'transcription'){
-          // Find previous slot's audio
-          const prevSlot = items[count - 2];
-          if(prevSlot && prevSlot.dataset && prevSlot.dataset.autoplay){
-            autoplayUrl = prevSlot.dataset.autoplay;
-            autoplayRate = 0.7;
-          }
-        } else if(newSlot && newSlot.dataset && newSlot.dataset.autoplay){
-          // Play newly revealed slot's audio if it has one
-          autoplayUrl = newSlot.dataset.autoplay;
-          // Check if new slot is dictation - play at 0.85 speed
-          if(newSlot.dataset.slotType === 'dictation'){
-            autoplayRate = 0.85;
-          }
-        }
-      }
-      if(autoplayUrl){
+      if(!handledTranscriptionAutoplay && autoplayUrl){
         player.src=autoplayUrl;
         player.playbackRate=autoplayRate;
         player.currentTime=0;
@@ -9164,12 +9197,12 @@ function renderComparisonResult(resultEl, comparison){
         if (!settings.gestures) {
           settings.gestures = {
             enabled: true,
-            swipeRight: 'easy',
-            swipeLeft: 'hard',
+            swipeRight: 'hard',
+            swipeLeft: 'easy',
             swipeDown: 'normal',
             tapToReveal: true,
             longPressMenu: true,
-            doubleTapAudio: false,
+            doubleTapAudio: true,
             velocityThreshold: 0.5
           };
         }
@@ -9248,35 +9281,6 @@ function renderComparisonResult(resultEl, comparison){
         doubleTapCheckbox.checked = settings.gestures.doubleTapAudio;
         doubleTapCheckbox.addEventListener('change', (e) => {
           settings.gestures.doubleTapAudio = e.target.checked;
-          saveGestureSettings(settings);
-        });
-      }
-
-      // Set select values
-      const swipeRightSelect = $("#settingSwipeRight");
-      const swipeLeftSelect = $("#settingSwipeLeft");
-      const swipeDownSelect = $("#settingSwipeDown");
-
-      if (swipeRightSelect) {
-        swipeRightSelect.value = settings.gestures.swipeRight;
-        swipeRightSelect.addEventListener('change', (e) => {
-          settings.gestures.swipeRight = e.target.value;
-          saveGestureSettings(settings);
-        });
-      }
-
-      if (swipeLeftSelect) {
-        swipeLeftSelect.value = settings.gestures.swipeLeft;
-        swipeLeftSelect.addEventListener('change', (e) => {
-          settings.gestures.swipeLeft = e.target.value;
-          saveGestureSettings(settings);
-        });
-      }
-
-      if (swipeDownSelect) {
-        swipeDownSelect.value = settings.gestures.swipeDown;
-        swipeDownSelect.addEventListener('change', (e) => {
-          settings.gestures.swipeDown = e.target.value;
           saveGestureSettings(settings);
         });
       }

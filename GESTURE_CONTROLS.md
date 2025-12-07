@@ -8,23 +8,23 @@ The Study tab now supports intuitive touch gestures for a more natural mobile le
 
 ## Available Gestures
 
-### 1. **Swipe Right → Rate as Easy** ⭐
-- **Action**: Mark current card as "Easy" and show next card
-- **Visual Feedback**: Card slides right with green glow
-- **Default**: Enabled (Easy rating)
-- **Customizable**: Can change to Normal/Hard/Disabled
-
-### 2. **Swipe Left → Rate as Hard**
+### 1. **Swipe Right → Rate as Hard** ⭐
 - **Action**: Mark current card as "Hard" (retry later)
-- **Visual Feedback**: Card slides left with red glow
+- **Visual Feedback**: Card slides right with red glow
 - **Default**: Enabled (Hard rating)
-- **Customizable**: Can change to Easy/Normal/Disabled
+- **Fixed**: Cannot be changed
+
+### 2. **Swipe Left → Rate as Easy**
+- **Action**: Mark current card as "Easy" and show next card
+- **Visual Feedback**: Card slides left with green glow
+- **Default**: Enabled (Easy rating)
+- **Fixed**: Cannot be changed
 
 ### 3. **Swipe Down → Rate as Normal**
 - **Action**: Mark current card as "Normal" and show next card
 - **Visual Feedback**: Card fades down with blue glow
 - **Default**: Enabled (Normal rating)
-- **Customizable**: Can change to Easy/Hard/Disabled
+- **Fixed**: Cannot be changed
 
 ### 4. **Tap Card → Reveal Next Slot**
 - **Action**: Show next content slot (replaces "Show More" button)
@@ -41,8 +41,8 @@ The Study tab now supports intuitive touch gestures for a more natural mobile le
 ### 6. **Double Tap → Replay Audio**
 - **Action**: Replay current audio slot
 - **Visual Feedback**: Audio button pulse
-- **Default**: Disabled (to avoid conflicts with mobile zoom)
-- **Note**: Only works if audio slot is visible
+- **Default**: Enabled ✅
+- **Note**: Only works if audio slot is visible. May conflict with zoom on some browsers.
 
 ---
 
@@ -53,17 +53,17 @@ Access gesture settings via the **⚙ Settings** button in the header.
 ### Global Toggle
 - **Enable swipe gestures** - Master switch for all gesture controls
 
-### Swipe Actions
-Each swipe direction can be mapped to:
-- **Easy** - Full SRS interval, advance stage
-- **Normal** - Half SRS interval, advance stage
-- **Hard** - No stage change, review tomorrow
-- **Disabled** - Swipe does nothing
+### Swipe Mapping (Fixed)
+- **Swipe Right** → Hard (retry later)
+- **Swipe Left** → Easy (advance with full interval)
+- **Swipe Down** → Normal (advance with half interval)
+
+*Note: Swipe directions cannot be customized - they are fixed for consistency.*
 
 ### Additional Options
-- **Tap card to reveal next** - Show next slot with single tap
-- **Long press for menu** - Enable/disable long press actions menu
-- **Double tap to replay audio** - Enable/disable double tap audio replay
+- **Tap card to reveal next** - Show next slot with single tap (Default: ✅ Enabled)
+- **Long press for menu** - Enable/disable long press actions menu (Default: ✅ Enabled)
+- **Double tap to replay audio** - Enable/disable double tap audio replay (Default: ✅ Enabled)
 
 ### Sensitivity
 - **Swipe Sensitivity** slider (0.3 - 1.0)
@@ -154,8 +154,9 @@ Gestures are **ignored** when touching:
 - Ensure you're not moving finger (movement cancels long press)
 
 ### Double tap conflicts with zoom?
-- Double tap audio is **disabled by default** for this reason
-- Only enable if zoom is not needed
+- Double tap audio is **enabled by default**
+- If you experience zoom conflicts, disable it in Settings
+- Most modern mobile browsers handle this correctly
 
 ---
 
