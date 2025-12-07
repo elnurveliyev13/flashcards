@@ -3679,7 +3679,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let activeTab='quickInput';
     let pendingShowMoreScroll=false;
     let studyBottomActions=null;
-    let studyMetaPanel=null;
+    let studyRecorderPanel=null;
     let tabSwitcher=null;
     let pendingStudyRender=false;
     function loadState(){state=JSON.parse(localStorage.getItem(storageKey(STORAGE_STATE))||'{"active":{},"decks":{},"hidden":{}}'); registry=JSON.parse(localStorage.getItem(storageKey(STORAGE_REG))||'{}');}
@@ -7020,28 +7020,37 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
       return true;
     }
+    const revealButton = $("#btnRevealNext");
     const bottomActionButtonsConfig = [
       { el: $("#btnEasyBottom"), handler: rateEasy },
       { el: $("#btnNormalBottom"), handler: rateNormal },
       { el: $("#btnHardBottom"), handler: rateHard }
     ].filter(cfg => cfg.el);
     const bottomActionButtons = bottomActionButtonsConfig.map(cfg => cfg.el);
-    function setBottomActionsEnabled(enabled){
+    function setRatingButtonsState(active){
       bottomActionButtons.forEach(btn => {
-        btn.disabled = !enabled;
+        btn.hidden = !active;
+        btn.disabled = !active;
       });
+    }
+    setRatingButtonsState(false);
+    if(revealButton){
+      revealButton.hidden = true;
     }
     function updateRevealButton(){
       const allSlotsRevealed = currentItem && currentItem.card._availableSlots && visibleSlots >= currentItem.card._availableSlots;
       const promptIsVisible = slotContainer.querySelector('.inline-field-prompt');
       const canShowPrompt = allSlotsRevealed && !promptIsVisible && currentItem && currentItem.card && currentItem.card.scope === 'private';
       const more = (currentItem && currentItem.card._availableSlots && visibleSlots < currentItem.card._availableSlots) || canShowPrompt;
-      const br=$("#btnRevealNext");
-      if(br){
-        br.disabled=!more;
-        br.classList.toggle("primary",!!more);
+      const hasCard = !!currentItem;
+      const showReveal = hasCard && !!more;
+      const showRatings = hasCard && !more;
+      if(revealButton){
+        revealButton.disabled=!showReveal;
+        revealButton.classList.toggle("primary",!!showReveal);
+        revealButton.hidden = !showReveal;
       }
-      setBottomActionsEnabled(!more);
+      setRatingButtonsState(showRatings);
     }
     async function showCurrent(forceRender=false, prevSlots=0){
       if(!currentItem){
@@ -7074,7 +7083,7 @@ function renderComparisonResult(resultEl, comparison){
       const container = root.querySelector('#slotContainer');
       if(!container) return;
       const rect = container.getBoundingClientRect();
-      const metaHeight = (studyMetaPanel && !studyMetaPanel.classList.contains('hidden'))
+      const metaHeight = (studyRecorderPanel && !studyRecorderPanel.classList.contains('hidden'))
         ? studyMetaPanel.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
@@ -9560,9 +9569,9 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       const bottomActions = document.getElementById('bottomActions');
-      const metaPanel = document.getElementById('metaPanel');
+      const recorderPanel = document.getElementById('studyRecorderPanel');
       studyBottomActions = bottomActions;
-      studyMetaPanel = metaPanel;
+      studyRecorderPanel = recorderPanel;
 
       function refreshBottomPanelStackMetrics() {
         if (!root) {
@@ -9572,8 +9581,8 @@ function renderComparisonResult(resultEl, comparison){
           ? Math.round(bottomActions.getBoundingClientRect().height) : 0;
         root.style.setProperty('--bottom-actions-stack-offset', `${bottomHeight}px`);
 
-        const metaHeight = (metaPanel && !metaPanel.classList.contains('hidden'))
-          ? Math.round(metaPanel.getBoundingClientRect().height) : 0;
+         const metaHeight = (recorderPanel && !recorderPanel.classList.contains('hidden'))
+           ? Math.round(recorderPanel.getBoundingClientRect().height) : 0;
         root.style.setProperty('--meta-panel-height', `${metaHeight}px`);
       }
 
@@ -9691,17 +9700,17 @@ function renderComparisonResult(resultEl, comparison){
             if (root) root.removeAttribute('data-bottom-visible');
           }
         }
-        if (metaPanel) {
-          if (tabName === 'study') {
-            metaPanel.classList.remove('hidden');
-            metaPanel.removeAttribute('hidden');
-            metaPanel.style.display = '';
-          } else {
-            metaPanel.classList.add('hidden');
-            metaPanel.setAttribute('hidden', 'hidden');
-            metaPanel.style.display = 'none';
-          }
-        }
+         if (recorderPanel) {
+           if (tabName === 'study') {
+             recorderPanel.classList.remove('hidden');
+             recorderPanel.removeAttribute('hidden');
+             recorderPanel.style.display = '';
+           } else {
+             recorderPanel.classList.add('hidden');
+             recorderPanel.setAttribute('hidden', 'hidden');
+             recorderPanel.style.display = 'none';
+           }
+         }
         queueBottomPanelStackRefresh();
 
         activeTab = tabName;
