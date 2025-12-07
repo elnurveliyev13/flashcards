@@ -1919,7 +1919,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   position:fixed;
   left:50%;
   transform:translateX(-50%);
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-actions-stack-offset));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--bottom-actions-stack-offset) - 78px);
   width:auto;
   min-width:0;
   padding:0 6px;
@@ -1927,6 +1927,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   border:none;
   box-shadow:none;
   z-index:1300;
+  pointer-events:auto;
 }
 
 .bottom-recorder{
@@ -1935,7 +1936,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   align-items:center;
   justify-content:center;
   padding:0;
-  pointer-events:auto;
+  pointer-events:none;
 }
 
 .bottom-recorder #metaRecorder{
@@ -1947,6 +1948,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   justify-content:center;
   position:relative;
   background:transparent;
+  pointer-events:auto;
 }
 .bottom-recorder #metaRecorder .iconbtn{
   width:auto;
@@ -1972,7 +1974,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   min-height:auto;
   border-radius:50%;
   padding:0;
-  opacity:0.5;
+  opacity:0.8;
   border:1px solid rgba(255,255,255,0.45);
   background:linear-gradient(145deg, rgba(99,102,241,0.32), rgba(15,23,42,0.85));
   box-shadow:
@@ -1985,10 +1987,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   font-size:3.2rem !important;
   line-height:1;
   flex:0 0 auto;
+  pointer-events:auto;
+  z-index:1305;
 }
 .bottom-recorder #btnRecordStudy:hover,
 .bottom-recorder #btnRecordStudy:focus-visible{
-  opacity:0;
+  opacity:1;
   transform:translateY(-2px);
   box-shadow:
     0 14px 36px rgba(15,23,42,0.85),
