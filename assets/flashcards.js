@@ -3728,7 +3728,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
-    let audioURL=null; const player=new Audio();
+let audioURL=null; const player=new Audio();
+let lastStudyAudioUrl=null;
+let lastStudyAudioRate=1;
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[];
     let lastAudioDurationSec=0;
     let privateAudioOnly=false;
@@ -5078,9 +5080,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     function playAudioFromUrl(url, rate){
       if(!url) return;
+      const rateValue = Number(rate);
+      const playbackRate = Number.isFinite(rateValue) ? rateValue : 1;
+      lastStudyAudioUrl = url;
+      lastStudyAudioRate = playbackRate;
       try{
         player.src = url;
-        player.playbackRate = rate || 1;
+        player.playbackRate = playbackRate;
         player.currentTime = 0;
         player.play().catch(()=>{});
       }catch(_e){}
@@ -6908,6 +6914,8 @@ function renderComparisonResult(resultEl, comparison){
       slotContainer.innerHTML="";
       hidePlayIcons();
       audioURL=null;
+      lastStudyAudioUrl=null;
+      lastStudyAudioRate=1;
       const allSlots=[];
       for(const kind of card.order){
         console.log('[DEBUG renderCard] Building slot for kind:', kind);
@@ -6947,12 +6955,7 @@ function renderComparisonResult(resultEl, comparison){
           if(prevAutoplay){
             handledTranscriptionAutoplay = true;
             transcriptionAnimationPromise.then(() => {
-              try{
-                player.src=prevAutoplay;
-                player.playbackRate=0.7;
-                player.currentTime=0;
-                player.play().catch(()=>{});
-              }catch(_e){}
+              playAudioFromUrl(prevAutoplay, 0.7);
             });
           }
         }
@@ -6966,10 +6969,7 @@ function renderComparisonResult(resultEl, comparison){
         }
       }
       if(!handledTranscriptionAutoplay && autoplayUrl){
-        player.src=autoplayUrl;
-        player.playbackRate=autoplayRate;
-        player.currentTime=0;
-        player.play().catch(()=>{});
+        playAudioFromUrl(autoplayUrl, autoplayRate);
       }
       card._availableSlots=allSlots.length;
 
@@ -8989,6 +8989,11 @@ function renderComparisonResult(resultEl, comparison){
       // Helper: Handle double tap (play audio)
       function handleDoubleTap(e) {
         if (!getGestureSetting('doubleTapAudio', false)) return;
+
+        if (lastStudyAudioUrl) {
+          playAudioFromUrl(lastStudyAudioUrl, lastStudyAudioRate);
+          return;
+        }
 
         // Find and click play button
         const playBtn = $("#btnPlay");
