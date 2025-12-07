@@ -2047,6 +2047,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let translationDebounce = null;
     let translationAbortController = null;
     let translationRequestSeq = 0;
+    // Front-side autocomplete (ordbokene + local ordbank)
+    const FRONT_SUGGEST_DEBOUNCE = 170;
+    const frontSuggestCache = {};
+    let frontSuggestTimer = null;
+    let frontSuggestRequestSeq = 0;
+    let frontSuggestActive = '';
+    let frontSuggestRendered = '';
+    let frontSuggestAbort = null;
+    let frontSuggestScheduledQuery = '';
     // Translation toggle removed - translation is always visible
     updateTranslationLangUI();
     translationButtons.forEach(btn=>{
@@ -2098,16 +2107,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');
     applyTranslationDirection('no-user');
-
-    // Front-side autocomplete (ordbokene + local ordbank)
-    const FRONT_SUGGEST_DEBOUNCE = 170;
-    const frontSuggestCache = {};
-    let frontSuggestTimer = null;
-    let frontSuggestRequestSeq = 0;
-    let frontSuggestActive = '';
-    let frontSuggestRendered = '';
-    let frontSuggestAbort = null;
-    let frontSuggestScheduledQuery = '';
 
     function currentFrontQuery(){
       if(!frontInput){
