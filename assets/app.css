@@ -4424,6 +4424,11 @@ select.inline-prompt-field {
   padding-right: 0 !important;
 }
 
+[data-dictation-id="dictation-nt3i91zwd"].dictation-exercise {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
 .dictation-input-wrapper {
   margin: 0;
 }
