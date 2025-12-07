@@ -1978,7 +1978,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .bottom-recorder #btnRecordStudy:hover,
 .bottom-recorder #btnRecordStudy:focus-visible{
-  opacity:0.85;
+  opacity:0;
   transform:translateY(-2px);
   box-shadow:
     0 14px 36px rgba(15,23,42,0.85),
