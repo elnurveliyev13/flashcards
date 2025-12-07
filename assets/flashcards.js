@@ -6750,7 +6750,7 @@ function renderComparisonResult(resultEl, comparison){
       pushSyllable(false);
 
       const pieces=tokens.map((t,i)=>{
-        const delay=i*2000; // 2s pause between syllables
+        const delay=i*1500; // 1.5s pause between syllables
         return `<span class="transcription-piece transcription-piece--drop" style="animation-delay:${delay}ms">${escapeHtml(t)}</span>`;
       }).join('');
 
@@ -7020,6 +7020,17 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
       return true;
     }
+    const bottomActionButtonsConfig = [
+      { el: $("#btnEasyBottom"), handler: rateEasy },
+      { el: $("#btnNormalBottom"), handler: rateNormal },
+      { el: $("#btnHardBottom"), handler: rateHard }
+    ].filter(cfg => cfg.el);
+    const bottomActionButtons = bottomActionButtonsConfig.map(cfg => cfg.el);
+    function setBottomActionsEnabled(enabled){
+      bottomActionButtons.forEach(btn => {
+        btn.disabled = !enabled;
+      });
+    }
     function updateRevealButton(){
       const allSlotsRevealed = currentItem && currentItem.card._availableSlots && visibleSlots >= currentItem.card._availableSlots;
       const promptIsVisible = slotContainer.querySelector('.inline-field-prompt');
@@ -7030,6 +7041,7 @@ function renderComparisonResult(resultEl, comparison){
         br.disabled=!more;
         br.classList.toggle("primary",!!more);
       }
+      setBottomActionsEnabled(!more);
     }
     async function showCurrent(forceRender=false, prevSlots=0){
       if(!currentItem){
@@ -7176,12 +7188,12 @@ function renderComparisonResult(resultEl, comparison){
     });
 
     // Fallback handlers for bottom action bar (work even if flashcards-ux.js is not loaded)
-    const _btnEasyBottom = $("#btnEasyBottom");
-    const _btnNormalBottom = $("#btnNormalBottom");
-    const _btnHardBottom = $("#btnHardBottom");
-    if(_btnEasyBottom && !_btnEasyBottom.dataset.bound){ _btnEasyBottom.dataset.bound = '1'; _btnEasyBottom.addEventListener('click', e=>{ e.preventDefault(); rateEasy(); }); _btnEasyBottom.disabled = false; }
-    if(_btnNormalBottom && !_btnNormalBottom.dataset.bound){ _btnNormalBottom.dataset.bound = '1'; _btnNormalBottom.addEventListener('click', e=>{ e.preventDefault(); rateNormal(); }); _btnNormalBottom.disabled = false; }
-    if(_btnHardBottom && !_btnHardBottom.dataset.bound){ _btnHardBottom.dataset.bound = '1'; _btnHardBottom.addEventListener('click', e=>{ e.preventDefault(); rateHard(); }); _btnHardBottom.disabled = false; }
+    bottomActionButtonsConfig.forEach(({el, handler})=>{
+      if(el.dataset.bound) return;
+      el.dataset.bound = '1';
+      el.addEventListener('click', e => { e.preventDefault(); handler(); });
+      el.disabled = false;
+    });
 
     // Keep bottom action bar aligned to content width (avoids overflow on Android themes)
     function syncBottomBarWidth(){
