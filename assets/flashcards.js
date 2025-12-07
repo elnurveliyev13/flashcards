@@ -8886,10 +8886,21 @@ function renderComparisonResult(resultEl, comparison){
       const studySection = $("#studySection");
       if (!studySection) return;
 
-      // Get gesture settings (with defaults)
+      // Fixed gesture settings (not customizable by users)
+      const GESTURE_SETTINGS = {
+        enabled: true,
+        swipeRight: 'hard',
+        swipeLeft: 'easy',
+        swipeDown: 'normal',
+        tapToReveal: true,
+        longPressMenu: true,
+        doubleTapAudio: true,
+        velocityThreshold: 0.5
+      };
+
+      // Get gesture setting (returns fixed values)
       function getGestureSetting(key, defaultValue) {
-        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
-        return settings.gestures?.[key] ?? defaultValue;
+        return GESTURE_SETTINGS[key] ?? defaultValue;
       }
 
       // Helper: Show rating preview badge
@@ -9187,120 +9198,6 @@ function renderComparisonResult(resultEl, comparison){
         isSwiping = false;
       }, { passive: true });
 
-    })();
-
-    // ========== GESTURE SETTINGS MANAGEMENT ==========
-    (function initGestureSettings() {
-      // Load saved settings or use defaults
-      function loadGestureSettings() {
-        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
-        if (!settings.gestures) {
-          settings.gestures = {
-            enabled: true,
-            swipeRight: 'hard',
-            swipeLeft: 'easy',
-            swipeDown: 'normal',
-            tapToReveal: true,
-            longPressMenu: true,
-            doubleTapAudio: true,
-            velocityThreshold: 0.5
-          };
-        }
-        return settings;
-      }
-
-      // Save settings to localStorage
-      function saveGestureSettings(settings) {
-        localStorage.setItem('flashcards_settings', JSON.stringify(settings));
-      }
-
-      // Update sensitivity value display
-      function updateSensitivityDisplay(value) {
-        const display = $("#sensitivityValue");
-        if (!display) return;
-
-        let label = 'Medium';
-        if (value <= 0.3) label = 'Very Easy';
-        else if (value <= 0.4) label = 'Easy';
-        else if (value <= 0.6) label = 'Medium';
-        else if (value <= 0.8) label = 'Hard';
-        else label = 'Very Hard';
-
-        display.textContent = label;
-      }
-
-      // Initialize settings UI
-      const settings = loadGestureSettings();
-
-      // Set checkbox states
-      const enabledCheckbox = $("#settingGesturesEnabled");
-      const tapRevealCheckbox = $("#settingTapToReveal");
-      const longPressCheckbox = $("#settingLongPressMenu");
-      const doubleTapCheckbox = $("#settingDoubleTapAudio");
-
-      if (enabledCheckbox) {
-        enabledCheckbox.checked = settings.gestures.enabled;
-
-        // Toggle gesture config panel visibility
-        const configPanel = $("#gestureConfigPanel");
-        if (configPanel && !settings.gestures.enabled) {
-          configPanel.classList.add('disabled');
-        }
-
-        enabledCheckbox.addEventListener('change', (e) => {
-          settings.gestures.enabled = e.target.checked;
-          saveGestureSettings(settings);
-
-          if (configPanel) {
-            if (e.target.checked) {
-              configPanel.classList.remove('disabled');
-            } else {
-              configPanel.classList.add('disabled');
-            }
-          }
-        });
-      }
-
-      if (tapRevealCheckbox) {
-        tapRevealCheckbox.checked = settings.gestures.tapToReveal;
-        tapRevealCheckbox.addEventListener('change', (e) => {
-          settings.gestures.tapToReveal = e.target.checked;
-          saveGestureSettings(settings);
-        });
-      }
-
-      if (longPressCheckbox) {
-        longPressCheckbox.checked = settings.gestures.longPressMenu;
-        longPressCheckbox.addEventListener('change', (e) => {
-          settings.gestures.longPressMenu = e.target.checked;
-          saveGestureSettings(settings);
-        });
-      }
-
-      if (doubleTapCheckbox) {
-        doubleTapCheckbox.checked = settings.gestures.doubleTapAudio;
-        doubleTapCheckbox.addEventListener('change', (e) => {
-          settings.gestures.doubleTapAudio = e.target.checked;
-          saveGestureSettings(settings);
-        });
-      }
-
-      // Set sensitivity slider
-      const sensitivitySlider = $("#settingSensitivity");
-      if (sensitivitySlider) {
-        sensitivitySlider.value = settings.gestures.velocityThreshold;
-        updateSensitivityDisplay(settings.gestures.velocityThreshold);
-
-        sensitivitySlider.addEventListener('input', (e) => {
-          const value = parseFloat(e.target.value);
-          updateSensitivityDisplay(value);
-        });
-
-        sensitivitySlider.addEventListener('change', (e) => {
-          settings.gestures.velocityThreshold = parseFloat(e.target.value);
-          saveGestureSettings(settings);
-        });
-      }
     })();
 
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
