@@ -129,6 +129,8 @@ html[data-font-size="extra-large"] {
   --radius-xl: 16px;
 
   --header-row-height: 34px;
+  --fc-tabs-height: 38px;
+  --fc-tabs-gap: 4px;
   /* Keep a 960px minimum but let desktop stretch with a small viewport gutter */
   --app-content-max-width: max(960px, calc(100vw - (var(--space-2) * 2)));
   --bottom-actions-stack-offset: 72px;
@@ -2323,140 +2325,132 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   );
 }
 
-/* === Mobile overrides (bottom bars & tabs) === */
-@media (max-width: 720px){
-  :root{
-    --fc-tabs-height: 38px;
-    --fc-tabs-gap: 4px;
-  }
+/* === Fixed bottom tabs (all viewports) === */
+.wrap{
+  padding-bottom: 0;
+}
 
-  .wrap{
-    padding-bottom: 0;
-  }
+/* Keep dashboard content clear of the fixed bottom tabs. */
+.fc-dashboard-wrap {
+  padding-bottom: calc(
+    var(--space-2)
+    + var(--fc-tabs-height)
+    + env(safe-area-inset-bottom, 0px)
+    + var(--bottom-actions-stack-offset, 0px)
+    + var(--meta-panel-height, 0px)
+  );
+}
 
-  /* Keep dashboard content clear of the fixed bottom tabs on mobile. */
-  .fc-dashboard-wrap {
-    padding-bottom: calc(
-      var(--space-2)
-      + var(--fc-tabs-height)
-      + env(safe-area-inset-bottom, 0px)
-      + var(--bottom-actions-stack-offset, 0px)
-      + var(--meta-panel-height, 0px)
-    );
-  }
+.tabs-toolbar .fc-tabs{
+  display: flex;
+  position: fixed !important;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px));
+  width: 100vw;
+  transform: none;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.4) 6px;
+  margin: 0;
+  border-radius: 0;
+  border: 0;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  background: rgba(10,16,26,0.98);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 -10px 22px rgba(0,0,0,0.35);
+  backdrop-filter: blur(12px);
+  gap: 4px;
+  align-items: center;
+  z-index: 2200;
+  min-height: var(--fc-tabs-height);
+  box-sizing: border-box;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 
-  .tabs-toolbar .fc-tabs{
-    --fc-tabs-height: 38px;
-    display: flex;
-    position: fixed !important;
-    left: 0;
-    right: 0;
-    bottom: calc(env(safe-area-inset-bottom, 0px));
-    width: 100vw;
-    transform: none;
-    padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.4) 6px;
-    margin: 0;
-    border-radius: 0;
-    border: 0;
-    border-top: 1px solid rgba(255,255,255,0.22);
-    background: rgba(10,16,26,0.98);
-    box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.12),
-      0 -10px 22px rgba(0,0,0,0.35);
-    backdrop-filter: blur(12px);
-    gap: 4px;
-    align-items: center;
-    z-index: 2200;
-    min-height: var(--fc-tabs-height);
-    box-sizing: border-box;
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-  }
+.fc-tab{
+  border-radius: 12px;
+  padding: 6px 8px;
+  min-height: 34px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: clamp(11.5px, 3vw, 13.5px);
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 0;
+  margin: 0;
+}
+.fc-tab::after{ display: none; }
+.fc-tab.fc-tab-active{
+  background: var(--surface-2);
+  border-color: var(--border);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+.fc-tab-icon{
+  font-size: 1.2rem;
+}
+#tabStudy{ flex: 1.25 1 0; min-width: 0; }
 
-  .fc-tab{
-    border-radius: 12px;
-    padding: 6px 8px;
-    min-height: 34px;
-    background: transparent;
-    border: 1px solid transparent;
-    font-size: clamp(11.5px, 3vw, 13.5px);
-    gap: 4px;
-    min-width: 0;
-    flex: 1 1 0;
-    margin: 0;
-  }
-  .fc-tab::after{ display: none; }
-  .fc-tab.fc-tab-active{
-    background: var(--surface-2);
-    border-color: var(--border);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
-  }
-  .fc-tab-icon{
-    font-size: 1.2rem;
-  }
-  #tabStudy{ flex: 1.25 1 0; min-width: 0; }
+#editActionsBar{
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  width: 100vw !important;
+  max-width: 100vw;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px) !important;
+  z-index: 2200 !important;
+  box-sizing: border-box;
+  margin: 0;
+  border-top: hidden;
+  border-bottom: 3px groove rgba(168,143,89,0.31);
+  border-radius: 0;
+  background: rgba(10,16,26,0.98);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  visibility: hidden;
+  pointer-events: none;
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  #editActionsBar{
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    transform: none !important;
-    width: 100vw !important;
-    max-width: 100vw;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px) !important;
-    z-index: 2200 !important;
-    box-sizing: border-box;
-    margin: 0;
-    border-top: hidden;
-    border-bottom: 3px groove rgba(168,143,89,0.31);
-    border-radius: 0;
-    background: rgba(10,16,26,0.98);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
-    visibility: hidden;
-    pointer-events: none;
-    padding: 4px 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+#bottomActions{
+  position: fixed;
+  left: 0;
+  right: 0;
+  transform: none;
+  width: 100vw;
+  max-width: 100vw;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px);
+  z-index: 2200;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 8px 4px 8px;
+  border-radius: 0;
+  display:flex;
+  justify-content:center;
+  background: rgba(5, 6, 14, 0.16);
+  border-top: hidden;
+  border-bottom: 3px groove rgba(168,143,89,0.31);
+  box-shadow: 0 -1px 5px rgba(0,0,0,0.12);
+  gap: 6px;
+}
 
-  #bottomActions{
-    position: fixed;
-    left: 0;
-    right: 0;
-    transform: none;
-    width: 100vw;
-    max-width: 100vw;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px);
-    z-index: 2200;
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0 8px 4px 8px;
-    border-radius: 0;
-    display:flex;
-    justify-content:center;
-    background: rgba(5, 6, 14, 0.16);
-    border-top: hidden;
-    border-bottom: 3px groove rgba(168,143,89,0.31);
-    box-shadow: 0 -1px 5px rgba(0,0,0,0.12);
-    gap: 6px;
-  }
+#mod_flashcards_container[data-edit-bar-visible] #editActionsBar{
+  visibility: visible !important;
+  pointer-events: auto;
+}
 
-  #mod_flashcards_container[data-edit-bar-visible] #editActionsBar{
-    visibility: visible !important;
-    pointer-events: auto;
-  }
-
-  #editActionsBar button,
-  #bottomActions button{
-    padding: 4px 12px 4px; /* symmetric vertical padding */
-    min-height: 32px;
-    line-height: 1.2;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
+#editActionsBar button,
+#bottomActions button{
+  padding: 4px 12px 4px; /* symmetric vertical padding */
+  min-height: 32px;
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 
