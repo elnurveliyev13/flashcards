@@ -2093,11 +2093,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
     }
+    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
+    const countWords = (text)=> (text.match(wordRegex) || []).length;
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');
     applyTranslationDirection('no-user');
-    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
-    const countWords = (text)=> (text.match(wordRegex) || []).length;
 
     // Front-side autocomplete (ordbokene + local ordbank)
     const FRONT_SUGGEST_DEBOUNCE = 170;
@@ -7084,7 +7084,7 @@ function renderComparisonResult(resultEl, comparison){
       if(!container) return;
       const rect = container.getBoundingClientRect();
       const metaHeight = (studyRecorderPanel && !studyRecorderPanel.classList.contains('hidden'))
-        ? studyMetaPanel.getBoundingClientRect().height : 0;
+        ? studyRecorderPanel.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
       const safeGap = 14;
