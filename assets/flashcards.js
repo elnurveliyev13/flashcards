@@ -8831,6 +8831,465 @@ function renderComparisonResult(resultEl, comparison){
 
     document.addEventListener("keydown",e=>{ if($("#listModal").style.display==="flex") return; const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||e.target.isContentEditable) return; if(e.code==="Space"){ e.preventDefault(); const br=$("#btnRevealNext"); if(br && !br.disabled) br.click(); } if(e.key==="e"||e.key==="E") rateEasy(); if(e.key==="n"||e.key==="N") rateNormal(); if(e.key==="h"||e.key==="H") rateHard(); });
 
+    // ========== GESTURE CONTROLS ==========
+    (function initGestures() {
+      let touchStartX = null;
+      let touchStartY = null;
+      let touchStartTime = null;
+      let isSwiping = false;
+      let longPressTimer = null;
+      let tapCount = 0;
+      let tapTimer = null;
+
+      const studySection = $("#studySection");
+      if (!studySection) return;
+
+      // Get gesture settings (with defaults)
+      function getGestureSetting(key, defaultValue) {
+        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
+        return settings.gestures?.[key] ?? defaultValue;
+      }
+
+      // Helper: Show rating preview badge
+      function showPreview(rating) {
+        const existing = document.querySelector('.rating-preview');
+        if (existing) existing.remove();
+
+        const badge = document.createElement('div');
+        badge.className = `rating-preview ${rating}`;
+        const labels = { easy: 'EASY', normal: 'NORMAL', hard: 'HARD' };
+        badge.textContent = labels[rating] || rating.toUpperCase();
+        document.body.appendChild(badge);
+
+        setTimeout(() => badge.remove(), 200);
+      }
+
+      // Helper: Animate swipe
+      function animateSwipe(direction, callback) {
+        const container = $("#slotContainer");
+        if (!container) return;
+
+        container.classList.add(`swipe-${direction}`);
+
+        // Visual feedback colors
+        const colors = {
+          right: '0 0 40px rgba(76, 175, 80, 0.6)',
+          left: '0 0 40px rgba(244, 67, 54, 0.6)',
+          down: '0 0 40px rgba(33, 150, 243, 0.6)'
+        };
+        container.style.boxShadow = colors[direction] || '';
+
+        setTimeout(() => {
+          callback();
+          container.classList.remove(`swipe-${direction}`);
+          resetCardPosition();
+        }, 300);
+      }
+
+      // Helper: Reset card position
+      function resetCardPosition() {
+        const container = $("#slotContainer");
+        if (!container) return;
+        container.style.transform = '';
+        container.style.boxShadow = '';
+      }
+
+      // Helper: Handle tap
+      function handleTap(e) {
+        // Ignore taps on interactive elements
+        if (e.target.closest('.iconbtn, input, textarea, select, .playRow, button, a')) {
+          return;
+        }
+
+        // Check if tap-to-reveal is enabled
+        if (!getGestureSetting('tapToReveal', true)) return;
+
+        // Show next slot
+        const revealBtn = $("#btnRevealNext");
+        if (revealBtn && !revealBtn.classList.contains('hidden') && !revealBtn.disabled) {
+          revealBtn.click();
+        }
+      }
+
+      // Helper: Handle double tap (play audio)
+      function handleDoubleTap(e) {
+        if (!getGestureSetting('doubleTapAudio', false)) return;
+
+        // Find and click play button
+        const playBtn = $("#btnPlay");
+        if (playBtn && !playBtn.classList.contains('hidden')) {
+          playBtn.click();
+        }
+      }
+
+      // Helper: Show actions menu
+      function showActionsMenu(x, y) {
+        if (!getGestureSetting('longPressMenu', true)) return;
+
+        // Remove existing menu
+        const existing = document.querySelector('.gesture-actions-menu');
+        if (existing) existing.remove();
+
+        const menu = document.createElement('div');
+        menu.className = 'gesture-actions-menu';
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+
+        const actions = [
+          { label: 'Edit Card', icon: '✏️', handler: () => { $("#btnEdit").click(); } },
+          { label: 'Delete Card', icon: '🗑️', handler: () => { $("#btnDel").click(); } },
+          { label: 'Card List', icon: '📋', handler: () => { $("#btnList").click(); } }
+        ];
+
+        actions.forEach(action => {
+          const btn = document.createElement('button');
+          btn.className = 'gesture-menu-btn';
+          btn.innerHTML = `<span class="gesture-menu-icon">${action.icon}</span><span>${action.label}</span>`;
+          btn.addEventListener('click', () => {
+            action.handler();
+            menu.remove();
+          });
+          menu.appendChild(btn);
+        });
+
+        // Close on outside click
+        setTimeout(() => {
+          document.addEventListener('click', function closeMenu(e) {
+            if (!menu.contains(e.target)) {
+              menu.remove();
+              document.removeEventListener('click', closeMenu);
+            }
+          });
+        }, 100);
+
+        document.body.appendChild(menu);
+      }
+
+      // Touch start handler
+      studySection.addEventListener('touchstart', (e) => {
+        // Ignore if modal is open
+        if ($("#listModal").style.display === "flex") return;
+
+        // Ignore if touching interactive elements
+        if (e.target.closest('.iconbtn, input, textarea, select, button, a')) return;
+
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+        isSwiping = false;
+
+        // Start long-press timer
+        longPressTimer = setTimeout(() => {
+          if (!isSwiping) {
+            const touch = e.touches[0];
+            showActionsMenu(touch.clientX, touch.clientY);
+
+            // Haptic feedback if supported
+            if (navigator.vibrate) {
+              navigator.vibrate(50);
+            }
+          }
+        }, 500);
+      }, { passive: true });
+
+      // Touch move handler
+      studySection.addEventListener('touchmove', (e) => {
+        if (touchStartX === null || touchStartY === null) return;
+
+        // Clear long-press timer
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const deltaY = e.touches[0].clientY - touchStartY;
+
+        const container = $("#slotContainer");
+        if (!container) return;
+
+        // Show visual feedback during swipe
+        if (Math.abs(deltaX) > 30 || Math.abs(deltaY) > 30) {
+          isSwiping = true;
+
+          // Apply transform
+          const rotation = deltaX * 0.05; // Subtle rotation
+          container.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotation}deg)`;
+
+          // Show preview based on direction
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Horizontal swipe
+            if (deltaX > 50) {
+              const action = getGestureSetting('swipeRight', 'easy');
+              if (action !== 'disabled') showPreview(action);
+            } else if (deltaX < -50) {
+              const action = getGestureSetting('swipeLeft', 'hard');
+              if (action !== 'disabled') showPreview(action);
+            }
+          } else {
+            // Vertical swipe
+            if (deltaY > 50) {
+              const action = getGestureSetting('swipeDown', 'normal');
+              if (action !== 'disabled') showPreview(action);
+            }
+          }
+        }
+      }, { passive: true });
+
+      // Touch end handler
+      studySection.addEventListener('touchend', (e) => {
+        if (touchStartX === null || touchStartY === null) {
+          return;
+        }
+
+        // Clear long-press timer
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        const deltaTime = Date.now() - touchStartTime;
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        const velocity = distance / deltaTime;
+
+        const velocityThreshold = getGestureSetting('velocityThreshold', 0.5);
+
+        // Check if gestures are enabled
+        if (!getGestureSetting('enabled', true)) {
+          resetCardPosition();
+          touchStartX = touchStartY = null;
+          return;
+        }
+
+        // Detect gesture type
+        if (velocity > velocityThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+          // Horizontal swipe
+          if (deltaX > 100) {
+            // Swipe right
+            const action = getGestureSetting('swipeRight', 'easy');
+            if (action === 'easy') {
+              animateSwipe('right', () => rateEasy());
+            } else if (action === 'normal') {
+              animateSwipe('right', () => rateNormal());
+            } else if (action === 'hard') {
+              animateSwipe('right', () => rateHard());
+            } else {
+              resetCardPosition();
+            }
+          } else if (deltaX < -100) {
+            // Swipe left
+            const action = getGestureSetting('swipeLeft', 'hard');
+            if (action === 'easy') {
+              animateSwipe('left', () => rateEasy());
+            } else if (action === 'normal') {
+              animateSwipe('left', () => rateNormal());
+            } else if (action === 'hard') {
+              animateSwipe('left', () => rateHard());
+            } else {
+              resetCardPosition();
+            }
+          } else {
+            resetCardPosition();
+          }
+        } else if (velocity > velocityThreshold && deltaY > 100) {
+          // Swipe down
+          const action = getGestureSetting('swipeDown', 'normal');
+          if (action === 'easy') {
+            animateSwipe('down', () => rateEasy());
+          } else if (action === 'normal') {
+            animateSwipe('down', () => rateNormal());
+          } else if (action === 'hard') {
+            animateSwipe('down', () => rateHard());
+          } else {
+            resetCardPosition();
+          }
+        } else if (!isSwiping && deltaTime < 300 && distance < 10) {
+          // Tap gesture
+          tapCount++;
+
+          if (tapCount === 1) {
+            // Wait for potential double tap
+            tapTimer = setTimeout(() => {
+              // Single tap
+              handleTap(e);
+              tapCount = 0;
+            }, 300);
+          } else if (tapCount === 2) {
+            // Double tap
+            clearTimeout(tapTimer);
+            handleDoubleTap(e);
+            tapCount = 0;
+          }
+
+          resetCardPosition();
+        } else {
+          // Gesture not recognized, reset
+          resetCardPosition();
+        }
+
+        // Reset
+        touchStartX = touchStartY = null;
+        isSwiping = false;
+      }, { passive: true });
+
+      // Cancel gesture on touch cancel
+      studySection.addEventListener('touchcancel', () => {
+        if (longPressTimer) {
+          clearTimeout(longPressTimer);
+          longPressTimer = null;
+        }
+        resetCardPosition();
+        touchStartX = touchStartY = null;
+        isSwiping = false;
+      }, { passive: true });
+
+    })();
+
+    // ========== GESTURE SETTINGS MANAGEMENT ==========
+    (function initGestureSettings() {
+      // Load saved settings or use defaults
+      function loadGestureSettings() {
+        const settings = JSON.parse(localStorage.getItem('flashcards_settings') || '{}');
+        if (!settings.gestures) {
+          settings.gestures = {
+            enabled: true,
+            swipeRight: 'easy',
+            swipeLeft: 'hard',
+            swipeDown: 'normal',
+            tapToReveal: true,
+            longPressMenu: true,
+            doubleTapAudio: false,
+            velocityThreshold: 0.5
+          };
+        }
+        return settings;
+      }
+
+      // Save settings to localStorage
+      function saveGestureSettings(settings) {
+        localStorage.setItem('flashcards_settings', JSON.stringify(settings));
+      }
+
+      // Update sensitivity value display
+      function updateSensitivityDisplay(value) {
+        const display = $("#sensitivityValue");
+        if (!display) return;
+
+        let label = 'Medium';
+        if (value <= 0.3) label = 'Very Easy';
+        else if (value <= 0.4) label = 'Easy';
+        else if (value <= 0.6) label = 'Medium';
+        else if (value <= 0.8) label = 'Hard';
+        else label = 'Very Hard';
+
+        display.textContent = label;
+      }
+
+      // Initialize settings UI
+      const settings = loadGestureSettings();
+
+      // Set checkbox states
+      const enabledCheckbox = $("#settingGesturesEnabled");
+      const tapRevealCheckbox = $("#settingTapToReveal");
+      const longPressCheckbox = $("#settingLongPressMenu");
+      const doubleTapCheckbox = $("#settingDoubleTapAudio");
+
+      if (enabledCheckbox) {
+        enabledCheckbox.checked = settings.gestures.enabled;
+
+        // Toggle gesture config panel visibility
+        const configPanel = $("#gestureConfigPanel");
+        if (configPanel && !settings.gestures.enabled) {
+          configPanel.classList.add('disabled');
+        }
+
+        enabledCheckbox.addEventListener('change', (e) => {
+          settings.gestures.enabled = e.target.checked;
+          saveGestureSettings(settings);
+
+          if (configPanel) {
+            if (e.target.checked) {
+              configPanel.classList.remove('disabled');
+            } else {
+              configPanel.classList.add('disabled');
+            }
+          }
+        });
+      }
+
+      if (tapRevealCheckbox) {
+        tapRevealCheckbox.checked = settings.gestures.tapToReveal;
+        tapRevealCheckbox.addEventListener('change', (e) => {
+          settings.gestures.tapToReveal = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (longPressCheckbox) {
+        longPressCheckbox.checked = settings.gestures.longPressMenu;
+        longPressCheckbox.addEventListener('change', (e) => {
+          settings.gestures.longPressMenu = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (doubleTapCheckbox) {
+        doubleTapCheckbox.checked = settings.gestures.doubleTapAudio;
+        doubleTapCheckbox.addEventListener('change', (e) => {
+          settings.gestures.doubleTapAudio = e.target.checked;
+          saveGestureSettings(settings);
+        });
+      }
+
+      // Set select values
+      const swipeRightSelect = $("#settingSwipeRight");
+      const swipeLeftSelect = $("#settingSwipeLeft");
+      const swipeDownSelect = $("#settingSwipeDown");
+
+      if (swipeRightSelect) {
+        swipeRightSelect.value = settings.gestures.swipeRight;
+        swipeRightSelect.addEventListener('change', (e) => {
+          settings.gestures.swipeRight = e.target.value;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (swipeLeftSelect) {
+        swipeLeftSelect.value = settings.gestures.swipeLeft;
+        swipeLeftSelect.addEventListener('change', (e) => {
+          settings.gestures.swipeLeft = e.target.value;
+          saveGestureSettings(settings);
+        });
+      }
+
+      if (swipeDownSelect) {
+        swipeDownSelect.value = settings.gestures.swipeDown;
+        swipeDownSelect.addEventListener('change', (e) => {
+          settings.gestures.swipeDown = e.target.value;
+          saveGestureSettings(settings);
+        });
+      }
+
+      // Set sensitivity slider
+      const sensitivitySlider = $("#settingSensitivity");
+      if (sensitivitySlider) {
+        sensitivitySlider.value = settings.gestures.velocityThreshold;
+        updateSensitivityDisplay(settings.gestures.velocityThreshold);
+
+        sensitivitySlider.addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          updateSensitivityDisplay(value);
+        });
+
+        sensitivitySlider.addEventListener('change', (e) => {
+          settings.gestures.velocityThreshold = parseFloat(e.target.value);
+          saveGestureSettings(settings);
+        });
+      }
+    })();
+
     try { if('serviceWorker' in navigator){ navigator.serviceWorker.register(baseurl + 'sw.js'); } } catch(e){}
     try { if (!document.querySelector('link[rel="manifest"]')) { const l=document.createElement('link'); l.rel='manifest'; l.href=baseurl + 'manifest.webmanifest'; document.head.appendChild(l);} } catch(e){}
 
