@@ -62,6 +62,18 @@ if ($hassiteconfig) {
         ''
     ));
 
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_translation_reasoning_effort',
+        get_string('settings_ai_translation_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_translation_reasoning_effort_desc', 'mod_flashcards'),
+        'low',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
     $settings->add(new admin_setting_configtext(
         'mod_flashcards/ai_question_model',
         get_string('settings_ai_question_model', 'mod_flashcards'),
@@ -76,11 +88,35 @@ if ($hassiteconfig) {
         ''
     ));
 
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_construction_reasoning_effort',
+        get_string('settings_ai_construction_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_construction_reasoning_effort_desc', 'mod_flashcards'),
+        'low',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
     $settings->add(new admin_setting_configtext(
         'mod_flashcards/ai_expression_model',
         get_string('settings_ai_expression_model', 'mod_flashcards'),
         get_string('settings_ai_expression_model_desc', 'mod_flashcards'),
         ''
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_expression_reasoning_effort',
+        get_string('settings_ai_expression_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_expression_reasoning_effort_desc', 'mod_flashcards'),
+        'low',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
     ));
 
     $settings->add(new admin_setting_configselect(

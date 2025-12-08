@@ -103,7 +103,7 @@ class openai_client {
      * @return bool True if the task has reasoning effort settings
      */
     protected function task_supports_reasoning_effort(string $task): bool {
-        return in_array($task, ['focus', 'correction', 'question'], true);
+        return in_array($task, ['focus', 'correction', 'question', 'translation', 'construction', 'expression'], true);
     }
 
     /**
@@ -353,7 +353,7 @@ PROMPT;
         // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
         if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('translation')) {
-            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question'); // Translation doesn't have specific effort, use question
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('translation');
             unset($payload['temperature']); // Remove temperature for reasoning models
         }
 
@@ -578,7 +578,7 @@ PROMPT;
         // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
         if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('expression')) {
-            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question'); // Expression doesn't have specific effort, use question
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('expression');
             unset($payload['temperature']); // Remove temperature for reasoning models
         }
         $response = $this->request($payload);

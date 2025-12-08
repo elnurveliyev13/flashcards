@@ -349,14 +349,23 @@ $string['settings_ai_focus_model_desc'] = 'Optional model for detecting focus wo
 $string['settings_ai_translation_model'] = 'Translation model';
 $string['settings_ai_translation_model_desc'] = 'Optional model for text translation. Leave empty to use the main model.';
 
+$string['settings_ai_translation_reasoning_effort'] = 'Translation reasoning effort';
+$string['settings_ai_translation_reasoning_effort_desc'] = 'Reasoning effort level for text translation when using o1/o3 models.';
+
 $string['settings_ai_question_model'] = 'Question answering model';
 $string['settings_ai_question_model_desc'] = 'Optional model for answering questions about text. Leave empty to use the main model.';
 
 $string['settings_ai_construction_model'] = 'Construction detection model';
 $string['settings_ai_construction_model_desc'] = 'Optional model for detecting grammatical constructions. Leave empty to use the main model.';
 
+$string['settings_ai_construction_reasoning_effort'] = 'Construction detection reasoning effort';
+$string['settings_ai_construction_reasoning_effort_desc'] = 'Reasoning effort level for construction detection when using o1/o3 models.';
+
 $string['settings_ai_expression_model'] = 'Expression content model';
 $string['settings_ai_expression_model_desc'] = 'Optional model for generating expression content (definitions, examples). Leave empty to use the main model.';
+
+$string['settings_ai_expression_reasoning_effort'] = 'Expression content reasoning effort';
+$string['settings_ai_expression_reasoning_effort_desc'] = 'Reasoning effort level for expression content generation when using o1/o3 models.';
 
 $string['settings_ai_focus_reasoning_effort'] = 'Focus detection reasoning effort';
 $string['settings_ai_focus_reasoning_effort_desc'] = 'Reasoning effort level for focus detection when using o1/o3 models. Note: Reasoning models may take 30+ seconds to respond.';
