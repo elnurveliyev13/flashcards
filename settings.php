@@ -20,6 +20,19 @@ if ($hassiteconfig) {
         1
     ));
 
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_focus_reasoning_effort',
+        get_string('settings_ai_focus_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_focus_reasoning_effort_desc', 'mod_flashcards'),
+        'medium',
+        [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
     $settings->add(new admin_setting_configpasswordunmask(
         'mod_flashcards/openai_apikey',
         get_string('settings_openai_key', 'mod_flashcards'),
@@ -75,6 +88,7 @@ if ($hassiteconfig) {
         get_string('settings_ai_translation_reasoning_effort_desc', 'mod_flashcards'),
         'low',
         [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
             'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
             'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
             'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
@@ -94,6 +108,7 @@ if ($hassiteconfig) {
         get_string('settings_ai_question_reasoning_effort_desc', 'mod_flashcards'),
         'medium',
         [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
             'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
             'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
             'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
@@ -113,6 +128,7 @@ if ($hassiteconfig) {
         get_string('settings_ai_construction_reasoning_effort_desc', 'mod_flashcards'),
         'low',
         [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
             'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
             'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
             'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
@@ -132,6 +148,7 @@ if ($hassiteconfig) {
         get_string('settings_ai_expression_reasoning_effort_desc', 'mod_flashcards'),
         'low',
         [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
             'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
             'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
             'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
