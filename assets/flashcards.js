@@ -11005,29 +11005,11 @@ Regeln:
 
       // AI quick question buttons
       const aiQuickBtns = block.querySelectorAll('.ai-quick-btn');
-      let hasClickedOnce = false;
 
       aiQuickBtns.forEach(btn => {
         btn.addEventListener('click', async function() {
           const questionType = this.getAttribute('data-type');
           await askAIAboutCorrection(questionType, originalText, result);
-
-          // After first click, add 4th button "Explain simpler"
-          if (!hasClickedOnce) {
-            hasClickedOnce = true;
-            const container = document.getElementById('aiQuickBtnsContainer');
-            if (container && !container.querySelector('[data-type="simpler"]')) {
-              const simplerBtn = document.createElement('button');
-              simplerBtn.type = 'button';
-              simplerBtn.className = 'ai-quick-btn';
-              simplerBtn.setAttribute('data-type', 'simpler');
-              simplerBtn.textContent = explainSimplerText;
-              simplerBtn.addEventListener('click', async function() {
-                await askAIAboutCorrection('simpler', originalText, result);
-              });
-              container.appendChild(simplerBtn);
-            }
-          }
         });
       });
 
