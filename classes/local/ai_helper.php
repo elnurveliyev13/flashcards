@@ -619,23 +619,11 @@ USERPROMPT;
             ];
         }
 
-        $config = get_config('mod_flashcards');
-        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
-
-        // Use the same model as configured in openai_client (taken from plugin settings).
+        // Get task-specific model
         $reflection = new \ReflectionClass($client);
-        $model = 'gpt-4o-mini';
-        if ($reflection->hasProperty('model')) {
-            $prop = $reflection->getProperty('model');
-            $prop->setAccessible(true);
-            $value = trim((string)$prop->getValue($client));
-            if ($value !== '') {
-                $model = $value;
-            }
-        }
-        if ($correctionmodel !== '') {
-            $model = $correctionmodel;
-        }
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'correction');
 
         // Check if multi-sampling is enabled
         $enableMultisampling = !empty($config->ai_multisampling_enabled);
@@ -1150,9 +1138,16 @@ USERPROMPT2;
             $result = ['answer' => $answer];
 
             // Include token usage information if available
+            $debug = [];
             if (isset($response->usage)) {
                 $result['usage'] = (array) $response->usage;
+                $debug['usage_added'] = true;
+                $debug['usage'] = $result['usage'];
+            } else {
+                $debug['usage_added'] = false;
+                $debug['usage'] = null;
             }
+            $result['debug'] = $debug;
 
             return $result;
         } catch (\Exception $e) {

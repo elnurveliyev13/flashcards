@@ -61,6 +61,42 @@ class openai_client {
     }
 
     /**
+     * Get the appropriate model for a specific task
+     *
+     * @param string $task The task type (focus, translation, correction, question, construction, expression)
+     * @return string The model to use
+     */
+    protected function get_model_for_task(string $task): string {
+        $config = get_config('mod_flashcards');
+        $taskModelSetting = 'ai_' . $task . '_model';
+        $model = trim((string)($config->$taskModelSetting ?? ''));
+        if ($model !== '') {
+            return $model;
+        }
+        // Fallback to correction model for correction tasks
+        if ($task === 'correction') {
+            $model = trim((string)($config->openai_correction_model ?? ''));
+            if ($model !== '') {
+                return $model;
+            }
+        }
+        // Fallback to main model
+        return $this->model;
+    }
+
+    /**
+     * Get the reasoning effort for a specific task
+     *
+     * @param string $task The task type (focus, correction, question)
+     * @return string The reasoning effort level (low, medium, high)
+     */
+    protected function get_reasoning_effort_for_task(string $task): string {
+        $config = get_config('mod_flashcards');
+        $effortSetting = 'ai_' . $task . '_reasoning_effort';
+        return trim((string)($config->$effortSetting ?? 'medium'));
+    }
+
+    /**
      * Whether client is configured for usage.
      */
     public function is_enabled(): bool {
@@ -173,8 +209,9 @@ PROMPT;
                 . 'Make sure each EX sentence reuses the focus word/expression (with the same particles/articles, if any) and reads like a natural, level-appropriate phrase a responsible tutor would offer; double-check grammar and register to avoid awkward filler.'
         ]);
 
+        $model = $this->get_model_for_task('focus');
         $payload = [
-            'model' => $this->model,
+            'model' => $model,
             'temperature' => 0.2,
             'messages' => [
                 [
@@ -187,6 +224,13 @@ PROMPT;
                 ],
             ],
         ];
+
+        // Add reasoning_effort for models that support it
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->requires_default_temperature($modelkey)) {
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('focus');
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         $response = $this->request($payload);
         $this->record_usage($userid, $response->usage ?? null);
@@ -257,8 +301,9 @@ PROMPT;
             'RULES: Preserve numbers, names and formatting. If the input already looks like the target language, return it unchanged. Do not wrap the answer in quotes.'
         ]);
 
+        $model = $this->get_model_for_task('translation');
         $payload = [
-            'model' => $this->model,
+            'model' => $model,
             'temperature' => 0.2,
             'messages' => [
                 [
@@ -271,6 +316,13 @@ PROMPT;
                 ],
             ],
         ];
+
+        // Add reasoning_effort for models that support it
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->requires_default_temperature($modelkey)) {
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question'); // Translation doesn't have specific effort, use question
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         $response = $this->request($payload);
         $this->record_usage($userid, $response->usage ?? null);
@@ -716,14 +768,15 @@ PROMPT;
         // Some newer models (e.g. gpt-5-mini/gpt-5-nano) only support the
         // default temperature and expose reasoning controls. For those,
         // drop any explicit temperature override (to avoid HTTP 400
-        // "unsupported_value") and request minimal reasoning effort to
-        // reduce latency when supported.
+        // "unsupported_value") and use reasoning_effort if set.
         $model = $payload['model'] ?? $this->model ?? '';
         $modelkey = core_text::strtolower(trim((string)$model));
         if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
             if (array_key_exists('temperature', $payload)) {
                 unset($payload['temperature']);
             }
+            // reasoning_effort should already be set by the calling method
+            // If not set, default to medium
             if (!isset($payload['reasoning_effort'])) {
                 $payload['reasoning_effort'] = 'medium';
             }
@@ -774,7 +827,7 @@ PROMPT;
         if (!$json) {
             $preview = substr($response, 0, 500);
             error_log('ai_invalid_json: response preview = ' . $preview);
-            throw new moodle_exception('ai_invalid_json', 'mod_flashcards', '', null, 'Response preview: ' . $preview);
+            throw new moodle_exception('ai_invalid_json', 'mod_flashcards', '', 'Response preview: ' . $preview);
         }
         return $json;
     }

@@ -342,6 +342,34 @@ $string['settings_openai_url'] = 'OpenAI endpoint';
 $string['settings_openai_url_desc'] = 'Override only when using a proxy-compatible endpoint.';
 $string['settings_openai_correction_model'] = 'Correction model (Check text)';
 $string['settings_openai_correction_model_desc'] = 'Optional model used for grammar checking and explanations (e.g. gpt-4o-mini). Leave empty to reuse the main OpenAI model.';
+
+$string['settings_ai_focus_model'] = 'Focus detection model';
+$string['settings_ai_focus_model_desc'] = 'Optional model for detecting focus words/expressions when learners click on text. Leave empty to use the main model.';
+
+$string['settings_ai_translation_model'] = 'Translation model';
+$string['settings_ai_translation_model_desc'] = 'Optional model for text translation. Leave empty to use the main model.';
+
+$string['settings_ai_question_model'] = 'Question answering model';
+$string['settings_ai_question_model_desc'] = 'Optional model for answering questions about text. Leave empty to use the main model.';
+
+$string['settings_ai_construction_model'] = 'Construction detection model';
+$string['settings_ai_construction_model_desc'] = 'Optional model for detecting grammatical constructions. Leave empty to use the main model.';
+
+$string['settings_ai_expression_model'] = 'Expression content model';
+$string['settings_ai_expression_model_desc'] = 'Optional model for generating expression content (definitions, examples). Leave empty to use the main model.';
+
+$string['settings_ai_focus_reasoning_effort'] = 'Focus detection reasoning effort';
+$string['settings_ai_focus_reasoning_effort_desc'] = 'Reasoning effort level for focus detection when using o1/o3 models.';
+
+$string['settings_ai_correction_reasoning_effort'] = 'Correction reasoning effort';
+$string['settings_ai_correction_reasoning_effort_desc'] = 'Reasoning effort level for text correction when using o1/o3 models.';
+
+$string['settings_ai_question_reasoning_effort'] = 'Question answering reasoning effort';
+$string['settings_ai_question_reasoning_effort_desc'] = 'Reasoning effort level for question answering when using o1/o3 models.';
+
+$string['settings_reasoning_effort_low'] = 'Low';
+$string['settings_reasoning_effort_medium'] = 'Medium';
+$string['settings_reasoning_effort_high'] = 'High';
 $string['settings_ai_doublecheck_correction'] = 'Double-check corrections';
 $string['settings_ai_doublecheck_correction_desc'] = 'Run a second AI pass to verify the suggested correction and optionally propose a more natural alternative. Disable to reduce latency with slower models.';
 $string['settings_ai_multisampling'] = 'Multi-sampling (Self-Consistency)';

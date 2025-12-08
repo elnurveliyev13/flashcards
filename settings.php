@@ -48,6 +48,77 @@ if ($hassiteconfig) {
         ''
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_focus_model',
+        get_string('settings_ai_focus_model', 'mod_flashcards'),
+        get_string('settings_ai_focus_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_translation_model',
+        get_string('settings_ai_translation_model', 'mod_flashcards'),
+        get_string('settings_ai_translation_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_question_model',
+        get_string('settings_ai_question_model', 'mod_flashcards'),
+        get_string('settings_ai_question_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_construction_model',
+        get_string('settings_ai_construction_model', 'mod_flashcards'),
+        get_string('settings_ai_construction_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_expression_model',
+        get_string('settings_ai_expression_model', 'mod_flashcards'),
+        get_string('settings_ai_expression_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_focus_reasoning_effort',
+        get_string('settings_ai_focus_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_focus_reasoning_effort_desc', 'mod_flashcards'),
+        'medium',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_correction_reasoning_effort',
+        get_string('settings_ai_correction_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_correction_reasoning_effort_desc', 'mod_flashcards'),
+        'medium',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_question_reasoning_effort',
+        get_string('settings_ai_question_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_question_reasoning_effort_desc', 'mod_flashcards'),
+        'medium',
+        [
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
     $settings->add(new admin_setting_configcheckbox(
         'mod_flashcards/ai_doublecheck_correction',
         get_string('settings_ai_doublecheck_correction', 'mod_flashcards'),
