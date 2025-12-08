@@ -249,6 +249,7 @@ PROMPT;
         $payload = [
             'model' => $model,
             'temperature' => 0.2,
+            'top_p' => 0.3,
             'messages' => [
                 [
                     'role' => 'system',
