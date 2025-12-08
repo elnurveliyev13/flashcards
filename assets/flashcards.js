@@ -1728,7 +1728,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(translationDebounce){
         clearTimeout(translationDebounce);
       }
-      translationDebounce = setTimeout(runTranslationHelper, 1400);
+
+      const sourceEl = translationDirection === 'user-no' ? translationInputLocal : frontInput;
+      const sourceText = (sourceEl?.value || '').trim();
+      const delay = sourceText.length < 5 ? 5000 : 3000;
+
+      translationDebounce = setTimeout(runTranslationHelper, delay);
     }
 
     async function runTranslationHelper(){
@@ -2110,7 +2115,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
     }
-    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'\-]+/gu; } catch(_e){ return /[A-Za-z0-9'\-]+/g; } })();
+    const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'`{\[\]\}-]+/gu; } catch(_e){ return /[A-Za-z0-9'`{\[\]\}-]+/g; } })();
     const countWords = (text)=> (text.match(wordRegex) || []).length;
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');
@@ -5438,7 +5443,7 @@ let lastStudyAudioRate=1;
       if(!text){
         return tokens;
       }
-      const pattern = /[\p{L}\p{M}]+|\d+|[^\s\p{L}\p{M}\d]/gu;
+      const pattern = /[\p{L}\p{M}\`\{\[\]\}]+|\d+|[^\s\p{L}\p{M}\d]/gu;
       let match;
       let idx = 0;
       while((match = pattern.exec(text)) !== null){
@@ -5446,7 +5451,7 @@ let lastStudyAudioRate=1;
         tokens.push({
           raw,
           norm: raw.toLowerCase(),
-          type: /^[\p{L}\p{M}\d]+$/u.test(raw) ? 'word' : 'punct',
+          type: /^[\p{L}\p{M}\d\`\{\[\]\}]+$/u.test(raw) ? 'word' : 'punct',
           index: idx++
         });
       }
