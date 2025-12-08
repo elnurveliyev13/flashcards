@@ -5443,7 +5443,7 @@ let lastStudyAudioRate=1;
       if(!text){
         return tokens;
       }
-      const pattern = /[\p{L}\p{M}\`\{\[\]\}]+|\d+|[^\s\p{L}\p{M}\d]/gu;
+      const pattern = /[\p{L}\p{M}`{}\[\]]+|\d+|[^\s\p{L}\p{M}\d]/gu;
       let match;
       let idx = 0;
       while((match = pattern.exec(text)) !== null){
@@ -5451,7 +5451,7 @@ let lastStudyAudioRate=1;
         tokens.push({
           raw,
           norm: raw.toLowerCase(),
-          type: /^[\p{L}\p{M}\d\`\{\[\]\}]+$/u.test(raw) ? 'word' : 'punct',
+          type: /^[\p{L}\p{M}\d`{}\[\]]+$/u.test(raw) ? 'word' : 'punct',
           index: idx++
         });
       }
