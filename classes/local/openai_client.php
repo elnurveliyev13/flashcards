@@ -97,6 +97,16 @@ class openai_client {
     }
 
     /**
+     * Check if a task supports reasoning effort settings
+     *
+     * @param string $task The task type
+     * @return bool True if the task has reasoning effort settings
+     */
+    protected function task_supports_reasoning_effort(string $task): bool {
+        return in_array($task, ['focus', 'correction', 'question'], true);
+    }
+
+    /**
      * Whether client is configured for usage.
      */
     public function is_enabled(): bool {
@@ -225,9 +235,9 @@ PROMPT;
             ],
         ];
 
-        // Add reasoning_effort for models that support it
+        // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
-        if ($this->requires_default_temperature($modelkey)) {
+        if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('focus')) {
             $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('focus');
             unset($payload['temperature']); // Remove temperature for reasoning models
         }
@@ -317,9 +327,9 @@ PROMPT;
             ],
         ];
 
-        // Add reasoning_effort for models that support it
+        // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
-        if ($this->requires_default_temperature($modelkey)) {
+        if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('translation')) {
             $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question'); // Translation doesn't have specific effort, use question
             unset($payload['temperature']); // Remove temperature for reasoning models
         }
@@ -375,8 +385,9 @@ PROMPT;
         }
         $userprompt .= "Return JSON: {\"index\": <number>, \"definition\": \"<exact chosen text>\"}. Do not add prose.";
 
+        $model = $this->get_model_for_task('question'); // choose_best_definition uses question model
         $payload = [
-            'model' => $this->model,
+            'model' => $model,
             'temperature' => 0.1,
             'max_tokens' => 80,
             'messages' => [
@@ -384,6 +395,13 @@ PROMPT;
                 ['role' => 'user', 'content' => $userprompt],
             ],
         ];
+
+        // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('question')) {
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question');
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         $response = $this->request($payload);
         $this->record_usage($userid, $response->usage ?? null);
@@ -432,8 +450,9 @@ PROMPT;
             "QUESTION ({$languageName}): " . $this->trim_prompt_text($question, 400),
         ]);
 
+        $model = $this->get_model_for_task('question');
         $payload = [
-            'model' => $this->model,
+            'model' => $model,
             'temperature' => $options['temperature'] ?? 0.35,
             'messages' => [
                 [
@@ -446,6 +465,13 @@ PROMPT;
                 ],
             ],
         ];
+
+        // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('question')) {
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question');
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         $response = $this->request($payload);
         $this->record_usage($userid, $response->usage ?? null);
@@ -501,8 +527,9 @@ PROMPT;
               . "3) Keep outputs short and level-appropriate.\n\n"
               . "Return JSON: {\"translation\":\"...\",\"definition\":\"...\",\"examples\":[\"NO | {$targetlang}\", ...]}";
 
+        $model = $this->get_model_for_task('expression'); // generate_expression_content uses expression model
         $payload = [
-            'model' => $this->model,
+            'model' => $model,
             'temperature' => 0.2,
             'max_tokens' => 220,
             'messages' => [
@@ -510,6 +537,13 @@ PROMPT;
                 ['role' => 'user', 'content' => $user],
             ],
         ];
+
+        // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->requires_default_temperature($modelkey) && $this->task_supports_reasoning_effort('expression')) {
+            $payload['reasoning_effort'] = $this->get_reasoning_effort_for_task('question'); // Expression doesn't have specific effort, use question
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
         $response = $this->request($payload);
         $this->record_usage(0, $response->usage ?? null);
         $content = $response->choices[0]->message->content ?? '';
