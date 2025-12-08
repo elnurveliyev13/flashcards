@@ -1057,7 +1057,7 @@ switch ($action) {
                     'debug' => [
                         'action' => 'ai_focus_helper',
                         'payload' => $payload,
-                        'response_preview' => substr($e->getMessage(), strpos($e->getMessage(), 'response preview =') + 18) ?: 'No preview available'
+                        'response_preview' => $e->a ?: 'No preview available'
                     ]
                 ]);
             } else {
