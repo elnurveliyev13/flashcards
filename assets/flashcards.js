@@ -948,7 +948,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         cognates: 'Mots apparentes',
         sayings: 'Expressions courantes',
         fill_field: 'Veuillez remplir : {$a}',
-        update: 'Mettre a jour',
+        update: 'Actualiser',
         createnew: 'Creer',
         audio: 'Audio',
         order_audio_word: 'Audio focal',
