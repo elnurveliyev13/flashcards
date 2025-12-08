@@ -117,6 +117,19 @@ class openai_client {
     }
 
     /**
+     * Check if a model uses max_completion_tokens instead of max_tokens
+     *
+     * @param string $modelkey lowercased model id
+     * @return bool True if model uses max_completion_tokens
+     */
+    protected function uses_max_completion_tokens(string $modelkey): bool {
+        // Newer models like gpt-5-mini use max_completion_tokens
+        return strpos($modelkey, '5-mini') !== false ||
+               strpos($modelkey, '5-nano') !== false ||
+               strpos($modelkey, 'o1-') !== false;
+    }
+
+    /**
      * Whether client is configured for usage.
      */
     public function is_enabled(): bool {
@@ -399,12 +412,19 @@ PROMPT;
         $payload = [
             'model' => $model,
             'temperature' => 0.1,
-            'max_tokens' => 80,
             'messages' => [
                 ['role' => 'system', 'content' => $systemprompt],
                 ['role' => 'user', 'content' => $userprompt],
             ],
         ];
+
+        // Use correct max_tokens parameter based on model
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->uses_max_completion_tokens($modelkey)) {
+            $payload['max_completion_tokens'] = 80;
+        } else {
+            $payload['max_tokens'] = 80;
+        }
 
         // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
@@ -541,12 +561,19 @@ PROMPT;
         $payload = [
             'model' => $model,
             'temperature' => 0.2,
-            'max_tokens' => 220,
             'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $user],
             ],
         ];
+
+        // Use correct max_tokens parameter based on model
+        $modelkey = core_text::strtolower(trim($model));
+        if ($this->uses_max_completion_tokens($modelkey)) {
+            $payload['max_completion_tokens'] = 220;
+        } else {
+            $payload['max_tokens'] = 220;
+        }
 
         // Add reasoning_effort for models that support it AND tasks that have reasoning effort settings
         $modelkey = core_text::strtolower(trim($model));
