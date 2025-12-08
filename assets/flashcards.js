@@ -5309,6 +5309,24 @@ let lastStudyAudioRate=1;
           checkBtn.click();
         }
       });
+
+      // Auto-capitalize first letter for dictation input
+      inputEl.addEventListener('input', () => {
+        const currentValue = inputEl.value;
+        const capitalized = capitalizeFirstLetter(currentValue);
+        if (capitalized !== currentValue) {
+          inputEl.value = capitalized;
+        }
+      });
+
+      // Auto-capitalize first letter for dictation input
+      inputEl.addEventListener('input', () => {
+        const currentValue = inputEl.value;
+        const capitalized = capitalizeFirstLetter(currentValue);
+        if (capitalized !== currentValue) {
+          inputEl.value = capitalized;
+        }
+      });
     }
 
     // Compare two texts character by character and word by word
