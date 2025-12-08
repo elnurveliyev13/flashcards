@@ -112,7 +112,7 @@ $string['update_disabled_hint'] = 'Abra primero una tarjeta existente para habil
 $string['createnew'] = 'Crear';
 $string['order'] = 'Orden (hacer clic en secuencia)';
 $string['empty'] = 'Nada pendiente hoy';
-$string['resetform'] = 'Restablecer formulario';
+$string['resetform'] = 'Limpiar';
 $string['addtomycards'] = 'Añadir a mis tarjetas';
 $string['install_app'] = 'Instalar aplicación';
 

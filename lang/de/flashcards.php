@@ -112,7 +112,7 @@ $string['update_disabled_hint'] = 'Öffnen Sie zuerst eine bestehende Karte, um 
 $string['createnew'] = 'Erstellen';
 $string['order'] = 'Reihenfolge (in Reihenfolge klicken)';
 $string['empty'] = 'Heute nichts fällig';
-$string['resetform'] = 'Formular zurücksetzen';
+$string['resetform'] = 'Leeren';
 $string['addtomycards'] = 'Zu meinen Karten hinzufügen';
 $string['install_app'] = 'App installieren';
 

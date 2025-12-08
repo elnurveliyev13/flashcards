@@ -112,7 +112,7 @@ $string['update_disabled_hint'] = 'Ouvrez d\'abord une carte existante pour acti
 $string['createnew'] = 'Créer';
 $string['order'] = 'Ordre (cliquer en séquence)';
 $string['empty'] = 'Rien prévu aujourd\'hui';
-$string['resetform'] = 'Réinitialiser le formulaire';
+$string['resetform'] = 'Effacer';
 $string['addtomycards'] = 'Ajouter à mes cartes';
 $string['install_app'] = 'Installer l\'application';
 

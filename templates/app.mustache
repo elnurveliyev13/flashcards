@@ -210,7 +210,11 @@
                 </div>
               </div>
               <div class="slot-head-extra">
-                <button id="btnQuickFormReset" class="ghost icon-only translation-reset" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}">Clear form</button>
+                <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
+                  <span class="btn-icon">à?"?</span>
+                  <span data-i18n="check_text">Sjekk teksten</span>
+                </button>
+                <button id="btnQuickFormReset" class="ghost icon-only translation-reset" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>{{#str}} resetform, mod_flashcards {{/str}}</button>
               </div>
             </div>
           </div>
@@ -219,10 +223,7 @@
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
           <div class="front-text-actions">
-            <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
-              <span class="btn-icon">🔍</span>
-              <span data-i18n="check_text">Sjekk teksten</span>
-            </button>
+            <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
           </div>
           <div id="errorCheckBlock" class="error-check-block" style="display:none;" aria-live="polite"></div>
         </div>
@@ -260,9 +261,6 @@
                   <button id="ocrUndo" type="button" class="stt-link hidden status-action-btn">{{#str}} ocr_status_undo, mod_flashcards {{/str}}</button>
                 </div>
               </div>
-            </div>
-            <div class="translation-status-row">
-              <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
             </div>
             <div class="slot focus-helper-slot">
               <div class="focus-helper-head">

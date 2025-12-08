@@ -2025,20 +2025,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
-    const translationStatusRow = mediaStatusIndicator ? mediaStatusIndicator.closest('.translation-status-row') : null;
-    const mediaStatusTargetId = 'yui_3_18_1_1_1764889193288_12';
-    const checkTextBtnInline = document.getElementById('checkTextBtn');
-    const mediaStatusTarget = document.getElementById(mediaStatusTargetId) ||
-      (checkTextBtnInline ? checkTextBtnInline.parentElement : null);
-    if(mediaStatusIndicator && mediaStatusTarget){
-      // Place the media status indicator inside the requested field (same row as checkTextBtn, right aligned).
+    const frontTextActions = document.querySelector('.front-text-actions');
+    if(mediaStatusIndicator && frontTextActions){
       mediaStatusIndicator.classList.add('translation-status-inline');
-      const host = mediaStatusTarget;
-      if(host && !host.contains(mediaStatusIndicator)){
-        host.appendChild(mediaStatusIndicator);
-      }
-      if(translationStatusRow && translationStatusRow !== host){
-        translationStatusRow.remove();
+      if(!frontTextActions.contains(mediaStatusIndicator)){
+        frontTextActions.appendChild(mediaStatusIndicator);
       }
     }
     const focusTranslationText = document.getElementById('focusTranslationText');

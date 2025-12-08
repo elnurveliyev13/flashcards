@@ -77,6 +77,17 @@
       this.root.appendChild(this.editBar);
     }
 
+    var quickResetBtn = document.getElementById('btnQuickFormReset');
+    if(quickResetBtn && this.editBar){
+      quickResetBtn.hidden = false;
+      quickResetBtn.removeAttribute('hidden');
+      quickResetBtn.style.removeProperty('display');
+      if(!this.editBar.contains(quickResetBtn)){
+        var referenceNode = this.editBar.querySelector('#saveBarUpdate') || this.editBar.firstChild;
+        this.editBar.insertBefore(quickResetBtn, referenceNode);
+      }
+    }
+
     // Hide inline row2 to avoid duplication
     try{
       var inlineRow = btnUpdate.closest('.row2');

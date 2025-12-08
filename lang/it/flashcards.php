@@ -112,7 +112,7 @@ $string['update_disabled_hint'] = 'Apri prima una scheda esistente per abilitare
 $string['createnew'] = 'Crea';
 $string['order'] = 'Ordine (clicca in sequenza)';
 $string['empty'] = 'Niente da fare oggi';
-$string['resetform'] = 'Reimposta modulo';
+$string['resetform'] = 'Pulisci';
 $string['addtomycards'] = 'Aggiungi alle mie schede';
 $string['install_app'] = 'Installa app';
 

@@ -112,7 +112,7 @@ $string['update_disabled_hint'] = 'Najpierw otwórz istniejącą fiszkę, aby w�
 $string['createnew'] = 'Utwórz';
 $string['order'] = 'Kolejność (klikaj po kolei)';
 $string['empty'] = 'Nic do nauki dzisiaj';
-$string['resetform'] = 'Zresetuj formularz';
+$string['resetform'] = 'Wyczyść';
 $string['addtomycards'] = 'Dodaj do moich fiszek';
 $string['install_app'] = 'Zainstaluj aplikację';
 
