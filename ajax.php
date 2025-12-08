@@ -773,45 +773,30 @@ switch ($action) {
         }
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
         $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
-        $helper = new \mod_flashcards\local\ai_helper();
-        $openaiexpr = new \mod_flashcards\local\openai_client();
-        $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
-            'language' => $language,
-            'level' => $level,
-            'voice' => $voiceid ?: null,
-        ]);
-        $debugai = [];
-        // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
-        $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
-        $ob = null;
-        if ($focuscheck !== '') {
-            $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
-        }
-        // If helper didn’t return, try clicked word as fallback.
-        if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
-            $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), []);
-        }
-        // If still nothing, try a direct lookup to confirm existence.
-        if ((!$ob || empty($ob['selected']))) {
-            // For multi-word expressions, skip strict ordbank validation.
-            if (str_contains($focuscheck, ' ')) {
-                $ob = [
-                    'selected' => [
-                        'lemma_id' => 0,
-                        'wordform' => $focuscheck,
-                        'baseform' => $focuscheck,
-                        'tag' => '',
-                        'paradigme_id' => null,
-                        'boy_nummer' => 0,
-                        'ipa' => null,
-                        'gender' => '',
-                    ],
-                    'forms' => [],
-                ];
-            } else {
-                $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
-                if (!$exists) {
-                    // Keep processing with minimal stub instead of erroring out.
+
+        try {
+            $helper = new \mod_flashcards\local\ai_helper();
+            $openaiexpr = new \mod_flashcards\local\openai_client();
+            $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
+                'language' => $language,
+                'level' => $level,
+                'voice' => $voiceid ?: null,
+            ]);
+            $debugai = [];
+            // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
+            $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
+            $ob = null;
+            if ($focuscheck !== '') {
+                $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
+            }
+            // If helper didn't return, try clicked word as fallback.
+            if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
+                $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), []);
+            }
+            // If still nothing, try a direct lookup to confirm existence.
+            if ((!$ob || empty($ob['selected']))) {
+                // For multi-word expressions, skip strict ordbank validation.
+                if (str_contains($focuscheck, ' ')) {
                     $ob = [
                         'selected' => [
                             'lemma_id' => 0,
@@ -826,160 +811,178 @@ switch ($action) {
                         'forms' => [],
                     ];
                 } else {
-                    // Build a minimal selected from first match
-                    $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 1", ['w' => $focuscheck]);
-                    $ob = [
-                        'selected' => [
-                            'lemma_id' => (int)$first->lemma_id,
-                            'wordform' => $first->oppslag,
-                            'baseform' => null,
-                            'tag' => $first->tag,
-                            'paradigme_id' => $first->paradigme_id,
-                            'boy_nummer' => (int)$first->boy_nummer,
-                            'ipa' => null,
-                            'gender' => '',
-                        ],
-                        'forms' => [],
-                    ];
-                }
-            }
-        }
-        // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
-        $selected = $ob['selected'];
-        $data['focusWord'] = $selected['baseform'] ?? $selected['wordform'] ?? $focuscheck;
-        $data['focusBaseform'] = $selected['baseform'] ?? $data['focusWord'];
-        $taglower = core_text::strtolower($selected['tag'] ?? '');
-        $aiPos = core_text::strtolower($data['pos'] ?? '');
-        $ordbankpos = '';
-        if ($taglower !== '') {
-            if (str_contains($taglower, 'verb')) {
-                $ordbankpos = 'verb';
-            } else if (str_contains($taglower, 'subst')) {
-                $ordbankpos = 'substantiv';
-            } else if (str_contains($taglower, 'adj')) {
-                $ordbankpos = 'adjektiv';
-            }
-        }
-        // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
-        $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
-        if (!$data['pos']) {
-            if (str_contains($taglower, 'verb')) {
-                $data['pos'] = 'verb';
-            } else if (str_contains($taglower, 'subst')) {
-                $data['pos'] = 'substantiv';
-            }
-        }
-        if (!empty($selected['ipa'])) {
-            $data['transcription'] = $selected['ipa'];
-        }
-        if (!empty($selected['gender'])) {
-            $data['gender'] = $selected['gender'];
-        }
-        $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
-        if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
-            $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
-        }
-        if (empty($data['parts']) && !empty($ob['parts'])) {
-            $data['parts'] = $ob['parts'];
-        }
-        // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
-        if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
-            $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
-            if (!empty($tmp['forms'])) {
-                $data['forms'] = $tmp['forms'];
-            }
-            if (empty($data['parts']) && !empty($tmp['parts'])) {
-                $data['parts'] = $tmp['parts'];
-            }
-        }
-        if (empty($data['parts']) && !empty($data['focusWord'])) {
-            $data['parts'] = [$data['focusWord']];
-        }
-        // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
-        $debugai = [];
-        if ($orbokeneenabled) {
-            $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
-            $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
-            $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
-            $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6);
-            if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
-                $entries = array_values(array_merge([[
-                    'baseform' => $resolvedExpr['expression'],
-                    'meanings' => $resolvedExpr['meanings'] ?? [],
-                    'examples' => $resolvedExpr['examples'] ?? [],
-                    'forms' => $resolvedExpr['forms'] ?? [],
-                    'dictmeta' => $resolvedExpr['dictmeta'] ?? [],
-                    'source' => 'ordbokene',
-                ]], $entries));
-            }
-            $chosen = null;
-            if (!empty($entries)) {
-                $deflist = [];
-                $map = [];
-                foreach ($entries as $ei => $entry) {
-                    $meanings = [];
-                    if (!empty($entry['meanings']) && is_array($entry['meanings'])) {
-                        $meanings = $entry['meanings'];
-                    } else if (!empty($entry['definition'])) {
-                        $meanings = [$entry['definition']];
-                    }
-                    foreach ($meanings as $mi => $def) {
-                        $def = trim((string)$def);
-                        if ($def === '') {
-                            continue;
-                        }
-                        $deflist[] = $def;
-                        $map[] = ['entry' => $ei, 'meaning' => $mi];
-                    }
-                }
-                if (count($deflist) > 1) {
-                    $best = $helper->choose_best_definition($fronttext, $lookupWord, $deflist, $language, $userid);
-                    if ($best && isset($best['index']) && isset($map[$best['index']])) {
-                        $chosen = $map[$best['index']];
-                    }
-                }
-                if ($chosen === null && !empty($entries)) {
-                    $chosen = ['entry' => 0, 'meaning' => 0];
-                }
-                if ($chosen !== null) {
-                    $entry = $entries[$chosen['entry']];
-                    $meaning = $entry['meanings'][$chosen['meaning']] ?? ($entry['meanings'][0] ?? '');
-                    $expression = $entry['baseform'] ?? $lookupWord;
-                    $data['ordbokene'] = [
-                        'expression' => $expression,
-                        'meanings' => $entry['meanings'] ?? [],
-                        'examples' => $entry['examples'] ?? [],
-                        'forms' => $entry['forms'] ?? [],
-                        'dictmeta' => $entry['dictmeta'] ?? [],
-                        'source' => 'ordbokene',
-                        'chosenMeaning' => $chosen['meaning'],
-                        'url' => $entry['dictmeta']['url'] ?? '',
-                        'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
-                    ];
-                    $data['focusExpression'] = $expression;
-                    $data['focusWord'] = $expression;
-                    $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$expression])));
-                    $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
-                    $seed = !empty($entry['examples']) ? $entry['examples'] : [];
-                    if ($openaiexpr->is_enabled()) {
-                        $gen = $openaiexpr->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
-                        if (!empty($gen['translation'])) {
-                            $data['translation'] = $gen['translation'];
-                        }
-                        if (!empty($gen['definition'])) {
-                            $data['definition'] = $gen['definition'];
-                        }
-                        if (!empty($gen['examples'])) {
-                            $data['examples'] = $gen['examples'];
-                        }
-                    }
-                    if (!empty($meaning)) {
-                        $data['analysis'] = [
-                            [
-                                'text' => $expression,
-                                'translation' => $meaning,
+                    $exists = $DB->count_records_select('ordbank_fullform', 'LOWER(OPPSLAG)=?', [$focuscheck]);
+                    if (!$exists) {
+                        // Keep processing with minimal stub instead of erroring out.
+                        $ob = [
+                            'selected' => [
+                                'lemma_id' => 0,
+                                'wordform' => $focuscheck,
+                                'baseform' => $focuscheck,
+                                'tag' => '',
+                                'paradigme_id' => null,
+                                'boy_nummer' => 0,
+                                'ipa' => null,
+                                'gender' => '',
                             ],
+                            'forms' => [],
                         ];
+                    } else {
+                        // Build a minimal selected from first match
+                        $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE LOWER(OPPSLAG)=:w LIMIT 1", ['w' => $focuscheck]);
+                        $ob = [
+                            'selected' => [
+                                'lemma_id' => (int)$first->lemma_id,
+                                'wordform' => $first->oppslag,
+                                'baseform' => null,
+                                'tag' => $first->tag,
+                                'paradigme_id' => $first->paradigme_id,
+                                'boy_nummer' => (int)$first->boy_nummer,
+                                'ipa' => null,
+                                'gender' => '',
+                            ],
+                            'forms' => [],
+                        ];
+                    }
+                }
+            }
+            // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
+            $selected = $ob['selected'];
+            $data['focusWord'] = $selected['baseform'] ?? $selected['wordform'] ?? $focuscheck;
+            $data['focusBaseform'] = $selected['baseform'] ?? $data['focusWord'];
+            $taglower = core_text::strtolower($selected['tag'] ?? '');
+            $aiPos = core_text::strtolower($data['pos'] ?? '');
+            $ordbankpos = '';
+            if ($taglower !== '') {
+                if (str_contains($taglower, 'verb')) {
+                    $ordbankpos = 'verb';
+                } else if (str_contains($taglower, 'subst')) {
+                    $ordbankpos = 'substantiv';
+                } else if (str_contains($taglower, 'adj')) {
+                    $ordbankpos = 'adjektiv';
+                }
+            }
+            // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
+            $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
+            if (!$data['pos']) {
+                if (str_contains($taglower, 'verb')) {
+                    $data['pos'] = 'verb';
+                } else if (str_contains($taglower, 'subst')) {
+                    $data['pos'] = 'substantiv';
+                }
+            }
+            if (!empty($selected['ipa'])) {
+                $data['transcription'] = $selected['ipa'];
+            }
+            if (!empty($selected['gender'])) {
+                $data['gender'] = $selected['gender'];
+            }
+            $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
+            if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
+                $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
+            }
+            if (empty($data['parts']) && !empty($ob['parts'])) {
+                $data['parts'] = $ob['parts'];
+            }
+            // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
+            if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
+                $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
+                if (!empty($tmp['forms'])) {
+                    $data['forms'] = $tmp['forms'];
+                }
+                if (empty($data['parts']) && !empty($tmp['parts'])) {
+                    $data['parts'] = $tmp['parts'];
+                }
+            }
+            if (empty($data['parts']) && !empty($data['focusWord'])) {
+                $data['parts'] = [$data['focusWord']];
+            }
+            // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
+            $debugai = [];
+            if ($orbokeneenabled) {
+                $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
+                $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
+                $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
+                $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6);
+                if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
+                    $entries = array_values(array_merge([[
+                        'baseform' => $resolvedExpr['expression'],
+                        'meanings' => $resolvedExpr['meanings'] ?? [],
+                        'examples' => $resolvedExpr['examples'] ?? [],
+                        'forms' => $resolvedExpr['forms'] ?? [],
+                        'dictmeta' => $resolvedExpr['dictmeta'] ?? [],
+                        'source' => 'ordbokene',
+                    ]], $entries));
+                }
+                $chosen = null;
+                if (!empty($entries)) {
+                    $deflist = [];
+                    $map = [];
+                    foreach ($entries as $ei => $entry) {
+                        $meanings = [];
+                        if (!empty($entry['meanings']) && is_array($entry['meanings'])) {
+                            $meanings = $entry['meanings'];
+                        } else if (!empty($entry['definition'])) {
+                            $meanings = [$entry['definition']];
+                        }
+                        foreach ($meanings as $mi => $def) {
+                            $def = trim((string)$def);
+                            if ($def === '') {
+                                continue;
+                            }
+                            $deflist[] = $def;
+                            $map[] = ['entry' => $ei, 'meaning' => $mi];
+                        }
+                    }
+                    if (count($deflist) > 1) {
+                        $best = $helper->choose_best_definition($fronttext, $lookupWord, $deflist, $language, $userid);
+                        if ($best && isset($best['index']) && isset($map[$best['index']])) {
+                            $chosen = $map[$best['index']];
+                        }
+                    }
+                    if ($chosen === null && !empty($entries)) {
+                        $chosen = ['entry' => 0, 'meaning' => 0];
+                    }
+                    if ($chosen !== null) {
+                        $entry = $entries[$chosen['entry']];
+                        $meaning = $entry['meanings'][$chosen['meaning']] ?? ($entry['meanings'][0] ?? '');
+                        $expression = $entry['baseform'] ?? $lookupWord;
+                        $data['ordbokene'] = [
+                            'expression' => $expression,
+                            'meanings' => $entry['meanings'] ?? [],
+                            'examples' => $entry['examples'] ?? [],
+                            'forms' => $entry['forms'] ?? [],
+                            'dictmeta' => $entry['dictmeta'] ?? [],
+                            'source' => 'ordbokene',
+                            'chosenMeaning' => $chosen['meaning'],
+                            'url' => $entry['dictmeta']['url'] ?? '',
+                            'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
+                        ];
+                        $data['focusExpression'] = $expression;
+                        $data['focusWord'] = $expression;
+                        $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$expression])));
+                        $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
+                        $seed = !empty($entry['examples']) ? $entry['examples'] : [];
+                        if ($openaiexpr->is_enabled()) {
+                            $gen = $openaiexpr->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
+                            if (!empty($gen['translation'])) {
+                                $data['translation'] = $gen['translation'];
+                            }
+                            if (!empty($gen['definition'])) {
+                                $data['definition'] = $gen['definition'];
+                            }
+                            if (!empty($gen['examples'])) {
+                                $data['examples'] = $gen['examples'];
+                            }
+                        }
+                        if (!empty($meaning)) {
+                            $data['analysis'] = [
+                                [
+                                    'text' => $expression,
+                                    'translation' => $meaning,
+                                ],
+                            ];
+                        }
                     }
                 }
             }
@@ -1027,22 +1030,40 @@ switch ($action) {
                     $data['forms'] = $baseLookup['forms'];
                 }
             }
+            // Ensure focus baseform stays on the lemma (not the expression surface form).
+            if (!empty($selected['baseform'])) {
+                $data['focusBaseform'] = $selected['baseform'];
+            }
+            // Final form cleanup for verbs to avoid noisy variants.
+            $data['forms'] = mod_flashcards_prune_verb_forms($data['forms'] ?? []);
+            if (empty($data['gender']) && !empty($selected['gender'])) {
+                $data['gender'] = $selected['gender'];
+            }
+            // Note: usage from operation is already in $data, don't overwrite with snapshot
+            $resp = ['ok' => true, 'data' => $data];
+            if (!empty($debugai)) {
+                $resp['debug'] = $debugai;
+            }
+            echo json_encode($resp);
+
+        } catch (\moodle_exception $e) {
+            if ($e->errorcode === 'ai_invalid_json') {
+                // Return detailed error info to browser console
+                echo json_encode([
+                    'ok' => false,
+                    'error' => 'Unexpected response from the AI service.',
+                    'errorcode' => 'ai_invalid_json',
+                    'details' => 'Check browser console for API response details',
+                    'debug' => [
+                        'action' => 'ai_focus_helper',
+                        'payload' => $payload,
+                        'response_preview' => substr($e->getMessage(), strpos($e->getMessage(), 'response preview =') + 18) ?: 'No preview available'
+                    ]
+                ]);
+            } else {
+                throw $e;
+            }
         }
-        // Ensure focus baseform stays on the lemma (not the expression surface form).
-        if (!empty($selected['baseform'])) {
-            $data['focusBaseform'] = $selected['baseform'];
-        }
-        // Final form cleanup for verbs to avoid noisy variants.
-        $data['forms'] = mod_flashcards_prune_verb_forms($data['forms'] ?? []);
-        if (empty($data['gender']) && !empty($selected['gender'])) {
-            $data['gender'] = $selected['gender'];
-        }
-        $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
-        $resp = ['ok' => true, 'data' => $data];
-        if (!empty($debugai)) {
-            $resp['debug'] = $debugai;
-        }
-        echo json_encode($resp);
         break;
 
     case 'ordbokene_suggest':
