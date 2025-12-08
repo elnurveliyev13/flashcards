@@ -1147,7 +1147,14 @@ USERPROMPT2;
 
             $answer = trim($response->choices[0]->message->content ?? '');
 
-            return ['answer' => $answer];
+            $result = ['answer' => $answer];
+
+            // Include token usage information if available
+            if (isset($response->usage)) {
+                $result['usage'] = (array) $response->usage;
+            }
+
+            return $result;
         } catch (\Exception $e) {
             error_log('Error in answer_ai_question: ' . $e->getMessage());
             return ['answer' => ''];
