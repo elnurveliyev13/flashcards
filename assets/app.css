@@ -5253,22 +5253,32 @@ select.inline-prompt-field {
   max-width: min(var(--slot-content-max-width), 100%);
   box-sizing: border-box;
   justify-content: flex-start;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
 }
 .front-text-actions .translation-status-inline{
   margin-left: 0;
   align-self: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: min(60vw, 18rem);
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  justify-content: flex-start;
 }
 
 .front-slot,
 .front-slot .fokus-input-wrap,
 .front-slot .textarea-wrap {
   min-width: 0;
+  width: 100%;
 }
 
 .front-slot textarea {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Subdue the inline media/status chip host so it visually recedes vs the bottom actions bar */
