@@ -497,12 +497,15 @@ class ai_helper {
      */
     private function accumulate_usage(?object $responseUsage, array &$totalUsage): void {
         if (empty($responseUsage)) {
+            error_log('accumulate_usage: responseUsage is empty');
             return;
         }
         $usage = (array) $responseUsage;
+        error_log('accumulate_usage: usage = ' . json_encode($usage));
         $totalUsage['prompt_tokens'] = ($totalUsage['prompt_tokens'] ?? 0) + ($usage['prompt_tokens'] ?? 0);
         $totalUsage['completion_tokens'] = ($totalUsage['completion_tokens'] ?? 0) + ($usage['completion_tokens'] ?? 0);
         $totalUsage['total_tokens'] = ($totalUsage['total_tokens'] ?? 0) + ($usage['total_tokens'] ?? 0);
+        error_log('accumulate_usage: totalUsage after = ' . json_encode($totalUsage));
     }
 
     public function check_norwegian_text(string $text, string $language, int $userid): array {
@@ -919,6 +922,10 @@ USERPROMPT2;
             if (!$result1['hasErrors']) {
                 $debugtiming['overall'] = microtime(true) - $overallstart;
                 $result1['debugTiming'] = $debugtiming;
+                // Include token usage information if available
+                if (!empty($totalUsage)) {
+                    $result1['usage'] = $totalUsage;
+                }
                 return $result1;
             }
 
@@ -928,6 +935,10 @@ USERPROMPT2;
         if (!$enabledoublecheck) {
             $debugtiming['overall'] = microtime(true) - $overallstart;
             $result1['debugTiming'] = $debugtiming;
+            // Include token usage information if available
+            if (!empty($totalUsage)) {
+                $result1['usage'] = $totalUsage;
+            }
             return $result1;
         }
 
