@@ -246,6 +246,8 @@ button:focus-visible,
 #mod_flashcards_container textarea,
 #mod_flashcards_container input[type="text"],
 #mod_flashcards_container input[type="search"]{-webkit-user-select:text;user-select:text}
+/* Allow text selection in error check blocks */
+#mod_flashcards_container .error-check-block *{-webkit-user-select:text;user-select:text}
 @media (max-width:620px){
   /* On small screens, remove side paddings and stretch to full width */
   .wrap{max-width:none;width:100%;padding-left:0;padding-right:0}
