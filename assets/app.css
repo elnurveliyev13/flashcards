@@ -5250,14 +5250,25 @@ select.inline-prompt-field {
   display: flex;
   gap: var(--space-1);
   width: 100%;
-  max-width: var(--slot-content-max-width);
+  max-width: min(var(--slot-content-max-width), 100%);
   box-sizing: border-box;
   justify-content: flex-start;
   align-items: center;
+  flex-wrap: wrap;
 }
 .front-text-actions .translation-status-inline{
   margin-left: 0;
   align-self: center;
+}
+
+.front-slot,
+.front-slot .fokus-input-wrap,
+.front-slot .textarea-wrap {
+  min-width: 0;
+}
+
+.front-slot textarea {
+  white-space: pre-wrap;
 }
 
 /* Subdue the inline media/status chip host so it visually recedes vs the bottom actions bar */
