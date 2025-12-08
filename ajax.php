@@ -1489,7 +1489,7 @@ if (!empty($ordbokene_debug)) {
         $direction = ($payload['direction'] ?? '') === 'user-no' ? 'user-no' : 'no-user';
         $helper = new \mod_flashcards\local\ai_helper();
         $data = $helper->translate_text($userid, $text, $source, $target, ['direction' => $direction]);
-        $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
+        // Note: usage from operation is already in $data, don't overwrite with snapshot
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 

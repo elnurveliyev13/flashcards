@@ -772,6 +772,7 @@ PROMPT;
         }
         $json = json_decode($response);
         if (!$json) {
+            error_log('ai_invalid_json: response preview = ' . substr($response, 0, 500));
             throw new moodle_exception('ai_invalid_json', 'mod_flashcards');
         }
         return $json;
