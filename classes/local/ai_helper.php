@@ -1097,22 +1097,11 @@ USERPROMPT2;
 
         $systemprompt = "You are an experienced Norwegian language teacher. Answer student questions about grammar and corrections clearly and helpfully.";
 
-        $config = get_config('mod_flashcards');
-        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
-
+        // Get task-specific model for question answering
         $reflection = new \ReflectionClass($client);
-        $model = 'gpt-4o-mini';
-        if ($reflection->hasProperty('model')) {
-            $prop = $reflection->getProperty('model');
-            $prop->setAccessible(true);
-            $value = trim((string)$prop->getValue($client));
-            if ($value !== '') {
-                $model = $value;
-            }
-        }
-        if ($correctionmodel !== '') {
-            $model = $correctionmodel;
-        }
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'question');
 
         $payload = [
             'model' => $model,
@@ -1122,6 +1111,17 @@ USERPROMPT2;
                 ['role' => 'user', 'content' => $prompt],
             ],
         ];
+
+        // Add reasoning_effort for models that support it
+        $modelkey = core_text::strtolower(trim($model));
+        $requiresDefaultTempMethod = $reflection->getMethod('requires_default_temperature');
+        $requiresDefaultTempMethod->setAccessible(true);
+        if ($requiresDefaultTempMethod->invoke($client, $modelkey)) {
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'question');
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         try {
             $method = $reflection->getMethod('request');
@@ -1138,16 +1138,9 @@ USERPROMPT2;
             $result = ['answer' => $answer];
 
             // Include token usage information if available
-            $debug = [];
             if (isset($response->usage)) {
                 $result['usage'] = (array) $response->usage;
-                $debug['usage_added'] = true;
-                $debug['usage'] = $result['usage'];
-            } else {
-                $debug['usage_added'] = false;
-                $debug['usage'] = null;
             }
-            $result['debug'] = $debug;
 
             return $result;
         } catch (\Exception $e) {
@@ -1172,28 +1165,29 @@ USERPROMPT2;
 
         // Messages array already includes system prompt from frontend
         // Just pass through to OpenAI
-        $config = get_config('mod_flashcards');
-        $correctionmodel = trim((string)($config->openai_correction_model ?? ''));
 
+        // Get task-specific model for question answering
         $reflection = new \ReflectionClass($client);
-        $model = 'gpt-4o-mini';
-        if ($reflection->hasProperty('model')) {
-            $prop = $reflection->getProperty('model');
-            $prop->setAccessible(true);
-            $value = trim((string)$prop->getValue($client));
-            if ($value !== '') {
-                $model = $value;
-            }
-        }
-        if ($correctionmodel !== '') {
-            $model = $correctionmodel;
-        }
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'question');
 
         $payload = [
             'model' => $model,
             'temperature' => 0.4,
             'messages' => $messages,
         ];
+
+        // Add reasoning_effort for models that support it
+        $modelkey = core_text::strtolower(trim($model));
+        $requiresDefaultTempMethod = $reflection->getMethod('requires_default_temperature');
+        $requiresDefaultTempMethod->setAccessible(true);
+        if ($requiresDefaultTempMethod->invoke($client, $modelkey)) {
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'question');
+            unset($payload['temperature']); // Remove temperature for reasoning models
+        }
 
         try {
             $method = $reflection->getMethod('request');
@@ -1207,7 +1201,14 @@ USERPROMPT2;
 
             $answer = trim($response->choices[0]->message->content ?? '');
 
-            return ['answer' => $answer];
+            $result = ['answer' => $answer];
+
+            // Include token usage information if available
+            if (isset($response->usage)) {
+                $result['usage'] = (array) $response->usage;
+            }
+
+            return $result;
         } catch (\Exception $e) {
             error_log('Error in answer_ai_question_with_context: ' . $e->getMessage());
             return ['answer' => ''];
@@ -1289,17 +1290,11 @@ If NO constructions found, return empty constructions array.";
             ];
         }
 
-        // Use the same pattern as other methods in openai_client
+        // Get task-specific model for construction detection
         $reflection = new \ReflectionClass($client);
-        $model = 'gpt-4o-mini';
-        if ($reflection->hasProperty('model')) {
-            $prop = $reflection->getProperty('model');
-            $prop->setAccessible(true);
-            $value = trim((string)$prop->getValue($client));
-            if ($value !== '') {
-                $model = $value;
-            }
-        }
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'construction');
 
         $payload = [
             'model' => $model,
