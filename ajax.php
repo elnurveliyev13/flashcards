@@ -732,6 +732,7 @@ switch ($action) {
         $helper = new \mod_flashcards\local\ai_helper();
         $result = $helper->answer_ai_question_with_context($messages, $language, $userid);
 
+        // Note: usage from operation is already in $result, don't overwrite with snapshot
         echo json_encode($result);
         break;
 
@@ -1506,7 +1507,7 @@ if (!empty($ordbokene_debug)) {
         $language = clean_param($payload['language'] ?? 'uk', PARAM_ALPHANUMEXT);
         $helper = new \mod_flashcards\local\ai_helper();
         $data = $helper->answer_question($userid, $fronttext, $question, ['language' => $language]);
-        $data['usage'] = mod_flashcards_get_usage_snapshot($userid);
+        // Note: usage from operation is already in $data, don't overwrite with snapshot
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
