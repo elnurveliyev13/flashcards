@@ -1957,6 +1957,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     compactPOSOptions();
 
+    function capitalizeFirstLetter(value) {
+      if (!value || value.length === 0) return value;
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
     const frontInput = $("#uFront");
     const frontInputWrap = frontInput ? frontInput.closest('.front-input-wrap') : null;
     const frontSuggest = frontInputWrap ? frontInputWrap.querySelector('[data-front-suggest]') : null;
@@ -2055,16 +2060,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     });
     if(frontInput){
-      frontInput.addEventListener('input', ()=>{
-        if(frontSuggestCollapsed){
-          frontSuggestCollapsed = false;
-          setFrontSuggestToggleState(false);
-        }
-        if(translationDirection === 'no-user'){
-          scheduleTranslationRefresh();
-        }
-        scheduleFrontSuggest();
-      });
+    frontInput.addEventListener('input', ()=>{
+      if(frontSuggestCollapsed){
+        frontSuggestCollapsed = false;
+        setFrontSuggestToggleState(false);
+      }
+      if(translationDirection === 'no-user'){
+        scheduleTranslationRefresh();
+      }
+      scheduleFrontSuggest();
+      // Auto-capitalize first letter
+      const currentValue = frontInput.value;
+      const capitalized = capitalizeFirstLetter(currentValue);
+      if (capitalized !== currentValue) {
+        frontInput.value = capitalized;
+      }
+    });
       frontInput.addEventListener('focus', ()=>{
         if(translationDirection !== 'no-user' && !frontInput.value.trim()){
           applyTranslationDirection('no-user');
@@ -2085,6 +2096,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       translationInputLocal.addEventListener('input', ()=>{
         if(translationDirection === 'user-no'){
           scheduleTranslationRefresh();
+        }
+        // Auto-capitalize first letter
+        const currentValue = translationInputLocal.value;
+        const capitalized = capitalizeFirstLetter(currentValue);
+        if (capitalized !== currentValue) {
+          translationInputLocal.value = capitalized;
         }
       });
       translationInputLocal.addEventListener('focus', ()=>{
