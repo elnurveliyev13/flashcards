@@ -376,6 +376,8 @@ $string['settings_ai_correction_reasoning_effort_desc'] = 'Reasoning effort leve
 $string['settings_ai_question_reasoning_effort'] = 'Question answering reasoning effort';
 $string['settings_ai_question_reasoning_effort_desc'] = 'Reasoning effort level for question answering when using o1/o3 models. Note: Reasoning models may take longer to respond.';
 
+$string['settings_reasoning_effort_none'] = 'None';
+$string['settings_reasoning_effort_minimal'] = 'Minimal';
 $string['settings_reasoning_effort_low'] = 'Low';
 $string['settings_reasoning_effort_medium'] = 'Medium';
 $string['settings_reasoning_effort_high'] = 'High';

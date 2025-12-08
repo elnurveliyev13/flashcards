@@ -54,6 +54,8 @@ if ($hassiteconfig) {
         get_string('settings_ai_correction_reasoning_effort_desc', 'mod_flashcards'),
         'medium',
         [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
+            'minimal' => get_string('settings_reasoning_effort_minimal', 'mod_flashcards'),
             'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
             'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
             'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),

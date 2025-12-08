@@ -107,13 +107,16 @@ class openai_client {
     }
 
     /**
-     * Check if a model supports reasoning_effort parameter (o1 models only)
+     * Check if a model supports reasoning_effort parameter (o1 and gpt-5 series models)
      *
      * @param string $modelkey lowercased model id
      * @return bool True if model supports reasoning_effort
      */
     protected function supports_reasoning_effort(string $modelkey): bool {
-        return strpos($modelkey, 'o1-') !== false;
+        return strpos($modelkey, 'o1-') !== false ||
+               strpos($modelkey, 'gpt-5') !== false ||
+               strpos($modelkey, '5-mini') !== false ||
+               strpos($modelkey, '5-nano') !== false;
     }
 
     /**
