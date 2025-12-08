@@ -775,6 +775,18 @@ switch ($action) {
         $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
 
         try {
+            // Check if using reasoning model for focus task (may take longer)
+            $config = get_config('mod_flashcards');
+            $focusModel = trim($config->ai_focus_model ?? '');
+            $isReasoningModel = false;
+            if ($focusModel !== '') {
+                $modelkey = core_text::strtolower(trim($focusModel));
+                $isReasoningModel = (strpos($modelkey, '5-mini') !== false ||
+                                   strpos($modelkey, '5-nano') !== false ||
+                                   strpos($modelkey, 'o1-mini') !== false ||
+                                   strpos($modelkey, 'o1-preview') !== false);
+            }
+
             $helper = new \mod_flashcards\local\ai_helper();
             $openaiexpr = new \mod_flashcards\local\openai_client();
             $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [

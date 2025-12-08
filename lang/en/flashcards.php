@@ -359,13 +359,13 @@ $string['settings_ai_expression_model'] = 'Expression content model';
 $string['settings_ai_expression_model_desc'] = 'Optional model for generating expression content (definitions, examples). Leave empty to use the main model.';
 
 $string['settings_ai_focus_reasoning_effort'] = 'Focus detection reasoning effort';
-$string['settings_ai_focus_reasoning_effort_desc'] = 'Reasoning effort level for focus detection when using o1/o3 models.';
+$string['settings_ai_focus_reasoning_effort_desc'] = 'Reasoning effort level for focus detection when using o1/o3 models. Note: Reasoning models may take 30+ seconds to respond.';
 
 $string['settings_ai_correction_reasoning_effort'] = 'Correction reasoning effort';
-$string['settings_ai_correction_reasoning_effort_desc'] = 'Reasoning effort level for text correction when using o1/o3 models.';
+$string['settings_ai_correction_reasoning_effort_desc'] = 'Reasoning effort level for text correction when using o1/o3 models. Note: Reasoning models may take longer to respond.';
 
 $string['settings_ai_question_reasoning_effort'] = 'Question answering reasoning effort';
-$string['settings_ai_question_reasoning_effort_desc'] = 'Reasoning effort level for question answering when using o1/o3 models.';
+$string['settings_ai_question_reasoning_effort_desc'] = 'Reasoning effort level for question answering when using o1/o3 models. Note: Reasoning models may take longer to respond.';
 
 $string['settings_reasoning_effort_low'] = 'Low';
 $string['settings_reasoning_effort_medium'] = 'Medium';

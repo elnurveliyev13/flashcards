@@ -771,7 +771,9 @@ PROMPT;
         // "unsupported_value") and use reasoning_effort if set.
         $model = $payload['model'] ?? $this->model ?? '';
         $modelkey = core_text::strtolower(trim((string)$model));
-        if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
+        $useReasoningModel = $modelkey !== '' && $this->requires_default_temperature($modelkey);
+
+        if ($useReasoningModel) {
             if (array_key_exists('temperature', $payload)) {
                 unset($payload['temperature']);
             }
@@ -787,9 +789,13 @@ PROMPT;
             'Content-Type: application/json',
             'Authorization: Bearer ' . $this->apikey,
         ];
+
+        // Use longer timeout for reasoning models (o1, gpt-5 series)
+        $timeout = $useReasoningModel ? 90 : 30;
+
         $options = [
             'CURLOPT_HTTPHEADER' => $headers,
-            'CURLOPT_TIMEOUT' => 30,
+            'CURLOPT_TIMEOUT' => $timeout,
             'CURLOPT_CONNECTTIMEOUT' => 10,
         ];
         $t0 = microtime(true);
