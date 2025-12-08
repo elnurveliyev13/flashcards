@@ -81,10 +81,13 @@
     if(quickResetBtn && this.editBar){
       quickResetBtn.hidden = false;
       quickResetBtn.removeAttribute('hidden');
+      quickResetBtn.type = 'button';
       quickResetBtn.style.removeProperty('display');
-      if(!this.editBar.contains(quickResetBtn)){
-        var referenceNode = this.editBar.querySelector('#saveBarUpdate') || this.editBar.firstChild;
+      var referenceNode = this.editBar.querySelector('#saveBarUpdate') || this.editBar.firstChild;
+      if(referenceNode){
         this.editBar.insertBefore(quickResetBtn, referenceNode);
+      } else {
+        this.editBar.insertBefore(quickResetBtn, this.editBar.firstChild);
       }
     }
 
