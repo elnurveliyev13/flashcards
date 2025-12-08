@@ -107,6 +107,16 @@ class openai_client {
     }
 
     /**
+     * Check if a model supports reasoning_effort parameter (o1 models only)
+     *
+     * @param string $modelkey lowercased model id
+     * @return bool True if model supports reasoning_effort
+     */
+    protected function supports_reasoning_effort(string $modelkey): bool {
+        return strpos($modelkey, 'o1-') !== false;
+    }
+
+    /**
      * Whether client is configured for usage.
      */
     public function is_enabled(): bool {
@@ -861,7 +871,10 @@ PROMPT;
                 DEBUG_DEVELOPER);
         }
         if (!empty($info['http_code']) && (int)$info['http_code'] >= 400) {
-            throw new moodle_exception('ai_http_error', 'mod_flashcards', '', null, 'HTTP ' . $info['http_code'] . ': ' . $response);
+            $error_msg = 'HTTP ' . $info['http_code'] . ': ' . substr($response, 0, 500);
+            debugging('[flashcards][openai] API Error: ' . $error_msg, DEBUG_DEVELOPER);
+            debugging('[flashcards][openai] Request payload: ' . json_encode($payload), DEBUG_DEVELOPER);
+            throw new moodle_exception('ai_http_error', 'mod_flashcards', '', null, $error_msg);
         }
         $json = json_decode($response);
         if (!$json) {
@@ -873,20 +886,19 @@ PROMPT;
     }
 
     /**
-     * Models that only allow the default temperature (1.0).
+     * Models that only allow the default temperature (1.0) and support reasoning_effort.
      *
      * @param string $modelkey lowercased model id
      */
     protected function requires_default_temperature(string $modelkey): bool {
-        // gpt-5-mini / gpt-5-nano and their dated variants (with or without "gpt-" prefix)
-        // Check for "5-mini" or "5-nano" anywhere in the string to catch both "gpt-5-mini" and "5-mini"
+        // gpt-5-mini / gpt-5-nano support reasoning_effort
         if (strpos($modelkey, '5-mini') !== false) {
             return true;
         }
         if (strpos($modelkey, '5-nano') !== false) {
             return true;
         }
-        // o1-mini and o1-preview also don't support temperature
+        // o1-mini and o1-preview also support reasoning_effort
         if (strpos($modelkey, 'o1-mini') !== false || strpos($modelkey, 'o1-preview') !== false) {
             return true;
         }
