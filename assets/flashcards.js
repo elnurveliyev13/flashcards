@@ -1582,7 +1582,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       en: 'English', uk: 'Ukrainian', ru: 'Russian',
       fr: 'Francais', es: 'Espanol', pl: 'Polski',
       it: 'Italiano', de: 'Deutsch',
-      no: 'Norsk (bokmal)', nb: 'Norsk (bokmal)', nn: 'Nynorsk'
+      no: 'Norsk', nb: 'Norsk', nn: 'Nynorsk'
     };
     const TRANSLATION_LANGUAGE_CODES = ['uk','en','ru','pl','de','fr','es','it'];
     const INTERFACE_LANGUAGE_CODES = ['en','uk','ru','fr','es','pl','it','de'];
@@ -9588,10 +9588,20 @@ function renderComparisonResult(resultEl, comparison){
     const iosHintClose = $("#iosHintClose");
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+    const isDisplayModeStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const isStandaloneApp = isInStandaloneMode || isDisplayModeStandalone;
     const hintDismissedKey = 'ios-install-hint-dismissed';
 
     debugLog('[PWA] iOS device:', isIOS);
     debugLog('[PWA] Standalone mode:', isInStandaloneMode);
+    debugLog('[PWA] display-mode standalone:', isDisplayModeStandalone);
+
+    if (isStandaloneApp) {
+      document.documentElement.classList.add('fc-standalone');
+      if (root) {
+        root.classList.add('fc-standalone');
+      }
+    }
 
     // Check if user previously dismissed the hint
     const isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';

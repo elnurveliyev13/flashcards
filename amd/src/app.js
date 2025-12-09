@@ -628,10 +628,20 @@ define(['core/str'], function(str) {
     const iosHintClose = $("#iosHintClose");
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+    const isDisplayModeStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
+    const isStandaloneApp = isInStandaloneMode || isDisplayModeStandalone;
     const hintDismissedKey = 'ios-install-hint-dismissed';
 
     console.log('[PWA] iOS device:', isIOS);
     console.log('[PWA] Standalone mode:', isInStandaloneMode);
+    console.log('[PWA] display-mode standalone:', isDisplayModeStandalone);
+
+    if (isStandaloneApp) {
+      document.documentElement.classList.add('fc-standalone');
+      if (root) {
+        root.classList.add('fc-standalone');
+      }
+    }
 
     // Check if user previously dismissed the hint
     const isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
