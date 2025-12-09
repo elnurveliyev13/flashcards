@@ -5389,9 +5389,13 @@ select.inline-prompt-field {
   border: 1px solid #cbd5e1;
   border-radius: 4px;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 1rem;
   line-height: 1.6;
   color: #0f172a;
+}
+
+.corrected-text * {
+  font-size: 1rem;
 }
 
 .error-check-suggestion {
@@ -5469,11 +5473,62 @@ select.inline-prompt-field {
   border-radius: 2px;
   cursor: help;
   transition: all 0.2s;
+  position: relative;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .text-correction:hover {
   background: #bbf7d0;
   border-bottom-color: #059669;
+}
+
+.text-correction::after {
+  content: attr(data-explanation);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 8px);
+  min-width: 12rem;
+  max-width: 20rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 1rem;
+  line-height: 1.4;
+  background: #111827;
+  color: #f8fafc;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  white-space: pre-line;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.text-correction::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 4px);
+  border: 6px solid transparent;
+  border-top-color: #111827;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.text-correction[data-explanation]:hover::after,
+.text-correction[data-explanation]:hover::before {
+  opacity: 1;
+}
+
+.text-correction[data-explanation=""]::after,
+.text-correction[data-explanation=""]::before {
+  display: none;
 }
 
 .error-check-actions {

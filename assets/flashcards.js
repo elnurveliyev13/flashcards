@@ -1578,13 +1578,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       voiceSlotEl.classList.add('hidden');
     }
 
+    const LANGUAGE_DISPLAY_NAMES = {
+      en: 'English', uk: 'Ukrainian', ru: 'Russian',
+      fr: 'Francais', es: 'Espanol', pl: 'Polski',
+      it: 'Italiano', de: 'Deutsch',
+      no: 'Norsk (bokmal)', nb: 'Norsk (bokmal)', nn: 'Nynorsk'
+    };
+    const TRANSLATION_LANGUAGE_CODES = ['uk','en','ru','pl','de','fr','es','it'];
+    const INTERFACE_LANGUAGE_CODES = ['en','uk','ru','fr','es','pl','it','de'];
+
     function languageName(code){
       const c = (code||'').toLowerCase();
-      const map = {
-        en:'English', no:'Norsk', nb:'Norsk', nn:'Nynorsk',
-        uk:'', ru:'', pl:'Polski', de:'Deutsch', fr:'Francais', es:'Espanol', it:'Italiano'
-      };
-      return map[c] || c.toUpperCase();
+      return LANGUAGE_DISPLAY_NAMES[c] || c.toUpperCase();
     }
 
     // Translation visibility functions removed - translation is always visible
@@ -1617,16 +1622,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     // Show language selector dialog
     function showLanguageSelector(){
-      const languages = [
-        {code: 'uk', name: ''},
-        {code: 'en', name: 'English'},
-        {code: 'ru', name: ''},
-        {code: 'pl', name: 'Polski'},
-        {code: 'de', name: 'Deutsch'},
-        {code: 'fr', name: 'Francais'},
-        {code: 'es', name: 'Espanol'},
-        {code: 'it', name: 'Italiano'}
-      ];
+      const languages = TRANSLATION_LANGUAGE_CODES.map(code => ({
+        code,
+        name: LANGUAGE_DISPLAY_NAMES[code] || code.toUpperCase()
+      }));
 
       const currentLang = userLang2;
       const msg = `Current translation language: ${languageName(currentLang)}\n\nSelect new translation language:\n\n` +
@@ -10516,11 +10515,10 @@ function renderComparisonResult(resultEl, comparison){
           if(typeof scheduleTranslationRefresh === 'function'){
             scheduleTranslationRefresh();
           }
-          const langNames = {
-            en: 'English', uk: '', ru: '',
-            fr: 'Francais', es: 'Espanol', pl: 'Polski',
-            it: 'Italiano', de: 'Deutsch'
-          };
+          const langNames = INTERFACE_LANGUAGE_CODES.reduce((map, code) => {
+            map[code] = LANGUAGE_DISPLAY_NAMES[code] || code;
+            return map;
+          }, {});
           const langName = langNames[newLang] || newLang;
           const emptyEl = $('#emptyMessage');
           if(emptyEl){
@@ -10550,7 +10548,7 @@ function renderComparisonResult(resultEl, comparison){
       // Update mobile button text to match current language
       function updateMobileButtonText(){
         if(langBtnMobile && langSelEl){
-          langBtnMobile.textContent = (langSelEl.value || 'EN').toUpperCase();
+          langBtnMobile.textContent = (langSelEl.value || 'en').toLowerCase();
         }
       }
 
@@ -10871,6 +10869,15 @@ Regeln:
     /**
      * Highlight differences between original and corrected text
      */
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function highlightDifferences(original, corrected, errors) {
       let highlighted = corrected;
 
@@ -10883,7 +10890,7 @@ Regeln:
         if (err.corrected && err.corrected.trim()) {
           // Wrap corrected parts in span with title showing explanation
           const explanation = err.issue || '';
-          const wrappedCorrection = `<span class="text-correction" title="${explanation}">${err.corrected}</span>`;
+          const wrappedCorrection = `<span class="text-correction" data-explanation="${escapeHtml(explanation)}" title="${escapeHtml(explanation)}">${escapeHtml(err.corrected)}</span>`;
           highlighted = highlighted.replace(err.corrected, wrappedCorrection);
         }
       });
@@ -11590,6 +11597,50 @@ Antworte auf Deutsch.`
         checkTextForErrors();
       });
     }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
+
+    function copyExplanationToClipboard(text) {
+      if (!text) {
+        return;
+      }
+
+      let copyPromise = null;
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        copyPromise = navigator.clipboard.writeText(text);
+      }
+
+      if (copyPromise && typeof copyPromise.then === 'function') {
+        copyPromise.catch(() => fallbackCopy(text));
+        return;
+      }
+
+      fallbackCopy(text);
+    }
+
+    document.addEventListener('click', function(event) {
+      const correction = event.target && event.target.closest && event.target.closest('.text-correction');
+      if (!correction) {
+        return;
+      }
+
+      const explanation = correction.dataset.explanation;
+      if (!explanation) {
+        return;
+      }
+
+      copyExplanationToClipboard(explanation);
+    });
 
   }
 export { flashcardsInit };
