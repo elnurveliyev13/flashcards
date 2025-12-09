@@ -2089,10 +2089,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontInput.addEventListener('click', scheduleFrontSuggest);
       frontInput.addEventListener('blur', ()=>{
         setTimeout(hideFrontSuggest, 120);
+        // Trigger immediate translation on blur
+        if(translationDirection === 'no-user' && frontInput.value.trim()){
+          runTranslationHelper();
+        }
       });
       frontInput.addEventListener('keydown', e=>{
         if(e.key === 'Escape'){
           hideFrontSuggest();
+        }
+        // Trigger immediate translation on Enter
+        if(e.key === 'Enter' && translationDirection === 'no-user' && frontInput.value.trim()){
+          e.preventDefault();
+          runTranslationHelper();
         }
       });
     }
@@ -2111,6 +2120,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       translationInputLocal.addEventListener('focus', ()=>{
         if(translationDirection !== 'user-no' && !translationInputLocal.value.trim()){
           applyTranslationDirection('user-no');
+        }
+      });
+      translationInputLocal.addEventListener('blur', ()=>{
+        // Trigger immediate translation on blur
+        if(translationDirection === 'user-no' && translationInputLocal.value.trim()){
+          runTranslationHelper();
+        }
+      });
+      translationInputLocal.addEventListener('keydown', e=>{
+        // Trigger immediate translation on Enter
+        if(e.key === 'Enter' && translationDirection === 'user-no' && translationInputLocal.value.trim()){
+          e.preventDefault();
+          runTranslationHelper();
         }
       });
     }
