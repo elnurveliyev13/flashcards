@@ -2429,8 +2429,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
    so they don't float upward. */
 .fc-standalone .tabs-toolbar .fc-tabs{
   bottom: 0;
-  padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
-  padding-top: 6px;
+  padding: 8px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
+  padding-top: 10px;
 }
 .fc-standalone .bottom-panel.bottom-actions{
   bottom: 0;

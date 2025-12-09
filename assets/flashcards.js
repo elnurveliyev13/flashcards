@@ -864,7 +864,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         front_placeholder: '_ _ _',
         ai_click_hint: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043b\u044e\u0431\u043e\u0435 \u0441\u043b\u043e\u0432\u043e \u0432\u044b\u0448\u0435, \u0447\u0442\u043e\u0431\u044b \u0432\u044b\u044f\u0432\u0438\u0442\u044c \u0443\u0441\u0442\u043e\u0439\u0447\u0438\u0432\u043e\u0435 \u0432\u044b\u0440\u0430\u0436\u0435\u043d\u0438\u0435',
         translation_en_placeholder: 'I love you',
-        translation_placeholder: '\u042f \u0442\u0435\u0431\u044f \u043b\u044e\u0431\u043b\u044e',
+        translation_placeholder: '_ _ _',
         explanation_placeholder: '_ _ _',
         focus_placeholder: '_ _ _',
         collocations_placeholder: '_ _ _',
