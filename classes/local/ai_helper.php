@@ -608,6 +608,37 @@ Rules for JSON:
 - Do NOT use trailing commas.
 - Booleans must be: true or false (not strings).
 - No comments, no extra text, no markdown, no backticks.
+Before you output your final answer, do a brief internal self-check.
+
+Linguistic self-check:
+- Compare the original sentence and `correctedText` word by word.
+  - For every difference, ask yourself: “Is this a CLEAR and OBJECTIVE error in standard Bokmål (grammar, spelling, agreement, word order, preposition, article, capitalization, or punctuation that affects understanding)?”
+  - If you are not clearly sure that it is an error, revert this change so that the fragment stays as in the original sentence.
+- Scan the original sentence once more for any remaining CLEAR errors in:
+  - capitalization,
+  - word order (including placement of adverbs and “ikke”),
+  - verb forms (tense and agreement),
+  - prepositions and collocations,
+  - articles and agreement,
+  - obvious spelling mistakes.
+  If you notice a clear error that is still not corrected in `correctedText`, correct it and add a corresponding error item.
+- Make sure that none of the corrections are purely stylistic or only “more natural”; every correction must be necessary for correctness or very basic naturalness for A2–B2 learners.
+
+Structural self-check:
+- Verify that the output is STRICTLY VALID JSON:
+  - only double quotes for strings,
+  - no trailing commas,
+  - booleans are true/false (not strings),
+  - no comments, no extra text, no markdown, no backticks.
+- Verify that `alternativeText` either:
+  - is clearly a more natural variant with the same meaning and learner-friendly grammar, OR
+  - is exactly equal to `correctedText`.
+- Verify that `hasErrors` is:
+  - false and `errors = []` if the original sentence was fully correct and natural, OR
+  - true if there is at least one real correction.
+- Verify that for EVERY change between the learner sentence and `correctedText` there is at least one corresponding item in `errors`, and that there is NO error item where `original` and `corrected` are exactly the same.
+
+If you find any inconsistency, silently fix it and only then output the final JSON.
 USERPROMPT;
         $client = new openai_client();
         if (!$client->is_enabled()) {
@@ -779,11 +810,22 @@ USERPROMPT2;
                     $this->accumulate_usage($response2->usage ?? null, $totalUsage);
 
                     $content2 = trim($response2->choices[0]->message->content ?? '');
-                    $json2 = null;
-                    if (preg_match('~\{.*\}~s', $content2, $m)) {
-                        $json2 = $m[0];
+                    $result2 = $this->parse_json_response($content2);
+                    if ($result2 === null) {
+                        error_log('check_norwegian_text: invalid JSON in multisampling stage2 response, retrying once');
+                        $retryStart = microtime(true);
+                        $response2 = $method->invoke($client, $payload2);
+                        $debugtiming['api_stage2_retry'] = microtime(true) - $retryStart;
+                        $recordMethod->invoke($client, $userid, $response2->usage ?? null);
+                        $this->accumulate_usage($response2->usage ?? null, $totalUsage);
+                        $content2 = trim($response2->choices[0]->message->content ?? '');
+                        $result2 = $this->parse_json_response($content2);
                     }
-                    $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
+
+                    if ($result2 === null) {
+                        error_log('check_norwegian_text: multisampling stage2 response still invalid after retry');
+                        $result2 = [];
+                    }
 
                     // Merge STAGE 2 results
                     $finalResult = $result1;
@@ -893,11 +935,17 @@ USERPROMPT2;
             }
 
             // Parse first response
-            $json1 = null;
-            if (preg_match('~\{.*\}~s', $content1, $m)) {
-                $json1 = $m[0];
+            $result1 = $this->parse_json_response($content1);
+            if ($result1 === null) {
+                error_log('check_norwegian_text: invalid JSON in stage1 response, retrying once');
+                $retryStart = microtime(true);
+                $responseRetry = $method->invoke($client, $payload1);
+                $debugtiming['api_stage1_retry'] = microtime(true) - $retryStart;
+                $recordMethod->invoke($client, $userid, $responseRetry->usage ?? null);
+                $this->accumulate_usage($responseRetry->usage ?? null, $totalUsage);
+                $contentRetry = trim($responseRetry->choices[0]->message->content ?? '');
+                $result1 = $this->parse_json_response($contentRetry);
             }
-            $result1 = $json1 ? json_decode($json1, true) : json_decode($content1, true);
 
             if (!is_array($result1) || !isset($result1['hasErrors'])) {
                 return ['hasErrors' => false, 'errors' => [], 'correctedText' => $text, 'explanation' => ''];
@@ -998,12 +1046,26 @@ USERPROMPT2;
             $debugtiming['api_stage2'] = microtime(true) - $t2;
             $recordMethod->invoke($client, $userid, $response2->usage ?? null);
 
+            // Accumulate usage from STAGE 2
+            $this->accumulate_usage($response2->usage ?? null, $totalUsage);
+
             $content2 = trim($response2->choices[0]->message->content ?? '');
-            $json2 = null;
-            if (preg_match('~\{.*\}~s', $content2, $m)) {
-                $json2 = $m[0];
+            $result2 = $this->parse_json_response($content2);
+            if ($result2 === null) {
+                error_log('check_norwegian_text: invalid JSON in stage2 response, retrying once');
+                $retryStart = microtime(true);
+                $response2 = $method->invoke($client, $payload2);
+                $debugtiming['api_stage2_retry'] = microtime(true) - $retryStart;
+                $recordMethod->invoke($client, $userid, $response2->usage ?? null);
+                $this->accumulate_usage($response2->usage ?? null, $totalUsage);
+                $content2 = trim($response2->choices[0]->message->content ?? '');
+                $result2 = $this->parse_json_response($content2);
             }
-            $result2 = $json2 ? json_decode($json2, true) : json_decode($content2, true);
+
+            if ($result2 === null) {
+                error_log('check_norwegian_text: stage2 response still invalid after retry');
+                $result2 = [];
+            }
 
             // Merge results
             $finalResult = $result1;
@@ -1649,6 +1711,31 @@ If NO constructions found, return empty constructions array.";
             return true;
         }
         return false;
+    }
+
+    /**
+     * Parse JSON output from the AI response, allowing for embedded JSON blocks.
+     *
+     * @param string $content Raw response text
+     * @return array|null Parsed array or null on failure
+     */
+    protected function parse_json_response(string $content): ?array {
+        $trimmed = trim($content);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $jsonCandidate = null;
+        if (preg_match('~\{.*\}~s', $trimmed, $matches)) {
+            $jsonCandidate = $matches[0];
+        }
+
+        $payload = $jsonCandidate ?? $trimmed;
+        $decoded = json_decode($payload, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+        return is_array($decoded) ? $decoded : null;
     }
 
     /**
