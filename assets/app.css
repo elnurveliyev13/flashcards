@@ -133,7 +133,7 @@ html[data-font-size="extra-large"] {
   --fc-tabs-gap: 4px;
   /* Keep a 960px minimum but let desktop stretch with a small viewport gutter */
   --app-content-max-width: max(960px, calc(100vw - (var(--space-2) * 2)));
-  --bottom-actions-stack-offset: 72px;
+  --bottom-actions-stack-offset: 0px;
   --meta-panel-height: 0px;
   --edit-actions-bar-height: 0px;
 
@@ -624,7 +624,7 @@ h1{
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface-2);
-  color: var(--text-strong);
+  color: var(--text);
   padding: 10px 12px;
   font-size: 0.9375rem; /* 15px */
   margin-top: 4px;
@@ -633,11 +633,11 @@ h1{
 }
 .header-pref-panel select option,
 .header-pref-panel select option:checked{
-  color: var(--text);
+  color: var(--text) !important;
 }
 #langSel,
 #ttsVoice{
-  color: var(--text);
+  color: var(--text) !important;
   font-weight: 600;
   min-height: 38px;
 }
@@ -1989,7 +1989,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
   border-radius:0 !important;
-  z-index:1300;
+  z-index:2300;
   pointer-events:auto;
 }
 
@@ -5763,16 +5763,17 @@ select.inline-prompt-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 14px;
   color: #fff;
 }
 .ai-check-inline {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   margin-right: 6px;
+  font-size: 12px;
 }
 .ai-check-ok {
   background: #22c55e;

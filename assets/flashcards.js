@@ -5190,6 +5190,7 @@ let lastStudyAudioRate=1;
       const recorderDock = document.getElementById('metaRecorder');
       if(recorderDock){
         recorderDock.classList.remove('hidden');
+        if(window.__fcRefreshBottomStack){ window.__fcRefreshBottomStack(); }
       }
 
       if(btnPlayBtn){
@@ -10199,6 +10200,8 @@ function renderComparisonResult(resultEl, comparison){
       function queueBottomPanelStackRefresh() {
         requestAnimationFrame(refreshBottomPanelStackMetrics);
       }
+      // Expose for layout-sensitive components that toggle bottom bars (e.g., recorder)
+      window.__fcRefreshBottomStack = queueBottomPanelStackRefresh;
 
       window.addEventListener('resize', () => {
         queueBottomPanelStackRefresh();
@@ -11142,16 +11145,15 @@ Regeln:
       const safeSentence = escapeHtml(sentence);
       const safeComment = comment ? escapeHtml(comment) : '';
       const isOk = status === 'ok';
-      const icon = isOk ? '✓' : '⚠';
+      const icon = isOk ? '✓' : '!';
       const iconClass = isOk ? 'ai-check-ok' : 'ai-check-warn';
       return `
         <div class="ai-check-item">
           <div class="ai-check-header">
-            <span class="ai-check-label">${escapeHtml(label)}</span>
-            <span class="ai-check-icon ${iconClass}">${icon}</span>
+            <span class="ai-check-label">${escapeHtml(label)}: <span class="ai-check-icon ${iconClass}">${icon}</span></span>
           </div>
           <div class="ai-answer-highlight">${safeSentence}</div>
-          ${safeComment ? `<div class="ai-answer-note"><span class="ai-check-icon ${iconClass} ai-check-inline">${icon}</span>${safeComment}</div>` : ''}
+          ${safeComment ? `<div class="ai-answer-note">${safeComment}</div>` : ''}
         </div>
       `;
     }
@@ -11250,6 +11252,19 @@ Regeln:
       }
 
       return `<div class="ai-answer-structured">${sections.join('')}</div>`;
+    }
+
+    function stripYuiArtifacts(container) {
+      if (!container) return;
+      const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
+      const toRemove = [];
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        if (node && typeof node.nodeValue === 'string' && node.nodeValue.trim().startsWith('yui_')) {
+          toRemove.push(node);
+        }
+      }
+      toRemove.forEach(n => n.parentNode && n.parentNode.removeChild(n));
     }
 
     async function askAIAboutCorrection(questionType, originalText, result) {
@@ -11403,7 +11418,7 @@ Return a single JSON object with the following structure:
   "recheck": {
     "status": "ok" | "needs_fix",
     "finalSentence": "Norwegian sentence (your final recommended version)",
-    "confidenceComment": "VERY short comment in USER_LANGUAGE (max 120 chars). If status is ok, just a brief confirmation; if needs_fix, a brief reason and key fix."
+    "confidenceComment": "VERY short comment in USER_LANGUAGE (max 120 chars). If status is ok, just a brief confirmation; if needs_fix, a brief reason and key fix. Always respond in USER_LANGUAGE (never Norwegian when USER_LANGUAGE is English)."
   },
   "alternative": {
     "status": "ok" | "needs_fix" | "absent",
@@ -11482,6 +11497,7 @@ Rules:
           ChatSessionManager.addMessage('assistant', data.answer);
 
           answerBlock.innerHTML = formatAIAnswer(data.answer);
+          stripYuiArtifacts(answerBlock);
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
           answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
