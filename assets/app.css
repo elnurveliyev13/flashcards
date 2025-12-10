@@ -2448,6 +2448,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .fc-standalone #editActionsBar{
   bottom: calc(var(--fc-tabs-height) + 10px) !important;
 }
+.fc-standalone.fc-bottom-actions-visible #bottomActions{
+  bottom: calc(var(--fc-tabs-height) + 16px);
+}
+.fc-standalone.fc-bottom-actions-visible #editActionsBar{
+  bottom: calc(var(--fc-tabs-height) + 16px) !important;
+}
 
 .fc-tab{
   border-radius: 12px;
