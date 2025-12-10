@@ -11111,10 +11111,16 @@ Regeln:
       if (parsed.recheck) {
         const finalSentence = escapeHtml(parsed.recheck.finalSentence || '');
         const confidence = escapeHtml(parsed.recheck.confidenceComment || '');
+        const status = (parsed.recheck.status || '').toLowerCase() === 'ok' ? 'ok' : 'needs_fix';
+        const statusLabel = status === 'ok' ? (t('ai_status_ok') || 'Looks good') : (t('ai_status_fix') || 'Needs attention');
         sections.push(`
           <div class="ai-answer-section">
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
             ${finalSentence ? `<div class="ai-answer-highlight">${finalSentence}</div>` : ''}
+            <div class="ai-status-row ai-status-${status}">
+              <span class="ai-status-dot"></span>
+              <span class="ai-status-text">${escapeHtml(statusLabel)}</span>
+            </div>
             ${confidence ? `<div class="ai-answer-note">${confidence}</div>` : ''}
           </div>
         `);
@@ -11316,8 +11322,9 @@ Return a single JSON object with the following structure:
 
 {
   "recheck": {
+    "status": "ok" | "needs_fix",
     "finalSentence": "Norwegian sentence (your final recommended version)",
-    "confidenceComment": "short comment in USER_LANGUAGE about how sure you are and why"
+    "confidenceComment": "VERY short comment in USER_LANGUAGE (max 120 chars). If status is ok, just a brief confirmation; if needs_fix, a brief reason and key fix."
   },
   "examples": [
     "Norwegian example sentence 1",
@@ -11341,6 +11348,9 @@ Rules:
   - "multiwordExpressions": []
   - "noMultiwordExpressions": true
   - and in "confidenceComment" or a short note inside "multiwordExpressions" explanation, clearly state in USER_LANGUAGE that there are no fixed expressions.
+- Do NOT repeat the same expression in both the confidenceComment and the multiwordExpressions section; keep each section focused and concise.
+- Keep confidenceComment concise (max 120 characters). If status is "ok", keep it to a single short confirmation; if "needs_fix", give one short reason.
+- Avoid repeating the same examples in multiple sections.
 - Output MUST be valid JSON:
   - Use ONLY double quotes for all strings.
   - No trailing commas.

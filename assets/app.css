@@ -5690,6 +5690,29 @@ select.inline-prompt-field {
   font-style: italic;
 }
 
+.ai-status-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.ai-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.ai-status-ok .ai-status-dot {
+  background: #22c55e;
+}
+.ai-status-needs_fix .ai-status-dot {
+  background: #f97316;
+}
+.ai-status-text {
+  color: #0f172a;
+}
+
 .ai-answer-structured {
   background: #ffffff;
   border: 1px solid #e2e8f0;
