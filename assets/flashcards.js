@@ -11374,7 +11374,7 @@ Regeln:
         const safeCorrected = escapeForPrompt(correctedSentenceValue);
         const safeAlternative = escapeForPrompt(result.suggestion || '');
         userPrompt = `
-You are a careful and conservative Norwegian (Bokmål) teacher for adult learners (A2-B2).
+You are a careful and conservative Norwegian (Bokmål) teacher.
 You must be very cautious with Norwegian grammar: if you are not sure something is wrong or right, clearly say that you are not sure instead of inventing a rule.
 
 USER_LANGUAGE = ${userLanguage}
@@ -11462,8 +11462,11 @@ Return a single JSON object with the following structure:
       "expression": "expression in Norwegian (grunnform)",
       "translation": "natural translation into USER_LANGUAGE",
       "explanation": "short explanation in USER_LANGUAGE",
-      "example": "Norwegian example sentence with this expression",
-      "exampleTranslation": "translation of the example into USER_LANGUAGE"
+      "examples": [
+        { "text": "Norwegian example sentence 1 with this expression", "translation": "translation of example 1 into USER_LANGUAGE" },
+        { "text": "Norwegian example sentence 2 with this expression", "translation": "translation of example 2 into USER_LANGUAGE" },
+        { "text": "Norwegian example sentence 3 with this expression", "translation": "translation of example 3 into USER_LANGUAGE" }
+      ]
     }
   ],
   "noMultiwordExpressions": false

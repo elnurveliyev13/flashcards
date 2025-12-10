@@ -519,7 +519,7 @@ class ai_helper {
 
         // First request: Find errors
         $systemprompt1 = <<<"SYSTEMPROMPT"
-You are an experienced teacher of Norwegian (Bokm?l) for adult learners (levels A2-B2).
+You are an experienced teacher of Norwegian (Bokm?l) for adult learners.
 
 Your job:
 - Carefully check ONE learner sentence in Norwegian.
@@ -556,7 +556,7 @@ Your tasks (do them in this order):
 2) Create an ALTERNATIVE, MORE NATURAL VERSION (optional):
    - ONLY if there is a clearly more natural and typical way to say the same thing in simple, learner-friendly Bokm?l.
    - Do NOT change meaning.
-   - Do NOT introduce advanced structures that are too difficult for A2-B2 learners.
+   - Do NOT introduce advanced structures that are too difficult for typical adult learners.
    - If you do NOT see a clear improvement, set the alternative equal to the main corrected sentence.
    - Even when the learner sentence is already correct and natural (for example: "Jeg har lyst p? is"), you MAY sometimes give a second, equally correct variant that is very common and useful for learners (for example: "Jeg vil ha is."). In such cases, keep correctedText very close to the original sentence and put the other variant into alternativeText.
 
@@ -763,9 +763,9 @@ Your tasks:
    - prepositions
    - obvious wrong word choice
 
-2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
-   - suggest ONE more natural alternative
-   - keep the language simple (A2-B2)
+  2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
+     - suggest ONE more natural alternative
+     - keep the language simple and not overly advanced
    - do NOT change the meaning
 
 JSON:
@@ -1056,9 +1056,9 @@ Your tasks:
    - prepositions
    - obvious wrong word choice
 
-2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
-   - suggest ONE more natural alternative
-   - keep the language simple (A2-B2)
+  2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
+     - suggest ONE more natural alternative
+     - keep the language simple and not overly advanced
    - do NOT change the meaning
 
 JSON:
