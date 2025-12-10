@@ -63,6 +63,7 @@ $string['apply_corrections'] = 'Применить исправления';
 $string['keep_as_is'] = 'Оставить как есть';
 $string['error_check_toggle_label'] = 'Показать проверку ошибок';
 $string['error_check_collapse_label'] = 'Скрыть блок проверки ошибок';
+$string['error_check_collapse_text'] = 'Свернуть';
 $string['error_checking_failed'] = 'Проверка не удалась';
 $string['naturalness_suggestion'] = 'Более естественный вариант:';
 $string['ask_ai_about_correction'] = 'Спросить AI';

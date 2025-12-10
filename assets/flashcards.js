@@ -2370,18 +2370,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function syncExpressionSuggestions(text){
       const normalized = (text || '').trim();
-      if(!focusHelperState.expressionSourceText){
-        if(!normalized && focusHelperState.expressionSuggestions.length){
-          focusHelperState.expressionSuggestions = [];
-          focusHelperState.activeExpressionIndex = null;
-        }
-        return;
-      }
-      if(!normalized || normalized !== focusHelperState.expressionSourceText){
+      if(!normalized && focusHelperState.expressionSuggestions.length){
         focusHelperState.expressionSuggestions = [];
         focusHelperState.expressionSourceText = '';
         focusHelperState.activeExpressionIndex = null;
       }
+    }
+
+    function setExpressionSourceText(text){
+      if(!focusHelperState.expressionSuggestions.length){
+        focusHelperState.expressionSourceText = '';
+        focusHelperState.activeExpressionIndex = null;
+        return;
+      }
+      focusHelperState.expressionSourceText = (text || '').trim();
+      focusHelperState.activeExpressionIndex = null;
     }
 
     function setFocusExpressionSuggestions(items, sourceText){
@@ -2408,8 +2411,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       focusHelperState.expressionSuggestions = Array.from(new Set(normalizedExpressions));
       const fallbackSource = (sourceText || (frontInput ? (frontInput.value || '') : '') || '').trim();
-      focusHelperState.expressionSourceText = fallbackSource;
-      focusHelperState.activeExpressionIndex = null;
+      setExpressionSourceText(fallbackSource);
       renderFocusChips();
     }
 
@@ -11034,6 +11036,32 @@ Regeln:
       return highlighted;
     }
 
+    function applyTextToFront(text, { closeErrorBlock = true } = {}) {
+      if (text === null || text === undefined) {
+        return;
+      }
+      const normalizedText = String(text);
+      if (focusHelperState.expressionSuggestions.length){
+        setExpressionSourceText(normalizedText);
+      }
+      const frontInput = $('#uFront');
+      if (frontInput) {
+        frontInput.value = normalizedText;
+        const inputEvent = new Event('input', { bubbles: true });
+        frontInput.dispatchEvent(inputEvent);
+      }
+
+      if (window.onFrontChange) {
+        window.onFrontChange();
+      }
+
+      renderFocusChips();
+
+      if (closeErrorBlock) {
+        closeErrorCheckBlock();
+      }
+    }
+
     /**
      * Show error check result with corrections
      */
@@ -11048,6 +11076,8 @@ Regeln:
       const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
       const keepAsIsText = t('keep_as_is') || 'Keep it as it is';
       const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
+      const collapseBtnAria = t('error_check_collapse_label') || 'Hide the error check panel';
+      const collapseBtnText = t('error_check_collapse_text') || 'Collapse';
 
       // Get original text
       const originalText = $('#uFront').value || '';
@@ -11091,8 +11121,9 @@ Regeln:
       const sureText = t('ai_sure') || 'Are you sure?';
 
       const html = `
-        <div class="error-check-header">
+        <div class="error-check-header-row">
           <strong>${errorsFoundText}</strong>
+          <button type="button" class="error-check-collapse-btn" aria-label="${collapseBtnAria}">${collapseBtnText}</button>
         </div>
         ${errorsListHtml}
         <div class="error-check-corrected">
@@ -11123,40 +11154,24 @@ Regeln:
       block.dataset.hasContent = '1';
       setErrorCheckToggleVisibility(true);
       openErrorCheckBlock();
+      const collapseBtnInline = block.querySelector('.error-check-collapse-btn');
+      if (collapseBtnInline) {
+        collapseBtnInline.addEventListener('click', function(event) {
+          event.preventDefault();
+          closeErrorCheckBlock();
+        });
+      }
 
       // Setup button handlers
       const applyCorrectedBtn = block.querySelector('.apply-corrected-btn');
       const applySuggestionBtn = block.querySelector('.apply-suggestion-btn');
       const rejectBtn = document.getElementById('rejectCorrectionBtn');
 
-      // Helper function to apply text
-      function applyText(text) {
-        const frontInput = $('#uFront');
-        if (frontInput) {
-          frontInput.value = text;
-
-          // Trigger input event to activate translation and other listeners
-          const inputEvent = new Event('input', { bubbles: true });
-          frontInput.dispatchEvent(inputEvent);
-        }
-
-        // Trigger translation update if available
-        if (window.onFrontChange) {
-          window.onFrontChange();
-        }
-
-        // Trigger tokenization
-        renderFocusChips();
-
-        // Hide error block
-        closeErrorCheckBlock();
-      }
-
       // Apply corrected version button
       if (applyCorrectedBtn) {
         applyCorrectedBtn.addEventListener('click', function() {
           const text = this.getAttribute('data-text');
-          applyText(text);
+          applyTextToFront(text);
         });
       }
 
@@ -11164,14 +11179,17 @@ Regeln:
       if (applySuggestionBtn) {
         applySuggestionBtn.addEventListener('click', function() {
           const text = this.getAttribute('data-text');
-          applyText(text);
+          applyTextToFront(text);
         });
       }
 
       // Keep it as it is button
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
-          // Just hide error block and continue with tokenization
+          if(focusHelperState.expressionSuggestions.length){
+            const currentText = ($('#uFront') ? $('#uFront').value : '') || '';
+            setExpressionSourceText(currentText);
+          }
           closeErrorCheckBlock();
           renderFocusChips();
         });
@@ -11219,6 +11237,11 @@ Regeln:
       if(!focusWordList) return;
       const suggestions = focusHelperState.expressionSuggestions || [];
       if(!suggestions.length){
+        return;
+      }
+      const frontNormalized = (frontInput ? (frontInput.value || '') : '').trim();
+      const expressionSource = focusHelperState.expressionSourceText || '';
+      if(expressionSource && expressionSource !== frontNormalized){
         return;
       }
       suggestions.forEach((expression, rowIndex) => {
@@ -11373,8 +11396,14 @@ Regeln:
       const sections = [];
       if (parsed.recheck) {
         const reStatus = (parsed.recheck.status || '').toLowerCase() === 'ok' ? 'ok' : 'needs_fix';
-        const finalSentence = parsed.recheck.finalSentence || '';
+        const finalSentence = (parsed.recheck.finalSentence || '').trim();
         const confidence = parsed.recheck.confidenceComment || '';
+        const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
+        const finalCta = finalSentence ? `
+          <div class="ai-answer-cta">
+            <button type="button" class="ai-apply-final-btn apply-primary" data-final="${escapeHtml(finalSentence)}">${applyCorrectionsText}</button>
+          </div>
+        ` : '';
         let altBlock = '';
         if (parsed.alternative && parsed.alternative.status && parsed.alternative.status !== 'absent' && parsed.alternative.sentence) {
           altBlock = renderSentenceCheck(t('ai_alternative') || 'Alternative', parsed.alternative.sentence, parsed.alternative.status.toLowerCase() === 'ok' ? 'ok' : 'needs_fix', parsed.alternative.comment || '');
@@ -11384,6 +11413,7 @@ Regeln:
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
             ${renderSentenceCheck(t('ai_corrected') || 'Corrected', finalSentence, reStatus, confidence)}
             ${altBlock}
+            ${finalCta}
           </div>
         `);
       }
@@ -11738,6 +11768,15 @@ Rules:
           const debugMeta = renderDebugMeta(data);
           answerBlock.innerHTML = `${formatted}${debugMeta}`;
           stripYuiArtifacts(answerBlock);
+          const applyFinalBtn = answerBlock.querySelector('.ai-apply-final-btn');
+          if (applyFinalBtn) {
+            applyFinalBtn.addEventListener('click', function() {
+              const finalSentence = this.getAttribute('data-final');
+              if (finalSentence) {
+                applyTextToFront(finalSentence);
+              }
+            });
+          }
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
           answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;

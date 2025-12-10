@@ -220,6 +220,10 @@
                 </div>
               </div>
               <div class="slot-head-extra">
+                <button type="button" id="toggleErrorCheckBtn" class="error-check-toggle-btn status-inline-toggle" aria-controls="errorCheckBlock" aria-expanded="false" title="{{#str}} error_check_toggle_label, mod_flashcards {{/str}}" style="display:none;">
+                  <span class="error-check-toggle-icon" aria-hidden="true">&#9888;</span>
+                  <span class="sr-only">{{#str}} error_check_toggle_label, mod_flashcards {{/str}}</span>
+                </button>
                 <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
                 <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
                   <span aria-hidden="true">&#8634;</span>
@@ -229,14 +233,7 @@
             </div>
           </div>
           <div class="fokus-input-wrap front-input-wrap">
-            <div class="error-check-trigger">
-              <button type="button" id="toggleErrorCheckBtn" class="error-check-toggle-btn" aria-controls="errorCheckBlock" aria-expanded="false" title="{{#str}} error_check_toggle_label, mod_flashcards {{/str}}" style="display:none;">
-                <span class="error-check-toggle-icon" aria-hidden="true">&#9888;</span>
-                <span class="sr-only">{{#str}} error_check_toggle_label, mod_flashcards {{/str}}</span>
-              </button>
-            </div>
             <div id="errorCheckBlock" class="error-check-block error-check-collapsed" style="display:none;" aria-live="polite">
-              <button type="button" id="collapseErrorCheckBtn" class="error-check-collapse-btn" aria-label="{{#str}} error_check_collapse_label, mod_flashcards {{/str}}">&times;</button>
               <div class="error-check-content"></div>
             </div>
             <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>

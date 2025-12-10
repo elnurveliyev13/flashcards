@@ -55,6 +55,7 @@ $string['apply_corrections'] = 'Apply corrections';
 $string['keep_as_is'] = 'Keep it as it is';
 $string['error_check_toggle_label'] = 'Show error check';
 $string['error_check_collapse_label'] = 'Hide the error check panel';
+$string['error_check_collapse_text'] = 'Collapse';
 $string['error_checking_failed'] = 'Error checking failed';
 $string['naturalness_suggestion'] = 'More natural alternative:';
 $string['ask_ai_about_correction'] = 'Ask AI';
