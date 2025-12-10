@@ -11389,19 +11389,24 @@ Input
 - correctedSentence: "${safeCorrected}"
 - alternativeSentence: "${safeAlternative || ''}" (may be empty)
 
-Always base your analysis primarily on correctedSentence, but use originalSentence to understand what the learner intended.
+Always base your analysis primarily on correctedSentence, but:
+- use originalSentence to understand what the learner intended, and
+- treat alternativeSentence (if not empty) as another serious candidate, not just a comment.
+Your goal is to choose the best version among correctedSentence, alternativeSentence (if present) and any clearly better variant you know.
 
 Part 1 - Re-check the corrected sentence ("Are you sure?" logic)
 1. Carefully assess whether correctedSentence is:
    - grammatically correct Bokmål,
-   - natural enough for an A2-B2 learner,
+   - natural and standard enough that a careful native teacher would accept it as a model sentence,
    - faithful to the meaning of originalSentence.
 2. Be conservative:
    - Avoid false corrections.
    - If you are not sure that something is wrong, treat it as acceptable and explicitly say you are not sure.
+   - Also ask yourself whether a typical native teacher would almost automatically suggest a more standard pattern; if yes, prefer that more standard variant.
 3. Decide whether you would:
    - keep correctedSentence as it is, OR
-   - make a slightly improved version (still simple and learner-friendly, without changing the meaning).
+   - replace it with a slightly improved or more standard version (still simple and learner-friendly, without changing the meaning), OR
+   - use alternativeSentence as the finalSentence if it is clearly the best option.
 
 Output for this part:
 - A short confidence comment in USER_LANGUAGE (for example: that the sentence is correct and natural, or that you have some doubts).
