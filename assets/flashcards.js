@@ -11151,7 +11151,7 @@ Regeln:
             <span class="ai-check-icon ${iconClass}">${icon}</span>
           </div>
           <div class="ai-answer-highlight">${safeSentence}</div>
-          ${safeComment ? `<div class="ai-answer-note">${safeComment}</div>` : ''}
+          ${safeComment ? `<div class="ai-answer-note"><span class="ai-check-icon ${iconClass} ai-check-inline">${icon}</span>${safeComment}</div>` : ''}
         </div>
       `;
     }
@@ -11188,11 +11188,6 @@ Regeln:
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
             ${renderSentenceCheck(t('ai_corrected') || 'Corrected', finalSentence, reStatus, confidence)}
             ${altBlock}
-            <div class="ai-answer-cta">
-              ${finalSentence ? `<button class="apply-primary" data-text="${escapeHtml(finalSentence)}" data-type="corrected">${escapeHtml(t('apply_corrections') || 'Apply corrections')}</button>` : ''}
-              ${parsed.alternative && parsed.alternative.sentence ? `<button data-text="${escapeHtml(parsed.alternative.sentence)}" data-type="alternative">${escapeHtml(t('apply_alternative') || 'Apply alternative')}</button>` : ''}
-              <button data-type="keep">${escapeHtml(t('keep_as_is') || 'Keep it as it is')}</button>
-            </div>
           </div>
         `);
       }
@@ -11395,8 +11390,9 @@ Instructions:
 3. For EACH expression:
    - Give the expression in Norwegian (grunnform).
    - Give a natural, meaning-based translation into USER_LANGUAGE (not word-for-word).
-   - Provide a short explanation in USER_LANGUAGE: when/how it is used.
+   - Provide a short explanation in USER_LANGUAGE: when/how it is used. Never leave this in Norwegian; if USER_LANGUAGE is English, the explanation must be in English.
    - Give ONE simple Norwegian example sentence that shows this expression in context (different from the original sentence and from the three examples in Part 2).
+   - Give a translation of that example sentence into USER_LANGUAGE.
 4. If you are uncertain whether something is a fixed/multiword expression or about its meaning, clearly mark your uncertainty in the explanation.
 5. If NO suitable multiword expressions are found, explicitly say that in USER_LANGUAGE.
 
@@ -11441,6 +11437,7 @@ Rules:
 - Keep confidenceComment concise (max 120 characters). If status is "ok", keep it to a single short confirmation; if "needs_fix", give one short reason.
 - Avoid repeating the same examples in multiple sections.
 - Ensure every example and every expression example includes a translation into USER_LANGUAGE.
+ - All explanations/translations must be in USER_LANGUAGE (including English UI). Do not leave explanations in Norwegian.
 - If alternativeSentence is empty, set alternative.status to "absent". If present, evaluate it separately from correctedSentence.
 - Output MUST be valid JSON:
   - Use ONLY double quotes for all strings.
@@ -11485,20 +11482,6 @@ Rules:
           ChatSessionManager.addMessage('assistant', data.answer);
 
           answerBlock.innerHTML = formatAIAnswer(data.answer);
-          answerBlock.querySelectorAll('.ai-answer-cta button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-              const type = btn.getAttribute('data-type');
-              if (type === 'keep') {
-                block.classList.remove('error-check-visible');
-                block.style.display = 'none';
-                return;
-              }
-              const text = btn.getAttribute('data-text');
-              if (text) {
-                applyText(text);
-              }
-            });
-          });
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
           answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
