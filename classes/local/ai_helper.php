@@ -890,6 +890,12 @@ USERPROMPT2;
                     if (!empty($totalUsage)) {
                         $finalResult['usage'] = $totalUsage;
                     }
+                    if (!empty($result1['model'] ?? '')) {
+                        $finalResult['model'] = $result1['model'];
+                    }
+                    if (!empty($result1['reasoning_effort'] ?? '')) {
+                        $finalResult['reasoning_effort'] = $result1['reasoning_effort'];
+                    }
 
                     return $finalResult;
                 } catch (\Exception $e) {
@@ -921,6 +927,8 @@ USERPROMPT2;
             $t1 = microtime(true);
             $response1 = $method->invoke($client, $payload1);
             $debugtiming['api_stage1'] = microtime(true) - $t1;
+            $modelused = $response1->model ?? ($payload1['model'] ?? '');
+            $reasoningUsed = $payload1['reasoning_effort'] ?? null;
 
             $recordMethod = $reflection->getMethod('record_usage');
             $recordMethod->setAccessible(true);
@@ -945,22 +953,36 @@ USERPROMPT2;
                 $this->accumulate_usage($responseRetry->usage ?? null, $totalUsage);
                 $contentRetry = trim($responseRetry->choices[0]->message->content ?? '');
                 $result1 = $this->parse_json_response($contentRetry);
+                $modelused = $responseRetry->model ?? $modelused;
             }
 
             if (!is_array($result1) || !isset($result1['hasErrors'])) {
                 return ['hasErrors' => false, 'errors' => [], 'correctedText' => $text, 'explanation' => ''];
             }
 
+            if (!empty($modelused)) {
+                $result1['model'] = $modelused;
+            }
+            if (!empty($reasoningUsed)) {
+                $result1['reasoning_effort'] = $reasoningUsed;
+            }
+
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
-                $debugtiming['overall'] = microtime(true) - $overallstart;
-                $result1['debugTiming'] = $debugtiming;
-                // Include token usage information if available
-                if (!empty($totalUsage)) {
-                    $result1['usage'] = $totalUsage;
-                }
-                return $result1;
+            $debugtiming['overall'] = microtime(true) - $overallstart;
+            $result1['debugTiming'] = $debugtiming;
+            // Include token usage information if available
+            if (!empty($totalUsage)) {
+                $result1['usage'] = $totalUsage;
             }
+            if (!empty($result1['model'] ?? '')) {
+                $result1['model'] = $result1['model'];
+            }
+            if (!empty($result1['reasoning_effort'] ?? '')) {
+                $result1['reasoning_effort'] = $result1['reasoning_effort'];
+            }
+            return $result1;
+        }
 
         // Optional STAGE 2: Second API call - Double-check and suggest natural alternative.
         // Controlled by admin setting to keep latency acceptable for slower models.
