@@ -5301,9 +5301,10 @@ select.inline-prompt-field {
 .front-text-actions .translation-status-inline{
   margin-left: 0;
   align-self: center;
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 0 1 auto;
+  min-width: fit-content;
   max-width: min(60vw, 18rem);
+  width: auto;
   word-break: break-word;
   overflow-wrap: anywhere;
   white-space: normal;
