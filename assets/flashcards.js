@@ -11299,7 +11299,12 @@ Regeln:
       answerBlock.style.display = 'block';
       answerBlock.innerHTML = `<div class="ai-answer-loading">${thinkingText}</div>`;
 
-      // Initialize chat session if first request
+      // For repeated "Are you sure?" calls, start a fresh session to avoid stacking prior follow-ups
+      if (questionType === 'sure' && ChatSessionManager.currentSession) {
+        ChatSessionManager.clearSession();
+      }
+
+      // Initialize chat session if first request (or after reset above)
       if (!ChatSessionManager.currentSession) {
         ChatSessionManager.createSession(originalText);
 
