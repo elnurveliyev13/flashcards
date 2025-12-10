@@ -5864,6 +5864,11 @@ select.inline-prompt-field {
 .ai-answer-plain {
   white-space: pre-wrap;
 }
+.ai-debug-meta {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #64748b;
+}
 
 /* ========================================
    CONSTRUCTION HIGHLIGHTING STYLES
