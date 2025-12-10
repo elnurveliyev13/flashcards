@@ -5734,6 +5734,35 @@ select.inline-prompt-field {
   color: #0f172a;
   font-size: 15px;
 }
+.ai-check-item {
+  margin-bottom: 10px;
+}
+.ai-check-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+.ai-check-label {
+  color: #0f172a;
+}
+.ai-check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #fff;
+}
+.ai-check-ok {
+  background: #22c55e;
+}
+.ai-check-warn {
+  background: #f97316;
+}
 .ai-answer-highlight {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -5743,6 +5772,11 @@ select.inline-prompt-field {
 }
 .ai-answer-note {
   color: #475569;
+}
+.ai-example-tr {
+  color: #475569;
+  font-size: 13px;
+  margin-top: 2px;
 }
 .ai-answer-list {
   margin: 0;

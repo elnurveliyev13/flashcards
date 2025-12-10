@@ -654,8 +654,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Ask AI',
         ai_sure: 'Are you sure?',
         ai_explain_more: 'Explain in detail',
-        ai_more_examples: 'Give more examples',
+        ai_more_examples: 'Examples:',
         ai_thinking: 'Thinking...',
+        ai_corrected: 'Corrected',
+        ai_alternative: 'Alternative',
       },
       uk: {
         app_title: 'MyMemory',
@@ -770,7 +772,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Запитати AI',
         ai_sure: 'Ти впевнений?',
         ai_explain_more: 'Поясни детальніше',
-        ai_more_examples: 'Дай більше прикладів',
+        ai_more_examples: '????????:',
         ai_thinking: 'Думаю...',
       },
       ru: {
@@ -886,7 +888,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Спросить AI',
         ai_sure: 'Ты уверен?',
         ai_explain_more: 'Объясни подробнее',
-        ai_more_examples: 'Дай больше примеров',
+        ai_more_examples: '????????:',
         ai_thinking: 'Думаю...',
       },
       fr: {
@@ -11089,6 +11091,25 @@ Regeln:
     /**
      * Ask AI about the correction
      */
+    function renderSentenceCheck(label, sentence, status, comment){
+      if (!sentence) return '';
+      const safeSentence = escapeHtml(sentence);
+      const safeComment = comment ? escapeHtml(comment) : '';
+      const isOk = status === 'ok';
+      const icon = isOk ? '✓' : '⚠';
+      const iconClass = isOk ? 'ai-check-ok' : 'ai-check-warn';
+      return `
+        <div class="ai-check-item">
+          <div class="ai-check-header">
+            <span class="ai-check-label">${escapeHtml(label)}</span>
+            <span class="ai-check-icon ${iconClass}">${icon}</span>
+          </div>
+          <div class="ai-answer-highlight">${safeSentence}</div>
+          ${safeComment ? `<div class="ai-answer-note">${safeComment}</div>` : ''}
+        </div>
+      `;
+    }
+
     function formatAIAnswer(answerText) {
       if (!answerText || typeof answerText !== 'string') {
         return `<div class="ai-answer-plain">${escapeHtml(String(answerText || ''))}</div>`;
@@ -11109,28 +11130,34 @@ Regeln:
 
       const sections = [];
       if (parsed.recheck) {
-        const finalSentence = escapeHtml(parsed.recheck.finalSentence || '');
-        const confidence = escapeHtml(parsed.recheck.confidenceComment || '');
-        const status = (parsed.recheck.status || '').toLowerCase() === 'ok' ? 'ok' : 'needs_fix';
-        const statusLabel = status === 'ok' ? (t('ai_status_ok') || 'Looks good') : (t('ai_status_fix') || 'Needs attention');
+        const reStatus = (parsed.recheck.status || '').toLowerCase() === 'ok' ? 'ok' : 'needs_fix';
+        const finalSentence = parsed.recheck.finalSentence || '';
+        const confidence = parsed.recheck.confidenceComment || '';
+        let altBlock = '';
+        if (parsed.alternative && parsed.alternative.status && parsed.alternative.status !== 'absent' && parsed.alternative.sentence) {
+          altBlock = renderSentenceCheck(t('ai_alternative') || 'Alternative', parsed.alternative.sentence, parsed.alternative.status.toLowerCase() === 'ok' ? 'ok' : 'needs_fix', parsed.alternative.comment || '');
+        }
         sections.push(`
           <div class="ai-answer-section">
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
-            ${finalSentence ? `<div class="ai-answer-highlight">${finalSentence}</div>` : ''}
-            <div class="ai-status-row ai-status-${status}">
-              <span class="ai-status-dot"></span>
-              <span class="ai-status-text">${escapeHtml(statusLabel)}</span>
-            </div>
-            ${confidence ? `<div class="ai-answer-note">${confidence}</div>` : ''}
+            ${renderSentenceCheck(t('ai_corrected') || 'Corrected', finalSentence, reStatus, confidence)}
+            ${altBlock}
           </div>
         `);
       }
 
       if (Array.isArray(parsed.examples) && parsed.examples.length > 0) {
-        const list = parsed.examples.map(ex => `<li>${escapeHtml(ex)}</li>`).join('');
+        const list = parsed.examples.map(ex => {
+          if (typeof ex === 'string') {
+            return `<li>${escapeHtml(ex)}</li>`;
+          }
+          const text = escapeHtml(ex.text || '');
+          const tr = escapeHtml(ex.translation || '');
+          return `<li>${text}${tr ? `<div class="ai-example-tr">${tr}</div>` : ''}</li>`;
+        }).join('');
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">${t('ai_more_examples') || 'Examples'}</div>
+            <div class="ai-answer-title">Examples:</div>
             <ul class="ai-answer-list">${list}</ul>
           </div>
         `);
@@ -11144,6 +11171,7 @@ Regeln:
           const translation = escapeHtml(item.translation || '');
           const explanation = escapeHtml(item.explanation || '');
           const example = escapeHtml(item.example || '');
+          const exampleTr = escapeHtml(item.exampleTranslation || '');
           return `
             <li class="ai-mwe-item">
               <div class="ai-mwe-head">
@@ -11152,19 +11180,20 @@ Regeln:
               </div>
               ${explanation ? `<div class="ai-mwe-expl">${explanation}</div>` : ''}
               ${example ? `<div class="ai-mwe-example">${example}</div>` : ''}
+              ${exampleTr ? `<div class="ai-example-tr">${exampleTr}</div>` : ''}
             </li>
           `;
         }).join('');
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">${t('ai_expressions') || 'Expressions'}</div>
+            <div class="ai-answer-title">Expressions:</div>
             <ul class="ai-mwe-list">${list}</ul>
           </div>
         `);
       } else if (parsed.noMultiwordExpressions) {
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">${t('ai_expressions') || 'Expressions'}</div>
+            <div class="ai-answer-title">Expressions:</div>
             <div class="ai-answer-note">${escapeHtml(parsed.recheck?.confidenceComment || (t('ai_no_expressions') || 'No fixed expressions found.'))}</div>
           </div>
         `);
@@ -11255,6 +11284,7 @@ Regeln:
       if (questionType === 'sure') {
         const safeOriginal = escapeForPrompt(originalText);
         const safeCorrected = escapeForPrompt(correctedSentenceValue);
+        const safeAlternative = escapeForPrompt(result.suggestion || '');
         userPrompt = `
 You are a careful and conservative Norwegian (Bokmål) teacher for adult learners (A2-B2).
 You must be very cautious with Norwegian grammar: if you are not sure something is wrong or right, clearly say that you are not sure instead of inventing a rule.
@@ -11269,6 +11299,7 @@ Your task is to:
 Input
 - originalSentence: "${safeOriginal}"
 - correctedSentence: "${safeCorrected}"
+- alternativeSentence: "${safeAlternative || ''}" (may be empty)
 
 Always base your analysis primarily on correctedSentence, but use originalSentence to understand what the learner intended.
 
@@ -11294,9 +11325,10 @@ Based on the key structure(s) used in the final recommended sentence from Part 1
 2. Create exactly THREE new example sentences in simple, natural Bokmål (A2-B2 level) that demonstrate these same patterns.
 3. Keep sentences short and clear. Do not introduce unnecessary rare vocabulary.
 4. The examples must be correct and natural Bokmål. If you are not fully sure about a sentence, do NOT use it.
+5. For EVERY example, provide a natural translation into USER_LANGUAGE.
 
 Output for this part:
-- A list of exactly three Norwegian example sentences.
+- A list of exactly three example objects, each with the Norwegian sentence and its translation into USER_LANGUAGE.
 
 Part 3 - Multiword expressions in the corrected sentence
 Now focus on multiword expressions in the final recommended Norwegian sentence from Part 1.
@@ -11326,17 +11358,23 @@ Return a single JSON object with the following structure:
     "finalSentence": "Norwegian sentence (your final recommended version)",
     "confidenceComment": "VERY short comment in USER_LANGUAGE (max 120 chars). If status is ok, just a brief confirmation; if needs_fix, a brief reason and key fix."
   },
+  "alternative": {
+    "status": "ok" | "needs_fix" | "absent",
+    "sentence": "alternative sentence if provided, otherwise empty",
+    "comment": "VERY short comment in USER_LANGUAGE (max 120 chars). If no alternative, set status to absent and leave sentence empty."
+  },
   "examples": [
-    "Norwegian example sentence 1",
-    "Norwegian example sentence 2",
-    "Norwegian example sentence 3"
+    { "text": "Norwegian example sentence 1", "translation": "Translation into USER_LANGUAGE" },
+    { "text": "Norwegian example sentence 2", "translation": "Translation into USER_LANGUAGE" },
+    { "text": "Norwegian example sentence 3", "translation": "Translation into USER_LANGUAGE" }
   ],
   "multiwordExpressions": [
     {
       "expression": "expression in Norwegian (grunnform)",
       "translation": "natural translation into USER_LANGUAGE",
       "explanation": "short explanation in USER_LANGUAGE",
-      "example": "Norwegian example sentence with this expression"
+      "example": "Norwegian example sentence with this expression",
+      "exampleTranslation": "translation of the example into USER_LANGUAGE"
     }
   ],
   "noMultiwordExpressions": false
@@ -11351,6 +11389,8 @@ Rules:
 - Do NOT repeat the same expression in both the confidenceComment and the multiwordExpressions section; keep each section focused and concise.
 - Keep confidenceComment concise (max 120 characters). If status is "ok", keep it to a single short confirmation; if "needs_fix", give one short reason.
 - Avoid repeating the same examples in multiple sections.
+- Ensure every example and every expression example includes a translation into USER_LANGUAGE.
+- If alternativeSentence is empty, set alternative.status to "absent". If present, evaluate it separately from correctedSentence.
 - Output MUST be valid JSON:
   - Use ONLY double quotes for all strings.
   - No trailing commas.
