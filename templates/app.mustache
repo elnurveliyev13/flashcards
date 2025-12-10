@@ -220,10 +220,7 @@
                 </div>
               </div>
               <div class="slot-head-extra">
-                <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
-                  <span class="btn-icon" aria-hidden="true">&#128269;</span>
-                  <span data-i18n="check_text">Sjekk teksten</span>
-                </button>
+                <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
                 <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
                   <span aria-hidden="true">&#8634;</span>
                   <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
@@ -236,7 +233,10 @@
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
           <div class="front-text-actions">
-            <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
+            <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
+              <span class="btn-icon" aria-hidden="true">&#128269;</span>
+              <span data-i18n="check_text">Sjekk teksten</span>
+            </button>
           </div>
           <div id="errorCheckBlock" class="error-check-block" style="display:none;" aria-live="polite"></div>
         </div>

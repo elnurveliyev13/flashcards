@@ -2077,10 +2077,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
     const frontTextActions = document.querySelector('.front-text-actions');
-    if(mediaStatusIndicator && frontTextActions){
+    const frontStatusHost = document.querySelector('.slot-head-extra');
+    if(mediaStatusIndicator){
       mediaStatusIndicator.classList.add('translation-status-inline');
-      if(!frontTextActions.contains(mediaStatusIndicator)){
-        frontTextActions.appendChild(mediaStatusIndicator);
+      const host = frontStatusHost || frontTextActions;
+      if(host && !host.contains(mediaStatusIndicator)){
+        host.appendChild(mediaStatusIndicator);
       }
     }
     const focusTranslationText = document.getElementById('focusTranslationText');
