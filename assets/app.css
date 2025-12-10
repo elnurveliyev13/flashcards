@@ -397,6 +397,7 @@ h1{
   user-select: none;
   position: relative;
   z-index: 10;
+  text-transform: uppercase;
 }
 
 .language-btn-mobile:active {
@@ -555,6 +556,12 @@ h1{
   gap: 4px;
 }
 
+.pref-panel-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .pref-label{
   font-size: 0.8125rem; /* 13px */
   font-weight: 600;
@@ -630,9 +637,12 @@ h1{
 }
 #langSel,
 #ttsVoice{
-  color: #fff;
+  color: var(--text);
   font-weight: 600;
   min-height: 38px;
+}
+#langSel {
+  text-transform: uppercase;
 }
 #ttsVoiceStatus {
   min-height: 1.125rem;
@@ -5775,8 +5785,9 @@ select.inline-prompt-field {
 }
 .ai-example-tr {
   color: #475569;
-  font-size: 13px;
-  margin-top: 2px;
+  font-size: 14px;
+  margin-top: 4px;
+  font-style: italic;
 }
 .ai-answer-list {
   margin: 0;
@@ -5822,6 +5833,25 @@ select.inline-prompt-field {
   color: #0f172a;
   margin-top: 6px;
   font-style: italic;
+}
+.ai-answer-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ai-answer-cta button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  font-weight: 600;
+}
+.ai-answer-cta button.apply-primary {
+  background: #22c55e;
+  color: #fff;
+  border-color: #16a34a;
 }
 .ai-answer-plain {
   white-space: pre-wrap;
@@ -6126,6 +6156,72 @@ select.inline-prompt-field {
 .pref-gesture-config.disabled {
   opacity: 0.5;
   pointer-events: none;
+}
+
+.pref-gestures-toggle {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pref-gestures-toggle:hover,
+.pref-gestures-toggle:focus-visible {
+  border-color: var(--primary);
+  background: var(--surface-3);
+  outline: none;
+}
+
+.pref-gestures-toggle-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.pref-gesture-submenu {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pref-submenu-back {
+  border: none;
+  background: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.pref-submenu-back:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.pref-submenu-back-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.header-pref-panel.gesture-open .pref-panel-main {
+  display: none;
+}
+
+.header-pref-panel.gesture-open .pref-gesture-submenu {
+  display: flex;
 }
 
 .pref-gesture-row {

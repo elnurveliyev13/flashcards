@@ -317,6 +317,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const prefsToggle = document.getElementById('prefsToggle');
     const prefsPanel = document.getElementById('prefsPanel');
     if (prefsToggle && prefsPanel) {
+      const prefsMain = document.getElementById('prefsMain');
+      const gestureSubmenu = document.getElementById('gestureSubmenu');
+      const gesturePrefsToggle = document.getElementById('gesturePrefsToggle');
+      const gestureSubmenuBack = document.getElementById('gestureSubmenuBack');
+      const GESTURE_SUBMENU_CLASS = 'gesture-open';
+
+      const setGestureSubmenuVisibility = visible => {
+        if (!gestureSubmenu) {
+          return;
+        }
+        prefsPanel.classList.toggle(GESTURE_SUBMENU_CLASS, visible);
+        if (prefsMain) {
+          prefsMain.setAttribute('aria-hidden', visible ? 'true' : 'false');
+        }
+        gestureSubmenu.setAttribute('aria-hidden', visible ? 'false' : 'true');
+        if (gesturePrefsToggle) {
+          gesturePrefsToggle.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        }
+      };
+      const showGestureSubmenu = () => setGestureSubmenuVisibility(true);
+      const hideGestureSubmenu = () => setGestureSubmenuVisibility(false);
+
+      gesturePrefsToggle?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        showGestureSubmenu();
+      });
+      gestureSubmenuBack?.addEventListener('click', event => {
+        event.preventDefault();
+        event.stopPropagation();
+        hideGestureSubmenu();
+      });
+
       const attachPrefsPanel = () => {
         if (!document.body) {
           return;
@@ -339,6 +372,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       let prefsOpen = false;
       const updatePrefsState = open => {
         prefsOpen = open;
+        if (!open) {
+          hideGestureSubmenu();
+        }
         prefsPanel.classList.toggle('open', open);
         prefsPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
         prefsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -362,6 +398,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       document.addEventListener('keydown', event => {
         if (!prefsOpen) return;
+        const gesturePanelOpen = gestureSubmenu && gestureSubmenu.getAttribute('aria-hidden') === 'false';
+        if (gesturePanelOpen) {
+          if (event.key === 'Escape' || event.key === 'Esc') {
+            event.preventDefault();
+            hideGestureSubmenu();
+          }
+          return;
+        }
         if (event.key === 'Escape' || event.key === 'Esc') {
           event.preventDefault();
           updatePrefsState(false);
@@ -11006,7 +11050,9 @@ Regeln:
           </div>
           <div id="aiAnswerBlock" class="ai-answer-block" style="display: none;"></div>
         </div>
-        <div class="error-check-actions">
+        <div class="error-check-actions" id="errorCheckActions">
+          ${result.correctedText ? `<button type="button" class="apply-corrected-btn" data-text="${result.correctedText.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>` : ''}
+          ${result.suggestion ? `<button type="button" class="apply-suggestion-btn" data-text="${result.suggestion.replace(/"/g, '&quot;')}">${t('apply_alternative') || 'Apply alternative'}</button>` : ''}
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
       `;
@@ -11142,6 +11188,11 @@ Regeln:
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
             ${renderSentenceCheck(t('ai_corrected') || 'Corrected', finalSentence, reStatus, confidence)}
             ${altBlock}
+            <div class="ai-answer-cta">
+              ${finalSentence ? `<button class="apply-primary" data-text="${escapeHtml(finalSentence)}" data-type="corrected">${escapeHtml(t('apply_corrections') || 'Apply corrections')}</button>` : ''}
+              ${parsed.alternative && parsed.alternative.sentence ? `<button data-text="${escapeHtml(parsed.alternative.sentence)}" data-type="alternative">${escapeHtml(t('apply_alternative') || 'Apply alternative')}</button>` : ''}
+              <button data-type="keep">${escapeHtml(t('keep_as_is') || 'Keep it as it is')}</button>
+            </div>
           </div>
         `);
       }
@@ -11434,6 +11485,20 @@ Rules:
           ChatSessionManager.addMessage('assistant', data.answer);
 
           answerBlock.innerHTML = formatAIAnswer(data.answer);
+          answerBlock.querySelectorAll('.ai-answer-cta button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const type = btn.getAttribute('data-type');
+              if (type === 'keep') {
+                block.classList.remove('error-check-visible');
+                block.style.display = 'none';
+                return;
+              }
+              const text = btn.getAttribute('data-text');
+              if (text) {
+                applyText(text);
+              }
+            });
+          });
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
           answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
