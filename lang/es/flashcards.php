@@ -62,7 +62,6 @@ $string['ask_ai_about_correction'] = 'Preguntar a la IA';
 $string['ai_sure'] = '¿Estás seguro?';
 $string['ai_explain_more'] = 'Explica en detalle';
 $string['ai_more_examples'] = 'Da más ejemplos';
-$string['ai_explain_simpler'] = 'Explica más simple';
 $string['ai_thinking'] = 'Pensando...';
 $string['focus_audio_badge'] = 'Audio focal';
 $string['front_audio_badge'] = 'Audio del anverso';

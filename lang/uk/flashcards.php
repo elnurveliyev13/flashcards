@@ -67,7 +67,6 @@ $string['ask_ai_about_correction'] = 'Запитати AI';
 $string['ai_sure'] = 'Ти впевнена?';
 $string['ai_explain_more'] = 'Поясни детальніше';
 $string['ai_more_examples'] = 'Дай більше прикладів';
-$string['ai_explain_simpler'] = 'Поясни простіше';
 $string['ai_thinking'] = 'Думає...';
 $string['focus_audio_badge'] = 'Аудіо (слово)';
 $string['front_audio_badge'] = 'Аудіо (текст)';

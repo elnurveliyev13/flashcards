@@ -59,7 +59,6 @@ $string['ask_ai_about_correction'] = 'Ask AI';
 $string['ai_sure'] = 'Are you sure?';
 $string['ai_explain_more'] = 'Explain in detail';
 $string['ai_more_examples'] = 'Give more examples';
-$string['ai_explain_simpler'] = 'Explain simpler';
 $string['ai_thinking'] = 'Thinking...';
 $string['ordbokene_block_label'] = 'Ordbøkene';
 $string['ordbokene_empty'] = 'Dictionary info appears here after lookup.';

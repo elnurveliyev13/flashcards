@@ -10142,10 +10142,12 @@ function renderComparisonResult(resultEl, comparison){
         const bottomHeight = (bottomActions && !bottomActions.classList.contains('hidden'))
           ? Math.round(bottomActions.getBoundingClientRect().height) : 0;
         root.style.setProperty('--bottom-actions-stack-offset', `${bottomHeight}px`);
+        root.classList.toggle('fc-bottom-actions-visible', bottomHeight > 0);
 
          const metaHeight = (metaRecorderEl && !metaRecorderEl.classList.contains('hidden'))
            ? Math.round(metaRecorderEl.getBoundingClientRect().height) : 0;
         root.style.setProperty('--meta-panel-height', `${metaHeight}px`);
+        root.classList.toggle('fc-meta-visible', metaHeight > 0);
       }
 
       function queueBottomPanelStackRefresh() {
@@ -10979,8 +10981,6 @@ Regeln:
 
       const askAiText = t('ask_ai_about_correction') || 'Ask AI';
       const sureText = t('ai_sure') || 'Are you sure?';
-      const explainMoreText = t('ai_explain_more') || 'Explain in detail';
-      const moreExamplesText = t('ai_more_examples') || 'Give more examples';
 
       const html = `
         <div class="error-check-header">
@@ -10999,8 +10999,8 @@ Regeln:
           <div style="margin-bottom: 8px; font-weight: 500; color: #475569;">💬 ${askAiText}:</div>
           <div class="ai-quick-questions" id="aiQuickBtnsContainer">
             <button type="button" class="ai-quick-btn" data-type="sure">${sureText}</button>
-            <button type="button" class="ai-quick-btn" data-type="explain">${explainMoreText}</button>
-            <button type="button" class="ai-quick-btn" data-type="examples">${moreExamplesText}</button>
+            <!-- <button type="button" class="ai-quick-btn" data-type="explain">${t('ai_explain_more') || 'Explain in detail'}</button> -->
+            <!-- <button type="button" class="ai-quick-btn" data-type="examples">${t('ai_more_examples') || 'Give more examples'}</button> -->
           </div>
           <div id="aiAnswerBlock" class="ai-answer-block" style="display: none;"></div>
         </div>
@@ -11159,282 +11159,117 @@ Regeln:
 
       // Build prompt based on question type (strict format per spec)
       let userPrompt = '';
+      const correctedSentenceValue = result.correctedText || result.corrected || originalText || '';
+      const userLanguage = language || 'en';
+      const escapeForPrompt = value => String(value || '').replace(/`/g, '\\`');
 
-      // No need to prepend context - AI already has it in message history
-
-      const prompts = {
-        'uk': {
-          sure: `Перепровір своє виправлення. Проаналізуй всі помилки та підтверди правильність. Відповідай коротко українською.`,
-          explain: `Поясни граматичну причину виправлення.
-
-ВАЖЛИВО: Покажи КОНТРАСТ на прикладах:
-1. Як це працює в ЦЬОМУ типі речення (де була помилка)
-2. Як це ВІДРІЗНЯЄТЬСЯ в інших типах речень
-
-Приклад структури:
-- У підрядних реченнях: "at det ikke er" (заперечення перед дієсловом)
-- У головних реченнях: "det er ikke" (заперечення після дієслова)
-
-Формат:
-- Коротке пояснення (2-3 речення) з фокусом на КОНКРЕТНОМУ контексті
-- 3-4 контрастних приклади норвезькою з перекладом українською
-
-НЕ роби широких узагальнень типу "ikke завжди йде перед дієсловом".
-Поясни КОНКРЕТНЕ правило для КОНКРЕТНОГО контексту.
-
-Відповідай українською.`,
-          examples: `Створи, будь ласка, 5–10 коротких норвезьких речень з такою ж граматичною структурою, як у виправленому варіанті. До кожного речення додай переклад українською.`,
-          simpler: `Поясни цю помилку простими словами, без граматичної термінології.
-
-Покажи приклади ПРАВИЛЬНОГО та НЕПРАВИЛЬНОГО використання:
-- Неправильно: [оригінальна помилка]
-- Правильно: [виправлений варіант]
-- Також покажи: Як це було б інакше в іншому типі речення
-
-Використовуй просту мову, але зберігай точність пояснення.
-Відповідай українською.`
-        },
-        'ru': {
-          sure: `Перепроверь свое исправление. Проанализируй все ошибки и подтверди правильность. Отвечай кратко по-русски.`,
-          explain: `Объясни грамматическую причину исправления.
-
-ВАЖНО: Покажи КОНТРАСТ на примерах:
-1. Как это работает в ЭТОМ типе предложения (где была ошибка)
-2. Как это ОТЛИЧАЕТСЯ в других типах предложений
-
-Пример структуры:
-- В придаточных предложениях: "at det ikke er" (отрицание перед глаголом)
-- В главных предложениях: "det er ikke" (отрицание после глагола)
-
-Формат:
-- Краткое объяснение (2-3 предложения) с фокусом на КОНКРЕТНОМ контексте
-- 3-4 контрастных примера на норвежском с переводом на русский
-
-НЕ делай широких обобщений типу "ikke всегда идет перед глаголом".
-Объясни КОНКРЕТНОЕ правило для КОНКРЕТНОГО контекста.
-
-Отвечай по-русски.`,
-          examples: `Создай, пожалуйста, 5–10 коротких норвежских предложений с такой же грамматической структурой, как в исправленном варианте. К каждому предложению добавь перевод на русский.`,
-          simpler: `Объясни эту ошибку простыми словами, без грамматической терминологии.
-
-Покажи примеры ПРАВИЛЬНОГО и НЕПРАВИЛЬНОГО использования:
-- Неправильно: [оригинальная ошибка]
-- Правильно: [исправленный вариант]
-- Также покажи: Как это было бы иначе в другом типе предложения
-
-Используй простой язык, но сохраняй точность объяснения.
-Отвечай по-русски.`
-        },
-        'en': {
-          sure: `You are continuing the same chat as above. The user is asking: "Are you sure your correction and explanation above are correct?" Carefully re-check the original Norwegian sentence, your corrected version and your previous explanation.
-
-If everything is correct, answer in 1–2 short sentences like: "Yes, my correction is correct because …". Do NOT repeat the full corrected sentence and do NOT start with "Corrected:".
-
-If you notice any mistake or a better correction, honestly admit it and give a short fix, for example: "No, I would correct it to: \"…\", because …". Keep the answer brief, as a follow-up in the same conversation. Answer in English.`,
-          explain: `Explain the grammatical reason for the correction.
-
-IMPORTANT: Show the CONTRAST with examples:
-1. Show how it works in THIS type of sentence (where the error was)
-2. Show how it's DIFFERENT in other types of sentences
-
-Example structure:
-- In subordinate clauses: "at det ikke er" (negation before verb)
-- In main clauses: "det er ikke" (negation after verb)
-
-Format:
-- Brief explanation (2-3 sentences) focusing on the SPECIFIC context
-- 3-4 contrasting Norwegian examples with English translation
-
-Do NOT make broad generalizations like "ikke always comes before the verb".
-Explain the SPECIFIC rule for the SPECIFIC context.
-
-Answer in English.`,
-          examples: `Please create 5–10 short Norwegian sentences with the same grammatical structure as in the corrected version. Add English translation to each sentence.`,
-          simpler: `Explain this error in simple words, without grammatical terminology.
-
-Show examples of RIGHT and WRONG usage:
-- Wrong: [original error]
-- Right: [corrected version]
-- Also show: How it would be different in a different type of sentence
-
-Use simple language but keep the explanation ACCURATE.
-Answer in English.`
-        },
-        'pl': {
-          sure: `Sprawdź ponownie swoją poprawkę. Przeanalizuj wszystkie błędy i potwierdź poprawność. Odpowiadaj krótko po polsku.`,
-          explain: `Wyjaśnij powód gramatyczny poprawki.
-
-WAŻNE: Pokaż KONTRAST na przykładach:
-1. Jak to działa w TYM typie zdania (gdzie był błąd)
-2. Jak to się RÓŻNI w innych typach zdań
-
-Przykład struktury:
-- W zdaniach podrzędnych: "at det ikke er" (przeczenie przed czasownikiem)
-- W zdaniach głównych: "det er ikke" (przeczenie po czasowniku)
-
-Format:
-- Krótkie wyjaśnienie (2-3 zdania) skupiające się na KONKRETNYM kontekście
-- 3-4 kontrastujące przykłady po norwesku z tłumaczeniem na polski
-
-NIE rób szerokich uogólnień typu "ikke zawsze idzie przed czasownikiem".
-Wyjaśnij KONKRETNĄ zasadę dla KONKRETNEGO kontekstu.
-
-Odpowiadaj po polsku.`,
-          examples: `Stwórz proszę 5–10 krótkich norweskich zdań z taką samą strukturą gramatyczną jak w poprawionej wersji. Do każdego zdania dodaj tłumaczenie na polski.`,
-          simpler: `Wyjaśnij ten błąd prostymi słowami, bez terminologii gramatycznej.
-
-Pokaż przykłady PRAWIDŁOWEGO i NIEPRAWIDŁOWEGO użycia:
-- Nieprawidłowo: [oryginalny błąd]
-- Prawidłowo: [poprawiona wersja]
-- Pokaż też: Jak to byłoby inaczej w innym typie zdania
-
-Używaj prostego języka, ale zachowaj dokładność wyjaśnienia.
-Odpowiadaj po polsku.`
-        },
-        'fr': {
-          sure: `Revérifie ta correction. Analyse toutes les erreurs et confirme l'exactitude. Réponds brièvement en français.`,
-          explain: `Explique la raison grammaticale de la correction.
-
-IMPORTANT : Montre le CONTRASTE avec des exemples :
-1. Comment cela fonctionne dans CE type de phrase (où était l'erreur)
-2. Comment c'est DIFFÉRENT dans d'autres types de phrases
-
-Exemple de structure :
-- Dans les propositions subordonnées : "at det ikke er" (négation avant le verbe)
-- Dans les propositions principales : "det er ikke" (négation après le verbe)
-
-Format :
-- Explication brève (2-3 phrases) se concentrant sur le contexte SPÉCIFIQUE
-- 3-4 exemples contrastés en norvégien avec traduction en français
-
-Ne fais PAS de généralisations larges comme "ikke vient toujours avant le verbe".
-Explique la règle SPÉCIFIQUE pour le contexte SPÉCIFIQUE.
-
-Réponds en français.`,
-          examples: `Crée s'il te plaît 5–10 phrases norvégiennes courtes avec la même structure grammaticale que dans la version corrigée. Ajoute une traduction en français à chaque phrase.`,
-          simpler: `Explique cette erreur avec des mots simples, sans terminologie grammaticale.
-
-Montre des exemples d'utilisation CORRECTE et INCORRECTE :
-- Incorrect : [erreur originale]
-- Correct : [version corrigée]
-- Montre aussi : Comment ce serait différent dans un autre type de phrase
-
-Utilise un langage simple mais garde l'explication PRÉCISE.
-Réponds en français.`
-        },
-        'es': {
-          sure: `Verifica nuevamente tu corrección. Analiza todos los errores y confirma la exactitud. Responde brevemente en español.`,
-          explain: `Explica la razón gramatical de la corrección.
-
-IMPORTANTE: Muestra el CONTRASTE con ejemplos:
-1. Cómo funciona en ESTE tipo de oración (donde estaba el error)
-2. Cómo es DIFERENTE en otros tipos de oraciones
-
-Ejemplo de estructura:
-- En oraciones subordinadas: "at det ikke er" (negación antes del verbo)
-- En oraciones principales: "det er ikke" (negación después del verbo)
-
-Formato:
-- Explicación breve (2-3 oraciones) enfocándose en el contexto ESPECÍFICO
-- 3-4 ejemplos contrastantes en noruego con traducción al español
-
-NO hagas generalizaciones amplias como "ikke siempre va antes del verbo".
-Explica la regla ESPECÍFICA para el contexto ESPECÍFICO.
-
-Responde en español.`,
-          examples: `Crea por favor 5–10 oraciones noruegas cortas con la misma estructura gramatical que en la versión corregida. Añade traducción al español a cada oración.`,
-          simpler: `Explica este error con palabras simples, sin terminología gramatical.
-
-Muestra ejemplos de uso CORRECTO e INCORRECTO:
-- Incorrecto: [error original]
-- Correcto: [versión corregida]
-- También muestra: Cómo sería diferente en otro tipo de oración
-
-Usa lenguaje simple pero mantén la explicación PRECISA.
-Responde en español.`
-        },
-        'it': {
-          sure: `Ricontrolla la tua correzione. Analizza tutti gli errori e conferma la correttezza. Rispondi brevemente in italiano.`,
-          explain: `Spiega la ragione grammaticale della correzione.
-
-IMPORTANTE: Mostra il CONTRASTO con esempi:
-1. Come funziona in QUESTO tipo di frase (dove c'era l'errore)
-2. Come è DIVERSO in altri tipi di frasi
-
-Esempio di struttura:
-- Nelle proposizioni subordinate: "at det ikke er" (negazione prima del verbo)
-- Nelle proposizioni principali: "det er ikke" (negazione dopo il verbo)
-
-Formato:
-- Spiegazione breve (2-3 frasi) concentrandosi sul contesto SPECIFICO
-- 3-4 esempi contrastanti in norvegese con traduzione in italiano
-
-NON fare generalizzazioni ampie come "ikke va sempre prima del verbo".
-Spiega la regola SPECIFICA per il contesto SPECIFICO.
-
-Rispondi in italiano.`,
-          examples: `Crea per favore 5–10 frasi norvegesi brevi con la stessa struttura grammaticale della versione corretta. Aggiungi traduzione in italiano a ogni frase.`,
-          simpler: `Spiega questo errore con parole semplici, senza terminologia grammaticale.
-
-Mostra esempi di uso CORRETTO e SCORRETTO:
-- Scorretto: [errore originale]
-- Corretto: [versione corretta]
-- Mostra anche: Come sarebbe diverso in un altro tipo di frase
-
-Usa un linguaggio semplice ma mantieni la spiegazione ACCURATA.
-Rispondi in italiano.`
-        },
-        'de': {
-          sure: `Überprüfe deine Korrektur erneut. Analysiere alle Fehler und bestätige die Richtigkeit. Antworte kurz auf Deutsch.`,
-          explain: `Erkläre den grammatikalischen Grund für die Korrektur.
-
-WICHTIG: Zeige den KONTRAST mit Beispielen:
-1. Wie es in DIESEM Satztyp funktioniert (wo der Fehler war)
-2. Wie es sich in anderen Satztypen UNTERSCHEIDET
-
-Beispiel Struktur:
-- In Nebensätzen: "at det ikke er" (Verneinung vor dem Verb)
-- In Hauptsätzen: "det er ikke" (Verneinung nach dem Verb)
-
-Format:
-- Kurze Erklärung (2-3 Sätze) mit Fokus auf den SPEZIFISCHEN Kontext
-- 3-4 kontrastierende Beispiele auf Norwegisch mit deutscher Übersetzung
-
-Mache KEINE breiten Verallgemeinerungen wie "ikke kommt immer vor dem Verb".
-Erkläre die SPEZIFISCHE Regel für den SPEZIFISCHEN Kontext.
-
-Antworte auf Deutsch.`,
-          examples: `Erstelle bitte 5–10 kurze norwegische Sätze mit derselben grammatischen Struktur wie in der korrigierten Version. Füge zu jedem Satz eine deutsche Übersetzung hinzu.`,
-          simpler: `Erkläre diesen Fehler mit einfachen Worten, ohne grammatikalische Terminologie.
-
-Zeige Beispiele für RICHTIGEN und FALSCHEN Gebrauch:
-- Falsch: [ursprünglicher Fehler]
-- Richtig: [korrigierte Version]
-- Zeige auch: Wie es in einem anderen Satztyp anders wäre
-
-Verwende einfache Sprache, aber halte die Erklärung GENAU.
-Antworte auf Deutsch.`
-        }
-      };
-
-      // Simplified follow-up behavior for the "Are you sure?" button in English.
-      // The model should just re-check its own correction and explanation,
-      // briefly confirm if they are correct, or correct itself if needed.
-      if (prompts.en) {
-        prompts.en.sure = `Please check again whether your correction and your explanation above are accurate. If they are, briefly confirm that your correction is correct and why. If you see a mistake or a better correction, adjust it and explain briefly. Answer in English.`;
-      }
-
-      const langPrompts = prompts[language] || prompts['en'];
-
-      // Use prompts directly without context duplication - AI has it in message history
+      // Other quick-question prompts are temporarily disabled; only the "Are you sure?" flow is active.
       if (questionType === 'sure') {
-        userPrompt = langPrompts.sure;
-      } else if (questionType === 'explain') {
-        userPrompt = langPrompts.explain;
-      } else if (questionType === 'examples') {
-        userPrompt = langPrompts.examples;
-      } else if (questionType === 'simpler') {
-        userPrompt = langPrompts.simpler;
+        const safeOriginal = escapeForPrompt(originalText);
+        const safeCorrected = escapeForPrompt(correctedSentenceValue);
+        userPrompt = `
+You are a careful and conservative Norwegian (Bokmål) teacher for adult learners (A2-B2).
+You must be very cautious with Norwegian grammar: if you are not sure something is wrong or right, clearly say that you are not sure instead of inventing a rule.
+
+USER_LANGUAGE = ${userLanguage}
+
+Your task is to:
+1) Re-check an already corrected Norwegian sentence and assess its correctness.
+2) Generate three additional example sentences using the same key structure(s) in natural, learner-friendly Bokmål.
+3) Identify multiword expressions in the corrected sentence and explain them.
+
+Input
+- originalSentence: "${safeOriginal}"
+- correctedSentence: "${safeCorrected}"
+
+Always base your analysis primarily on correctedSentence, but use originalSentence to understand what the learner intended.
+
+Part 1 - Re-check the corrected sentence ("Are you sure?" logic)
+1. Carefully assess whether correctedSentence is:
+   - grammatically correct Bokmål,
+   - natural enough for an A2-B2 learner,
+   - faithful to the meaning of originalSentence.
+2. Be conservative:
+   - Avoid false corrections.
+   - If you are not sure that something is wrong, treat it as acceptable and explicitly say you are not sure.
+3. Decide whether you would:
+   - keep correctedSentence as it is, OR
+   - make a slightly improved version (still simple and learner-friendly, without changing the meaning).
+
+Output for this part:
+- A short confidence comment in USER_LANGUAGE (for example: that the sentence is correct and natural, or that you have some doubts).
+- A field with the final recommended version of the sentence (either equal to correctedSentence, or with a minimal improvement).
+
+Part 2 - Generate three example sentences ("Give more examples" logic)
+Based on the key structure(s) used in the final recommended sentence from Part 1:
+1. Identify 1-2 main grammatical patterns or constructions that are important for the learner.
+2. Create exactly THREE new example sentences in simple, natural Bokmål (A2-B2 level) that demonstrate these same patterns.
+3. Keep sentences short and clear. Do not introduce unnecessary rare vocabulary.
+4. The examples must be correct and natural Bokmål. If you are not fully sure about a sentence, do NOT use it.
+
+Output for this part:
+- A list of exactly three Norwegian example sentences.
+
+Part 3 - Multiword expressions in the corrected sentence
+Now focus on multiword expressions in the final recommended Norwegian sentence from Part 1.
+
+Definitions:
+- A "multiword expression" is two or more words that:
+  - are commonly used together in real language;
+  - are perceived as a single semantic unit, not just a sum of individual words.
+
+Instructions:
+1. Identify all valid multiword expressions (2+ words) in the final recommended sentence that frequently occur together and convey a unified meaning.
+2. Write each expression in normal dictionary form (grunnform).
+3. For EACH expression:
+   - Give the expression in Norwegian (grunnform).
+   - Give a natural, meaning-based translation into USER_LANGUAGE (not word-for-word).
+   - Provide a short explanation in USER_LANGUAGE: when/how it is used.
+   - Give ONE simple Norwegian example sentence that shows this expression in context (different from the original sentence and from the three examples in Part 2).
+4. If you are uncertain whether something is a fixed/multiword expression or about its meaning, clearly mark your uncertainty in the explanation.
+5. If NO suitable multiword expressions are found, explicitly say that in USER_LANGUAGE.
+
+Output format
+Return a single JSON object with the following structure:
+
+{
+  "recheck": {
+    "finalSentence": "Norwegian sentence (your final recommended version)",
+    "confidenceComment": "short comment in USER_LANGUAGE about how sure you are and why"
+  },
+  "examples": [
+    "Norwegian example sentence 1",
+    "Norwegian example sentence 2",
+    "Norwegian example sentence 3"
+  ],
+  "multiwordExpressions": [
+    {
+      "expression": "expression in Norwegian (grunnform)",
+      "translation": "natural translation into USER_LANGUAGE",
+      "explanation": "short explanation in USER_LANGUAGE",
+      "example": "Norwegian example sentence with this expression"
+    }
+  ],
+  "noMultiwordExpressions": false
+}
+
+Rules:
+- If you find at least one multiword expression, set "noMultiwordExpressions" to false.
+- If you find none, set:
+  - "multiwordExpressions": []
+  - "noMultiwordExpressions": true
+  - and in "confidenceComment" or a short note inside "multiwordExpressions" explanation, clearly state in USER_LANGUAGE that there are no fixed expressions.
+- Output MUST be valid JSON:
+  - Use ONLY double quotes for all strings.
+  - No trailing commas.
+  - Booleans must be: true or false (not strings).
+- All non-Norwegian text (comments, explanations and translations) must be in USER_LANGUAGE.
+- Do NOT add any extra text outside the JSON.
+`;
+      } else {
+        const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
+        answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
+        return;
       }
 
       // Add user message to chat history

@@ -2432,6 +2432,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 8px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
   padding-top: 10px;
 }
+.fc-standalone.fc-bottom-actions-visible .tabs-toolbar .fc-tabs{
+  padding-top: 12px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px) * 0.4);
+}
 .fc-standalone .bottom-panel.bottom-actions{
   bottom: 0;
 }
