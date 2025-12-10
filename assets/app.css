@@ -5798,6 +5798,10 @@ select.inline-prompt-field {
   margin-top: 4px;
   font-style: italic;
 }
+.ai-example-hl {
+  text-decoration: underline;
+  font-weight: 600;
+}
 .ai-answer-list {
   margin: 0;
   padding-left: 20px;

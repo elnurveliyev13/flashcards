@@ -2133,10 +2133,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontInput.addEventListener('click', scheduleFrontSuggest);
       frontInput.addEventListener('blur', ()=>{
         setTimeout(hideFrontSuggest, 120);
-        // Trigger immediate translation on blur
-        if(translationDirection === 'no-user' && frontInput.value.trim()){
-          runTranslationHelper();
-        }
       });
       frontInput.addEventListener('keydown', e=>{
         if(e.key === 'Escape'){
@@ -2167,10 +2163,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
       translationInputLocal.addEventListener('blur', ()=>{
-        // Trigger immediate translation on blur
-        if(translationDirection === 'user-no' && translationInputLocal.value.trim()){
-          runTranslationHelper();
-        }
       });
       translationInputLocal.addEventListener('keydown', e=>{
         // Trigger immediate translation on Enter
@@ -11196,12 +11188,17 @@ Regeln:
         `);
       }
 
+      const renderExampleText = raw => {
+        const safe = escapeHtml(raw || '');
+        return safe.replace(/\[\[(.+?)\]\]/g, '<span class="ai-example-hl">$1</span>');
+      };
+
       if (Array.isArray(parsed.examples) && parsed.examples.length > 0) {
         const list = parsed.examples.map(ex => {
           if (typeof ex === 'string') {
-            return `<li>${escapeHtml(ex)}</li>`;
+            return `<li>${renderExampleText(ex)}</li>`;
           }
-          const text = escapeHtml(ex.text || '');
+          const text = renderExampleText(ex.text || '');
           const tr = escapeHtml(ex.translation || '');
           return `<li>${text}${tr ? `<div class="ai-example-tr">${tr}</div>` : ''}</li>`;
         }).join('');
@@ -11220,8 +11217,16 @@ Regeln:
           const expr = escapeHtml(item.expression || '');
           const translation = escapeHtml(item.translation || '');
           const explanation = escapeHtml(item.explanation || '');
-          const example = escapeHtml(item.example || '');
-          const exampleTr = escapeHtml(item.exampleTranslation || '');
+          const examples = Array.isArray(item.examples) && item.examples.length
+            ? item.examples
+            : (item.example || item.exampleTranslation
+                ? [{ text: item.example || '', translation: item.exampleTranslation || '' }]
+                : []);
+          const examplesHtml = examples.map(ex => {
+            const text = renderExampleText(ex.text || '');
+            const tr = escapeHtml(ex.translation || '');
+            return `<div class="ai-mwe-example">${text}</div>${tr ? `<div class="ai-example-tr">${tr}</div>` : ''}`;
+          }).join('');
           return `
             <li class="ai-mwe-item">
               <div class="ai-mwe-head">
@@ -11229,8 +11234,7 @@ Regeln:
                 ${translation ? `<span class="ai-mwe-translation">${translation}</span>` : ''}
               </div>
               ${explanation ? `<div class="ai-mwe-expl">${explanation}</div>` : ''}
-              ${example ? `<div class="ai-mwe-example">${example}</div>` : ''}
-              ${exampleTr ? `<div class="ai-example-tr">${exampleTr}</div>` : ''}
+              ${examplesHtml}
             </li>
           `;
         }).join('');
