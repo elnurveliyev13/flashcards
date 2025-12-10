@@ -20,6 +20,13 @@ if ($hassiteconfig) {
         1
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_focus_model',
+        get_string('settings_ai_focus_model', 'mod_flashcards'),
+        get_string('settings_ai_focus_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
     $settings->add(new admin_setting_configselect(
         'mod_flashcards/ai_focus_reasoning_effort',
         get_string('settings_ai_focus_reasoning_effort', 'mod_flashcards'),
