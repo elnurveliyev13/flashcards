@@ -2066,7 +2066,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusAnalysisList = document.getElementById('focusAnalysisList');
     const ordbokeneBlock = document.getElementById('ordbokeneBlock');
-    const focusHelperState = { tokens: [], activeIndex: null, abortController: null };
+    const focusHelperState = {
+      tokens: [],
+      activeIndex: null,
+      abortController: null,
+      expressionSuggestions: [],
+      expressionSourceText: '',
+      activeExpressionIndex: null
+    };
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
     translationInputLocal = document.getElementById('uTransLocal');
@@ -2361,6 +2368,51 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusStatusEl.textContent = text || '';
     }
 
+    function syncExpressionSuggestions(text){
+      const normalized = (text || '').trim();
+      if(!focusHelperState.expressionSourceText){
+        if(!normalized && focusHelperState.expressionSuggestions.length){
+          focusHelperState.expressionSuggestions = [];
+          focusHelperState.activeExpressionIndex = null;
+        }
+        return;
+      }
+      if(!normalized || normalized !== focusHelperState.expressionSourceText){
+        focusHelperState.expressionSuggestions = [];
+        focusHelperState.expressionSourceText = '';
+        focusHelperState.activeExpressionIndex = null;
+      }
+    }
+
+    function setFocusExpressionSuggestions(items, sourceText){
+      const expressionsInput = Array.isArray(items) ? items : [];
+      const normalizedExpressions = expressionsInput
+        .map(item => {
+          if(!item) return '';
+          if(typeof item === 'string') return item;
+          if(typeof item === 'object'){
+            return (item.expression || item.expressionText || '');
+          }
+          return '';
+        })
+        .map(str => (str || '').trim())
+        .filter(Boolean);
+      if(!normalizedExpressions.length){
+        if(focusHelperState.expressionSuggestions.length){
+          focusHelperState.expressionSuggestions = [];
+          focusHelperState.expressionSourceText = '';
+          focusHelperState.activeExpressionIndex = null;
+          renderFocusChips();
+        }
+        return;
+      }
+      focusHelperState.expressionSuggestions = Array.from(new Set(normalizedExpressions));
+      const fallbackSource = (sourceText || (frontInput ? (frontInput.value || '') : '') || '').trim();
+      focusHelperState.expressionSourceText = fallbackSource;
+      focusHelperState.activeExpressionIndex = null;
+      renderFocusChips();
+    }
+
     function extractFocusTokens(text){
       if(!text) return [];
       // Split text into words and non-words (punctuation, spaces)
@@ -2387,14 +2439,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function updateChipActiveState(){
       if(!focusWordList) return;
       Array.from(focusWordList.querySelectorAll('.focus-chip')).forEach(btn=>{
-        const idx = Number(btn.dataset.index || -1);
-        btn.classList.toggle('active', idx === focusHelperState.activeIndex);
+        if(btn.classList.contains('focus-chip--expression')){
+          const exprIdx = Number(btn.dataset.expressionIndex || -1);
+          btn.classList.toggle('active', exprIdx === focusHelperState.activeExpressionIndex);
+        } else {
+          const idx = Number(btn.dataset.index || -1);
+          btn.classList.toggle('active', idx === focusHelperState.activeIndex);
+        }
+      });
+      Array.from(focusWordList.querySelectorAll('.focus-expression-row')).forEach(row=>{
+        const rowIdx = Number(row.dataset.expressionRow || -1);
+        row.classList.toggle('focus-expression-row--active', rowIdx === focusHelperState.activeExpressionIndex);
       });
     }
 
     function renderFocusChips(){
       if(!focusWordList) return;
       const text = frontInput ? frontInput.value : '';
+      syncExpressionSuggestions(text);
       const tokens = extractFocusTokens(text);
       // Store only word tokens for focusHelperState
       focusHelperState.tokens = tokens.filter(t => t.isWord);
@@ -2420,6 +2482,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
           btn.addEventListener('click', ()=>{
+            focusHelperState.activeExpressionIndex = null;
             focusHelperState.activeIndex = token.index;
             updateChipActiveState();
             if(aiEnabled){
@@ -2441,6 +2504,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusWordList.appendChild(span);
         }
       });
+      renderExpressionRows();
+      updateChipActiveState();
     }
 
     function renderSentenceAnalysis(items){
@@ -8554,6 +8619,7 @@ function renderComparisonResult(resultEl, comparison){
        }else{
         setTranslationPreview('', aiStrings.translationIdle);
        }
+       clearErrorCheckBlock();
        // Re-initialize autogrow for textareas after reset
        setTimeout(() => { initAutogrow(); initTextareaClearButtons(); }, 50);
      }
@@ -10899,10 +10965,7 @@ Regeln:
       // Show loading status
       const checkingText = t('checking_text') || 'Checking text...';
       setFocusStatus('loading', checkingText);
-      const errorBlock = $('#errorCheckBlock');
-      if (errorBlock) {
-        errorBlock.style.display = 'none';
-      }
+      clearErrorCheckBlock();
 
       try {
         const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
@@ -10977,6 +11040,8 @@ Regeln:
     function showErrorCheckResult(result) {
       const block = $('#errorCheckBlock');
       if (!block) return;
+      const contentContainer = block.querySelector('.error-check-content');
+      if (!contentContainer) return;
 
       const errorsFoundText = t('errors_found') || 'Errors found!';
       const correctedVersionText = t('corrected_version') || 'Corrected version:';
@@ -11054,9 +11119,10 @@ Regeln:
         </div>
       `;
 
-      block.innerHTML = html;
-      block.classList.add('error-check-visible');
-      block.style.display = 'block';
+      contentContainer.innerHTML = html;
+      block.dataset.hasContent = '1';
+      setErrorCheckToggleVisibility(true);
+      openErrorCheckBlock();
 
       // Setup button handlers
       const applyCorrectedBtn = block.querySelector('.apply-corrected-btn');
@@ -11083,8 +11149,7 @@ Regeln:
         renderFocusChips();
 
         // Hide error block
-        block.classList.remove('error-check-visible');
-        block.style.display = 'none';
+        closeErrorCheckBlock();
       }
 
       // Apply corrected version button
@@ -11107,8 +11172,7 @@ Regeln:
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
           // Just hide error block and continue with tokenization
-          block.classList.remove('error-check-visible');
-          block.style.display = 'none';
+          closeErrorCheckBlock();
           renderFocusChips();
         });
       }
@@ -11129,6 +11193,142 @@ Regeln:
       if (result.suggestion) {
         block.dataset.suggestion = result.suggestion;
       }
+    }
+
+    function setErrorCheckToggleVisibility(visible) {
+      const toggleBtn = $('#toggleErrorCheckBtn');
+      if (!toggleBtn) return;
+      toggleBtn.style.display = visible ? 'inline-flex' : 'none';
+    }
+
+    function openErrorCheckBlock() {
+      const block = $('#errorCheckBlock');
+      if (!block) return;
+      block.classList.add('error-check-visible');
+      block.classList.remove('error-check-collapsed');
+      block.style.display = 'block';
+      block.dataset.opened = '1';
+      const toggleBtn = $('#toggleErrorCheckBtn');
+      if (toggleBtn) {
+        toggleBtn.classList.add('is-active');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    function renderExpressionRows(){
+      if(!focusWordList) return;
+      const suggestions = focusHelperState.expressionSuggestions || [];
+      if(!suggestions.length){
+        return;
+      }
+      suggestions.forEach((expression, rowIndex) => {
+        const row = document.createElement('div');
+        row.className = 'focus-expression-row';
+        row.dataset.expressionRow = String(rowIndex);
+        if(rowIndex === focusHelperState.activeExpressionIndex){
+          row.classList.add('focus-expression-row--active');
+        }
+        row.dataset.expressionText = expression;
+        const tokens = extractFocusTokens(expression);
+        if(!tokens.length){
+          const btn = document.createElement('button');
+          btn.type='button';
+          btn.className='focus-chip focus-chip--expression';
+          btn.textContent = expression;
+          btn.dataset.expressionIndex = String(rowIndex);
+          btn.dataset.expressionText = expression;
+          btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
+          row.appendChild(btn);
+        } else {
+          tokens.forEach((token)=>{
+            if(token.isWord){
+              const btn = document.createElement('button');
+              btn.type='button';
+              btn.className='focus-chip focus-chip--expression';
+              btn.textContent = token.text;
+              btn.dataset.expressionIndex = String(rowIndex);
+              btn.dataset.expressionText = expression;
+              btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
+              row.appendChild(btn);
+            } else {
+              const span = document.createElement('span');
+              span.className = 'focus-expression-punctuation';
+              span.textContent = token.text;
+              row.appendChild(span);
+            }
+          });
+        }
+        focusWordList.appendChild(row);
+      });
+    }
+
+    function handleExpressionSelection(expression, rowIndex){
+      if(!expression) return;
+      focusHelperState.activeIndex = null;
+      focusHelperState.activeExpressionIndex = rowIndex;
+      updateChipActiveState();
+      if(fokusInput){
+        fokusInput.value = expression;
+        try{
+          fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
+        }catch(_){}
+      }
+      triggerFokusSuggestForInput();
+    }
+
+    function closeErrorCheckBlock() {
+      const block = $('#errorCheckBlock');
+      if (!block) return;
+      block.classList.remove('error-check-visible');
+      block.classList.add('error-check-collapsed');
+      block.style.display = 'none';
+      block.dataset.opened = '0';
+      const toggleBtn = $('#toggleErrorCheckBtn');
+      if (toggleBtn) {
+        toggleBtn.classList.remove('is-active');
+        toggleBtn.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function toggleErrorCheckBlock() {
+      const block = $('#errorCheckBlock');
+      if (!block || block.dataset.hasContent !== '1') return;
+      if (block.dataset.opened === '1') {
+        closeErrorCheckBlock();
+      } else {
+        openErrorCheckBlock();
+      }
+    }
+
+    function clearErrorCheckBlock() {
+      const block = $('#errorCheckBlock');
+      if (!block) return;
+      const content = block.querySelector('.error-check-content');
+      if (content) {
+        content.innerHTML = '';
+      }
+      block.dataset.hasContent = '';
+      block.dataset.originalText = '';
+      block.dataset.correctedText = '';
+      delete block.dataset.suggestion;
+      setErrorCheckToggleVisibility(false);
+      closeErrorCheckBlock();
+    }
+
+    const toggleErrorCheckBtn = $('#toggleErrorCheckBtn');
+    if (toggleErrorCheckBtn) {
+      toggleErrorCheckBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        toggleErrorCheckBlock();
+      });
+    }
+
+    const collapseErrorCheckBtn = $('#collapseErrorCheckBtn');
+    if (collapseErrorCheckBtn) {
+      collapseErrorCheckBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        closeErrorCheckBlock();
+      });
     }
 
     /**
@@ -11211,6 +11411,8 @@ Regeln:
       }
 
       const mwes = Array.isArray(parsed.multiwordExpressions) ? parsed.multiwordExpressions : [];
+      const expressionSource = (parsed.recheck?.finalSentence || parsed.alternative?.sentence || (frontInput ? frontInput.value : '') || '').trim();
+      setFocusExpressionSuggestions(mwes, expressionSource);
       const hasMwes = mwes.length > 0 && !parsed.noMultiwordExpressions;
       if (hasMwes) {
         const list = mwes.map(item => {
@@ -11553,16 +11755,18 @@ Rules:
     function showSuccessMessage() {
       const block = $('#errorCheckBlock');
       if (!block) return;
+      const content = block.querySelector('.error-check-content');
+      if (!content) return;
 
       const noErrorsText = t('no_errors_found') || 'No errors found!';
-      block.innerHTML = `<div class="error-check-success">✓ ${noErrorsText}</div>`;
-      block.classList.add('error-check-visible');
-      block.style.display = 'block';
+      content.innerHTML = `<div class="error-check-success">✓ ${noErrorsText}</div>`;
+      block.dataset.hasContent = '1';
+      setErrorCheckToggleVisibility(true);
+      openErrorCheckBlock();
 
       // Auto-hide after 3 seconds
       setTimeout(() => {
-        block.classList.remove('error-check-visible');
-        block.style.display = 'none';
+        closeErrorCheckBlock();
       }, 3000);
     }
 

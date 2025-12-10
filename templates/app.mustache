@@ -229,6 +229,16 @@
             </div>
           </div>
           <div class="fokus-input-wrap front-input-wrap">
+            <div class="error-check-trigger">
+              <button type="button" id="toggleErrorCheckBtn" class="error-check-toggle-btn" aria-controls="errorCheckBlock" aria-expanded="false" title="{{#str}} error_check_toggle_label, mod_flashcards {{/str}}" style="display:none;">
+                <span class="error-check-toggle-icon" aria-hidden="true">&#9888;</span>
+                <span class="sr-only">{{#str}} error_check_toggle_label, mod_flashcards {{/str}}</span>
+              </button>
+            </div>
+            <div id="errorCheckBlock" class="error-check-block error-check-collapsed" style="display:none;" aria-live="polite">
+              <button type="button" id="collapseErrorCheckBtn" class="error-check-collapse-btn" aria-label="{{#str}} error_check_collapse_label, mod_flashcards {{/str}}">&times;</button>
+              <div class="error-check-content"></div>
+            </div>
             <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
@@ -238,7 +248,6 @@
               <span data-i18n="check_text">Sjekk teksten</span>
             </button>
           </div>
-          <div id="errorCheckBlock" class="error-check-block" style="display:none;" aria-live="polite"></div>
         </div>
         <div class="slot front-translation-slot" id="slot_front_translation">
           <div class="slot-head-row slot-head-inline-row">
