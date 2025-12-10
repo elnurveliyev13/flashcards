@@ -11089,6 +11089,88 @@ Regeln:
     /**
      * Ask AI about the correction
      */
+    function formatAIAnswer(answerText) {
+      if (!answerText || typeof answerText !== 'string') {
+        return `<div class="ai-answer-plain">${escapeHtml(String(answerText || ''))}</div>`;
+      }
+
+      const cleanText = answerText.trim().replace(/^```[a-z]*\n?/i, '').replace(/```$/i, '').trim();
+      let parsed = null;
+      try {
+        parsed = JSON.parse(cleanText);
+      } catch (_err) {
+        // fallback: show plain text
+        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+      }
+
+      if (!parsed || typeof parsed !== 'object') {
+        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+      }
+
+      const sections = [];
+      if (parsed.recheck) {
+        const finalSentence = escapeHtml(parsed.recheck.finalSentence || '');
+        const confidence = escapeHtml(parsed.recheck.confidenceComment || '');
+        sections.push(`
+          <div class="ai-answer-section">
+            <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
+            ${finalSentence ? `<div class="ai-answer-highlight">${finalSentence}</div>` : ''}
+            ${confidence ? `<div class="ai-answer-note">${confidence}</div>` : ''}
+          </div>
+        `);
+      }
+
+      if (Array.isArray(parsed.examples) && parsed.examples.length > 0) {
+        const list = parsed.examples.map(ex => `<li>${escapeHtml(ex)}</li>`).join('');
+        sections.push(`
+          <div class="ai-answer-section">
+            <div class="ai-answer-title">${t('ai_more_examples') || 'Examples'}</div>
+            <ul class="ai-answer-list">${list}</ul>
+          </div>
+        `);
+      }
+
+      const mwes = Array.isArray(parsed.multiwordExpressions) ? parsed.multiwordExpressions : [];
+      const hasMwes = mwes.length > 0 && !parsed.noMultiwordExpressions;
+      if (hasMwes) {
+        const list = mwes.map(item => {
+          const expr = escapeHtml(item.expression || '');
+          const translation = escapeHtml(item.translation || '');
+          const explanation = escapeHtml(item.explanation || '');
+          const example = escapeHtml(item.example || '');
+          return `
+            <li class="ai-mwe-item">
+              <div class="ai-mwe-head">
+                <span class="ai-mwe-term">${expr}</span>
+                ${translation ? `<span class="ai-mwe-translation">${translation}</span>` : ''}
+              </div>
+              ${explanation ? `<div class="ai-mwe-expl">${explanation}</div>` : ''}
+              ${example ? `<div class="ai-mwe-example">${example}</div>` : ''}
+            </li>
+          `;
+        }).join('');
+        sections.push(`
+          <div class="ai-answer-section">
+            <div class="ai-answer-title">${t('ai_expressions') || 'Expressions'}</div>
+            <ul class="ai-mwe-list">${list}</ul>
+          </div>
+        `);
+      } else if (parsed.noMultiwordExpressions) {
+        sections.push(`
+          <div class="ai-answer-section">
+            <div class="ai-answer-title">${t('ai_expressions') || 'Expressions'}</div>
+            <div class="ai-answer-note">${escapeHtml(parsed.recheck?.confidenceComment || (t('ai_no_expressions') || 'No fixed expressions found.'))}</div>
+          </div>
+        `);
+      }
+
+      if (sections.length === 0) {
+        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+      }
+
+      return `<div class="ai-answer-structured">${sections.join('')}</div>`;
+    }
+
     async function askAIAboutCorrection(questionType, originalText, result) {
       const answerBlock = document.getElementById('aiAnswerBlock');
       if (!answerBlock) return;
@@ -11301,7 +11383,7 @@ Rules:
           // Add assistant response to chat history
           ChatSessionManager.addMessage('assistant', data.answer);
 
-          answerBlock.innerHTML = `<div class="ai-answer-content">${data.answer}</div>`;
+          answerBlock.innerHTML = formatAIAnswer(data.answer);
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
           answerBlock.innerHTML = `<div class="ai-answer-error">${errorMsg}</div>`;
