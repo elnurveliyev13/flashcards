@@ -975,10 +975,11 @@ USERPROMPT2;
             if (!empty($totalUsage)) {
                 $result1['usage'] = $totalUsage;
             }
-            if (!empty($result1['model'] ?? '')) {
+            // Preserve model/reasoning info if set
+            if (!empty($result1['model'])) {
                 $result1['model'] = $result1['model'];
             }
-            if (!empty($result1['reasoning_effort'] ?? '')) {
+            if (!empty($result1['reasoning_effort'])) {
                 $result1['reasoning_effort'] = $result1['reasoning_effort'];
             }
             return $result1;
@@ -1219,7 +1220,14 @@ USERPROMPT2;
 
             $answer = trim($response->choices[0]->message->content ?? '');
 
-            $result = ['answer' => $answer];
+            $result = [
+                'answer' => $answer,
+                'model' => $response->model ?? ($payload['model'] ?? ''),
+            ];
+
+            if (!empty($payload['reasoning_effort'])) {
+                $result['reasoning_effort'] = $payload['reasoning_effort'];
+            }
 
             // Include token usage information if available
             if (isset($response->usage)) {
@@ -1285,7 +1293,14 @@ USERPROMPT2;
 
             $answer = trim($response->choices[0]->message->content ?? '');
 
-            $result = ['answer' => $answer];
+            $result = [
+                'answer' => $answer,
+                'model' => $response->model ?? ($payload['model'] ?? ''),
+            ];
+
+            if (!empty($payload['reasoning_effort'])) {
+                $result['reasoning_effort'] = $payload['reasoning_effort'];
+            }
 
             // Include token usage information if available
             if (isset($response->usage)) {
