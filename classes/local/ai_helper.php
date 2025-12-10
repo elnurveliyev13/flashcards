@@ -786,14 +786,26 @@ CRITICAL RULES:
 - Do NOT output anything outside the JSON object.
 USERPROMPT2;
 
-                $payload2 = [
-                    'model' => $model,
-                    'temperature' => 0.0,
-                    'messages' => [
-                        ['role' => 'system', 'content' => $systemprompt2],
-                        ['role' => 'user', 'content' => $userprompt2],
-                    ],
-                ];
+        $payload2 = [
+            'model' => $model,
+            'temperature' => 0.0,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt2],
+                ['role' => 'user', 'content' => $userprompt2],
+            ],
+        ];
+
+        if ($requiresDefaultTempMethod->invoke($client, $modelkey)) {
+            if (!empty($reasoningUsed)) {
+                $payload2['reasoning_effort'] = $reasoningUsed;
+            } else {
+                $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+                $getReasoningMethod->setAccessible(true);
+                $payload2['reasoning_effort'] = $getReasoningMethod->invoke($client, 'correction');
+                $reasoningUsed = $payload2['reasoning_effort'];
+            }
+            unset($payload2['temperature']);
+        }
 
                 try {
                     $method = $reflection->getMethod('request');
@@ -895,6 +907,8 @@ USERPROMPT2;
                     }
                     if (!empty($result1['reasoning_effort'] ?? '')) {
                         $finalResult['reasoning_effort'] = $result1['reasoning_effort'];
+                    } else {
+                        $finalResult['reasoning_effort'] = $reasoningUsed ?? 'none';
                     }
 
                     return $finalResult;
@@ -918,6 +932,18 @@ USERPROMPT2;
                 ['role' => 'user', 'content' => $userprompt1],
             ],
         ];
+
+        $reasoningUsed = null;
+        $modelkey = core_text::strtolower(trim($model));
+        $requiresDefaultTempMethod = $reflection->getMethod('requires_default_temperature');
+        $requiresDefaultTempMethod->setAccessible(true);
+        if ($requiresDefaultTempMethod->invoke($client, $modelkey)) {
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload1['reasoning_effort'] = $getReasoningMethod->invoke($client, 'correction');
+            $reasoningUsed = $payload1['reasoning_effort'];
+            unset($payload1['temperature']);
+        }
 
         try {
             $method = $reflection->getMethod('request');
@@ -963,9 +989,8 @@ USERPROMPT2;
             if (!empty($modelused)) {
                 $result1['model'] = $modelused;
             }
-            if (!empty($reasoningUsed)) {
-                $result1['reasoning_effort'] = $reasoningUsed;
-            }
+            $reasoningUsed = $reasoningUsed ?? 'none';
+            $result1['reasoning_effort'] = $reasoningUsed;
 
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
