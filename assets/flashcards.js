@@ -11299,8 +11299,8 @@ Regeln:
       answerBlock.style.display = 'block';
       answerBlock.innerHTML = `<div class="ai-answer-loading">${thinkingText}</div>`;
 
-      // For repeated "Are you sure?" calls, start a fresh session to avoid stacking prior follow-ups
-      if (questionType === 'sure' && ChatSessionManager.currentSession) {
+      // Always start a fresh session for every quick question to avoid stacking history
+      if (ChatSessionManager.currentSession) {
         ChatSessionManager.clearSession();
       }
 
