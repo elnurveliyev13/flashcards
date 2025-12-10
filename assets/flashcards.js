@@ -655,7 +655,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_sure: 'Are you sure?',
         ai_explain_more: 'Explain in detail',
         ai_more_examples: 'Give more examples',
-        ai_explain_simpler: 'Explain simpler',
         ai_thinking: 'Thinking...',
       },
       uk: {
@@ -772,7 +771,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_sure: 'Ти впевнений?',
         ai_explain_more: 'Поясни детальніше',
         ai_more_examples: 'Дай більше прикладів',
-        ai_explain_simpler: 'Поясни простіше',
         ai_thinking: 'Думаю...',
       },
       ru: {
@@ -889,7 +887,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_sure: 'Ты уверен?',
         ai_explain_more: 'Объясни подробнее',
         ai_more_examples: 'Дай больше примеров',
-        ai_explain_simpler: 'Объясни проще',
         ai_thinking: 'Думаю...',
       },
       fr: {
@@ -1206,7 +1203,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_sure: 'Jesteś pewien?',
         ai_explain_more: 'Wyjaśnij szczegółowo',
         ai_more_examples: 'Daj więcej przykładów',
-        ai_explain_simpler: 'Wyjaśnij prościej',
         ai_thinking: 'Myślę...',
       },
       it: {
@@ -10985,7 +10981,6 @@ Regeln:
       const sureText = t('ai_sure') || 'Are you sure?';
       const explainMoreText = t('ai_explain_more') || 'Explain in detail';
       const moreExamplesText = t('ai_more_examples') || 'Give more examples';
-      const explainSimplerText = t('ai_explain_simpler') || 'Explain simpler';
 
       const html = `
         <div class="error-check-header">
