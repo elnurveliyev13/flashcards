@@ -11351,12 +11351,9 @@ Regeln:
         // without a rigid "Corrected:" prefix so the AI can answer more naturally.
         // Use correctedText (the field returned from the backend); fall back to original text if needed.
         const correctedSentence = result.correctedText || result.corrected || originalText || '';
-        let correctionMsg = correctedSentence ? `"${correctedSentence}"` : '';
-        if (result.suggestion) {
-          correctionMsg += `\n\n${naturalLabel}: "${result.suggestion}"`;
-        }
-        if (result.explanation) {
-          correctionMsg += `\n\n${result.explanation}`;
+        let correctionMsg = correctedSentence ? correctedSentence : '';
+        if (result.suggestion && result.suggestion.trim() && result.suggestion !== correctedSentence) {
+          correctionMsg += `\n${naturalLabel}: ${result.suggestion}`;
         }
         ChatSessionManager.addMessage('assistant', correctionMsg);
       }
@@ -11497,7 +11494,8 @@ Rules:
       ChatSessionManager.addMessage('user', userPrompt);
 
       // Get full message history for API
-      const messages = ChatSessionManager.getMessagesForAPI();
+      // Send consistent minimal context: system + original check + corrected + current question
+      const messages = ChatSessionManager.getMessagesForAPI(4);
 
       try {
         const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
