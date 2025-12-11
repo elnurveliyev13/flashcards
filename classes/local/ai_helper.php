@@ -562,8 +562,10 @@ Your tasks (do them in this order):
 
 3) List EACH learner error separately:
    - For each error, show:
-     - the original fragment from the learner sentence (keep this fragment as short as possible while still clearly showing the mistake)
-     - your corrected version of exactly that fragment (the fragment you are bulding you error explanation about)
+     - the original fragment from the learner sentence.
+       This fragment should normally be ONE word or a short phrase / construction (for example: a verb form, a preposition + noun, or a small group of words), NOT the whole sentence.
+       Only use the full sentence as "original" if almost every part of the sentence is wrong and it cannot be broken into smaller clear pieces.
+     - your corrected version of exactly that fragment (use the same length: one word or the same short phrase, not a longer paraphrase or the whole sentence)
      - a SHORT explanation in $langname
      - a simple category and certainty level
 
