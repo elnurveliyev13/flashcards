@@ -490,6 +490,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       frontTransHide: dataset.frontTransHide || 'Hide translation',
       expressionEdit: dataset.expressionEdit || 'Edit expression',
       expressionEditPrompt: dataset.expressionEditPrompt || 'Edit the expression text',
+      tokenCreateCard: dataset.tokenCreateCard || 'Create card',
+      tokenCreateCardStatus: dataset.tokenCreateCardStatus || 'Card draft prepared',
       translationIdle: 'Status',
       translationLoading: dataset.translationLoading || 'Translating',
       translationError: dataset.translationError || 'Translation failed',
@@ -2097,8 +2099,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionReady: false,
       expressionRequestText: ''
     };
-    let expressionChipMenuEl = null;
-    let expressionChipMenuOutsideHandler = null;
+    let focusChipMenuEl = null;
+    let focusChipMenuOutsideHandler = null;
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
     translationInputLocal = document.getElementById('uTransLocal');
@@ -2518,35 +2520,52 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
-    function closeExpressionChipMenu(){
-      if(expressionChipMenuOutsideHandler){
-        document.removeEventListener('click', expressionChipMenuOutsideHandler, true);
-        expressionChipMenuOutsideHandler = null;
+    function closeFocusChipMenu(){
+      if(focusChipMenuOutsideHandler){
+        document.removeEventListener('click', focusChipMenuOutsideHandler, true);
+        focusChipMenuOutsideHandler = null;
       }
-      window.removeEventListener('resize', closeExpressionChipMenu);
-      window.removeEventListener('scroll', closeExpressionChipMenu, true);
-      if(expressionChipMenuEl){
-        expressionChipMenuEl.remove();
-        expressionChipMenuEl = null;
+      window.removeEventListener('resize', closeFocusChipMenu);
+      window.removeEventListener('scroll', closeFocusChipMenu, true);
+      if(focusChipMenuEl){
+        focusChipMenuEl.remove();
+        focusChipMenuEl = null;
       }
     }
 
-    function openExpressionChipMenu(target, options){
+    function openFocusChipMenu(target, options){
       if(!target) return;
-      closeExpressionChipMenu();
+      const hasActions = !!(options?.onCreate || options?.onEdit);
+      if(!hasActions){
+        return;
+      }
+      closeFocusChipMenu();
       const menu = document.createElement('div');
       menu.className = 'focus-expression-menu';
-      const editBtn = document.createElement('button');
-      editBtn.type = 'button';
-      editBtn.className = 'focus-expression-menu__item';
-      editBtn.textContent = aiStrings.expressionEdit || 'Edit expression';
-      editBtn.addEventListener('click', ()=>{
-        closeExpressionChipMenu();
-        if(options?.onEdit){
-          options.onEdit();
-        }
+      const actions = [];
+      if(options?.onCreate){
+        actions.push({
+          label: aiStrings.tokenCreateCard || 'Create card',
+          handler: options.onCreate
+        });
+      }
+      if(options?.onEdit){
+        actions.push({
+          label: aiStrings.expressionEdit || 'Edit expression',
+          handler: options.onEdit
+        });
+      }
+      actions.forEach(action=>{
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'focus-expression-menu__item';
+        btn.textContent = action.label;
+        btn.addEventListener('click', ()=>{
+          closeFocusChipMenu();
+          action.handler();
+        });
+        menu.appendChild(btn);
       });
-      menu.appendChild(editBtn);
       document.body.appendChild(menu);
       const rect = target.getBoundingClientRect();
       const baseX = typeof options?.x === 'number' ? options.x : (rect.left + (rect.width / 2));
@@ -2564,15 +2583,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       menu.style.left = `${left}px`;
       menu.style.top = `${top}px`;
-      expressionChipMenuOutsideHandler = (evt)=>{
+      focusChipMenuOutsideHandler = (evt)=>{
         if(menu && !menu.contains(evt.target)){
-          closeExpressionChipMenu();
+          closeFocusChipMenu();
         }
       };
-      setTimeout(()=>document.addEventListener('click', expressionChipMenuOutsideHandler, true), 0);
-      window.addEventListener('resize', closeExpressionChipMenu);
-      window.addEventListener('scroll', closeExpressionChipMenu, true);
-      expressionChipMenuEl = menu;
+      setTimeout(()=>document.addEventListener('click', focusChipMenuOutsideHandler, true), 0);
+      window.addEventListener('resize', closeFocusChipMenu);
+      window.addEventListener('scroll', closeFocusChipMenu, true);
+      focusChipMenuEl = menu;
     }
 
     function promptExpressionEdit(expressionData, rowIndex){
@@ -2594,15 +2613,56 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       handleExpressionSelection(focusHelperState.expressionSuggestions[rowIndex], rowIndex);
     }
 
-    function attachExpressionChipMenuHandlers(btn, expressionData, rowIndex){
+    function createCardFromToken(tokenText, expressionData){
+      const text = (tokenText || '').trim();
+      if(!text){
+        return;
+      }
+      closeFocusChipMenu();
+      editingCardId = null;
+      if(typeof tabSwitcher === 'function'){
+        tabSwitcher('quickInput');
+      }
+      resetForm();
+      const front = document.getElementById('uFront');
+      if(front){
+        front.value = text;
+        try{ front.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+      }
+      if(expressionData){
+        const explanation = (expressionData.explanation || '').trim();
+        if(explanation){
+          const explEl = document.getElementById('uExplanation');
+          if(explEl){
+            explEl.value = explanation;
+            try{ explEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+          }
+        }
+        const examplesEl = document.getElementById('uExamples');
+        const examples = Array.isArray(expressionData.examples) ? expressionData.examples.map(v => (typeof v === 'string' ? v.trim() : (v && v.text ? String(v.text).trim() : ''))).filter(Boolean) : [];
+        if(examples.length && examplesEl){
+          examplesEl.value = examples.join('\n');
+          try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+        }
+      }
+      const statusEl = document.getElementById('status');
+      if(statusEl){
+        statusEl.textContent = aiStrings.tokenCreateCardStatus || '';
+        setTimeout(()=>{ statusEl.textContent=''; }, 1200);
+      }
+      openEditor();
+    }
+
+    function attachFocusChipMenuHandlers(btn, tokenText, options = {}){
       if(!btn){
         return;
       }
       const openMenu = (clientX, clientY)=>{
-        openExpressionChipMenu(btn, {
+        openFocusChipMenu(btn, {
           x: clientX,
           y: clientY,
-          onEdit: ()=>promptExpressionEdit(expressionData, rowIndex)
+          onCreate: options.onCreate,
+          onEdit: options.onEdit
         });
       };
       btn.addEventListener('contextmenu', e=>{
@@ -2635,7 +2695,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function renderFocusChips(){
       if(!focusWordList) return;
-      closeExpressionChipMenu();
+      closeFocusChipMenu();
       const text = frontInput ? frontInput.value : '';
       syncExpressionSuggestions(text);
       const tokens = extractFocusTokens(text);
@@ -2662,6 +2722,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.className='focus-chip';
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
+          attachFocusChipMenuHandlers(btn, token.text, {
+            onCreate: ()=>createCardFromToken(token.text)
+          });
           btn.addEventListener('click', ()=>{
             focusHelperState.activeExpressionIndex = null;
             focusHelperState.activeIndex = token.index;
@@ -11439,7 +11502,10 @@ Regeln:
         btn.dataset.expressionIndex = String(rowIndex);
         btn.dataset.expressionText = expression;
         btn.addEventListener('click', ()=>handleExpressionSelection(expressionData, rowIndex));
-        attachExpressionChipMenuHandlers(btn, expressionData, rowIndex);
+        attachFocusChipMenuHandlers(btn, expression, {
+          onCreate: ()=>createCardFromToken(expression, expressionData),
+          onEdit: ()=>promptExpressionEdit(expressionData, rowIndex)
+        });
         row.appendChild(btn);
         focusWordList.appendChild(row);
       });
@@ -11514,6 +11580,12 @@ Regeln:
           }
         }
         applyExpressionExamples(data.examples);
+        const explanationEl = document.getElementById('uExplanation');
+        const explanationValue = (data.definition || expressionMeta?.explanation || data.translation || '').trim();
+        if(explanationValue && explanationEl && (!explanationEl.value.trim() || data.ordbokene)){
+          explanationEl.value = explanationValue;
+          try{ explanationEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+        }
         setFocusTranslation(data.translation || expressionMeta?.translation || '');
         setFocusStatus('success', aiStrings.success || '');
       }catch(err){

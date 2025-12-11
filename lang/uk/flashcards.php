@@ -43,6 +43,8 @@ $string['ai_detecting'] = 'Виявлення виразу...';
 $string['ai_helper_success'] = 'Фокусну фразу додано';
 $string['ai_helper_error'] = 'Не вдалося виявити вираз';
 $string['ai_no_text'] = 'Введіть речення, щоб увімкнути помічника';
+$string['token_create_card'] = '???????? ??????';
+$string['token_create_card_status'] = '???????? ?????? ????????????';
 $string['choose_focus_word'] = 'Оберіть фокус-слово або фразу';
 $string['sentence_analysis'] = 'Граматичний та смисловий розбір';
 $string['analysis_empty'] = 'Виберіть слово, щоб побачити граматичний розбір.';
@@ -464,3 +466,5 @@ $string['error_elevenlabs_stt_api'] = 'Помилка розпізнавання
 $string['error_stt_disabled'] = 'Розпізнавання мовлення не налаштовано. Увімкніть Whisper або ElevenLabs STT.';
 $string['error_stt_upload'] = 'Не вдалося обробити завантажений аудіофайл.';
 $string['error_stt_api'] = 'Сервіс розпізнавання мовлення повернув помилку: {$a}';
+
+

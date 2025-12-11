@@ -138,6 +138,81 @@ function mod_flashcards_normalize_infinitive(string $value): string {
 }
 
 /**
+ * Lookup phrase via Ordbøkene by trying both direct lookup and search.
+ *
+ * @param string $expression
+ * @param string $lang
+ * @return array|null
+ */
+function mod_flashcards_lookup_or_search_expression(string $expression, string $lang = 'begge'): ?array {
+    $norm = mod_flashcards_normalize_infinitive($expression);
+    if ($norm === '') {
+        return null;
+    }
+    try {
+        $lookup = ordbokene_client::lookup($norm, $lang);
+        if (!empty($lookup)) {
+            $lookup['expression'] = mod_flashcards_normalize_infinitive($lookup['baseform'] ?? $norm);
+            return $lookup;
+        }
+    } catch (\Throwable $ex) {
+        // ignore
+    }
+    try {
+        $search = ordbokene_client::search_expressions($norm, $lang);
+        if (!empty($search)) {
+            $search['expression'] = mod_flashcards_normalize_infinitive($search['baseform'] ?? $norm);
+            return $search;
+        }
+    } catch (\Throwable $ex) {
+        // ignore
+    }
+    return null;
+}
+
+/**
+ * Produce lightweight expression variants for better Ordbøkene coverage.
+ *
+ * @param string $expression
+ * @return array
+ */
+function mod_flashcards_expand_expression_variants(string $expression): array {
+    $expression = mod_flashcards_normalize_infinitive($expression);
+    if ($expression === '') {
+        return [];
+    }
+    $variants = [$expression];
+    $trimTokens = ['å', 'på', 'med', 'til', 'over', 'for', 'om', 'av', 'i', 'seg'];
+    foreach ($trimTokens as $token) {
+        $pattern = '~\b' . preg_quote($token, '~') . '$~iu';
+        if (preg_match($pattern, $expression)) {
+            $trimmed = trim(preg_replace($pattern, '', $expression));
+            if ($trimmed !== '') {
+                $variants[] = $trimmed;
+            }
+        }
+    }
+    $verbs = ['være', 'ha', 'bli', 'få', 'holde', 'gå', 'komme'];
+    foreach ($verbs as $verb) {
+        $prefixed = trim($verb . ' ' . $expression);
+        if ($prefixed !== '') {
+            $variants[] = $prefixed;
+        }
+    }
+    if (preg_match('~\bpå$~iu', $expression)) {
+        $variants[] = trim($expression . ' med');
+    }
+    $cleaned = [];
+    foreach (array_unique($variants) as $variant) {
+        $variant = trim($variant);
+        if ($variant !== '') {
+            $cleaned[] = $variant;
+        }
+    }
+    return $cleaned;
+}
+
+/**
  * Try to resolve a multi-word expression via Ordbøkene.
  *
  * @param string $fronttext Full sentence (surface forms)
@@ -177,33 +252,48 @@ function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $
         return true;
     };
     $sentTokens = $tokenize($fronttext);
+    $seen = [];
+
+    $buildResult = function(array $resolved, string $fallback): array {
+        $expression = mod_flashcards_normalize_infinitive($resolved['expression'] ?? $resolved['baseform'] ?? $fallback);
+        return [
+            'expression' => $expression,
+            'meanings' => $resolved['meanings'] ?? [],
+            'examples' => $resolved['examples'] ?? [],
+            'forms' => $resolved['forms'] ?? [],
+            'dictmeta' => $resolved['dictmeta'] ?? [],
+            'source' => 'ordbokene',
+            'citation' => '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+        ];
+    };
+
     foreach ($candidates as $cand) {
         $norm = mod_flashcards_normalize_infinitive($cand);
-        if ($norm === '') {
+        if ($norm === '' || isset($seen[$norm])) {
             continue;
         }
-        // Skip expressions whose tokens are not present in the sentence in the same order to avoid phantom combinations (e.g., 'slå til' when 'til' precedes 'slå').
+        $seen[$norm] = true;
         $exprTokens = $tokenize($norm);
         if (!$tokensInOrder($exprTokens, $sentTokens)) {
             continue;
         }
-        try {
-            $lookup = ordbokene_client::lookup($norm, $lang);
-        } catch (\Throwable $e) {
-            continue;
-        }
-        if (!empty($lookup)) {
-            $expression = mod_flashcards_normalize_infinitive($lookup['baseform'] ?? $norm);
-            return [
-                'expression' => $expression,
-                'meanings' => $lookup['meanings'] ?? [],
-                'examples' => $lookup['examples'] ?? [],
-                'forms' => $lookup['forms'] ?? [],
-                'dictmeta' => $lookup['dictmeta'] ?? [],
-                'source' => 'ordbokene',
-                'citation' => '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
-            ];
+        $resolved = mod_flashcards_lookup_or_search_expression($norm, $lang);
+        if (!empty($resolved)) {
+            return $buildResult($resolved, $norm);
         }
     }
+
+    foreach (mod_flashcards_expand_expression_variants($clicked) as $variant) {
+        $norm = mod_flashcards_normalize_infinitive($variant);
+        if ($norm === '' || isset($seen[$norm])) {
+            continue;
+        }
+        $seen[$norm] = true;
+        $resolved = mod_flashcards_lookup_or_search_expression($norm, $lang);
+        if (!empty($resolved)) {
+            return $buildResult($resolved, $norm);
+        }
+    }
+
     return null;
 }
