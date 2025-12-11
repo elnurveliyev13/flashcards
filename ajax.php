@@ -1503,8 +1503,102 @@ if (!empty($ordbokene_debug)) {
         } catch (\Throwable $ex) {
             debugging('[flashcards] ordbank_focus_helper failed: ' . $ex->getMessage(), DEBUG_DEVELOPER);
             http_response_code(400);
-            echo json_encode(['ok' => false, 'error' => $ex->getMessage()]);
+        echo json_encode(['ok' => false, 'error' => $ex->getMessage()]);
         }
+        break;
+
+    case 'expression_focus_helper':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $expression = trim($payload['expression'] ?? '');
+        $fronttext = trim($payload['frontText'] ?? '');
+        $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
+        $meta = is_array($payload['meta']) ? $payload['meta'] : [];
+        if ($expression === '') {
+            throw new invalid_parameter_exception('Missing expression');
+        }
+        $lang = ($language === 'nn') ? 'nn' : ((in_array($language, ['nb', 'no'], true) ? 'bm' : 'begge'));
+        $resolved = mod_flashcards_resolve_ordbokene_expression($fronttext, $expression, $expression, $lang);
+        if (empty($resolved)) {
+            $resolved = \mod_flashcards\local\ordbokene_client::lookup($expression, $lang);
+            if (!empty($resolved['baseform'])) {
+                $resolved['expression'] = mod_flashcards_normalize_infinitive($resolved['baseform']);
+            } else {
+                $resolved['expression'] = mod_flashcards_normalize_infinitive($expression);
+            }
+        }
+        if (empty($resolved)) {
+            $search = \mod_flashcards\local\ordbokene_client::search_expressions($expression, $lang);
+            if (!empty($search)) {
+                $search['expression'] = mod_flashcards_normalize_infinitive($search['baseform'] ?? $expression);
+                $resolved = $search;
+            }
+        }
+        if (empty($resolved)) {
+            $resolved = ['expression' => mod_flashcards_normalize_infinitive($expression)];
+        }
+        $baseExpression = (string)($resolved['expression'] ?? $expression);
+        $metaExamples = [];
+        if (!empty($meta['examples'])) {
+            if (is_array($meta['examples'])) {
+                foreach ($meta['examples'] as $item) {
+                    if (is_string($item)) {
+                        $metaExamples[] = trim($item);
+                    } else if (is_array($item) && !empty($item['text'])) {
+                        $metaExamples[] = trim($item['text']);
+                    }
+                }
+            } else if (is_string($meta['examples'])) {
+                $metaExamples[] = trim($meta['examples']);
+            }
+            $metaExamples = array_values(array_filter($metaExamples));
+        }
+        $translation = trim((string)($meta['translation'] ?? ''));
+        $definition = trim((string)($meta['definition'] ?? ''));
+        $explanation = trim((string)($meta['explanation'] ?? ''));
+        if (!$translation && !empty($resolved['meanings'])) {
+            $translation = (string)($resolved['meanings'][0] ?? '');
+        }
+        if (!$definition && $translation) {
+            $definition = $translation;
+        }
+        $analysis = [];
+        if ($explanation) {
+            $analysis[] = ['text' => $baseExpression, 'translation' => $explanation];
+        } else if ($translation) {
+            $analysis[] = ['text' => $baseExpression, 'translation' => $translation];
+        }
+        $examples = $metaExamples ?: ($resolved['examples'] ?? []);
+        $data = [
+            'focusWord' => $expression,
+            'focusBaseform' => $baseExpression,
+            'focusExpression' => $baseExpression,
+            'selected' => [
+                'lemma_id' => 0,
+                'wordform' => $expression,
+                'baseform' => $baseExpression,
+                'tag' => 'phrase',
+                'paradigme_id' => null,
+                'boy_nummer' => 0,
+                'ipa' => null,
+                'gender' => '',
+            ],
+            'pos' => 'phrase',
+            'forms' => $resolved['forms'] ?? [],
+            'parts' => [$baseExpression],
+            'ordbokene' => array_merge($resolved, [
+                'expression' => $baseExpression,
+                'source' => 'ordbokene',
+            ]),
+            'analysis' => $analysis,
+            'translation' => $translation,
+            'definition' => $definition,
+            'examples' => $examples,
+        ];
+        echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
     case 'ai_translate':

@@ -2375,6 +2375,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.expressionSourceText = '';
         focusHelperState.activeExpressionIndex = null;
       }
+      if(focusHelperState.expressionSourceText && normalized && normalized !== focusHelperState.expressionSourceText){
+        focusHelperState.expressionSuggestions = [];
+        focusHelperState.expressionSourceText = '';
+        focusHelperState.activeExpressionIndex = null;
+      }
     }
 
     function setExpressionSourceText(text){
@@ -2387,20 +2392,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusHelperState.activeExpressionIndex = null;
     }
 
-    function setFocusExpressionSuggestions(items, sourceText){
-      const expressionsInput = Array.isArray(items) ? items : [];
-      const normalizedExpressions = expressionsInput
+    function normalizeExpressionExamples(value){
+      const list = Array.isArray(value) ? value : (value ? [value] : []);
+      return list
         .map(item => {
-          if(!item) return '';
-          if(typeof item === 'string') return item;
+          if(typeof item === 'string') return item.trim();
           if(typeof item === 'object'){
-            return (item.expression || item.expressionText || '');
+            return (item.text || item || '').toString().trim();
           }
           return '';
         })
-        .map(str => (str || '').trim())
         .filter(Boolean);
-      if(!normalizedExpressions.length){
+    }
+
+    function setFocusExpressionSuggestions(items, sourceText){
+      const expressionsInput = Array.isArray(items) ? items : [];
+      if(!expressionsInput.length){
         if(focusHelperState.expressionSuggestions.length){
           focusHelperState.expressionSuggestions = [];
           focusHelperState.expressionSourceText = '';
@@ -2409,7 +2416,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         return;
       }
-      focusHelperState.expressionSuggestions = Array.from(new Set(normalizedExpressions));
+      const seen = new Set();
+      const prepared = [];
+      expressionsInput.forEach(item => {
+        if(!item) return;
+        const exprText = (typeof item === 'string' ? item : (item.expression || item.expressionText || item.term || '')).toString().trim();
+        if(!exprText) {
+          return;
+        }
+        const key = exprText.toLowerCase();
+        if(seen.has(key)){
+          return;
+        }
+        seen.add(key);
+        const translation = (item.translation || item.meaning || item.translationText || '').toString().trim();
+        const explanation = (item.explanation || item.note || item.confidence || item.confidenceComment || '').toString().trim();
+        const examples = normalizeExpressionExamples(item.examples || item.example || item.exampleText);
+        prepared.push({
+          expression: exprText,
+          translation,
+          explanation,
+          examples
+        });
+      });
+      if(!prepared.length){
+        if(focusHelperState.expressionSuggestions.length){
+          focusHelperState.expressionSuggestions = [];
+          focusHelperState.expressionSourceText = '';
+          focusHelperState.activeExpressionIndex = null;
+          renderFocusChips();
+        }
+        return;
+      }
+      focusHelperState.expressionSuggestions = prepared;
       const fallbackSource = (sourceText || (frontInput ? (frontInput.value || '') : '') || '').trim();
       setExpressionSourceText(fallbackSource);
       renderFocusChips();
@@ -11251,7 +11290,11 @@ Regeln:
       if(expressionSource && expressionSource !== frontNormalized){
         return;
       }
-      suggestions.forEach((expression, rowIndex) => {
+      suggestions.forEach((expressionData, rowIndex) => {
+        const expression = (expressionData && expressionData.expression) || '';
+        if(!expression){
+          return;
+        }
         const row = document.createElement('div');
         row.className = 'focus-expression-row';
         row.dataset.expressionRow = String(rowIndex);
@@ -11265,26 +11308,106 @@ Regeln:
         btn.textContent = expression;
         btn.dataset.expressionIndex = String(rowIndex);
         btn.dataset.expressionText = expression;
-        btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
+        btn.addEventListener('click', ()=>handleExpressionSelection(expressionData, rowIndex));
         row.appendChild(btn);
         focusWordList.appendChild(row);
       });
     }
 
-    function handleExpressionSelection(expression, rowIndex){
-      if(!expression) return;
-      focusHelperState.activeIndex = null;
+    async function handleExpressionSelection(expressionData, rowIndex){
+      if(!expressionData || !expressionData.expression){
+        return;
+      }
       focusHelperState.activeExpressionIndex = rowIndex;
+      focusHelperState.activeIndex = null;
       updateChipActiveState();
+      const expression = expressionData.expression;
       if(fokusInput){
         fokusInput.value = expression;
         try{
           fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
         }catch(_){}
       }
-      triggerFokusSuggestForInput();
+      await loadExpressionFocus(expression, expressionData);
     }
 
+    async function loadExpressionFocus(expression, expressionMeta){
+      if(!expression){
+        return;
+      }
+      const url = new URL(M.cfg.wwwroot + '/mod/flashcards/ajax.php');
+      url.searchParams.set('action', 'expression_focus_helper');
+      url.searchParams.set('sesskey', sesskey);
+      const payload = {
+        expression,
+        frontText: frontInput ? (frontInput.value || '') : '',
+        language: currentInterfaceLang || 'en',
+        meta: {
+          translation: expressionMeta?.translation || '',
+          explanation: expressionMeta?.explanation || '',
+          examples: expressionMeta?.examples || [],
+        }
+      };
+      try{
+        const response = await fetch(url.toString(), {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if(!result || !result.ok || !result.data){
+          return;
+        }
+        const data = result.data;
+        if(expressionMeta?.explanation){
+          const analysis = Array.isArray(data.analysis) ? data.analysis.slice() : [];
+          analysis.unshift({ text: expression, translation: expressionMeta.explanation });
+          data.analysis = analysis;
+        }
+        if(expressionMeta?.translation){
+          data.translation = data.translation || expressionMeta.translation;
+        }
+        if(expressionMeta?.examples && expressionMeta.examples.length){
+          data.examples = expressionMeta.examples;
+        }
+        applyFocusMeta(data);
+        const posField = document.getElementById('uPOS');
+        if(posField){
+          posField.value = data.pos || 'phrase';
+        }
+        if(focusBaseInput){
+          const baseValue = (data.focusBaseform || expression).trim();
+          if(baseValue){
+            focusBaseInput.value = baseValue;
+            try{ focusBaseInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+          }
+        }
+        if(translationInputLocal){
+          translationInputLocal.value = data.translation || expressionMeta?.translation || '';
+        }
+        applyExpressionExamples(data.examples);
+        setFocusTranslation(data.translation || expressionMeta?.translation || '');
+        setFocusStatus('success', aiStrings.success || '');
+      }catch(err){
+        console.error('[Flashcards] expression focus helper failed', err);
+      }
+    }
+
+    function applyExpressionExamples(list){
+      const examplesEl = document.getElementById('uExamples');
+      if(!examplesEl || !Array.isArray(list)){
+        return;
+      }
+      const entries = list
+        .map(item => typeof item === 'string' ? item.trim() : (item && item.text ? item.text.trim() : ''))
+        .filter(Boolean);
+      if(!entries.length){
+        examplesEl.value = '';
+        return;
+      }
+      examplesEl.value = entries.join('\n');
+      try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+    }
     function closeErrorCheckBlock() {
       const block = $('#errorCheckBlock');
       if (!block) return;
