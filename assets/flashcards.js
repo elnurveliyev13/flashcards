@@ -11077,7 +11077,6 @@ Regeln:
       const keepAsIsText = t('keep_as_is') || 'Keep it as it is';
       const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
       const collapseBtnAria = t('error_check_collapse_label') || 'Hide the error check panel';
-      const collapseBtnText = t('error_check_collapse_text') || 'Collapse';
 
       // Get original text
       const originalText = $('#uFront').value || '';
@@ -11123,7 +11122,9 @@ Regeln:
       const html = `
         <div class="error-check-header-row">
           <strong>${errorsFoundText}</strong>
-          <button type="button" class="error-check-collapse-btn" aria-label="${collapseBtnAria}">${collapseBtnText}</button>
+          <button type="button" class="error-check-collapse-btn" aria-label="${collapseBtnAria}">
+            <span aria-hidden="true" class="error-check-collapse-icon">−</span>
+          </button>
         </div>
         ${errorsListHtml}
         <div class="error-check-corrected">
@@ -11163,15 +11164,17 @@ Regeln:
       }
 
       // Setup button handlers
-      const applyCorrectedBtn = block.querySelector('.apply-corrected-btn');
+      const applyCorrectedBtns = block.querySelectorAll('.apply-corrected-btn');
       const applySuggestionBtn = block.querySelector('.apply-suggestion-btn');
       const rejectBtn = document.getElementById('rejectCorrectionBtn');
 
       // Apply corrected version button
-      if (applyCorrectedBtn) {
-        applyCorrectedBtn.addEventListener('click', function() {
-          const text = this.getAttribute('data-text');
-          applyTextToFront(text);
+      if (applyCorrectedBtns && applyCorrectedBtns.length) {
+        applyCorrectedBtns.forEach(btn => {
+          btn.addEventListener('click', function() {
+            const text = this.getAttribute('data-text');
+            applyTextToFront(text);
+          });
         });
       }
 
