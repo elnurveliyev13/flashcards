@@ -1658,7 +1658,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           langChangeHint.addEventListener('click', showLanguageSelector);
         }
         updateTranslationModeLabels();
-        scheduleTranslationRefresh();
         updateInterfaceTexts();
       } catch(_e){}
     }
@@ -1732,7 +1731,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusTranslationText.textContent = clean || '?';
     }
 
-    function applyTranslationDirection(dir){
+    function applyTranslationDirection(dir, opts = {}){
+      const triggerTranslation = opts.triggerTranslation !== false;
       translationDirection = dir === 'user-no' ? 'user-no' : 'no-user';
       translationButtons.forEach(btn=>{
         btn.classList.toggle('active', btn.dataset.dir === translationDirection);
@@ -1743,7 +1743,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           : (translationHintDefault || aiStrings.translationIdle);
       }
       // Translation is always visible - no toggle needed
-      scheduleTranslationRefresh();
+      if(triggerTranslation){
+        scheduleTranslationRefresh();
+      }
 
       // Auto-focus the appropriate input field and move cursor to end
       if(translationDirection === 'user-no'){
@@ -1777,18 +1779,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       translationDebounce = setTimeout(runTranslationHelper, delay);
     }
 
-    async function runTranslationHelper(){
-      const sourceEl = translationDirection === 'user-no' ? translationInputLocal : frontInput;
-      if(!sourceEl){
+    async function runTranslationHelper(options = {}){
+      const direction = options.direction || translationDirection;
+      const sourceEl = options.sourceEl || (direction === 'user-no' ? translationInputLocal : frontInput);
+      if(!sourceEl && !options.text){
         return;
       }
       if(!aiEnabled){
         setTranslationPreview('error', aiStrings.disabled);
         return;
       }
-      const sourceText = (sourceEl.value || '').trim();
+      const sourceText = (options.text ?? (sourceEl?.value || '')).trim();
       if(sourceText.length < 2){
-        if(translationDirection === 'user-no'){
+        if(direction === 'user-no'){
           setTranslationPreview('', aiStrings.translationReverseHint);
         }else{
           setTranslationPreview('', aiStrings.translationIdle);
@@ -1804,9 +1807,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setTranslationPreview('loading');
       const payload = {
         text: sourceText,
-        sourceLang: translationDirection === 'user-no' ? userLang2 : 'no',
-        targetLang: translationDirection === 'user-no' ? 'no' : userLang2,
-        direction: translationDirection
+        sourceLang: direction === 'user-no' ? userLang2 : 'no',
+        targetLang: direction === 'user-no' ? 'no' : userLang2,
+        direction
       };
       try{
         const data = await api('ai_translate', {}, 'POST', payload, {signal: controller.signal});
@@ -1815,7 +1818,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           return;
         }
         const translated = (data.translation || '').trim();
-        if(translationDirection === 'no-user'){
+        if(direction === 'no-user'){
           if(translationInputLocal){
             translationInputLocal.value = translated;
           }
@@ -1841,6 +1844,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           try{
             frontInput.dispatchEvent(new Event('input', {bubbles:true}));
           }catch(_e){}
+          if(translationInputEn && userLang2 !== 'en'){
+            try{
+              const enPayload = {
+                text: sourceText,
+                sourceLang: userLang2,
+                targetLang: 'en',
+                direction: 'user-en'
+              };
+              const enData = await api('ai_translate', {}, 'POST', enPayload);
+              updateUsageFromResponse(enData);
+              const enTranslated = (enData.translation || '').trim();
+              translationInputEn.value = enTranslated;
+            }catch(enErr){
+              console.error('[Flashcards][AI] English translation failed', enErr);
+            }
+          }
         }
         setTranslationPreview('success');
       }catch(err){
@@ -2122,9 +2141,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         frontSuggestCollapsed = false;
         setFrontSuggestToggleState(false);
       }
-      if(translationDirection === 'no-user'){
-        scheduleTranslationRefresh();
-      }
       scheduleFrontSuggest();
       // Auto-capitalize first letter
       const currentValue = frontInput.value;
@@ -2135,7 +2151,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     });
       frontInput.addEventListener('focus', ()=>{
         if(translationDirection !== 'no-user' && !frontInput.value.trim()){
-          applyTranslationDirection('no-user');
+          applyTranslationDirection('no-user', {triggerTranslation:false});
         }
         scheduleFrontSuggest();
       });
@@ -2147,18 +2163,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(e.key === 'Escape'){
           hideFrontSuggest();
         }
-        // Trigger immediate translation on Enter
-        if(e.key === 'Enter' && translationDirection === 'no-user' && frontInput.value.trim()){
-          e.preventDefault();
-          runTranslationHelper();
-        }
       });
     }
     if(translationInputLocal){
       translationInputLocal.addEventListener('input', ()=>{
-        if(translationDirection === 'user-no'){
-          scheduleTranslationRefresh();
-        }
         // Auto-capitalize first letter
         const currentValue = translationInputLocal.value;
         const capitalized = capitalizeFirstLetter(currentValue);
@@ -2168,24 +2176,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       translationInputLocal.addEventListener('focus', ()=>{
         if(translationDirection !== 'user-no' && !translationInputLocal.value.trim()){
-          applyTranslationDirection('user-no');
+          applyTranslationDirection('user-no', {triggerTranslation:false});
         }
       });
       translationInputLocal.addEventListener('blur', ()=>{
       });
       translationInputLocal.addEventListener('keydown', e=>{
-        // Trigger immediate translation on Enter
-        if(e.key === 'Enter' && translationDirection === 'user-no' && translationInputLocal.value.trim()){
-          e.preventDefault();
-          runTranslationHelper();
-        }
       });
     }
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'`{\[\]\}-]+/gu; } catch(_e){ return /[A-Za-z0-9'`{\[\]\}-]+/g; } })();
     const countWords = (text)=> (text.match(wordRegex) || []).length;
     setTranslationPreview('', aiStrings.translationIdle);
     setFocusTranslation('');
-    applyTranslationDirection('no-user');
+    applyTranslationDirection('no-user', {triggerTranslation:false});
 
     function currentFrontQuery(){
       if(!frontInput){
@@ -3009,11 +3012,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const expl = document.getElementById('uExplanation');
         if(expl && (!expl.value.trim() || data.ordbokene)){
           expl.value = data.definition;
-        }
-      }
-      if(Object.prototype.hasOwnProperty.call(data, 'translation')){
-        if(translationInputLocal && (!translationInputLocal.value.trim() || data.ordbokene)){
-          translationInputLocal.value = data.translation || '';
         }
       }
       setFocusTranslation(data.translation || '');
@@ -8673,7 +8671,7 @@ function renderComparisonResult(resultEl, comparison){
          translationAbortController = null;
        }
        if(translationDirection !== 'no-user'){
-         applyTranslationDirection('no-user');
+         applyTranslationDirection('no-user', {triggerTranslation:false});
        }else{
         setTranslationPreview('', aiStrings.translationIdle);
        }
@@ -10709,9 +10707,6 @@ function renderComparisonResult(resultEl, comparison){
           if(typeof updateTranslationModeLabels === 'function'){
             updateTranslationModeLabels();
           }
-          if(typeof scheduleTranslationRefresh === 'function'){
-            scheduleTranslationRefresh();
-          }
           const langNames = INTERFACE_LANGUAGE_CODES.reduce((map, code) => {
             map[code] = LANGUAGE_DISPLAY_NAMES[code] || code;
             return map;
@@ -11118,6 +11113,7 @@ Regeln:
       }
 
       renderFocusChips();
+      runTranslationHelper({direction: 'no-user', text: normalizedText});
 
       if (closeErrorBlock) {
         closeErrorCheckBlock();
@@ -11209,7 +11205,7 @@ Regeln:
           <div id="aiAnswerBlock" class="ai-answer-block" style="display: none;"></div>
         </div>
         <div class="error-check-actions" id="errorCheckActions">
-          <button type="button" id="applyLatestCorrectionBtn">${applyCorrectionsText}</button>
+          <button type="button" id="applyLatestCorrectionBtn" class="apply-latest-btn">${applyCorrectionsText}</button>
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
       `;
@@ -11395,9 +11391,6 @@ Regeln:
             focusBaseInput.value = baseValue;
             try{ focusBaseInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
           }
-        }
-        if(translationInputLocal){
-          translationInputLocal.value = data.translation || expressionMeta?.translation || '';
         }
         applyExpressionExamples(data.examples);
         setFocusTranslation(data.translation || expressionMeta?.translation || '');
@@ -11757,8 +11750,8 @@ Now focus on multiword expressions in the final recommended Norwegian sentence f
 
 Definitions:
 - A "multiword expression" is two or more words that:
-  - are commonly used together in real language;
-  - are perceived as a single semantic unit, not just a sum of individual words.
+  - are commonly used together in real language, AND
+  - are perceived as a single semantic unit with a somewhat fixed form or special meaning, not just a sum of their parts.
 
 Instructions:
 1. Identify all valid multiword expressions (2+ words) in the final recommended sentence that frequently occur together and convey a unified meaning.
@@ -11769,8 +11762,9 @@ Instructions:
    - Provide a short explanation in USER_LANGUAGE: when/how it is used. Never leave this in Norwegian; if USER_LANGUAGE is English, the explanation must be in English.
    - Give ONE simple Norwegian example sentence that shows this expression in context (different from the original sentence and from the three examples in Part 2).
    - Give a translation of that example sentence into USER_LANGUAGE.
-4. If you are uncertain whether something is a fixed/multiword expression or about its meaning, clearly mark your uncertainty in the explanation.
-5. If NO suitable multiword expressions are found, explicitly say that in USER_LANGUAGE.
+4. Only include an expression if you are clearly confident that it is a real multiword expression (fixed phrase or strongly conventional pattern). Do NOT list combinations that are just normal grammar (for example, a common adverb + verb) unless there is a special meaning or strongly fixed usage.
+5. If you are uncertain whether something is a fixed/multiword expression or about its meaning, it is safer to skip it (do not add it to the list) and instead explain briefly in USER_LANGUAGE that you do not see clear multiword expressions here.
+6. If NO suitable multiword expressions are found, explicitly say that in USER_LANGUAGE.
 
 Output format
 Return a single JSON object with the following structure:

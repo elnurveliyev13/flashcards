@@ -557,8 +557,8 @@ Your tasks (do them in this order):
    - ONLY if there is a clearly more natural and typical way to say the same thing in simple, learner-friendly Bokm?l.
    - Do NOT change meaning.
    - Do NOT introduce advanced structures that are too difficult for typical adult learners.
-   - If you do NOT see a clear improvement, set the alternative equal to the main corrected sentence.
-   - Even when the learner sentence is already correct and natural (for example: "Jeg har lyst p? is"), you MAY sometimes give a second, equally correct variant that is very common and useful for learners (for example: "Jeg vil ha is."). In such cases, keep correctedText very close to the original sentence and put the other variant into alternativeText.
+   - The alternative should demonstrate a clearly different but still common pattern (not just tiny word changes), while keeping the same meaning and difficulty.
+   - If you do NOT see a clear improvement or a clearly different common pattern, set the alternative equal to the main corrected sentence.
 
 3) List EACH learner error separately:
    - For each error, show:
