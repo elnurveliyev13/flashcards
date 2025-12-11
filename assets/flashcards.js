@@ -2072,7 +2072,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       abortController: null,
       expressionSuggestions: [],
       expressionSourceText: '',
-      activeExpressionIndex: null
+      activeExpressionIndex: null,
+      expressionReady: false,
+      expressionRequestText: ''
     };
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
@@ -2375,11 +2377,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.expressionSourceText = '';
         focusHelperState.activeExpressionIndex = null;
       }
-      if(focusHelperState.expressionSourceText && normalized && normalized !== focusHelperState.expressionSourceText){
-        focusHelperState.expressionSuggestions = [];
-        focusHelperState.expressionSourceText = '';
-        focusHelperState.activeExpressionIndex = null;
-      }
     }
 
     function setExpressionSourceText(text){
@@ -2390,6 +2387,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       focusHelperState.expressionSourceText = (text || '').trim();
       focusHelperState.activeExpressionIndex = null;
+    }
+
+    function activateExpressionSuggestions(text){
+      focusHelperState.expressionRequestText = (text || '').trim();
+      if(!focusHelperState.expressionSuggestions.length){
+        focusHelperState.expressionReady = false;
+        focusHelperState.expressionSourceText = '';
+        focusHelperState.activeExpressionIndex = null;
+        return;
+      }
+      focusHelperState.expressionReady = true;
+      setExpressionSourceText(focusHelperState.expressionRequestText);
+      focusHelperState.expressionRequestText = '';
     }
 
     function normalizeExpressionExamples(value){
@@ -2412,6 +2422,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusHelperState.expressionSuggestions = [];
           focusHelperState.expressionSourceText = '';
           focusHelperState.activeExpressionIndex = null;
+          focusHelperState.expressionReady = false;
+          focusHelperState.expressionRequestText = '';
           renderFocusChips();
         }
         return;
@@ -2444,13 +2456,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusHelperState.expressionSuggestions = [];
           focusHelperState.expressionSourceText = '';
           focusHelperState.activeExpressionIndex = null;
+          focusHelperState.expressionReady = false;
+          focusHelperState.expressionRequestText = '';
           renderFocusChips();
         }
         return;
       }
       focusHelperState.expressionSuggestions = prepared;
-      const fallbackSource = (sourceText || (frontInput ? (frontInput.value || '') : '') || '').trim();
-      setExpressionSourceText(fallbackSource);
+      if(!focusHelperState.expressionReady && focusHelperState.expressionRequestText){
+        focusHelperState.expressionReady = true;
+        setExpressionSourceText(focusHelperState.expressionRequestText);
+        focusHelperState.expressionRequestText = '';
+      }
       renderFocusChips();
     }
 
@@ -11000,6 +11017,12 @@ Regeln:
         return;
       }
 
+      focusHelperState.expressionSuggestions = [];
+      focusHelperState.expressionSourceText = '';
+      focusHelperState.expressionReady = false;
+      focusHelperState.activeExpressionIndex = null;
+      focusHelperState.expressionRequestText = '';
+
       // Use interface language for explanations, NOT learning language
       const language = currentInterfaceLang || 'en';
 
@@ -11081,7 +11104,7 @@ Regeln:
       }
       const normalizedText = String(text);
       if (focusHelperState.expressionSuggestions.length){
-        setExpressionSourceText(normalizedText);
+        activateExpressionSuggestions(normalizedText);
       }
       const frontInput = $('#uFront');
       if (frontInput) {
@@ -11150,9 +11173,8 @@ Regeln:
       if (result.suggestion && result.suggestion.trim()) {
         suggestionHtml = `
           <div class="error-check-suggestion">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="margin-bottom: 8px;">
               <strong>💡 ${suggestionText}</strong>
-              <button type="button" class="apply-suggestion-btn" data-text="${result.suggestion.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>
             </div>
             <div class="suggestion-text">${result.suggestion}</div>
           </div>
@@ -11188,7 +11210,6 @@ Regeln:
         </div>
         <div class="error-check-actions" id="errorCheckActions">
           <button type="button" id="applyLatestCorrectionBtn">${applyCorrectionsText}</button>
-          ${result.suggestion ? `<button type="button" class="apply-suggestion-btn" data-text="${result.suggestion.replace(/"/g, '&quot;')}">${t('apply_alternative') || 'Apply alternative'}</button>` : ''}
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
       `;
@@ -11206,7 +11227,6 @@ Regeln:
       }
 
       // Setup button handlers
-      const applySuggestionBtn = block.querySelector('.apply-suggestion-btn');
       const rejectBtn = document.getElementById('rejectCorrectionBtn');
       const applyLatestCorrectionBtn = document.getElementById('applyLatestCorrectionBtn');
 
@@ -11220,21 +11240,12 @@ Regeln:
         });
       }
 
-      // Apply suggestion button
-      if (applySuggestionBtn) {
-        applySuggestionBtn.addEventListener('click', function() {
-          const text = this.getAttribute('data-text');
-          applyTextToFront(text);
-          setLatestCorrection(text);
-        });
-      }
-
       // Keep it as it is button
       if (rejectBtn) {
         rejectBtn.addEventListener('click', function() {
           if(focusHelperState.expressionSuggestions.length){
             const currentText = ($('#uFront') ? $('#uFront').value : '') || '';
-            setExpressionSourceText(currentText);
+            activateExpressionSuggestions(currentText);
           }
           closeErrorCheckBlock();
           renderFocusChips();
@@ -11281,6 +11292,9 @@ Regeln:
 
     function renderExpressionRows(){
       if(!focusWordList) return;
+      if(!focusHelperState.expressionReady){
+        return;
+      }
       const suggestions = focusHelperState.expressionSuggestions || [];
       if(!suggestions.length){
         return;
