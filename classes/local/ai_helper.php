@@ -562,8 +562,8 @@ Your tasks (do them in this order):
 
 3) List EACH learner error separately:
    - For each error, show:
-     - the original fragment from the learner sentence
-     - your corrected version
+     - the original fragment from the learner sentence (keep this fragment as short as possible while still clearly showing the mistake)
+     - your corrected version of exactly that fragment (the fragment you are bulding you error explanation about)
      - a SHORT explanation in $langname
      - a simple category and certainty level
 
