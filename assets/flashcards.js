@@ -11492,25 +11492,6 @@ Regeln:
       return `<div class="ai-answer-structured">${sections.join('')}</div>`;
     }
 
-    function renderDebugMeta(data){
-      if (!data || typeof data !== 'object') return '';
-      const model = data.model || data?.meta?.model || '';
-      const reasoning = data.reasoning_effort || data?.meta?.reasoning_effort || '';
-      const usage = data.usage || {};
-      const tokens = [];
-      if (usage.prompt_tokens) tokens.push(`p:${usage.prompt_tokens}`);
-      if (usage.completion_tokens) tokens.push(`c:${usage.completion_tokens}`);
-      if (usage.total_tokens) tokens.push(`t:${usage.total_tokens}`);
-      const timing = data.debugTiming?.overall || data.timing?.overall;
-      if (!model && !reasoning && tokens.length === 0 && !timing) return '';
-      const parts = [];
-      if (model) parts.push(`Model: ${escapeHtml(String(model))}`);
-      if (reasoning) parts.push(`Reasoning: ${escapeHtml(String(reasoning))}`);
-      if (tokens.length) parts.push(`Tokens ${tokens.join('/')}`);
-      if (timing) parts.push(`Time: ${escapeHtml(String(timing))}`);
-      return `<div class="ai-debug-meta">${parts.join(' • ')}</div>`;
-    }
-
     function stripYuiArtifacts(container) {
       if (!container) return;
       const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
@@ -11765,8 +11746,7 @@ Rules:
           ChatSessionManager.addMessage('assistant', data.answer);
 
           const formatted = formatAIAnswer(data.answer);
-          const debugMeta = renderDebugMeta(data);
-          answerBlock.innerHTML = `${formatted}${debugMeta}`;
+          answerBlock.innerHTML = formatted;
           stripYuiArtifacts(answerBlock);
           const applyFinalBtn = answerBlock.querySelector('.ai-apply-final-btn');
           if (applyFinalBtn) {
