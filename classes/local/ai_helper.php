@@ -717,6 +717,15 @@ USERPROMPT;
                 if (!empty($totalUsage)) {
                     $result1['usage'] = $totalUsage;
                 }
+                // Drop any spurious error items where original and corrected are identical
+                if (!empty($result1['errors']) && is_array($result1['errors'])) {
+                    $result1['errors'] = array_values(array_filter($result1['errors'], function($err) {
+                        if (!isset($err['original'], $err['corrected'])) {
+                            return true;
+                        }
+                        return trim((string)$err['original']) !== trim((string)$err['corrected']);
+                    }));
+                }
                 return $result1;
             }
 
@@ -728,6 +737,14 @@ USERPROMPT;
                     // Include token usage information if available
                     if (!empty($totalUsage)) {
                         $result1['usage'] = $totalUsage;
+                    }
+                    if (!empty($result1['errors']) && is_array($result1['errors'])) {
+                        $result1['errors'] = array_values(array_filter($result1['errors'], function($err) {
+                            if (!isset($err['original'], $err['corrected'])) {
+                                return true;
+                            }
+                            return trim((string)$err['original']) !== trim((string)$err['corrected']);
+                        }));
                     }
                     return $result1;
                 }
