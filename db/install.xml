@@ -217,5 +217,24 @@
         <INDEX NAME="enabled_idx" UNIQUE="false" FIELDS="enabled"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="flashcards_tts_usage" COMMENT="Monthly TTS usage per user and provider">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="provider" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT=""/>
+        <FIELD NAME="period_start" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="UTC timestamp for 1st day of the month"/>
+        <FIELD NAME="characters" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="requests" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="user_provider_period_uix" UNIQUE="true" FIELDS="userid, provider, period_start"/>
+        <INDEX NAME="provider_idx" UNIQUE="false" FIELDS="provider"/>
+        <INDEX NAME="period_idx" UNIQUE="false" FIELDS="period_start"/>
+      </INDEXES>
+    </TABLE>
   </TABLES>
 </XMLDB>

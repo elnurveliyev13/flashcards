@@ -216,6 +216,14 @@ if ($hassiteconfig) {
         'eleven_monolingual_v2'
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_tts_monthly_limit',
+        get_string('settings_elevenlabs_tts_limit', 'mod_flashcards'),
+        get_string('settings_elevenlabs_tts_limit_desc', 'mod_flashcards'),
+        0,
+        PARAM_INT
+    ));
+
     // Amazon Polly
     $settings->add(new admin_setting_heading(
         'mod_flashcards/polly_heading',
@@ -256,6 +264,14 @@ if ($hassiteconfig) {
         get_string('settings_polly_voice_map', 'mod_flashcards'),
         get_string('settings_polly_voice_map_desc', 'mod_flashcards'),
         ''
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/amazonpolly_tts_monthly_limit',
+        get_string('settings_polly_tts_limit', 'mod_flashcards'),
+        get_string('settings_polly_tts_limit_desc', 'mod_flashcards'),
+        0,
+        PARAM_INT
     ));
 
     // Orbøkene dictionary
@@ -490,6 +506,13 @@ if ($hassiteconfig) {
         get_string('settings_vapid_subject_desc', 'mod_flashcards'),
         'mailto:admin@example.com'
     ));
+
+    $ADMIN->add('modsettings', new admin_externalpage(
+            'mod_flashcards_ttsusage',
+            get_string('ttsusage_title', 'mod_flashcards'),
+            new moodle_url('/mod/flashcards/admin/tts_usage.php'),
+            'moodle/site:config'
+        ));
 
     $ADMIN->add('modsettings', new admin_externalpage(
             'mod_flashcards_mediareport',

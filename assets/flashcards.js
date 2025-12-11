@@ -11718,8 +11718,7 @@ Rules:
           ChatSessionManager.addMessage('assistant', data.answer);
 
           const { html: formatted, parsed } = formatAIAnswer(data.answer);
-          const debugMeta = renderDebugMeta(data);
-          answerBlock.innerHTML = `${formatted}${debugMeta}`;
+          answerBlock.innerHTML = formatted;
           stripYuiArtifacts(answerBlock);
           if (parsed?.recheck?.finalSentence) {
             const finalSentence = (parsed.recheck.finalSentence || '').trim();

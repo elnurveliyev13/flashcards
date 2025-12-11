@@ -41,6 +41,10 @@ class tts_service {
     protected $pollyenabled;
     /** @var array<string,string> */
     protected $pollyoverrides = [];
+    /** @var int */
+    protected $elevenlimit;
+    /** @var int */
+    protected $pollylimit;
 
     public function __construct() {
         $config = get_config('mod_flashcards');
@@ -48,6 +52,7 @@ class tts_service {
         $this->elevenmodel = trim($config->elevenlabs_model ?? '') ?: 'eleven_monolingual_v2';
         $this->defaultvoice = trim($config->elevenlabs_default_voice ?? '') ?: null;
         $this->elevenenabled = !empty($this->elevenapikey);
+        $this->elevenlimit = (int)($config->elevenlabs_tts_monthly_limit ?? 0);
 
         $this->pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: null;
         $this->pollysecret = trim($config->amazonpolly_secret_key ?? '') ?: getenv('FLASHCARDS_POLLY_SECRET') ?: null;
@@ -56,6 +61,7 @@ class tts_service {
         $rawoverrides = (string)($config->amazonpolly_voice_map ?? '');
         $this->pollyoverrides = $this->parse_voice_overrides($rawoverrides);
         $this->pollyenabled = !empty($this->pollyaccess) && !empty($this->pollysecret);
+        $this->pollylimit = (int)($config->amazonpolly_tts_monthly_limit ?? 0);
 
         $this->enabled = $this->elevenenabled || $this->pollyenabled;
     }
@@ -88,7 +94,8 @@ class tts_service {
             $label = 'front';
         }
 
-        $provider = $this->resolve_provider($text, $options['provider'] ?? null);
+        $tokens = $this->estimate_tts_tokens($text);
+        $provider = $this->choose_provider_with_limits($userid, $text, $options['provider'] ?? null, $tokens);
         if ($provider === self::PROVIDER_POLLY) {
             $pollyvoice = $this->resolve_polly_voice($voice);
             if ($pollyvoice === '') {
@@ -100,7 +107,18 @@ class tts_service {
         if ($voice === '') {
             throw new coding_exception('Missing ElevenLabs voice id');
         }
-        return $this->synthesize_with_elevenlabs($userid, $text, $label, $voice);
+        try {
+            return $this->synthesize_with_elevenlabs($userid, $text, $label, $voice);
+        } catch (\moodle_exception $ex) {
+            // Fallback to Polly on provider errors if available and under limit.
+            if ($this->pollyenabled && !$this->would_exceed_limit($userid, self::PROVIDER_POLLY, $tokens)) {
+                $pollyvoice = $this->resolve_polly_voice($voice);
+                if ($pollyvoice !== '') {
+                    return $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+                }
+            }
+            throw $ex;
+        }
     }
 
     protected function synthesize_with_elevenlabs(int $userid, string $text, string $label, string $voice): array {
@@ -158,7 +176,7 @@ class tts_service {
         }
 
         $file = $this->store_audio_file($context, $userid, $filename, $response);
-        $this->record_tts_usage($userid, $text);
+        $this->record_tts_usage($userid, $text, self::PROVIDER_ELEVENLABS);
         return $this->format_file_response($context, $userid, $file->get_filename(), $voice, self::PROVIDER_ELEVENLABS);
     }
 
@@ -176,6 +194,7 @@ class tts_service {
 
         $response = $this->request_polly_stream($voice, $text);
         $file = $this->store_audio_file($context, $userid, $filename, $response);
+        $this->record_tts_usage($userid, $text, self::PROVIDER_POLLY);
         return $this->format_file_response($context, $userid, $file->get_filename(), $voice, self::PROVIDER_POLLY);
     }
 
@@ -290,7 +309,8 @@ class tts_service {
         throw new coding_exception('No TTS providers are configured');
     }
 
-    protected function record_tts_usage(int $userid, string $text): void {
+    protected function record_tts_usage(int $userid, string $text, string $provider): void {
+        global $DB;
         if ($userid <= 0) {
             return;
         }
@@ -298,10 +318,31 @@ class tts_service {
         if ($tokens <= 0) {
             return;
         }
-        $prefname = 'mod_flashcards_elevenlabs_tts_' . date('Ym');
-        $used = (int)get_user_preferences($prefname, 0, $userid);
-        $newvalue = $used + $tokens;
-        set_user_preference($prefname, $newvalue, $userid);
+        $period = $this->current_period_start();
+        $now = time();
+
+        $existing = $DB->get_record('flashcards_tts_usage', [
+            'userid' => $userid,
+            'provider' => $provider,
+            'period_start' => $period,
+        ], '*', IGNORE_MISSING);
+
+        if ($existing) {
+            $existing->characters += $tokens;
+            $existing->requests += 1;
+            $existing->timemodified = $now;
+            $DB->update_record('flashcards_tts_usage', $existing);
+        } else {
+            $record = (object)[
+                'userid' => $userid,
+                'provider' => $provider,
+                'period_start' => $period,
+                'characters' => $tokens,
+                'requests' => 1,
+                'timemodified' => $now,
+            ];
+            $DB->insert_record('flashcards_tts_usage', $record);
+        }
     }
 
     protected function estimate_tts_tokens(string $text): int {
@@ -311,6 +352,64 @@ class tts_service {
             return 0;
         }
         return mb_strlen($clean, 'UTF-8');
+    }
+
+    protected function current_period_start(): int {
+        $year = (int)gmdate('Y');
+        $month = (int)gmdate('n');
+        return gmmktime(0, 0, 0, $month, 1, $year);
+    }
+
+    protected function get_usage(int $userid, string $provider): ?\stdClass {
+        global $DB;
+        if ($userid <= 0) {
+            return null;
+        }
+        return $DB->get_record('flashcards_tts_usage', [
+            'userid' => $userid,
+            'provider' => $provider,
+            'period_start' => $this->current_period_start(),
+        ], '*', IGNORE_MISSING) ?: null;
+    }
+
+    protected function get_limit_for_provider(string $provider): int {
+        if ($provider === self::PROVIDER_ELEVENLABS) {
+            return $this->elevenlimit;
+        }
+        if ($provider === self::PROVIDER_POLLY) {
+            return $this->pollylimit;
+        }
+        return 0;
+    }
+
+    protected function would_exceed_limit(int $userid, string $provider, int $tokens): bool {
+        $limit = $this->get_limit_for_provider($provider);
+        if ($limit <= 0) {
+            return false;
+        }
+        $usage = $this->get_usage($userid, $provider);
+        $used = $usage ? (int)$usage->characters : 0;
+        return ($used + $tokens) > $limit;
+    }
+
+    protected function choose_provider_with_limits(int $userid, string $text, ?string $preferred, int $tokens): string {
+        $provider = $this->resolve_provider($text, $preferred);
+
+        if ($provider === self::PROVIDER_ELEVENLABS && $this->would_exceed_limit($userid, self::PROVIDER_ELEVENLABS, $tokens)) {
+            if ($this->pollyenabled && !$this->would_exceed_limit($userid, self::PROVIDER_POLLY, $tokens)) {
+                return self::PROVIDER_POLLY;
+            }
+            throw new moodle_exception('error_tts_quota', 'mod_flashcards', '', 'ElevenLabs');
+        }
+
+        if ($provider === self::PROVIDER_POLLY && $this->would_exceed_limit($userid, self::PROVIDER_POLLY, $tokens)) {
+            if ($this->elevenenabled && !$this->would_exceed_limit($userid, self::PROVIDER_ELEVENLABS, $tokens)) {
+                return self::PROVIDER_ELEVENLABS;
+            }
+            throw new moodle_exception('error_tts_quota', 'mod_flashcards', '', 'Amazon Polly');
+        }
+
+        return $provider;
     }
 
     protected function count_words(string $text): int {

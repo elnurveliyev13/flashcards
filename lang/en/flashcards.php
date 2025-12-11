@@ -128,6 +128,20 @@ $string['mediareport_audio_focus'] = 'Focus audio';
 $string['mediareport_noaudio'] = 'No stored audio for this card.';
 $string['mediareport_cardid'] = 'Card ID: {$a}';
 $string['mediareport_deck'] = 'Deck: {$a}';
+
+$string['ttsusage_title'] = 'TTS usage';
+$string['ttsusage_desc'] = 'Per-user text-to-speech usage for {$a}.';
+$string['ttsusage_month'] = 'Month';
+$string['ttsusage_perpage'] = 'Rows per page';
+$string['ttsusage_user'] = 'User';
+$string['ttsusage_eleven'] = 'ElevenLabs';
+$string['ttsusage_polly'] = 'Amazon Polly';
+$string['ttsusage_total'] = 'Total';
+$string['ttsusage_chars'] = '{$a} chars';
+$string['ttsusage_requests'] = '{$a} requests';
+$string['ttsusage_empty'] = 'No TTS usage recorded for this month yet.';
+$string['ttsusage_limit_eleven'] = 'ElevenLabs limit: {$a} chars';
+$string['ttsusage_limit_polly'] = 'Polly limit: {$a} chars';
 $string['choosefile'] = 'Choose file';
 $string['chooseaudiofile'] = 'Choose audio file';
 $string['showmore'] = 'Show more';
@@ -398,6 +412,8 @@ $string['settings_elevenlabs_voice_map'] = 'Voice options';
 $string['settings_elevenlabs_voice_map_desc'] = 'Define one voice per line using the format Name=voice-id. Example: Ida=21m00Tcm4TlvDq8ikWAM';
 $string['settings_elevenlabs_model'] = 'ElevenLabs model ID';
 $string['settings_elevenlabs_model_desc'] = 'Defaults to eleven_monolingual_v2. Update only if your account uses a different model.';
+$string['settings_elevenlabs_tts_limit'] = 'Monthly ElevenLabs quota (characters per user)';
+$string['settings_elevenlabs_tts_limit_desc'] = '0 disables the limit. After the cap is reached, requests fall back to Polly when available.';
 $string['settings_polly_section'] = 'Amazon Polly';
 $string['settings_polly_section_desc'] = 'Used for ultra-short phrases (two words or fewer) to keep latency low.';
 $string['settings_polly_key'] = 'AWS access key ID';
@@ -410,6 +426,8 @@ $string['settings_polly_voice'] = 'Default Polly voice';
 $string['settings_polly_voice_desc'] = 'Voice name (e.g. Liv, Ida) used when no override is defined.';
 $string['settings_polly_voice_map'] = 'Polly voice overrides';
 $string['settings_polly_voice_map_desc'] = 'Optional mapping between ElevenLabs voice IDs and Polly voice names. Use the format elevenVoiceId=PollyVoice per line.';
+$string['settings_polly_tts_limit'] = 'Monthly Polly quota (characters per user)';
+$string['settings_polly_tts_limit_desc'] = '0 disables the limit. Requests beyond the cap are rejected.';
 
 $string['settings_orbokene_section'] = 'Orbøkene dictionary';
 $string['settings_orbokene_section_desc'] = 'When enabled the AI helper will try to enrich detected expressions with data from the flashcards_orbokene table.';
@@ -497,6 +515,7 @@ $string['error_whisper_quota'] = 'You reached your monthly speech limit ({$a}).'
 $string['error_whisper_upload'] = 'Could not process the uploaded audio file.';
 $string['error_whisper_api'] = 'Speech-to-text service failed: {$a}';
 $string['error_whisper_filesize'] = 'Audio file is too large (max {$a}).';
+$string['error_tts_quota'] = 'You reached the monthly text-to-speech limit for {$a}.';
 
 // ElevenLabs STT errors
 $string['error_elevenlabs_stt_disabled'] = 'ElevenLabs speech-to-text is not available right now.';

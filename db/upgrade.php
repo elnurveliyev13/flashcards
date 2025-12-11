@@ -965,5 +965,30 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025112000, 'flashcards');
     }
 
+    if ($oldversion < 2025121200) {
+        mtrace('Flashcards: Adding TTS usage tracking table...');
+
+        $table = new xmldb_table('flashcards_tts_usage');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('provider', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('period_start', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('characters', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('requests', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('user_provider_period_uix', XMLDB_INDEX_UNIQUE, ['userid', 'provider', 'period_start']);
+        $table->add_index('provider_idx', XMLDB_INDEX_NOTUNIQUE, ['provider']);
+        $table->add_index('period_idx', XMLDB_INDEX_NOTUNIQUE, ['period_start']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_tts_usage table');
+        }
+
+        upgrade_mod_savepoint(true, 2025121200, 'flashcards');
+    }
+
     return true;
 }
