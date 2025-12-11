@@ -488,6 +488,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ttsError: dataset.ttsError || 'Audio generation failed.',
       frontTransShow: dataset.frontTransShow || 'Show translation',
       frontTransHide: dataset.frontTransHide || 'Hide translation',
+      expressionEdit: dataset.expressionEdit || 'Edit expression',
+      expressionEditPrompt: dataset.expressionEditPrompt || 'Edit the expression text',
       translationIdle: 'Status',
       translationLoading: dataset.translationLoading || 'Translating',
       translationError: dataset.translationError || 'Translation failed',
@@ -2095,6 +2097,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionReady: false,
       expressionRequestText: ''
     };
+    let expressionChipMenuEl = null;
+    let expressionChipMenuOutsideHandler = null;
     frontTranslationSlot = document.getElementById('slot_front_translation');
     // frontTranslationToggle removed - button no longer exists
     translationInputLocal = document.getElementById('uTransLocal');
@@ -2514,8 +2518,124 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
+    function closeExpressionChipMenu(){
+      if(expressionChipMenuOutsideHandler){
+        document.removeEventListener('click', expressionChipMenuOutsideHandler, true);
+        expressionChipMenuOutsideHandler = null;
+      }
+      window.removeEventListener('resize', closeExpressionChipMenu);
+      window.removeEventListener('scroll', closeExpressionChipMenu, true);
+      if(expressionChipMenuEl){
+        expressionChipMenuEl.remove();
+        expressionChipMenuEl = null;
+      }
+    }
+
+    function openExpressionChipMenu(target, options){
+      if(!target) return;
+      closeExpressionChipMenu();
+      const menu = document.createElement('div');
+      menu.className = 'focus-expression-menu';
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'focus-expression-menu__item';
+      editBtn.textContent = aiStrings.expressionEdit || 'Edit expression';
+      editBtn.addEventListener('click', ()=>{
+        closeExpressionChipMenu();
+        if(options?.onEdit){
+          options.onEdit();
+        }
+      });
+      menu.appendChild(editBtn);
+      document.body.appendChild(menu);
+      const rect = target.getBoundingClientRect();
+      const baseX = typeof options?.x === 'number' ? options.x : (rect.left + (rect.width / 2));
+      const baseY = typeof options?.y === 'number' ? options.y : rect.bottom;
+      const menuRect = menu.getBoundingClientRect();
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth || 0;
+      let left = (baseX + window.scrollX) - (menuRect.width / 2);
+      const maxLeft = (window.scrollX + viewportWidth) - menuRect.width - 8;
+      const minLeft = window.scrollX + 8;
+      left = Math.min(Math.max(left, minLeft), maxLeft);
+      let top = baseY + window.scrollY + 8;
+      const maxTop = window.scrollY + window.innerHeight - menuRect.height - 8;
+      if(top > maxTop){
+        top = Math.max(window.scrollY + 8, rect.top + window.scrollY - menuRect.height - 8);
+      }
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+      expressionChipMenuOutsideHandler = (evt)=>{
+        if(menu && !menu.contains(evt.target)){
+          closeExpressionChipMenu();
+        }
+      };
+      setTimeout(()=>document.addEventListener('click', expressionChipMenuOutsideHandler, true), 0);
+      window.addEventListener('resize', closeExpressionChipMenu);
+      window.addEventListener('scroll', closeExpressionChipMenu, true);
+      expressionChipMenuEl = menu;
+    }
+
+    function promptExpressionEdit(expressionData, rowIndex){
+      const current = (expressionData && expressionData.expression) || '';
+      const next = window.prompt(aiStrings.expressionEditPrompt || aiStrings.expressionEdit || 'Edit expression', current);
+      if(next === null){
+        return;
+      }
+      const trimmed = (next || '').trim();
+      if(!trimmed || trimmed === current){
+        return;
+      }
+      if(!Array.isArray(focusHelperState.expressionSuggestions) || !focusHelperState.expressionSuggestions[rowIndex]){
+        return;
+      }
+      focusHelperState.expressionSuggestions[rowIndex].expression = trimmed;
+      focusHelperState.activeExpressionIndex = rowIndex;
+      renderFocusChips();
+      handleExpressionSelection(focusHelperState.expressionSuggestions[rowIndex], rowIndex);
+    }
+
+    function attachExpressionChipMenuHandlers(btn, expressionData, rowIndex){
+      if(!btn){
+        return;
+      }
+      const openMenu = (clientX, clientY)=>{
+        openExpressionChipMenu(btn, {
+          x: clientX,
+          y: clientY,
+          onEdit: ()=>promptExpressionEdit(expressionData, rowIndex)
+        });
+      };
+      btn.addEventListener('contextmenu', e=>{
+        e.preventDefault();
+        openMenu(e.clientX, e.clientY);
+      });
+      let pressTimer = null;
+      const clearTimer = ()=>{
+        if(pressTimer){
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      };
+      btn.addEventListener('touchstart', e=>{
+        clearTimer();
+        const touch = e.touches && e.touches[0];
+        const startX = touch ? touch.clientX : e.clientX;
+        const startY = touch ? touch.clientY : e.clientY;
+        pressTimer = setTimeout(()=>{
+          openMenu(startX, startY);
+          if(navigator?.vibrate){
+            try{ navigator.vibrate(35); }catch(_){}
+          }
+        }, 500);
+      }, {passive:true});
+      ['touchend','touchcancel','touchmove','mouseleave'].forEach(evt=>{
+        btn.addEventListener(evt, clearTimer, {passive:true});
+      });
+    }
+
     function renderFocusChips(){
       if(!focusWordList) return;
+      closeExpressionChipMenu();
       const text = frontInput ? frontInput.value : '';
       syncExpressionSuggestions(text);
       const tokens = extractFocusTokens(text);
@@ -11319,6 +11439,7 @@ Regeln:
         btn.dataset.expressionIndex = String(rowIndex);
         btn.dataset.expressionText = expression;
         btn.addEventListener('click', ()=>handleExpressionSelection(expressionData, rowIndex));
+        attachExpressionChipMenuHandlers(btn, expressionData, rowIndex);
         row.appendChild(btn);
         focusWordList.appendChild(row);
       });
