@@ -80,6 +80,44 @@ class ordbank_helper {
     }
 
     /**
+     * Normalize ordbank tag to POS string for pronunciation lookup.
+     */
+    protected static function normalize_tag_to_pos(string $tag): ?string {
+        $lower = core_text::strtolower(trim($tag));
+        if (str_contains($lower, 'subst')) {
+            return 'substantiv';
+        }
+        if (str_contains($lower, 'verb')) {
+            return 'verb';
+        }
+        if (str_contains($lower, 'adj')) {
+            return 'adjektiv';
+        }
+        if (str_contains($lower, 'adv')) {
+            return 'adverb';
+        }
+        if (str_contains($lower, 'pron')) {
+            return 'pronomen';
+        }
+        if (str_contains($lower, 'det')) {
+            return 'determinativ';
+        }
+        if (str_contains($lower, 'prep')) {
+            return 'preposisjon';
+        }
+        if (str_contains($lower, 'konj')) {
+            return 'konjunksjon';
+        }
+        if (str_contains($lower, 'subj')) {
+            return 'subjunksjon';
+        }
+        if (str_contains($lower, 'int')) {
+            return 'interjeksjon';
+        }
+        return null;
+    }
+
+    /**
      * Find all ordbank entries matching a surface form.
      *
      * @param string $wordform
@@ -98,13 +136,9 @@ class ordbank_helper {
                        f.TAG,
                        f.PARADIGME_ID,
                        f.BOY_NUMMER,
-                       l.GRUNNFORM AS baseform,
-                       p.ipa AS ipa_from_dict,
-                       p.xsampa,
-                       p.nofabet
+                       l.GRUNNFORM AS baseform
                   FROM {ordbank_fullform} f
              LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
-             LEFT JOIN {flashcards_pron_dict} p ON LOWER(p.wordform) = LOWER(f.OPPSLAG)
                  WHERE LOWER(f.OPPSLAG) = :w";
 
         try {
@@ -123,43 +157,14 @@ class ordbank_helper {
                 (int)$rec->boy_nummer,
             ]);
             if (!isset($out[$key])) {
-                $ipa = $rec->ipa_from_dict ?? null;
-                $xsampa = $rec->xsampa ?? null;
-                $nofabet = $rec->nofabet ?? null;
-                // Fallback to pron dict by surface and baseform if IPA is still empty.
-                if (empty($ipa)) {
-                    $pronSurface = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->wordform, null);
-                    if ($pronSurface) {
-                        $ipa = $pronSurface['ipa'] ?? $ipa;
-                        $xsampa = $pronSurface['xsampa'] ?? $xsampa;
-                        $nofabet = $pronSurface['nofabet'] ?? $nofabet;
-                    }
+                $pos = self::normalize_tag_to_pos($rec->tag ?? '');
+                $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->wordform, $pos);
+                if (!$pron && !empty($rec->baseform)) {
+                    $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform, $pos);
                 }
-                if (empty($ipa) && !empty($rec->baseform)) {
-                    $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform, null);
-                    if ($pron) {
-                        $ipa = $pron['ipa'] ?? $ipa;
-                        $xsampa = $pron['xsampa'] ?? $xsampa;
-                        $nofabet = $pron['nofabet'] ?? $nofabet;
-                    }
-                }
-                // Final DB fallback: direct select from flashcards_pron_dict (surface then baseform).
-                if (empty($ipa)) {
-                    try {
-                        global $DB;
-                        $p = $DB->get_record_select('flashcards_pron_dict', 'LOWER(wordform) = ?', [core_text::strtolower((string)$rec->wordform)], '*', IGNORE_MULTIPLE);
-                        if (!$p && !empty($rec->baseform)) {
-                            $p = $DB->get_record_select('flashcards_pron_dict', 'LOWER(wordform) = ?', [core_text::strtolower((string)$rec->baseform)], '*', IGNORE_MULTIPLE);
-                        }
-                        if ($p) {
-                            $ipa = $p->ipa ?? $ipa;
-                            $xsampa = $p->xsampa ?? $xsampa;
-                            $nofabet = $p->nofabet ?? $nofabet;
-                        }
-                    } catch (\Throwable $e) {
-                        // ignore pronunciation lookup errors
-                    }
-                }
+                $ipa = $pron ? $pron['ipa'] : null;
+                $xsampa = $pron ? $pron['xsampa'] : null;
+                $nofabet = $pron ? $pron['nofabet'] : null;
                 $out[$key] = [
                     'lemma_id' => (int)$rec->lemma_id,
                     'wordform' => $rec->wordform,

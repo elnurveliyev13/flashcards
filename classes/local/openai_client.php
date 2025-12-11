@@ -93,7 +93,14 @@ class openai_client {
     protected function get_reasoning_effort_for_task(string $task): string {
         $config = get_config('mod_flashcards');
         $effortSetting = 'ai_' . $task . '_reasoning_effort';
-        return trim((string)($config->$effortSetting ?? 'medium'));
+        $value = trim((string)($config->$effortSetting ?? ''));
+        if ($value === '') {
+            return 'medium';
+        }
+        if ($value === 'none') {
+            return '';
+        }
+        return $value;
     }
 
     /**

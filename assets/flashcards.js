@@ -11071,13 +11071,17 @@ Regeln:
       const contentContainer = block.querySelector('.error-check-content');
       if (!contentContainer) return;
 
+      const setLatestCorrection = (value) => {
+        block.dataset.latestCorrection = (value || '').trim();
+      };
+      setLatestCorrection(result.correctedText || '');
+
       const errorsFoundText = t('errors_found') || 'Errors found!';
       const correctedVersionText = t('corrected_version') || 'Corrected version:';
       const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
       const keepAsIsText = t('keep_as_is') || 'Keep it as it is';
       const suggestionText = t('naturalness_suggestion') || 'More natural alternative:';
       const collapseBtnAria = t('error_check_collapse_label') || 'Hide the error check panel';
-
       // Get original text
       const originalText = $('#uFront').value || '';
 
@@ -11130,7 +11134,6 @@ Regeln:
         <div class="error-check-corrected">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <strong>${correctedVersionText}</strong>
-            <button type="button" class="apply-corrected-btn" data-text="${result.correctedText.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>
           </div>
           <div class="corrected-text">${highlightedText}</div>
         </div>
@@ -11145,7 +11148,7 @@ Regeln:
           <div id="aiAnswerBlock" class="ai-answer-block" style="display: none;"></div>
         </div>
         <div class="error-check-actions" id="errorCheckActions">
-          ${result.correctedText ? `<button type="button" class="apply-corrected-btn" data-text="${result.correctedText.replace(/"/g, '&quot;')}">${applyCorrectionsText}</button>` : ''}
+          <button type="button" id="applyLatestCorrectionBtn">${applyCorrectionsText}</button>
           ${result.suggestion ? `<button type="button" class="apply-suggestion-btn" data-text="${result.suggestion.replace(/"/g, '&quot;')}">${t('apply_alternative') || 'Apply alternative'}</button>` : ''}
           <button type="button" id="rejectCorrectionBtn">${keepAsIsText}</button>
         </div>
@@ -11164,17 +11167,17 @@ Regeln:
       }
 
       // Setup button handlers
-      const applyCorrectedBtns = block.querySelectorAll('.apply-corrected-btn');
       const applySuggestionBtn = block.querySelector('.apply-suggestion-btn');
       const rejectBtn = document.getElementById('rejectCorrectionBtn');
+      const applyLatestCorrectionBtn = document.getElementById('applyLatestCorrectionBtn');
 
-      // Apply corrected version button
-      if (applyCorrectedBtns && applyCorrectedBtns.length) {
-        applyCorrectedBtns.forEach(btn => {
-          btn.addEventListener('click', function() {
-            const text = this.getAttribute('data-text');
-            applyTextToFront(text);
-          });
+      if (applyLatestCorrectionBtn) {
+        applyLatestCorrectionBtn.addEventListener('click', function() {
+          const latest = (block.dataset.latestCorrection || result.correctedText || '').trim();
+          if (latest) {
+            applyTextToFront(latest);
+            setLatestCorrection(latest);
+          }
         });
       }
 
@@ -11183,6 +11186,7 @@ Regeln:
         applySuggestionBtn.addEventListener('click', function() {
           const text = this.getAttribute('data-text');
           applyTextToFront(text);
+          setLatestCorrection(text);
         });
       }
 
@@ -11728,9 +11732,7 @@ Rules:
             if (finalSentence) {
               const block = $('#errorCheckBlock');
               if (block) {
-                block.dataset.aiFinalSentence = finalSentence;
-                const applyBtns = block.querySelectorAll('.apply-corrected-btn');
-                applyBtns.forEach(btn => btn.setAttribute('data-text', finalSentence));
+                block.dataset.latestCorrection = finalSentence;
               }
             }
           }

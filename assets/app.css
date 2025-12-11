@@ -5481,10 +5481,10 @@ select.inline-prompt-field {
 }
 
 .error-check-collapse-btn {
-  background: rgba(15, 23, 42, 0.95);
-  color: #fff;
-  border: 1px solid rgba(59, 130, 246, 0.8);
-  border-radius: 6px;
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
   padding: 0;
   width: 42px;
   height: 32px;
@@ -5494,16 +5494,16 @@ select.inline-prompt-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.45);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
   transition: transform 0.2s, box-shadow 0.2s, background 0.2s, border 0.2s;
 }
 
 .error-check-collapse-btn:hover,
 .error-check-collapse-btn:focus-visible {
   transform: translateY(-1px);
-  background: rgba(37, 99, 235, 0.9);
-  border-color: #2563eb;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.45);
+  background: #fff;
+  border-color: #94a3b8;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.3);
 }
 
 .error-check-collapse-btn:focus-visible {
