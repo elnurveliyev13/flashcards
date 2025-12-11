@@ -11252,35 +11252,14 @@ Regeln:
           row.classList.add('focus-expression-row--active');
         }
         row.dataset.expressionText = expression;
-        const tokens = extractFocusTokens(expression);
-        if(!tokens.length){
-          const btn = document.createElement('button');
-          btn.type='button';
-          btn.className='focus-chip focus-chip--expression';
-          btn.textContent = expression;
-          btn.dataset.expressionIndex = String(rowIndex);
-          btn.dataset.expressionText = expression;
-          btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
-          row.appendChild(btn);
-        } else {
-          tokens.forEach((token)=>{
-            if(token.isWord){
-              const btn = document.createElement('button');
-              btn.type='button';
-              btn.className='focus-chip focus-chip--expression';
-              btn.textContent = token.text;
-              btn.dataset.expressionIndex = String(rowIndex);
-              btn.dataset.expressionText = expression;
-              btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
-              row.appendChild(btn);
-            } else {
-              const span = document.createElement('span');
-              span.className = 'focus-expression-punctuation';
-              span.textContent = token.text;
-              row.appendChild(span);
-            }
-          });
-        }
+        const btn = document.createElement('button');
+        btn.type='button';
+        btn.className='focus-chip focus-chip--expression';
+        btn.textContent = expression;
+        btn.dataset.expressionIndex = String(rowIndex);
+        btn.dataset.expressionText = expression;
+        btn.addEventListener('click', ()=>handleExpressionSelection(expression, rowIndex));
+        row.appendChild(btn);
         focusWordList.appendChild(row);
       });
     }
@@ -11377,7 +11356,7 @@ Regeln:
 
     function formatAIAnswer(answerText) {
       if (!answerText || typeof answerText !== 'string') {
-        return `<div class="ai-answer-plain">${escapeHtml(String(answerText || ''))}</div>`;
+        return { html: `<div class="ai-answer-plain">${escapeHtml(String(answerText || ''))}</div>`, parsed: null };
       }
 
       const cleanText = answerText.trim().replace(/^```[a-z]*\n?/i, '').replace(/```$/i, '').trim();
@@ -11386,11 +11365,11 @@ Regeln:
         parsed = JSON.parse(cleanText);
       } catch (_err) {
         // fallback: show plain text
-        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+        return { html: `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`, parsed: null };
       }
 
       if (!parsed || typeof parsed !== 'object') {
-        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+        return { html: `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`, parsed: null };
       }
 
       const sections = [];
@@ -11398,12 +11377,6 @@ Regeln:
         const reStatus = (parsed.recheck.status || '').toLowerCase() === 'ok' ? 'ok' : 'needs_fix';
         const finalSentence = (parsed.recheck.finalSentence || '').trim();
         const confidence = parsed.recheck.confidenceComment || '';
-        const applyCorrectionsText = t('apply_corrections') || 'Apply corrections';
-        const finalCta = finalSentence ? `
-          <div class="ai-answer-cta">
-            <button type="button" class="ai-apply-final-btn apply-primary" data-final="${escapeHtml(finalSentence)}">${applyCorrectionsText}</button>
-          </div>
-        ` : '';
         let altBlock = '';
         if (parsed.alternative && parsed.alternative.status && parsed.alternative.status !== 'absent' && parsed.alternative.sentence) {
           altBlock = renderSentenceCheck(t('ai_alternative') || 'Alternative', parsed.alternative.sentence, parsed.alternative.status.toLowerCase() === 'ok' ? 'ok' : 'needs_fix', parsed.alternative.comment || '');
@@ -11413,7 +11386,6 @@ Regeln:
             <div class="ai-answer-title">${t('ai_sure') || 'Are you sure?'}</div>
             ${renderSentenceCheck(t('ai_corrected') || 'Corrected', finalSentence, reStatus, confidence)}
             ${altBlock}
-            ${finalCta}
           </div>
         `);
       }
@@ -11486,10 +11458,10 @@ Regeln:
       }
 
       if (sections.length === 0) {
-        return `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`;
+        return { html: `<div class="ai-answer-plain">${escapeHtml(answerText)}</div>`, parsed };
       }
 
-      return `<div class="ai-answer-structured">${sections.join('')}</div>`;
+      return { html: `<div class="ai-answer-structured">${sections.join('')}</div>`, parsed };
     }
 
     function stripYuiArtifacts(container) {
@@ -11745,17 +11717,20 @@ Rules:
           // Add assistant response to chat history
           ChatSessionManager.addMessage('assistant', data.answer);
 
-          const formatted = formatAIAnswer(data.answer);
-          answerBlock.innerHTML = formatted;
+          const { html: formatted, parsed } = formatAIAnswer(data.answer);
+          const debugMeta = renderDebugMeta(data);
+          answerBlock.innerHTML = `${formatted}${debugMeta}`;
           stripYuiArtifacts(answerBlock);
-          const applyFinalBtn = answerBlock.querySelector('.ai-apply-final-btn');
-          if (applyFinalBtn) {
-            applyFinalBtn.addEventListener('click', function() {
-              const finalSentence = this.getAttribute('data-final');
-              if (finalSentence) {
-                applyTextToFront(finalSentence);
+          if (parsed?.recheck?.finalSentence) {
+            const finalSentence = (parsed.recheck.finalSentence || '').trim();
+            if (finalSentence) {
+              const block = $('#errorCheckBlock');
+              if (block) {
+                block.dataset.aiFinalSentence = finalSentence;
+                const applyBtns = block.querySelectorAll('.apply-corrected-btn');
+                applyBtns.forEach(btn => btn.setAttribute('data-text', finalSentence));
               }
-            });
+            }
           }
         } else {
           const errorMsg = t('ai_chat_error') || 'The AI could not answer that question.';
