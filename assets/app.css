@@ -2692,6 +2692,10 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   max-width: min(65vw, 18rem, 100%);
   text-align: center;
   white-space: normal;
+  word-break: anywhere;
+  overflow-wrap: anywhere;
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .status-chip[data-state="loading"] {
@@ -5400,11 +5404,14 @@ select.inline-prompt-field {
 .front-text-actions .translation-status-inline{
   margin-left: 0;
   align-self: center;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: fit-content;
-  max-width: min(60vw, 18rem);
+  max-width: 12rem;
   width: auto;
   word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  text-align: center;
   overflow-wrap: anywhere;
   white-space: normal;
   justify-content: flex-start;
