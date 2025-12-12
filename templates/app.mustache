@@ -214,11 +214,12 @@
             <div class="slot front-slot">
               <div class="slot-head slot-head-stacked slot-head-inline">
                 <div class="slot-head-row slot-head-inline-row translation-header">
-              <div class="slot-head-main">
+              <div class="slot-head-main slot-head-main--with-action">
                 <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
-                <div class="translation-mode translation-mode-inline">
-                  <button type="button" class="translation-mode-btn active" data-dir="no-user" data-translation-btn>
-                    <span class="translation-mode-label" id="translationModeForward">Norsk > English</span>
+                <div class="front-header-action">
+                  <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
+                    <span class="btn-icon" aria-hidden="true">&#128269;</span>
+                    <span data-i18n="check_text">Sjekk teksten</span>
                   </button>
                 </div>
               </div>
@@ -243,10 +244,11 @@
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
           <div class="front-text-actions">
-            <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
-              <span class="btn-icon" aria-hidden="true">&#128269;</span>
-              <span data-i18n="check_text">Sjekk teksten</span>
-            </button>
+            <div class="translation-mode translation-mode-inline">
+              <button type="button" class="translation-mode-btn active" data-dir="no-user" data-translation-btn>
+                <span class="translation-mode-label" id="translationModeForward">Norsk > English</span>
+              </button>
+            </div>
           </div>
         </div>
         <div class="slot front-translation-slot" id="slot_front_translation">
@@ -290,6 +292,13 @@
               </div>
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
+            </div>
+            <div class="slot">
+              <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
+              <div class="fokus-input-wrap">
+                <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
+                <div id="fokusSuggest" class="fokus-suggest"></div>
+              </div>
             </div>
             <div class="slot" id="slot_focus_analysis">
               <div class="analysis-header">
@@ -592,10 +601,6 @@
             <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder"></textarea>
             <div class="fokus-suggest front-suggest" data-front-suggest></div>
           </div>
-        </div>
-        <div class="slot">
-          <span class="tag">{{#str}} fokus, mod_flashcards {{/str}}</span>
-          <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
         </div>
         <div class="slot">
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>

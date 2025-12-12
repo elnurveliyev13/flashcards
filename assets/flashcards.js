@@ -2125,6 +2125,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let translationDebounce = null;
     let translationAbortController = null;
     let translationRequestSeq = 0;
+    const translationButtonsByDir = {};
+    const translationFlashTimers = {};
+
+    function flashTranslationButton(dir){
+      const btn = translationButtonsByDir[dir];
+      if(!btn){
+        return;
+      }
+      btn.classList.add('translation-flash');
+      if(translationFlashTimers[dir]){
+        clearTimeout(translationFlashTimers[dir]);
+      }
+      translationFlashTimers[dir] = setTimeout(()=>{
+        btn.classList.remove('translation-flash');
+        translationFlashTimers[dir] = null;
+      }, 1000);
+    }
+
+    function ensureTranslationDirection(dir){
+      if(translationDirection === dir){
+        return;
+      }
+      applyTranslationDirection(dir, {triggerTranslation:false});
+    }
+
+    function triggerTranslation(dir, options = {}){
+      ensureTranslationDirection(dir);
+      flashTranslationButton(dir);
+      runTranslationHelper({...options, direction: dir});
+    }
+
     // Front-side autocomplete (ordbokene + local ordbank)
     const FRONT_SUGGEST_DEBOUNCE = 170;
     const frontSuggestCache = {};
@@ -2137,8 +2168,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // Translation toggle removed - translation is always visible
     updateTranslationLangUI();
     translationButtons.forEach(btn=>{
+      const dir = btn.dataset.dir || 'no-user';
+      translationButtonsByDir[dir] = btn;
       btn.addEventListener('click', ()=>{
-        applyTranslationDirection(btn.dataset.dir || 'no-user');
+        triggerTranslation(dir);
       });
     });
     if(frontInput){
@@ -2170,6 +2203,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           hideFrontSuggest();
         }
       });
+      frontInput.addEventListener('keyup', e=>{
+        if(e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey){
+          triggerTranslation('no-user');
+        }
+      });
+    }
+    if(fokusInput){
+      fokusInput.addEventListener('input', ()=>{
+        scheduleFocusSuggest();
+      });
+      fokusInput.addEventListener('focus', ()=>{
+        scheduleFocusSuggest();
+      });
+      fokusInput.addEventListener('blur', ()=>{
+        setTimeout(hideFocusSuggest, 200);
+      });
     }
     if(translationInputLocal){
       translationInputLocal.addEventListener('input', ()=>{
@@ -2187,7 +2236,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       translationInputLocal.addEventListener('blur', ()=>{
       });
-      translationInputLocal.addEventListener('keydown', e=>{
+      translationInputLocal.addEventListener('keyup', e=>{
+        if(e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey){
+          triggerTranslation('user-no');
+        }
       });
     }
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'`{\[\]\}-]+/gu; } catch(_e){ return /[A-Za-z0-9'`{\[\]\}-]+/g; } })();
@@ -2367,10 +2419,126 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       frontSuggestScheduledQuery = q;
       // gentle debounce to wait for pauses and avoid repeated requests
-        frontSuggestTimer = setTimeout(()=>{
-          frontSuggestTimer = null;
-          fetchFrontSuggest(q);
-        }, FRONT_SUGGEST_DEBOUNCE);
+      frontSuggestTimer = setTimeout(()=>{
+        frontSuggestTimer = null;
+        fetchFrontSuggest(q);
+      }, FRONT_SUGGEST_DEBOUNCE);
+    }
+
+    const FOCUS_SUGGEST_DEBOUNCE = 170;
+    const focusSuggestCache = {};
+    let focusSuggestTimer = null;
+    let focusSuggestRequestSeq = 0;
+    let focusSuggestActive = '';
+    let focusSuggestRendered = '';
+    let focusSuggestAbort = null;
+    let focusSuggestScheduledQuery = '';
+    let focusSuggestList = null;
+
+    function currentFocusQuery(){
+      if(!fokusInput) return '';
+      return (fokusInput.value || '').trim();
+    }
+
+    async function fetchFocusSuggest(query){
+      if(!fokusSuggest || !focusSuggestList){
+        return;
+      }
+      const seq = ++focusSuggestRequestSeq;
+      focusSuggestActive = query;
+      if(focusSuggestAbort){
+        try{ focusSuggestAbort.abort(); }catch(_){}
+      }
+      focusSuggestAbort = new AbortController();
+      const key = query.toLowerCase();
+      if(focusSuggestCache[key]){
+        if(seq === focusSuggestRequestSeq && focusSuggestActive === query){
+          focusSuggestRendered = query;
+          renderFocusSuggest(focusSuggestCache[key], query);
+        }
+        return;
+      }
+      try{
+        const resp = await api('front_suggest', {}, 'POST', {query}, {signal: focusSuggestAbort.signal});
+        const list = Array.isArray(resp) ? resp : [];
+        focusSuggestCache[key] = list;
+        if(seq === focusSuggestRequestSeq && focusSuggestActive === query){
+          focusSuggestRendered = query;
+          renderFocusSuggest(list, query);
+        }
+      }catch(err){
+        if(err?.name !== 'AbortError'){
+          console.error('[Flashcards] focus suggest failed', err);
+        }
+        hideFocusSuggest();
+      }
+    }
+
+    function renderFocusSuggest(list, query){
+      if(!fokusSuggest || !focusSuggestList){
+        return;
+      }
+      focusSuggestList.innerHTML = '';
+      if(!list.length){
+        hideFocusSuggest();
+        return;
+      }
+      list.forEach(item => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'focus-suggest-item';
+        button.textContent = item || query;
+        button.addEventListener('click', () => {
+          if(fokusInput){
+            fokusInput.value = button.textContent;
+            fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
+            fokusInput.focus();
+          }
+          hideFocusSuggest();
+        });
+        focusSuggestList.appendChild(button);
+      });
+      fokusSuggest.classList.add('open');
+    }
+
+    function hideFocusSuggest(){
+      if(!fokusSuggest || !focusSuggestList){
+        return;
+      }
+      focusSuggestList.innerHTML = '';
+      fokusSuggest.classList.remove('open');
+      if(focusSuggestAbort){
+        try{ focusSuggestAbort.abort(); }catch(_){}
+        focusSuggestAbort = null;
+      }
+      focusSuggestScheduledQuery = '';
+    }
+
+    function scheduleFocusSuggest(){
+      if(!fokusInput || !fokusSuggest){
+        return;
+      }
+      const wordCount = countWords(currentFocusQuery());
+      if(wordCount > 4){
+        hideFocusSuggest();
+        return;
+      }
+      const q = currentFocusQuery();
+      if(focusSuggestTimer){
+        clearTimeout(focusSuggestTimer);
+      }
+      if(!q || q.length < 2){
+        hideFocusSuggest();
+        return;
+      }
+      if(q === focusSuggestScheduledQuery && focusSuggestTimer){
+        return;
+      }
+      focusSuggestScheduledQuery = q;
+      focusSuggestTimer = setTimeout(()=>{
+        focusSuggestTimer = null;
+        fetchFocusSuggest(q);
+      }, FOCUS_SUGGEST_DEBOUNCE);
     }
 
     function setFocusStatus(state, text){
@@ -11296,7 +11464,7 @@ Regeln:
       }
 
       renderFocusChips();
-      runTranslationHelper({direction: 'no-user', text: normalizedText});
+      triggerTranslation('no-user', {text: normalizedText});
 
       if (closeErrorBlock) {
         closeErrorCheckBlock();
