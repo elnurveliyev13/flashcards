@@ -2711,6 +2711,8 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .translation-mode-inline {
   margin-left: 0;
   display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
 }
 
 .fc-quick-media-btn {
@@ -5392,7 +5394,7 @@ select.inline-prompt-field {
   max-width: min(var(--slot-content-max-width), 100%);
   box-sizing: border-box;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: center;
   flex-wrap: wrap;
 }
 .front-text-actions .translation-status-inline{
