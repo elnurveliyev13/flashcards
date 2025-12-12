@@ -5496,6 +5496,8 @@ select.inline-prompt-field {
   display: flex;
   align-items: center;
   gap: 0.45rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .error-check-toggle-btn {
