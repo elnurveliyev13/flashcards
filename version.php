@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025121200; // YYYYMMDDXX. Added TTS quota tracking and admin report
+$plugin->version   = 2025121300; // YYYYMMDDXX. Added per-language example translations table
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.14.0-push-notifications'; // Added push notifications for due cards reminders

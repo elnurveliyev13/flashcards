@@ -207,6 +207,7 @@ class api {
                 $transmap[$row->cardid][strtolower($row->lang)] = $row->text;
             }
         }
+        $examplemap = self::fetch_example_translations([$deckid => $ids]);
     
         $out = [];
         foreach ($recs as $r) {
@@ -218,6 +219,8 @@ class api {
             if (!empty($transmap[$r->cardid])) {
                 $payload['translations'] = $transmap[$r->cardid];
             }
+            $cardkey = ((int)$r->deckid) . '::' . $r->cardid;
+            $payload = self::normalize_examples_on_fetch($payload, $examplemap[$cardkey] ?? [], function_exists('current_language') ? current_language() : null);
             $out[] = [
                 'deckId' => (int)$r->deckid,
                 'cardId' => $r->cardid,
@@ -293,6 +296,7 @@ class api {
     
         // Preload translations for all fetched cards
         $transmap = [];
+        $examplemap = [];
         if (!empty($recs)) {
             $bydeck = [];
             foreach ($recs as $r) { $bydeck[(int)$r->deckid][] = $r->cardid; }
@@ -303,8 +307,9 @@ class api {
                     $transmap[$dk.'::'.$row->cardid][strtolower($row->lang)] = $row->text;
                 }
             }
+            $examplemap = self::fetch_example_translations($bydeck);
         }
-    
+
         $out = [];
         foreach ($recs as $r) {
             $payload = json_decode($r->payload, true);
@@ -312,6 +317,7 @@ class api {
             $payload = self::populate_transcription_if_missing($payload);
             $key = ((int)$r->deckid).'::'.$r->cardid;
             if (!empty($transmap[$key])) { $payload['translations'] = $transmap[$key]; }
+            $payload = self::normalize_examples_on_fetch($payload, $examplemap[$key] ?? [], function_exists('current_language') ? current_language() : null);
             $out[] = [
                 'deckId' => (int)$r->deckid,
                 'cardId' => $r->cardid,
@@ -416,6 +422,265 @@ class api {
         return $foundAny ? implode(' ', $transcriptions) : null;
     }
 
+    /**
+     * Normalize examples to base Norwegian text list and collect per-language translations.
+     *
+     * @param array $payload Card payload (modified in-place to keep only base examples)
+     * @param string|null $defaultlang Lang code to use when parsing legacy "no | translation" strings
+     * @return array{0: array, 1: int} [$translationsMap, $baseExampleCount]
+     */
+    protected static function normalize_examples_for_storage(array &$payload, ?string $defaultlang = null): array {
+        $translations = [];
+        $examples = $payload['examples'] ?? [];
+        if (!is_array($examples)) {
+            $examples = [];
+        }
+
+        $base = [];
+        foreach ($examples as $idx => $ex) {
+            $text = '';
+            if (is_array($ex)) {
+                $text = trim((string)($ex['text'] ?? $ex['no'] ?? ''));
+                if (!empty($ex['translations']) && is_array($ex['translations'])) {
+                    foreach ($ex['translations'] as $lng => $val) {
+                        $lng = strtolower(substr((string)$lng, 0, 10));
+                        $val = trim((string)$val);
+                        if ($lng !== '' && $val !== '') {
+                            $translations[$lng][(int)$idx] = $val;
+                        }
+                    }
+                }
+            } else {
+                $parts = explode('|', (string)$ex, 2);
+                $text = trim($parts[0]);
+                if (count($parts) === 2) {
+                    $trans = trim($parts[1]);
+                    if ($trans !== '') {
+                        $lng = $defaultlang ? strtolower(substr($defaultlang, 0, 10)) : '';
+                        if ($lng !== '') {
+                            $translations[$lng][(int)$idx] = $trans;
+                        }
+                    }
+                }
+            }
+
+            if ($text !== '') {
+                $base[] = $text;
+            }
+        }
+
+        // Merge explicit exampleTranslations payload (lang => [idx => text])
+        if (!empty($payload['exampleTranslations']) && is_array($payload['exampleTranslations'])) {
+            foreach ($payload['exampleTranslations'] as $lng => $arr) {
+                if (!is_array($arr)) { continue; }
+                $lng = strtolower(substr((string)$lng, 0, 10));
+                if ($lng === '') { continue; }
+                foreach ($arr as $i => $val) {
+                    $val = trim((string)$val);
+                    if ($val === '') { continue; }
+                    $translations[$lng][(int)$i] = $val;
+                }
+            }
+        }
+
+        $payload['examples'] = $base;
+        return [$translations, count($base)];
+    }
+
+    /**
+     * Upsert per-language example translations without touching languages not provided.
+     *
+     * @param int $deckid Deck id
+     * @param string $cardid Card id
+     * @param array $translations Map lang => [idx => text]
+     * @param int $basecount Number of examples (indexes beyond this are removed)
+     */
+    protected static function upsert_example_translations(int $deckid, string $cardid, array $translations, int $basecount): void {
+        global $DB;
+        $deckid = (int)$deckid;
+        $cardid = trim($cardid);
+        if ($cardid === '') {
+            return;
+        }
+
+        // Remove translations for deleted examples (all languages)
+        $DB->delete_records_select(
+            'flashcards_card_example_trans',
+            'deckid = :deckid AND cardid = :cardid AND example_idx >= :maxidx',
+            ['deckid' => $deckid, 'cardid' => $cardid, 'maxidx' => $basecount]
+        );
+
+        if (empty($translations)) {
+            return;
+        }
+
+        $now = time();
+        foreach ($translations as $lng => $items) {
+            if (!is_array($items)) { continue; }
+            $lng = strtolower(substr((string)$lng, 0, 10));
+            if ($lng === '') { continue; }
+
+            foreach ($items as $idx => $text) {
+                $idx = (int)$idx;
+                if ($idx < 0 || $idx >= $basecount) {
+                    continue;
+                }
+                $text = trim((string)$text);
+                $existing = $DB->get_record('flashcards_card_example_trans', [
+                    'deckid' => $deckid,
+                    'cardid' => $cardid,
+                    'example_idx' => $idx,
+                    'lang' => $lng
+                ]);
+
+                if ($text === '') {
+                    if ($existing) {
+                        $DB->delete_records('flashcards_card_example_trans', ['id' => $existing->id]);
+                    }
+                    continue;
+                }
+
+                $row = (object)[
+                    'deckid' => $deckid,
+                    'cardid' => $cardid,
+                    'example_idx' => $idx,
+                    'lang' => $lng,
+                    'text' => $text,
+                    'timemodified' => $now,
+                ];
+
+                if ($existing) {
+                    $row->id = $existing->id;
+                    $DB->update_record('flashcards_card_example_trans', $row);
+                } else {
+                    $DB->insert_record('flashcards_card_example_trans', $row);
+                }
+            }
+        }
+    }
+
+    /**
+     * Normalize examples on fetch, merging DB translations and legacy inline translations.
+     *
+     * @param array $payload Card payload
+     * @param array $dbtranslations Map lang => [idx => text] loaded from DB table
+     * @param string|null $langhint Language to assign for legacy inline translations
+     * @return array Updated payload
+     */
+    protected static function normalize_examples_on_fetch(array $payload, array $dbtranslations = [], ?string $langhint = null): array {
+        $exampletranslations = [];
+        if (!empty($payload['exampleTranslations']) && is_array($payload['exampleTranslations'])) {
+            foreach ($payload['exampleTranslations'] as $lng => $items) {
+                if (!is_array($items)) { continue; }
+                $lng = strtolower(substr((string)$lng, 0, 10));
+                if ($lng === '') { continue; }
+                foreach ($items as $idx => $val) {
+                    $val = trim((string)$val);
+                    if ($val === '') { continue; }
+                    $exampletranslations[$lng][(int)$idx] = $val;
+                }
+            }
+        }
+
+        // Overlay DB translations (source of truth)
+        foreach ($dbtranslations as $lng => $items) {
+            if (!is_array($items)) { continue; }
+            $lng = strtolower(substr((string)$lng, 0, 10));
+            if ($lng === '') { continue; }
+            foreach ($items as $idx => $val) {
+                $val = trim((string)$val);
+                if ($val === '') { continue; }
+                $exampletranslations[$lng][(int)$idx] = $val;
+            }
+        }
+
+        $examples = $payload['examples'] ?? [];
+        if (!is_array($examples)) {
+            $payload['examples'] = [];
+            return $payload;
+        }
+
+        $langcode = $langhint ? strtolower(substr($langhint, 0, 10)) : '';
+        if ($langcode === '' && function_exists('current_language')) {
+            $langcode = strtolower(substr(current_language(), 0, 10));
+        }
+
+        $clean = [];
+        foreach ($examples as $idx => $ex) {
+            $text = '';
+            if (is_array($ex)) {
+                $text = trim((string)($ex['text'] ?? $ex['no'] ?? ''));
+            } else {
+                $parts = explode('|', (string)$ex, 2);
+                $text = trim($parts[0]);
+                if (count($parts) === 2 && $langcode !== '') {
+                    $trans = trim($parts[1]);
+                    if ($trans !== '') {
+                        $exampletranslations[$langcode][(int)$idx] = $trans;
+                    }
+                }
+            }
+            if ($text !== '') {
+                $clean[] = $text;
+            }
+        }
+
+        // Drop translations that no longer have a base example
+        $max = count($clean);
+        if ($max >= 0) {
+            foreach ($exampletranslations as $lng => $items) {
+                foreach ($items as $i => $val) {
+                    if ((int)$i >= $max || trim((string)$val) === '') {
+                        unset($exampletranslations[$lng][$i]);
+                    }
+                }
+                if (empty($exampletranslations[$lng])) {
+                    unset($exampletranslations[$lng]);
+                }
+            }
+        }
+
+        $payload['examples'] = $clean;
+        if (!empty($exampletranslations)) {
+            $payload['exampleTranslations'] = $exampletranslations;
+        } else {
+            unset($payload['exampleTranslations']);
+        }
+
+        return $payload;
+    }
+
+    /**
+     * Fetch per-language example translations for provided cards.
+     *
+     * @param array $bydeck Map deckId => array of cardIds
+     * @return array Map "deck::cardid" => [lang => [idx => text]]
+     */
+    protected static function fetch_example_translations(array $bydeck): array {
+        global $DB;
+        $out = [];
+        foreach ($bydeck as $deckid => $ids) {
+            if (empty($ids)) { continue; }
+            list($insql, $inparams) = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'c');
+            $rows = $DB->get_records_select(
+                'flashcards_card_example_trans',
+                'deckid = :deckid AND cardid ' . $insql,
+                ['deckid' => (int)$deckid] + $inparams
+            );
+            foreach ($rows as $row) {
+                $key = ((int)$deckid) . '::' . $row->cardid;
+                $lng = strtolower((string)$row->lang);
+                $idx = (int)$row->example_idx;
+                $txt = trim((string)$row->text);
+                if ($lng === '' || $idx < 0 || $txt === '') {
+                    continue;
+                }
+                $out[$key][$lng][$idx] = $txt;
+            }
+        }
+        return $out;
+    }
+
     public static function normalize_card_id($text) {
         $text = trim((string)$text);
         if ($text === '') { $text = uniqid('c', false); }
@@ -432,6 +697,13 @@ class api {
         $pp = $payload['payload'] ?? [];
         if (!is_array($pp)) { $pp = []; }
         $pp = self::populate_transcription_if_missing($pp);
+        $defaultlang = function_exists('current_language') ? current_language() : '';
+        [$exampletranslations, $examplecount] = self::normalize_examples_for_storage($pp, $defaultlang);
+        if (!empty($exampletranslations)) {
+            $pp['exampleTranslations'] = $exampletranslations;
+        } else {
+            unset($pp['exampleTranslations']);
+        }
         $translations = [];
         if (isset($pp['translations']) && is_array($pp['translations'])) {
             foreach ($pp['translations'] as $lng => $txt) {
@@ -494,7 +766,10 @@ class api {
         ];
         if ($existing) { $rec->id = $existing->id; $DB->update_record('flashcards_cards', $rec); }
         else { $DB->insert_record('flashcards_cards', $rec); }
-    
+
+        // Upsert example translations (per language, per example index)
+        self::upsert_example_translations($deckid, $cardid, $exampletranslations, $examplecount);
+
         // Upsert translations rows
         foreach ($translations as $lng => $txt) {
             $exist = $DB->get_record('flashcards_card_trans', ['deckid'=>$deckid,'cardid'=>$cardid,'lang'=>$lng]);
@@ -565,6 +840,7 @@ class api {
             // Rationale: Card no longer exists, so all progress references are orphaned
             $DB->delete_records('flashcards_progress', ['deckid' => $deckid, 'cardid' => $cardid]);
             $DB->delete_records('flashcards_card_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
+            $DB->delete_records('flashcards_card_example_trans', ['deckid' => $deckid, 'cardid' => $cardid]);
 
             // Decrement total_cards_created counter for the card owner
             if ($rec->ownerid !== null) {

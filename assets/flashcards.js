@@ -1881,8 +1881,71 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // Prepare translation inputs visibility/labels
     // Dynamic Examples and Collocations Lists
-    let examplesData = []; // Array of {no: "Norwegian text", trans: "Translation"}
+    let examplesData = []; // Array of {no: "Norwegian text", translations: {lang: translation}}
     let collocationsData = [];
+
+    const getExampleTranslation = (item, lang) => {
+      if(!item || !lang) return '';
+      return (item.translations && item.translations[lang]) ? item.translations[lang] : '';
+    };
+    const setExampleTranslation = (item, lang, value) => {
+      if(!item || !lang) return;
+      if(!item.translations) item.translations = {};
+      item.translations[lang] = value;
+    };
+
+    const parseExamples = (examplesRaw, translationsMap) => {
+      const list = Array.isArray(examplesRaw) ? examplesRaw : [];
+      const out = [];
+      list.forEach((item, idx) => {
+        let text = '';
+        let translations = {};
+        if(item && typeof item === 'object' && !Array.isArray(item)) {
+          text = String(item.text || item.no || '').trim();
+          if(item.translations && typeof item.translations === 'object') {
+            Object.entries(item.translations).forEach(([lng, val]) => {
+              if(!lng) return;
+              const v = String(val || '').trim();
+              if(v) translations[lng] = v;
+            });
+          } else if(item.trans) {
+            translations[userLang2] = String(item.trans || '').trim();
+          }
+        } else if(typeof item === 'string') {
+          const parts = item.split('|');
+          text = (parts.shift() || '').trim();
+          const legacyTrans = parts.join('|').trim();
+          if(legacyTrans) {
+            translations[userLang2] = legacyTrans;
+          }
+        } else if(item !== undefined && item !== null) {
+          text = String(item).trim();
+        }
+
+        if(text) {
+          if(translationsMap && typeof translationsMap === 'object') {
+            Object.entries(translationsMap).forEach(([lng, arr]) => {
+              if(!Array.isArray(arr)) return;
+              const val = arr[idx];
+              if(typeof val === 'string' && val.trim() !== '') {
+                translations[lng] = val.trim();
+              }
+            });
+          }
+          out.push({ no: text, translations });
+        }
+      });
+      return out;
+    };
+
+    const parseCollocations = (arr) => {
+      if(!Array.isArray(arr)) return [];
+      return arr.map(str => {
+        if(typeof str !== 'string') return {no: String(str), trans: ''};
+        const parts = str.split('|').map(s => s.trim());
+        return {no: parts[0] || '', trans: parts[1] || ''};
+      });
+    };
 
     function createItemElement(type, index, data) {
       const container = document.createElement('div');
@@ -1933,11 +1996,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       inputTrans.type = 'text';
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
       inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #94a3b8; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
-      inputTrans.value = data.trans || '';
+      inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
       inputTrans.classList.add('hidden');
       inputTrans.addEventListener('input', (e) => {
-        if(type === 'Example') examplesData[index].trans = e.target.value;
-        else collocationsData[index].trans = e.target.value;
+        if(type === 'Example') {
+          setExampleTranslation(examplesData[index], userLang2, e.target.value);
+        } else {
+          collocationsData[index].trans = e.target.value;
+        }
       });
 
       const btnToggle = document.createElement('button');
@@ -1979,7 +2045,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     if(btnAddExample) {
       btnAddExample.addEventListener('click', (e) => {
         e.preventDefault();
-        examplesData.push({no: '', trans: ''});
+        examplesData.push({no: '', translations: {}});
         renderExamples();
       });
     }
@@ -7897,19 +7963,9 @@ function renderComparisonResult(resultEl, comparison){
       const af=(c.forms&&c.forms.adj)||{}; const _af1=document.getElementById('uAdjPositiv'); if(_af1) _af1.value = af.positiv||''; const _af2=document.getElementById('uAdjKomparativ'); if(_af2) _af2.value = af.komparativ||''; const _af3=document.getElementById('uAdjSuperlativ'); if(_af3) _af3.value = af.superlativ||'';
       const _ant=document.getElementById('uAntonyms'); if(_ant) _ant.value = Array.isArray(c.antonyms)?c.antonyms.join('\n'):'';
 
-      // Parse examples and collocations from string format "text | translation"
-      function parseItems(arr) {
-        if(!Array.isArray(arr)) return [];
-        return arr.map(str => {
-          if(typeof str !== 'string') return {no: String(str), trans: ''};
-          const parts = str.split('|').map(s => s.trim());
-          return {no: parts[0] || '', trans: parts[1] || ''};
-        });
-      }
-
       // Load into dynamic lists for Extended Editor
-      examplesData = parseItems(c.examples);
-      collocationsData = parseItems(c.collocations);
+      examplesData = parseExamples(c.examples, c.exampleTranslations);
+      collocationsData = parseCollocations(c.collocations);
       renderExamples();
       renderCollocations();
 
@@ -7917,7 +7973,7 @@ function renderComparisonResult(resultEl, comparison){
       const _col=document.getElementById('uCollocations');
       if(_col) _col.value = Array.isArray(c.collocations)?c.collocations.map(s => typeof s === 'string' ? s.split('|')[0].trim() : s).join('\n'):'';
       const _exs=document.getElementById('uExamples');
-      if(_exs) _exs.value = Array.isArray(c.examples)?c.examples.map(s => typeof s === 'string' ? s.split('|')[0].trim() : s).join('\n'):'';
+      if(_exs) _exs.value = examplesData.map(item => item.no).join('\n');
 
       const _cog=document.getElementById('uCognates'); if(_cog) _cog.value = Array.isArray(c.cognates)?c.cognates.join('\n'):'';
       const _say=document.getElementById('uSayings'); if(_say) _say.value = Array.isArray(c.sayings)?c.sayings.join('\n'):'';
@@ -9175,12 +9231,44 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       if(examplesData.length > 0) {
-        payload.examples = examplesData.filter(item => item.no).map(item => {
-          return item.trans ? `${item.no} | ${item.trans}` : item.no;
+        const baseExamples = [];
+        const langExamples = [];
+        examplesData.forEach(item => {
+          const text = (item.no || '').trim();
+          if(!text) return;
+          baseExamples.push(text);
+          const trVal = (getExampleTranslation(item, userLang2) || '').trim();
+          langExamples.push(trVal);
         });
+        if(baseExamples.length) {
+          payload.examples = baseExamples;
+          if(langExamples.some(v => v && v.trim())) {
+            payload.exampleTranslations = {};
+            payload.exampleTranslations[userLang2] = langExamples;
+          }
+        }
       } else {
         // Fallback to Quick Input textarea (Advanced fields)
-        const examples=linesToArr('uExamples'); if(examples.length) payload.examples=examples;
+        const examples = linesToArr('uExamples');
+        if(examples.length) {
+          const baseExamples = [];
+          const langExamples = [];
+          examples.forEach(line => {
+            const parts = line.split('|');
+            const text = (parts.shift() || '').trim();
+            if(!text) return;
+            baseExamples.push(text);
+            const trans = parts.join('|').trim();
+            langExamples.push(trans || '');
+          });
+          if(baseExamples.length) {
+            payload.examples = baseExamples;
+            if(langExamples.some(v => v && v.trim())) {
+              payload.exampleTranslations = {};
+              payload.exampleTranslations[userLang2] = langExamples;
+            }
+          }
+        }
       }
 
       const cognates=linesToArr('uCognates'); if(cognates.length) payload.cognates=cognates;

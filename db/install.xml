@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<XMLDB PATH="mod/flashcards/db" VERSION="2025102501" COMMENT="Flashcards module">
+<XMLDB PATH="mod/flashcards/db" VERSION="2025121300" COMMENT="Flashcards module">
   <TABLES>
     <TABLE NAME="flashcards" COMMENT="Flashcards activity instances">
       <FIELDS>
@@ -131,6 +131,25 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="deck_card_lang_uix" UNIQUE="true" FIELDS="deckid, cardid, lang"/>
+        <INDEX NAME="deck_idx" UNIQUE="false" FIELDS="deckid"/>
+        <INDEX NAME="lang_idx" UNIQUE="false" FIELDS="lang"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="flashcards_card_example_trans" COMMENT="Per-language translations for card examples">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="deckid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="cardid" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="example_idx" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="lang" TYPE="char" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="text" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="deck_card_example_lang_uix" UNIQUE="true" FIELDS="deckid, cardid, example_idx, lang"/>
         <INDEX NAME="deck_idx" UNIQUE="false" FIELDS="deckid"/>
         <INDEX NAME="lang_idx" UNIQUE="false" FIELDS="lang"/>
       </INDEXES>

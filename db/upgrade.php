@@ -990,5 +990,31 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025121200, 'flashcards');
     }
 
+    // Per-language example translations table.
+    if ($oldversion < 2025121300) {
+        mtrace('Flashcards: Adding per-language example translations table...');
+
+        $table = new xmldb_table('flashcards_card_example_trans');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('deckid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('cardid', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('example_idx', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('lang', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('text', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('deck_card_example_lang_uix', XMLDB_INDEX_UNIQUE, ['deckid', 'cardid', 'example_idx', 'lang']);
+        $table->add_index('deck_idx', XMLDB_INDEX_NOTUNIQUE, ['deckid']);
+        $table->add_index('lang_idx', XMLDB_INDEX_NOTUNIQUE, ['lang']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_card_example_trans table');
+        }
+
+        upgrade_mod_savepoint(true, 2025121300, 'flashcards');
+    }
+
     return true;
 }
