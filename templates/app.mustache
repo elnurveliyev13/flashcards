@@ -214,14 +214,8 @@
             <div class="slot front-slot">
               <div class="slot-head slot-head-stacked slot-head-inline">
                 <div class="slot-head-row slot-head-inline-row translation-header">
-              <div class="slot-head-main slot-head-main--with-action">
+              <div class="slot-head-main">
                 <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
-                <div class="front-header-action">
-                  <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
-                    <span class="btn-icon" aria-hidden="true">&#128269;</span>
-                    <span data-i18n="check_text">Sjekk teksten</span>
-                  </button>
-                </div>
               </div>
               <div class="slot-head-extra">
                 <button type="button" id="toggleErrorCheckBtn" class="error-check-toggle-btn status-inline-toggle" aria-controls="errorCheckBlock" aria-expanded="false" title="{{#str}} error_check_toggle_label, mod_flashcards {{/str}}" style="display:none;">
@@ -249,6 +243,10 @@
                 <span class="translation-mode-label" id="translationModeForward">Norsk > English</span>
               </button>
             </div>
+            <button type="button" id="checkTextBtn" class="btn btn-sm btn-secondary check-text-btn">
+              <span class="btn-icon" aria-hidden="true">&#128269;</span>
+              <span data-i18n="check_text">Sjekk teksten</span>
+            </button>
           </div>
         </div>
         <div class="slot front-translation-slot" id="slot_front_translation">
