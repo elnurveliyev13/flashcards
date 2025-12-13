@@ -1738,9 +1738,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function applyTranslationDirection(dir, opts = {}){
       const triggerTranslation = opts.triggerTranslation !== false;
       translationDirection = dir === 'user-no' ? 'user-no' : 'no-user';
-      translationButtons.forEach(btn=>{
-        btn.classList.toggle('active', btn.dataset.dir === translationDirection);
-      });
       if(translationModeHint){
         translationModeHint.textContent = (translationDirection === 'user-no')
           ? aiStrings.translationReverseHint
@@ -3478,11 +3475,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       if(Array.isArray(data.examples) && data.examples.length){
-        const examplesEl = document.getElementById('uExamples');
-        if(examplesEl){
-          // Prefer the latest payload examples (override when ordbokene provided).
-          if(!examplesEl.value.trim() || data.ordbokene){
-            examplesEl.value = data.examples.join('\n');
+        const parsedExamples = parseExamples(data.examples, data.exampleTranslations || null);
+        if(parsedExamples.length){
+          examplesData = parsedExamples;
+          renderExamples();
+          const examplesEl = document.getElementById('uExamples');
+          if(examplesEl){
+            // Prefer the latest payload examples (override when ordbokene provided).
+            if(!examplesEl.value.trim() || data.ordbokene){
+              examplesEl.value = parsedExamples.map(e => e.no).join('\n');
+            }
           }
         }
       }
@@ -5765,6 +5767,27 @@ let lastStudyAudioRate=1;
         const preferredTranslation = c.translations[userLang2] || c.translations['en'] || '';
         if(preferredTranslation){
           c.translation = preferredTranslation;
+        }
+      }
+
+      // Normalize examples: split legacy "no | translation" into per-lang translations
+      if(Array.isArray(c.examples) || c.exampleTranslations){
+        const parsed = parseExamples(c.examples || [], c.exampleTranslations || null);
+        const exampleTranslations = {};
+        parsed.forEach((item, idx) => {
+          if(item.translations){
+            Object.entries(item.translations).forEach(([lng,val])=>{
+              if(!lng || !val) return;
+              if(!exampleTranslations[lng]) exampleTranslations[lng] = [];
+              exampleTranslations[lng][idx] = val;
+            });
+          }
+        });
+        c.examples = parsed.map(p => p.no);
+        if(Object.keys(exampleTranslations).length){
+          c.exampleTranslations = exampleTranslations;
+        } else {
+          delete c.exampleTranslations;
         }
       }
 
