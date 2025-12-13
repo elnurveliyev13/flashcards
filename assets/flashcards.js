@@ -1902,6 +1902,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         let translations = {};
         if(item && typeof item === 'object' && !Array.isArray(item)) {
           text = String(item.text || item.no || '').trim();
+          const trValue = (item.translation || item.trans || '').trim();
+          if(trValue) {
+            translations[userLang2] = trValue;
+          }
           if(item.translations && typeof item.translations === 'object') {
             Object.entries(item.translations).forEach(([lng, val]) => {
               if(!lng) return;
@@ -2872,11 +2876,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             try{ explEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
           }
         }
-        const examplesEl = document.getElementById('uExamples');
-        const examples = Array.isArray(expressionData.examples) ? expressionData.examples.map(v => (typeof v === 'string' ? v.trim() : (v && v.text ? String(v.text).trim() : ''))).filter(Boolean) : [];
-        if(examples.length && examplesEl){
-          examplesEl.value = examples.join('\n');
-          try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+        const examplesParsed = parseExamples(expressionData.examples || [], null);
+        if(examplesParsed.length){
+          examplesData = examplesParsed;
+          renderExamples();
+          const examplesEl = document.getElementById('uExamples');
+          if(examplesEl){
+            examplesEl.value = examplesParsed.map(e => e.no).join('\n');
+            try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
+          }
         }
       }
       const statusEl = document.getElementById('status');
@@ -10405,6 +10413,18 @@ function renderComparisonResult(resultEl, comparison){
         } else {
           const lines = editor.value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
           currentItem.card[field] = lines;
+          if(field === 'examples' && currentItem.card.exampleTranslations){
+            Object.keys(currentItem.card.exampleTranslations).forEach(lng => {
+              const arr = currentItem.card.exampleTranslations[lng];
+              if(!Array.isArray(arr)) return;
+              currentItem.card.exampleTranslations[lng] = arr.slice(0, lines.length);
+              for(let i=0;i<currentItem.card.exampleTranslations[lng].length;i++){
+                if(typeof currentItem.card.exampleTranslations[lng][i] !== 'string'){
+                  currentItem.card.exampleTranslations[lng][i] = String(currentItem.card.exampleTranslations[lng][i] || '');
+                }
+              }
+            });
+          }
           updated = true;
         }
 
@@ -10570,13 +10590,14 @@ function renderComparisonResult(resultEl, comparison){
       if(Array.isArray(c.antonyms)) p.antonyms=c.antonyms;
       if(Array.isArray(c.collocations)) p.collocations=c.collocations;
       if(Array.isArray(c.examples)) p.examples=c.examples;
+      if(c.exampleTranslations) p.exampleTranslations = c.exampleTranslations;
       if(Array.isArray(c.cognates)) p.cognates=c.cognates;
       if(Array.isArray(c.sayings)) p.sayings=c.sayings;
       return p;
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025103107"; // Must match version.php
+    const CACHE_VERSION = "2025121300"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
@@ -11850,19 +11871,20 @@ Regeln:
     }
 
     function applyExpressionExamples(list){
+      if(!Array.isArray(list)){
+        return;
+      }
+      // Normalize into examplesData with per-language translations
+      examplesData = parseExamples(list, null);
+      renderExamples();
+
+      // Quick textarea shows only base examples
       const examplesEl = document.getElementById('uExamples');
-      if(!examplesEl || !Array.isArray(list)){
-        return;
+      if(examplesEl){
+        const entries = examplesData.map(item => item.no).filter(Boolean);
+        examplesEl.value = entries.join('\n');
+        try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
       }
-      const entries = list
-        .map(item => typeof item === 'string' ? item.trim() : (item && item.text ? item.text.trim() : ''))
-        .filter(Boolean);
-      if(!entries.length){
-        examplesEl.value = '';
-        return;
-      }
-      examplesEl.value = entries.join('\n');
-      try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
     }
     function closeErrorCheckBlock() {
       const block = $('#errorCheckBlock');

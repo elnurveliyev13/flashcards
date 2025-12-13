@@ -859,6 +859,9 @@ PROMPT;
             if (array_key_exists('temperature', $payload)) {
                 unset($payload['temperature']);
             }
+            if (array_key_exists('top_p', $payload)) {
+                unset($payload['top_p']);
+            }
             // reasoning_effort should already be set by the calling method
             // If not set, default to medium
             if (!isset($payload['reasoning_effort'])) {
