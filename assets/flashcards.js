@@ -1998,7 +1998,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
       inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #94a3b8; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
       inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
-      inputTrans.classList.add('hidden');
       inputTrans.addEventListener('input', (e) => {
         if(type === 'Example') {
           setExampleTranslation(examplesData[index], userLang2, e.target.value);
@@ -2007,30 +2006,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
 
-      const btnToggle = document.createElement('button');
-      btnToggle.type = 'button';
-      btnToggle.className = 'fc-link-btn';
-      btnToggle.style.cssText = 'font-size: 0.85em; padding: 4px 8px;';
-      btnToggle.textContent = '?? Show/Hide';
-      btnToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        inputTrans.classList.toggle('hidden');
-      });
-
       transRow.appendChild(inputTrans);
-      transRow.appendChild(btnToggle);
       container.appendChild(transRow);
 
       return container;
     }
 
     function renderExamples() {
-      const list = $('#examplesList');
-      if(!list) return;
-      list.innerHTML = '';
-      examplesData.forEach((item, idx) => {
-        list.appendChild(createItemElement('Example', idx, item));
+      const targets = [$('#examplesList'), $('#examplesListQuick')].filter(Boolean);
+      targets.forEach(list => {
+        list.innerHTML = '';
+        examplesData.forEach((item, idx) => {
+          list.appendChild(createItemElement('Example', idx, item));
+        });
       });
+      const hiddenTextarea = document.getElementById('uExamples');
+      if(hiddenTextarea){
+        hiddenTextarea.value = examplesData.map(item => item.no).join('\n');
+      }
     }
 
     function renderCollocations() {
@@ -2042,14 +2035,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
-    const btnAddExample = $('#btnAddExample');
-    if(btnAddExample) {
-      btnAddExample.addEventListener('click', (e) => {
+    function bindAddExampleButton(id){
+      const btn = $(id);
+      if(!btn) return;
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
         examplesData.push({no: '', translations: {}});
         renderExamples();
       });
     }
+    bindAddExampleButton('#btnAddExample');
+    bindAddExampleButton('#btnAddExampleQuick');
 
     const btnAddCollocation = $('#btnAddCollocation');
     if(btnAddCollocation) {

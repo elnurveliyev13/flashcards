@@ -368,7 +368,11 @@
             </div>
             <div class="slot">
               <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
-              <textarea id="uExamples" class="autogrow" placeholder="examples..." data-i18n-placeholder="examples_placeholder"></textarea>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <button type="button" id="btnAddExampleQuick" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+              </div>
+              <div id="examplesListQuick" style="display: flex; flex-direction: column; gap: 12px;"></div>
+              <textarea id="uExamples" class="hidden" aria-hidden="true" style="display:none"></textarea>
             </div>
             <div class="slot ai-question-slot">
               <div class="ai-question-head">
