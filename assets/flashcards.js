@@ -8349,6 +8349,7 @@ function renderComparisonResult(resultEl, comparison){
           }
           const y = eventClientY(ev);
           if(y === null || lockStartY === null) return;
+          try{ ev.preventDefault(); ev.stopPropagation(); }catch(_e){}
           const delta = y - lockStartY;
           if(delta > 0){
             updateLockProgress(delta);
@@ -8368,6 +8369,8 @@ function renderComparisonResult(resultEl, comparison){
       recBtn.addEventListener("pointerdown", onDown);
       recBtn.addEventListener("mousedown", onDown);
       recBtn.addEventListener("touchstart", onDown, {passive:false});
+      // Prevent scroll while dragging to lock on touch devices
+      recBtn.addEventListener("touchmove", e=>{ if(holdActive){ try{ e.preventDefault(); e.stopPropagation(); }catch(_e){} } }, {passive:false});
       try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
       if(stopBtn && !stopBtn.dataset.boundQuickStop){
         stopBtn.dataset.boundQuickStop = "1";
