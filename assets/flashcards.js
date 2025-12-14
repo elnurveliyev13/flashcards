@@ -1891,17 +1891,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       item.translations[lang] = value;
     };
 
-    const parseExamples = (examplesRaw, translationsMap) => {
+    const parseExamples = (examplesRaw, translationsMap, langHint = null) => {
       const list = Array.isArray(examplesRaw) ? examplesRaw : [];
       const out = [];
       list.forEach((item, idx) => {
         let text = '';
         let translations = {};
+        let fallbackTranslation = '';
+
         if(item && typeof item === 'object' && !Array.isArray(item)) {
           text = String(item.text || item.no || '').trim();
           const trValue = (item.translation || item.trans || '').trim();
           if(trValue) {
-            translations[userLang2] = trValue;
+            fallbackTranslation = trValue;
           }
           if(item.translations && typeof item.translations === 'object') {
             Object.entries(item.translations).forEach(([lng, val]) => {
@@ -1909,15 +1911,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               const v = String(val || '').trim();
               if(v) translations[lng] = v;
             });
-          } else if(item.trans) {
-            translations[userLang2] = String(item.trans || '').trim();
           }
         } else if(typeof item === 'string') {
           const parts = item.split('|');
           text = (parts.shift() || '').trim();
           const legacyTrans = parts.join('|').trim();
           if(legacyTrans) {
-            translations[userLang2] = legacyTrans;
+            fallbackTranslation = legacyTrans;
           }
         } else if(item !== undefined && item !== null) {
           text = String(item).trim();
@@ -1932,6 +1932,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
                 translations[lng] = val.trim();
               }
             });
+          } else if(langHint && fallbackTranslation) {
+            translations[langHint] = fallbackTranslation;
           }
           out.push({ no: text, translations });
         }
@@ -1982,7 +1984,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const inputNo = document.createElement('input');
       inputNo.type = 'text';
       inputNo.placeholder = 'Norwegian text...';
-      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; color: #ffffff; font-weight: 500; border: 1px solid #374151; border-radius: 6px;';
+      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; font-weight: 500; border: 1px solid #374151; border-radius: 6px;';
+      inputNo.classList.add('example-input-base');
       inputNo.value = data.no || '';
       inputNo.addEventListener('input', (e) => {
         if(type === 'Example') examplesData[index].no = e.target.value;
@@ -1996,7 +1999,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const inputTrans = document.createElement('input');
       inputTrans.type = 'text';
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
-      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #ffffff; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
+      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
+      inputTrans.classList.add('example-input-trans');
       inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
       inputTrans.addEventListener('input', (e) => {
         if(type === 'Example') {
@@ -2139,6 +2143,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     const fokusInput = $("#uFokus");
     let fokusSuggest = $("#fokusSuggest");
+    let focusSuggestList = null;
     // Create suggest container if missing (template cache fallback).
     if(!fokusSuggest && fokusInput && fokusInput.parentElement){
       const div = document.createElement('div');
@@ -2146,6 +2151,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       div.className = 'fokus-suggest';
       fokusInput.parentElement.appendChild(div);
       fokusSuggest = div;
+    }
+    if(fokusSuggest){
+      focusSuggestList = fokusSuggest.querySelector('.focus-suggest-list');
+      if(!focusSuggestList){
+        focusSuggestList = document.createElement('div');
+        focusSuggestList.className = 'focus-suggest-list';
+        fokusSuggest.appendChild(focusSuggestList);
+      }
     }
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
@@ -2496,7 +2509,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let focusSuggestRendered = '';
     let focusSuggestAbort = null;
     let focusSuggestScheduledQuery = '';
-    let focusSuggestList = null;
 
     function currentFocusQuery(){
       if(!fokusInput) return '';
@@ -2869,7 +2881,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             try{ explEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
           }
         }
-        const examplesParsed = parseExamples(expressionData.examples || [], null);
+        const examplesParsed = parseExamples(expressionData.examples || [], null, userLang2);
         if(examplesParsed.length){
           examplesData = examplesParsed;
           renderExamples();
@@ -3471,7 +3483,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       if(Array.isArray(data.examples) && data.examples.length){
-        const parsedExamples = parseExamples(data.examples, data.exampleTranslations || null);
+        const parsedExamples = parseExamples(data.examples, data.exampleTranslations || null, userLang2);
         if(parsedExamples.length){
           examplesData = parsedExamples;
           renderExamples();
@@ -11896,7 +11908,7 @@ Regeln:
         return;
       }
       // Normalize into examplesData with per-language translations
-      examplesData = parseExamples(list, null);
+      examplesData = parseExamples(list, null, userLang2);
       renderExamples();
 
       // Quick textarea shows only base examples
