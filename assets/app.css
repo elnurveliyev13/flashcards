@@ -4384,6 +4384,7 @@ input.example-input-trans {
   color: #cbd5e1;
   font-size: 13px;
   line-height: 1;
+  padding: 0;
 }
 .example-icon-btn:hover {
   background: rgba(255,255,255,0.08);

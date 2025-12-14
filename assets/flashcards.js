@@ -1967,7 +1967,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
       toggleBtn.className = 'example-icon-btn example-toggle';
-      toggleBtn.innerHTML = '&#128065;'; // eye icon
+      toggleBtn.innerHTML = '&#9776;'; // simple lines icon for toggle
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
