@@ -1964,9 +1964,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
-      btnRemove.className = 'fc-link-btn';
-      btnRemove.style.cssText = 'font-size: 0.85em; padding: 2px 6px; color: #ef4444;';
-      btnRemove.textContent = '? Remove';
+      btnRemove.className = 'list-remove-btn';
+      const removeLabel = type === 'Example' ? 'Remove example' : 'Remove collocation';
+      btnRemove.setAttribute('aria-label', removeLabel);
+      btnRemove.title = removeLabel;
+      btnRemove.innerHTML = '<span aria-hidden="true">🗑️</span>';
       btnRemove.addEventListener('click', () => {
         if(type === 'Example') {
           examplesData.splice(index, 1);
