@@ -8188,8 +8188,11 @@ function renderComparisonResult(resultEl, comparison){
       var timerEl = document.getElementById('recTimer');
       var hintEl  = document.getElementById('recHint');
       const lockHint = document.getElementById('recLockHint');
-      const lockHintText = lockHint ? lockHint.querySelector('.rec-lock-text') : null;
-      const LOCK_THRESHOLD_PX = 72;
+      const lockLabelTitle = lockHint ? lockHint.querySelector('.rec-lock-label-title') : null;
+      const lockLabelSub = lockHint ? lockHint.querySelector('.rec-lock-label-sub') : null;
+      const lockThumb = lockHint ? lockHint.querySelector('.rec-lock-thumb') : null;
+      const lockProgressBar = lockHint ? lockHint.querySelector('.rec-lock-progress') : null;
+      const LOCK_THRESHOLD_PX = 84;
       var tInt=null, t0=0;
       var autoStopTimer=null;
       if(IS_IOS && !iosRecorderGlobal){
@@ -8210,8 +8213,14 @@ function renderComparisonResult(resultEl, comparison){
       function setHintIdle(){ if(hintEl){ hintEl.textContent = t('press_hold_to_record') || 'Press and hold to record'; } }
       function setHintActive(){ if(hintEl){ hintEl.textContent = t('release_when_finished') || 'Release when you finish'; } }
       function setHintLocked(){ if(hintEl){ hintEl.textContent = t('rec_locked_tap_stop') || 'Recording locked. Tap stop when you finish.'; } }
-      function setLockHintIdle(){ if(lockHintText){ lockHintText.textContent = t('slide_down_to_lock') || 'Slide down to lock'; } }
-      function setLockHintLocked(){ if(lockHintText){ lockHintText.textContent = t('rec_locked_tap_stop') || 'Recording locked. Tap stop when you finish.'; } }
+      function setLockHintIdle(){
+        if(lockLabelTitle){ lockLabelTitle.textContent = t('slide_down_to_lock') || 'Slide down to lock'; }
+        if(lockLabelSub){ lockLabelSub.textContent = t('hold_to_start') || 'Hold to start'; }
+      }
+      function setLockHintLocked(){
+        if(lockLabelTitle){ lockLabelTitle.textContent = t('rec_locked_tap_stop') || 'Recording locked'; }
+        if(lockLabelSub){ lockLabelSub.textContent = t('tap_stop') || 'Tap stop to finish'; }
+      }
       function eventClientY(ev){
         if(!ev) return null;
         if(ev.touches && ev.touches[0]) return ev.touches[0].clientY;
@@ -8237,6 +8246,18 @@ function renderComparisonResult(resultEl, comparison){
         const clamped = Math.max(0, Math.min(1, delta / LOCK_THRESHOLD_PX));
         lockHint.style.setProperty('--lock-progress', clamped.toFixed(3));
         lockHint.classList.toggle('armed', clamped >= 0.7);
+        if(lockLabelSub){
+          if(clamped >= 1){
+            lockLabelSub.textContent = t('release_to_lock') || 'Release to lock';
+          }else if(clamped >= 0.5){
+            lockLabelSub.textContent = t('keep_dragging') || 'Keep dragging...';
+          }else{
+            lockLabelSub.textContent = t('hold_to_start') || 'Hold to start';
+          }
+        }
+        if(lockProgressBar){
+          lockProgressBar.style.opacity = clamped > 0 ? 0.55 : 0.35;
+        }
       }
       function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
       function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent = fmt(Date.now()-t0); }catch(_e){} }, 250); }
@@ -8433,6 +8454,9 @@ function renderComparisonResult(resultEl, comparison){
         if(stopBtn) stopBtn.classList.add('hidden');
         hideLockHint();
         setLockHintIdle();
+        if(lockProgressBar){
+          lockProgressBar.style.opacity = 0.35;
+        }
       }
       function engageLock(){
         if(lockEngaged) return;
