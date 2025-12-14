@@ -8187,6 +8187,9 @@ function renderComparisonResult(resultEl, comparison){
       var isRecording = false;
       var timerEl = document.getElementById('recTimer');
       var hintEl  = document.getElementById('recHint');
+      const lockHint = document.getElementById('recLockHint');
+      const lockHintText = lockHint ? lockHint.querySelector('.rec-lock-text') : null;
+      const LOCK_THRESHOLD_PX = 72;
       var tInt=null, t0=0;
       var autoStopTimer=null;
       if(IS_IOS && !iosRecorderGlobal){
@@ -8206,6 +8209,35 @@ function renderComparisonResult(resultEl, comparison){
       function t(s){ try{ return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[s]) || ''; }catch(_e){ return ''; } }
       function setHintIdle(){ if(hintEl){ hintEl.textContent = t('press_hold_to_record') || 'Press and hold to record'; } }
       function setHintActive(){ if(hintEl){ hintEl.textContent = t('release_when_finished') || 'Release when you finish'; } }
+      function setHintLocked(){ if(hintEl){ hintEl.textContent = t('rec_locked_tap_stop') || 'Recording locked. Tap stop when you finish.'; } }
+      function setLockHintIdle(){ if(lockHintText){ lockHintText.textContent = t('slide_down_to_lock') || 'Slide down to lock'; } }
+      function setLockHintLocked(){ if(lockHintText){ lockHintText.textContent = t('rec_locked_tap_stop') || 'Recording locked. Tap stop when you finish.'; } }
+      function eventClientY(ev){
+        if(!ev) return null;
+        if(ev.touches && ev.touches[0]) return ev.touches[0].clientY;
+        if(ev.changedTouches && ev.changedTouches[0]) return ev.changedTouches[0].clientY;
+        if(typeof ev.clientY === 'number') return ev.clientY;
+        return null;
+      }
+      function showLockHint(){
+        if(!lockHint) return;
+        lockHint.classList.remove('hidden','locked','armed');
+        lockHint.classList.add('lock-visible');
+        lockHint.style.setProperty('--lock-progress','0');
+        setLockHintIdle();
+      }
+      function hideLockHint(){
+        if(!lockHint) return;
+        lockHint.classList.remove('lock-visible','locked','armed');
+        lockHint.style.setProperty('--lock-progress','0');
+        lockHint.classList.add('hidden');
+      }
+      function updateLockProgress(delta){
+        if(!lockHint) return;
+        const clamped = Math.max(0, Math.min(1, delta / LOCK_THRESHOLD_PX));
+        lockHint.style.setProperty('--lock-progress', clamped.toFixed(3));
+        lockHint.classList.toggle('armed', clamped >= 0.7);
+      }
       function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
       function timerStart(){ if(!timerEl) return; timerEl.classList.remove('hidden'); t0=Date.now(); timerEl.textContent='00:00'; if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=setInterval(function(){ try{ timerEl.textContent = fmt(Date.now()-t0); }catch(_e){} }, 250); }
       function timerStop(){ if(tInt) try{clearInterval(tInt);}catch(_e){}; tInt=null; if(timerEl) timerEl.classList.add('hidden'); }
@@ -8330,6 +8362,10 @@ function renderComparisonResult(resultEl, comparison){
             rec = null;
             isRecording = false;
             startPending = false;
+            recBtn.classList.remove("recording");
+            timerStop();
+            setHintIdle();
+            resetLockState();
           };
           try{ rec.start(1000); }catch(_e){ rec.start(); }
           isRecording = true;
@@ -8359,6 +8395,7 @@ function renderComparisonResult(resultEl, comparison){
             recBtn.classList.remove("recording");
             timerStop();
             setHintIdle();
+            resetLockState();
             return;
           }
           try{
@@ -8372,6 +8409,7 @@ function renderComparisonResult(resultEl, comparison){
             recBtn.classList.remove("recording");
             timerStop();
             setHintIdle();
+            resetLockState();
           }
           return;
         }
@@ -8380,17 +8418,50 @@ function renderComparisonResult(resultEl, comparison){
         recBtn.classList.remove("recording");
         timerStop();
         setHintIdle();
+        resetLockState();
         startPending = false;
       }
       let holdActive = false;
       let activePointerToken = null;
       let holdTimeout = null;
+      let lockEngaged = false;
+      let lockStartY = null;
+      function resetLockState(){
+        lockEngaged = false;
+        lockStartY = null;
+        recBtn.classList.remove('rec-locked');
+        if(stopBtn) stopBtn.classList.add('hidden');
+        hideLockHint();
+        setLockHintIdle();
+      }
+      function engageLock(){
+        if(lockEngaged) return;
+        lockEngaged = true;
+        if(holdTimeout){
+          clearTimeout(holdTimeout);
+          holdTimeout = null;
+        }
+        if(stopBtn) stopBtn.classList.remove("hidden");
+        recBtn.classList.add('rec-locked');
+        if(lockHint){
+          lockHint.classList.add('locked','lock-visible');
+        }
+        setHintLocked();
+        setLockHintLocked();
+        const startPromise = startRecording();
+        if(startPromise && typeof startPromise.then === 'function'){
+          startPromise.catch(err=>{ recorderLog('start promise rejected: '+(err?.message||err)); });
+        }
+      }
       function onDown(e){
         if(e.type === 'mousedown' && e.button !== 0) return;
         if(e.pointerType === 'mouse' && e.button !== 0) return;
         if(holdActive) return;
         holdActive = true;
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
+        lockEngaged = false;
+        lockStartY = eventClientY(e);
+        showLockHint();
         try{ e.preventDefault(); }catch(_e){}
         const iosPermissionPending = IS_IOS && iosMicPermissionState !== 'granted';
         if(iosPermissionPending){
@@ -8416,6 +8487,8 @@ function renderComparisonResult(resultEl, comparison){
           window.removeEventListener("mouseup", onceUp);
           window.removeEventListener("touchend", onceUp);
           window.removeEventListener("touchcancel", onceUp);
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("touchmove", onMove);
           holdActive = false;
           activePointerToken = null;
           // Clear the timeout if button released before delay
@@ -8423,9 +8496,28 @@ function renderComparisonResult(resultEl, comparison){
             clearTimeout(holdTimeout);
             holdTimeout = null;
           }
+          if(lockEngaged){
+            return;
+          }
           const stopPromise = stopRecording();
           if(stopPromise && typeof stopPromise.then === 'function'){
-            stopPromise.catch(err=>{ recorderLog('stop promise rejected: '+(err?.message||err)); });
+            stopPromise.catch(err=>{ recorderLog('stop promise rejected: '+(err?.message||err)); }).finally(resetLockState);
+          } else {
+            resetLockState();
+          }
+        }
+        function onMove(ev){
+          if(activePointerToken !== null && typeof activePointerToken === 'number'){
+            if(ev && ev.pointerId !== undefined && ev.pointerId !== activePointerToken){ return; }
+          }
+          const y = eventClientY(ev);
+          if(y === null || lockStartY === null) return;
+          const delta = y - lockStartY;
+          if(delta > 0){
+            updateLockProgress(delta);
+            if(delta >= LOCK_THRESHOLD_PX){
+              engageLock();
+            }
           }
         }
         window.addEventListener("pointerup", onceUp);
@@ -8433,12 +8525,25 @@ function renderComparisonResult(resultEl, comparison){
         window.addEventListener("mouseup", onceUp);
         window.addEventListener("touchend", onceUp);
         window.addEventListener("touchcancel", onceUp);
+        window.addEventListener("pointermove", onMove, {passive:false});
+        window.addEventListener("touchmove", onMove, {passive:false});
       }
       recBtn.addEventListener("pointerdown", onDown);
       recBtn.addEventListener("mousedown", onDown);
       recBtn.addEventListener("touchstart", onDown, {passive:false});
       try{ recBtn.addEventListener("click", function(e){ try{e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();}catch(_e){} }, true); }catch(_e){}
+      if(stopBtn && !stopBtn.dataset.boundQuickStop){
+        stopBtn.dataset.boundQuickStop = "1";
+        stopBtn.addEventListener("click", e=>{
+          try{ e.preventDefault(); }catch(_e){}
+          const stopPromise = stopRecording();
+          if(stopPromise && typeof stopPromise.then === 'function'){
+            stopPromise.catch(err=>{ recorderLog('stop button rejected: '+(err?.message||err)); });
+          }
+        });
+      }
       setHintIdle();
+      setLockHintIdle();
     })();
 
     // ========== STUDY TAB PRONUNCIATION PRACTICE ==========
