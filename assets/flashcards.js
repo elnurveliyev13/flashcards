@@ -2937,42 +2937,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       closeFocusChipMenu();
-      editingCardId = null;
-      if(typeof tabSwitcher === 'function'){
-        tabSwitcher('quickInput');
+      const deckId = MY_DECK_ID;
+      if(!registry[deckId]){
+        registry[deckId] = { id: deckId, title: 'My cards', cards: [] };
       }
-      resetForm();
-      const front = document.getElementById('uFront');
-      if(front){
-        front.value = text;
-        try{ front.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
-      }
-      if(expressionData){
-        const explanation = (expressionData.explanation || '').trim();
-        if(explanation){
-          const explEl = document.getElementById('uExplanation');
-          if(explEl){
-            explEl.value = explanation;
-            try{ explEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
-          }
-        }
-        const examplesParsed = parseExamples(expressionData.examples || [], null, userLang2);
-        if(examplesParsed.length){
-          examplesData = examplesParsed;
-          renderExamples();
-          const examplesEl = document.getElementById('uExamples');
-          if(examplesEl){
-            examplesEl.value = examplesParsed.map(e => e.no).join('\n');
-            try{ examplesEl.dispatchEvent(new Event('input', {bubbles:true})); }catch(_){}
-          }
-        }
+      const id = `draft-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`;
+      const examplesParsed = Array.isArray(expressionData?.examples)
+        ? parseExamples(expressionData.examples || [], null, userLang2).map(e => e.no || '').filter(Boolean)
+        : [];
+      const cardPayload = {
+        id,
+        text,
+        fokus: '',
+        explanation: (expressionData?.explanation || '').trim(),
+        examples: examplesParsed,
+        order: [...DEFAULT_ORDER],
+        tokenDraft: true
+      };
+      registry[deckId].cards.push(cardPayload);
+      saveRegistry();
+      ensureDeckProgress(deckId, registry[deckId].cards);
+      state.active[deckId] = true;
+      saveState();
+      buildQueue();
+      refreshSelect();
+      updateBadge();
+      if(document.getElementById('listModal')?.style.display === 'flex'){
+        buildListRows();
       }
       const statusEl = document.getElementById('status');
       if(statusEl){
         statusEl.textContent = aiStrings.tokenCreateCardStatus || '';
-        setTimeout(()=>{ statusEl.textContent=''; }, 1200);
+        setTimeout(()=>{ statusEl.textContent=''; }, 1400);
       }
-      openEditor();
     }
 
     function attachFocusChipMenuHandlers(btn, tokenText, options = {}){
@@ -9466,6 +9463,14 @@ function renderComparisonResult(resultEl, comparison){
         tr.innerHTML=`<td class="clickable-word">${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell actions-cell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
         const wordCell=tr.firstElementChild;
+        const isDraft = !!r.card.tokenDraft;
+        if(isDraft){
+          tr.classList.add('card-row-draft');
+          const badge=document.createElement('span');
+          badge.className='card-draft-badge';
+          badge.textContent='Draft';
+          wordCell.prepend(badge);
+        }
         wordCell.style.cursor="pointer";
         wordCell.title="Open card";
         wordCell.onclick=()=>{

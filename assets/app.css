@@ -1768,6 +1768,23 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   padding-top:10px;
   padding-bottom:10px;
 }
+#listTable .card-draft-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-right:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(245,158,11,0.15);
+  color:#fbbf24;
+  font-size:0.75rem;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.02em;
+}
+#listTable tr.card-row-draft td{
+  background:rgba(245,158,11,0.08);
+}
 #listTable .actions-cell .iconbtn{
   padding:8px;
   min-width:32px;
