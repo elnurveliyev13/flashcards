@@ -1950,7 +1950,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     };
 
-        function createItemElement(type, index, data) {
+    function createItemElement(type, index, data) {
       const container = document.createElement('div');
       container.className = 'example-card';
       container.dataset.index = index;
@@ -1966,16 +1966,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
-      toggleBtn.className = 'fc-link-btn example-toggle';
-      toggleBtn.textContent = t('show_translation') || 'Show translation';
+      toggleBtn.className = 'example-icon-btn example-toggle';
+      toggleBtn.innerHTML = '&#128065;'; // eye icon
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
-      btnRemove.className = 'fc-link-btn example-remove';
+      btnRemove.className = 'example-icon-btn example-remove';
       const removeLabel = type === 'Example' ? 'Remove example' : 'Remove collocation';
       btnRemove.setAttribute('aria-label', removeLabel);
       btnRemove.title = removeLabel;
-      btnRemove.textContent = '× Remove';
+      btnRemove.innerHTML = '&#128465;'; // trash
 
       actions.appendChild(toggleBtn);
       actions.appendChild(btnRemove);
@@ -2015,16 +2015,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       body.appendChild(transWrap);
       container.appendChild(body);
 
-      const hasTranslation = (type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '')).trim() !== '';
-      if(hasTranslation){
-        transWrap.classList.add('is-open');
-        toggleBtn.textContent = t('hide_translation') || 'Hide translation';
-      }
+      // default: translation hidden
+      transWrap.classList.remove('is-open');
 
       toggleBtn.addEventListener('click', e => {
         e.preventDefault();
         const isOpen = transWrap.classList.toggle('is-open');
-        toggleBtn.textContent = isOpen ? (t('hide_translation') || 'Hide translation') : (t('show_translation') || 'Show translation');
+        toggleBtn.classList.toggle('is-open', isOpen);
       });
 
       btnRemove.addEventListener('click', () => {
@@ -2470,6 +2467,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function scheduleFocusSuggest(){
       if(!fokusInput || !focusSuggestList || focusSuggestCollapsed){
+        return;
+      }
+      if(document.activeElement !== fokusInput){
         return;
       }
       const wordCount = countWords(currentFocusQuery());
@@ -7996,7 +7996,7 @@ function renderComparisonResult(resultEl, comparison){
       const lockLabelSub = lockHint ? lockHint.querySelector('.rec-lock-label-sub') : null;
       const lockThumb = lockHint ? lockHint.querySelector('.rec-lock-thumb') : null;
       const lockProgressBar = lockHint ? lockHint.querySelector('.rec-lock-progress') : null;
-      const LOCK_THRESHOLD_PX = 84;
+      const LOCK_THRESHOLD_PX = 60;
       var tInt=null, t0=0;
       var autoStopTimer=null;
       if(IS_IOS && !iosRecorderGlobal){
@@ -8038,12 +8038,18 @@ function renderComparisonResult(resultEl, comparison){
         lockHint.classList.add('lock-visible');
         lockHint.style.setProperty('--lock-progress','0');
         setLockHintIdle();
+        if(lockThumb){
+          lockThumb.style.transform = 'translate(-50%, 0px)';
+        }
       }
       function hideLockHint(){
         if(!lockHint) return;
         lockHint.classList.remove('lock-visible','locked','armed');
         lockHint.style.setProperty('--lock-progress','0');
         lockHint.classList.add('hidden');
+        if(lockThumb){
+          lockThumb.style.transform = 'translate(-50%, 0px)';
+        }
       }
       function updateLockProgress(delta){
         if(!lockHint) return;
@@ -8061,6 +8067,9 @@ function renderComparisonResult(resultEl, comparison){
         }
         if(lockProgressBar){
           lockProgressBar.style.opacity = clamped > 0 ? 0.55 : 0.35;
+        }
+        if(lockThumb){
+          lockThumb.style.transform = 'translate(-50%, '+Math.min(72, Math.max(0, clamped*72)).toFixed(1)+'px)';
         }
       }
       function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
@@ -12496,4 +12505,3 @@ Rules:
 
   }
 export { flashcardsInit };
-
