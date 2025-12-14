@@ -2144,6 +2144,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const fokusInput = $("#uFokus");
     let fokusSuggest = $("#fokusSuggest");
     let focusSuggestList = null;
+    let focusSuggestToggle = null;
+    let focusSuggestPanel = null;
+    let focusSuggestCollapsed = false;
+    const focusSuggestToggleLabel = frontSuggestToggleLabel;
+    const setFocusSuggestToggleState = (collapsed) => {
+      if(!focusSuggestToggle){
+        return;
+      }
+      focusSuggestToggle.classList.toggle('collapsed', collapsed);
+      focusSuggestToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      const icon = collapsed ? '▼' : '▲';
+      focusSuggestToggle.innerHTML = `
+        <span aria-hidden="true" class="front-suggest-toggle-icon">${icon}</span>
+        <span class="front-suggest-toggle-text">${focusSuggestToggleLabel}</span>
+      `;
+    };
     // Create suggest container if missing (template cache fallback).
     if(!fokusSuggest && fokusInput && fokusInput.parentElement){
       const div = document.createElement('div');
@@ -2153,12 +2169,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       fokusSuggest = div;
     }
     if(fokusSuggest){
-      focusSuggestList = fokusSuggest.querySelector('.focus-suggest-list');
-      if(!focusSuggestList){
-        focusSuggestList = document.createElement('div');
-        focusSuggestList.className = 'focus-suggest-list';
-        fokusSuggest.appendChild(focusSuggestList);
-      }
+      fokusSuggest.classList.add('front-suggest');
+      fokusSuggest.classList.add('front-suggest-has-toggle');
+      focusSuggestToggle = document.createElement('button');
+      focusSuggestToggle.type = 'button';
+      focusSuggestToggle.className = 'front-suggest-toggle';
+      focusSuggestToggle.title = focusSuggestToggleLabel;
+      focusSuggestToggle.setAttribute('aria-label', focusSuggestToggleLabel);
+      focusSuggestToggle.addEventListener('click', e=>{
+        e.preventDefault();
+        e.stopPropagation();
+        focusSuggestCollapsed = true;
+        setFocusSuggestToggleState(true);
+        hideFocusSuggest();
+      });
+      focusSuggestList = document.createElement('div');
+      focusSuggestList.className = 'front-suggest-list';
+      focusSuggestPanel = document.createElement('div');
+      focusSuggestPanel.className = 'front-suggest-panel';
+      focusSuggestPanel.appendChild(focusSuggestToggle);
+      focusSuggestPanel.appendChild(focusSuggestList);
+      fokusSuggest.appendChild(focusSuggestPanel);
+      setFocusSuggestToggleState(false);
     }
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
@@ -2287,13 +2319,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     if(fokusInput){
       fokusInput.addEventListener('input', ()=>{
+        if(focusSuggestCollapsed){
+          focusSuggestCollapsed = false;
+          setFocusSuggestToggleState(false);
+        }
         scheduleFocusSuggest();
       });
       fokusInput.addEventListener('focus', ()=>{
+        if(focusSuggestCollapsed){
+          focusSuggestCollapsed = false;
+          setFocusSuggestToggleState(false);
+        }
         scheduleFocusSuggest();
       });
       fokusInput.addEventListener('blur', ()=>{
         setTimeout(hideFocusSuggest, 200);
+      });
+      fokusInput.addEventListener('click', scheduleFocusSuggest);
+      fokusInput.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape'){
+          hideFocusSuggest();
+        }
       });
     }
     if(translationInputLocal){
@@ -2332,6 +2378,32 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return value.length > 120 ? value.slice(-120) : value;
     }
 
+    function formatDictLabel(item){
+      const langs = (item.langs || []).map(l=>{
+        const v = (l||'').toLowerCase();
+        if(v==='ordbokene' || v==='ordbank') return '';
+        if(v==='bm' || v==='bokmål' || v==='bokmal' || v==='bokmaal') return 'bm';
+        if(v==='nn' || v==='nynorsk') return 'nn';
+        if(v) return v.toUpperCase();
+        return '';
+      }).filter(Boolean);
+      const langLabel = langs.length ? langs.join('/') : '';
+      const dictKey = ((item.dict || item.source || '')).toLowerCase();
+      let source = '';
+      if(dictKey === 'ordbokene'){
+        source = 'ordbøkene';
+      } else if(dictKey === 'ordbank'){
+        source = 'ordbank';
+      } else if(dictKey){
+        source = dictKey;
+      } else if(item.dict){
+        source = item.dict;
+      } else if(item.source){
+        source = item.source;
+      }
+      return { langLabel, source };
+    }
+
     function hideFrontSuggest(){
       if(!frontSuggest){
         return;
@@ -2353,31 +2425,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const container = frontSuggestList || frontSuggest;
       container.innerHTML = '';
-      const formatDictLabel = (item)=>{
-        const langs = (item.langs || []).map(l=>{
-          const v = (l||'').toLowerCase();
-          if(v==='ordbokene' || v==='ordbank') return '';
-          if(v==='bm' || v==='bokmål' || v==='bokmal' || v==='bokmaal') return 'bm';
-          if(v==='nn' || v==='nynorsk') return 'nn';
-          if(v) return v.toUpperCase();
-          return '';
-        }).filter(Boolean);
-        const langLabel = langs.length ? langs.join('/') : '';
-        const dictKey = ((item.dict || item.source || '')).toLowerCase();
-        let source = '';
-        if(dictKey === 'ordbokene'){
-          source = 'ordbøkene';
-        } else if(dictKey === 'ordbank'){
-          source = 'ordbank';
-        } else if(dictKey){
-          source = dictKey;
-        } else if(item.dict){
-          source = item.dict;
-        } else if(item.source){
-          source = item.source;
-        }
-        return { langLabel, source };
-      };
       if(!Array.isArray(list) || !list.length){
         frontSuggest.classList.remove('open');
         return;
@@ -2516,7 +2563,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     async function fetchFocusSuggest(query){
-      if(!fokusSuggest || !focusSuggestList){
+      if(!fokusSuggest || !focusSuggestList || focusSuggestCollapsed){
         return;
       }
       const seq = ++focusSuggestRequestSeq;
@@ -2549,31 +2596,57 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
+    function applyFocusSuggestion(item, query){
+      const lemma = (item && item.lemma) ? item.lemma : (query || '');
+      if(!lemma.trim()){
+        return;
+      }
+      if(fokusInput){
+        fokusInput.value = lemma;
+        try{
+          fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
+          fokusInput.focus();
+        }catch(_){}
+      }
+      hideFocusSuggest();
+    }
+
     function renderFocusSuggest(list, query){
       if(!fokusSuggest || !focusSuggestList){
         return;
       }
       focusSuggestList.innerHTML = '';
-      if(!list.length){
-        hideFocusSuggest();
+      if(!Array.isArray(list) || !list.length){
+        fokusSuggest.classList.remove('open');
         return;
       }
       list.forEach(item => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'focus-suggest-item';
-        button.textContent = item || query;
-        button.addEventListener('click', () => {
-          if(fokusInput){
-            fokusInput.value = button.textContent;
-            fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
-            fokusInput.focus();
-          }
-          hideFocusSuggest();
+        const btn = document.createElement('div');
+        btn.className = 'fokus-suggest-item';
+        const lemma = document.createElement('span');
+        lemma.className = 'lemma';
+        lemma.textContent = item.lemma || '';
+        const dict = document.createElement('span');
+        dict.className = 'dict';
+        const dictInfo = formatDictLabel(item);
+        const label = dictInfo.source || '';
+        dict.textContent = dictInfo.langLabel ? `${label} (${dictInfo.langLabel})` : label;
+        if(dictInfo.langLabel){
+          dict.title = dictInfo.langLabel;
+        } else {
+          dict.removeAttribute('title');
+        }
+        btn.appendChild(lemma);
+        btn.appendChild(dict);
+        btn.style.cursor = 'default';
+        btn.addEventListener('click', () => {
+          applyFocusSuggestion(item, query);
         });
-        focusSuggestList.appendChild(button);
+        focusSuggestList.appendChild(btn);
       });
+      focusSuggestCollapsed = false;
       fokusSuggest.classList.add('open');
+      setFocusSuggestToggleState(false);
     }
 
     function hideFocusSuggest(){
@@ -2590,7 +2663,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function scheduleFocusSuggest(){
-      if(!fokusInput || !fokusSuggest){
+      if(!fokusInput || !focusSuggestList || focusSuggestCollapsed){
         return;
       }
       const wordCount = countWords(currentFocusQuery());
@@ -2981,7 +3054,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             } else {
               triggerOrdbankHelper(token, token.index, tokens);
             }
-            triggerFokusSuggestForInput();
+            scheduleFocusSuggest();
           });
           if(token.index === focusHelperState.activeIndex){
             btn.classList.add('active');
@@ -3120,100 +3193,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         renderSentenceAnalysis([]);
         renderOrdbokeneBlock(null);
       }
-    }
-
-    // --- Fokus autocomplete (ordbokene) ---
-    let suggestTimer = null;
-    const suggestCache = {};
-
-    function triggerFokusSuggestForInput(){
-      if(!fokusInput) return;
-      const q = (fokusInput.value || '').trim();
-      if(suggestTimer){
-        clearTimeout(suggestTimer);
-      }
-      if(q.length < 2){
-        hideFokusSuggest();
-        return;
-      }
-      suggestTimer = setTimeout(()=>fetchFokusSuggest(q), 200);
-    }
-
-    function hideFokusSuggest(){
-      if(fokusSuggest){
-        fokusSuggest.innerHTML = '';
-        fokusSuggest.classList.remove('open');
-      }
-    }
-
-    function renderFokusSuggest(list){
-      if(!fokusSuggest){
-        return;
-      }
-      fokusSuggest.innerHTML = '';
-      if(!Array.isArray(list) || !list.length){
-        fokusSuggest.classList.remove('open');
-        return;
-      }
-      list.forEach(item=>{
-        const btn = document.createElement('div');
-        btn.className = 'fokus-suggest-item';
-        const lemma = document.createElement('span');
-        lemma.className = 'lemma';
-        lemma.textContent = item.lemma || '';
-        const dict = document.createElement('span');
-        dict.className = 'dict';
-        dict.textContent = item.dict || '';
-        btn.appendChild(lemma);
-        btn.appendChild(dict);
-        btn.addEventListener('mousedown', (e)=>{
-          e.preventDefault();
-          const val = item.lemma || '';
-          if(fokusInput){
-            fokusInput.value = val;
-            try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
-          }
-          hideFokusSuggest();
-          // Trigger ordbank helper immediately with the selected lemma.
-          const dummyToken = {text: val, isWord: true, index: 0};
-          triggerOrdbankHelper(dummyToken, 0, [dummyToken]);
-        });
-        fokusSuggest.appendChild(btn);
-      });
-      fokusSuggest.classList.add('open');
-    }
-
-    async function fetchFokusSuggest(query){
-      const key = `${userLang2}:${query}`;
-      if(suggestCache[key]){
-        renderFokusSuggest(suggestCache[key]);
-        return;
-      }
-      try{
-        const resp = await api('ordbokene_suggest', {}, 'POST', {query, lang: userLang2});
-        if(resp && resp.ok && Array.isArray(resp.data)){
-          suggestCache[key] = resp.data;
-          renderFokusSuggest(resp.data);
-        }else{
-          renderFokusSuggest([]);
-        }
-      }catch(_e){
-        renderFokusSuggest([]);
-      }
-    }
-
-    if(fokusInput){
-      fokusInput.addEventListener('input', triggerFokusSuggestForInput);
-      fokusInput.addEventListener('focus', triggerFokusSuggestForInput);
-      fokusInput.addEventListener('blur', ()=>{
-        setTimeout(hideFokusSuggest, 120);
-      });
-      fokusInput.addEventListener('keydown', (e)=>{
-        if(e.key === 'Escape'){
-          hideFokusSuggest();
-        }
-      });
-      fokusInput.addEventListener('click', triggerFokusSuggestForInput);
     }
 
     function renderCompoundParts(parts, fallbackText){
