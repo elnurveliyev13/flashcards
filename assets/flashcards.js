@@ -1986,10 +1986,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const body = document.createElement('div');
       body.className = 'example-body';
 
-      const inputNo = document.createElement('input');
-      inputNo.type = 'text';
+      const inputNo = document.createElement('textarea');
+      inputNo.rows = 2;
       inputNo.placeholder = 'Norwegian text...';
-      inputNo.className = 'example-input-base';
+      inputNo.className = 'example-input-base example-textarea autogrow';
       inputNo.value = data.no || '';
       inputNo.addEventListener('input', (e) => {
         if(type === 'Example') examplesData[index].no = e.target.value;
@@ -1999,10 +1999,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const transWrap = document.createElement('div');
       transWrap.className = 'example-trans-wrap';
-      const inputTrans = document.createElement('input');
-      inputTrans.type = 'text';
+      const inputTrans = document.createElement('textarea');
+      inputTrans.rows = 2;
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
-      inputTrans.className = 'example-input-trans';
+      inputTrans.className = 'example-input-trans example-textarea autogrow';
       inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
       inputTrans.addEventListener('input', (e) => {
         if(type === 'Example') {
@@ -7996,7 +7996,7 @@ function renderComparisonResult(resultEl, comparison){
       const lockLabelSub = lockHint ? lockHint.querySelector('.rec-lock-label-sub') : null;
       const lockThumb = lockHint ? lockHint.querySelector('.rec-lock-thumb') : null;
       const lockProgressBar = lockHint ? lockHint.querySelector('.rec-lock-progress') : null;
-      const LOCK_THRESHOLD_PX = 60;
+      const LOCK_THRESHOLD_PX = 52;
       var tInt=null, t0=0;
       var autoStopTimer=null;
       if(IS_IOS && !iosRecorderGlobal){
@@ -8069,7 +8069,7 @@ function renderComparisonResult(resultEl, comparison){
           lockProgressBar.style.opacity = clamped > 0 ? 0.55 : 0.35;
         }
         if(lockThumb){
-          lockThumb.style.transform = 'translate(-50%, '+Math.min(72, Math.max(0, clamped*72)).toFixed(1)+'px)';
+          lockThumb.style.transform = 'translate(-50%, '+Math.min(62, Math.max(0, clamped*62)).toFixed(1)+'px)';
         }
       }
       function fmt(t){ t=Math.max(0,Math.floor(t/1000)); var m=('0'+Math.floor(t/60)).slice(-2), s=('0'+(t%60)).slice(-2); return m+':'+s; }
