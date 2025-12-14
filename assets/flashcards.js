@@ -1996,7 +1996,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const inputTrans = document.createElement('input');
       inputTrans.type = 'text';
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
-      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #94a3b8; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
+      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; color: #ffffff; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
       inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
       inputTrans.addEventListener('input', (e) => {
         if(type === 'Example') {
@@ -11186,6 +11186,8 @@ function renderComparisonResult(resultEl, comparison){
           if(typeof updateTranslationModeLabels === 'function'){
             updateTranslationModeLabels();
           }
+          // Re-render examples list to reflect translations for the new interface language
+          try{ renderExamples(); }catch(_e){}
           const langNames = INTERFACE_LANGUAGE_CODES.reduce((map, code) => {
             map[code] = LANGUAGE_DISPLAY_NAMES[code] || code;
             return map;
