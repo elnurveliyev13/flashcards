@@ -4332,11 +4332,61 @@ input.example-input-trans:focus {
   border:1px solid #4b5563 !important;
   box-shadow:none !important;
 }
+.example-input-base,
+.example-input-trans,
+input.example-input-base,
+input.example-input-trans {
+  font-family:var(--font-sans) !important;
+}
 .example-input-trans::-webkit-input-placeholder,
 .example-input-trans:-ms-input-placeholder,
 .example-input-trans::placeholder {
   color:#94a3b8 !important;
   opacity:1;
+}
+
+/* Compact example list */
+.example-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.example-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.example-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.example-toggle {
+  font-size: 0.85rem;
+  color: var(--link);
+}
+.example-remove {
+  color: #ef4444;
+  font-size: 0.85rem;
+}
+.example-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.example-trans-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+}
+.example-trans-wrap.is-open {
+  display: flex;
 }
 .list-remove-btn {
   width: 36px;

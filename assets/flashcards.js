@@ -1,4 +1,4 @@
-/* global M */
+﻿/* global M */
 import { log as baseDebugLog } from './modules/debug.js';
 import { idbPut, idbGet, urlFor } from './modules/storage.js';
 import { createIOSRecorder } from './modules/recorder.js';
@@ -1950,25 +1950,83 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     };
 
-    function createItemElement(type, index, data) {
+        function createItemElement(type, index, data) {
       const container = document.createElement('div');
-      container.style.cssText = 'display: flex; flex-direction: column; gap: 6px; padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px;';
+      container.className = 'example-card';
       container.dataset.index = index;
 
       const topRow = document.createElement('div');
-      topRow.style.cssText = 'display: flex; justify-content: space-between; align-items: center;';
+      topRow.className = 'example-head';
 
       const label = document.createElement('span');
-      label.style.cssText = 'font-size: 0.9em; opacity: 0.7;';
       label.textContent = `${type} #${index + 1}`;
+
+      const actions = document.createElement('div');
+      actions.className = 'example-actions';
+
+      const toggleBtn = document.createElement('button');
+      toggleBtn.type = 'button';
+      toggleBtn.className = 'fc-link-btn example-toggle';
+      toggleBtn.textContent = t('show_translation') || 'Show translation';
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
-      btnRemove.className = 'list-remove-btn';
+      btnRemove.className = 'fc-link-btn example-remove';
       const removeLabel = type === 'Example' ? 'Remove example' : 'Remove collocation';
       btnRemove.setAttribute('aria-label', removeLabel);
       btnRemove.title = removeLabel;
-      btnRemove.innerHTML = '<span aria-hidden="true">🗑️</span>';
+      btnRemove.textContent = '× Remove';
+
+      actions.appendChild(toggleBtn);
+      actions.appendChild(btnRemove);
+      topRow.appendChild(label);
+      topRow.appendChild(actions);
+      container.appendChild(topRow);
+
+      const body = document.createElement('div');
+      body.className = 'example-body';
+
+      const inputNo = document.createElement('input');
+      inputNo.type = 'text';
+      inputNo.placeholder = 'Norwegian text...';
+      inputNo.className = 'example-input-base';
+      inputNo.value = data.no || '';
+      inputNo.addEventListener('input', (e) => {
+        if(type === 'Example') examplesData[index].no = e.target.value;
+        else collocationsData[index].no = e.target.value;
+      });
+      body.appendChild(inputNo);
+
+      const transWrap = document.createElement('div');
+      transWrap.className = 'example-trans-wrap';
+      const inputTrans = document.createElement('input');
+      inputTrans.type = 'text';
+      inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
+      inputTrans.className = 'example-input-trans';
+      inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
+      inputTrans.addEventListener('input', (e) => {
+        if(type === 'Example') {
+          setExampleTranslation(examplesData[index], userLang2, e.target.value);
+        } else {
+          collocationsData[index].trans = e.target.value;
+        }
+      });
+      transWrap.appendChild(inputTrans);
+      body.appendChild(transWrap);
+      container.appendChild(body);
+
+      const hasTranslation = (type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '')).trim() !== '';
+      if(hasTranslation){
+        transWrap.classList.add('is-open');
+        toggleBtn.textContent = t('hide_translation') || 'Hide translation';
+      }
+
+      toggleBtn.addEventListener('click', e => {
+        e.preventDefault();
+        const isOpen = transWrap.classList.toggle('is-open');
+        toggleBtn.textContent = isOpen ? (t('hide_translation') || 'Hide translation') : (t('show_translation') || 'Show translation');
+      });
+
       btnRemove.addEventListener('click', () => {
         if(type === 'Example') {
           examplesData.splice(index, 1);
@@ -1978,42 +2036,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           renderCollocations();
         }
       });
-
-      topRow.appendChild(label);
-      topRow.appendChild(btnRemove);
-      container.appendChild(topRow);
-
-      const inputNo = document.createElement('input');
-      inputNo.type = 'text';
-      inputNo.placeholder = 'Norwegian text...';
-      inputNo.style.cssText = 'width: 100%; padding: 8px; background: #0b1220; font-weight: 500; border: 1px solid #374151; border-radius: 6px;';
-      inputNo.classList.add('example-input-base');
-      inputNo.value = data.no || '';
-      inputNo.addEventListener('input', (e) => {
-        if(type === 'Example') examplesData[index].no = e.target.value;
-        else collocationsData[index].no = e.target.value;
-      });
-      container.appendChild(inputNo);
-
-      const transRow = document.createElement('div');
-      transRow.style.cssText = 'display: flex; align-items: center; gap: 8px;';
-
-      const inputTrans = document.createElement('input');
-      inputTrans.type = 'text';
-      inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
-      inputTrans.style.cssText = 'flex: 1; padding: 8px; background: #0b1220; font-family: Georgia, "Times New Roman", serif; font-style: italic; border: 1px solid #374151; border-radius: 6px;';
-      inputTrans.classList.add('example-input-trans');
-      inputTrans.value = type === 'Example' ? getExampleTranslation(data, userLang2) : (data.trans || '');
-      inputTrans.addEventListener('input', (e) => {
-        if(type === 'Example') {
-          setExampleTranslation(examplesData[index], userLang2, e.target.value);
-        } else {
-          collocationsData[index].trans = e.target.value;
-        }
-      });
-
-      transRow.appendChild(inputTrans);
-      container.appendChild(transRow);
 
       return container;
     }
@@ -2101,55 +2123,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     const frontInput = $("#uFront");
-    const frontInputWrap = frontInput ? frontInput.closest('.front-input-wrap') : null;
-    const frontSuggest = frontInputWrap ? frontInputWrap.querySelector('[data-front-suggest]') : null;
-    let frontSuggestList = null;
-    let frontSuggestToggle = null;
-    let frontSuggestPanel = null;
-    let frontSuggestCollapsed = false;
-    const frontSuggestToggleLabel = getModString('front_suggest_collapse') || 'Hide suggestions';
-    const setFrontSuggestToggleState = (collapsed) => {
-      if(!frontSuggestToggle){
-        return;
-      }
-      frontSuggestToggle.classList.toggle('collapsed', collapsed);
-      frontSuggestToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      const icon = collapsed ? '▼' : '▲';
-      frontSuggestToggle.innerHTML = `
-        <span aria-hidden="true" class="front-suggest-toggle-icon">${icon}</span>
-        <span class="front-suggest-toggle-text">${frontSuggestToggleLabel}</span>
-      `;
-    };
-    if(frontSuggest){
-      frontSuggest.classList.add('front-suggest-has-toggle');
-      frontSuggestToggle = document.createElement('button');
-      frontSuggestToggle.type = 'button';
-      frontSuggestToggle.className = 'front-suggest-toggle';
-      frontSuggestToggle.title = frontSuggestToggleLabel;
-      frontSuggestToggle.setAttribute('aria-label', frontSuggestToggleLabel);
-      frontSuggestToggle.addEventListener('click', e=>{
-        e.preventDefault();
-        e.stopPropagation();
-        frontSuggestCollapsed = true;
-        setFrontSuggestToggleState(true);
-        hideFrontSuggest();
-      });
-      frontSuggestList = document.createElement('div');
-      frontSuggestList.className = 'front-suggest-list';
-      frontSuggestPanel = document.createElement('div');
-      frontSuggestPanel.className = 'front-suggest-panel';
-      frontSuggestPanel.appendChild(frontSuggestToggle);
-      frontSuggestPanel.appendChild(frontSuggestList);
-      frontSuggest.appendChild(frontSuggestPanel);
-      setFrontSuggestToggleState(false);
-    }
+    const focusSuggestToggleLabel = getModString('front_suggest_collapse') || 'Hide suggestions';
     const fokusInput = $("#uFokus");
     let fokusSuggest = $("#fokusSuggest");
     let focusSuggestList = null;
     let focusSuggestToggle = null;
     let focusSuggestPanel = null;
     let focusSuggestCollapsed = false;
-    const focusSuggestToggleLabel = frontSuggestToggleLabel;
     const setFocusSuggestToggleState = (collapsed) => {
       if(!focusSuggestToggle){
         return;
@@ -2266,15 +2246,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       runTranslationHelper({...options, direction: dir});
     }
 
-    // Front-side autocomplete (ordbokene + local ordbank)
-    const FRONT_SUGGEST_DEBOUNCE = 170;
-    const frontSuggestCache = {};
-    let frontSuggestTimer = null;
-    let frontSuggestRequestSeq = 0;
-    let frontSuggestActive = '';
-    let frontSuggestRendered = '';
-    let frontSuggestAbort = null;
-    let frontSuggestScheduledQuery = '';
     // Translation toggle removed - translation is always visible
     updateTranslationLangUI();
     translationButtons.forEach(btn=>{
@@ -2285,32 +2256,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     });
     if(frontInput){
-    frontInput.addEventListener('input', ()=>{
-      if(frontSuggestCollapsed){
-        frontSuggestCollapsed = false;
-        setFrontSuggestToggleState(false);
-      }
-      scheduleFrontSuggest();
-      // Auto-capitalize first letter
-      const currentValue = frontInput.value;
-      const capitalized = capitalizeFirstLetter(currentValue);
-      if (capitalized !== currentValue) {
-        frontInput.value = capitalized;
-      }
-    });
+      frontInput.addEventListener('input', ()=>{
+        // Auto-capitalize first letter
+        const currentValue = frontInput.value;
+        const capitalized = capitalizeFirstLetter(currentValue);
+        if (capitalized !== currentValue) {
+          frontInput.value = capitalized;
+        }
+      });
       frontInput.addEventListener('focus', ()=>{
         if(translationDirection !== 'no-user' && !frontInput.value.trim()){
           applyTranslationDirection('no-user', {triggerTranslation:false});
-        }
-        scheduleFrontSuggest();
-      });
-      frontInput.addEventListener('click', scheduleFrontSuggest);
-      frontInput.addEventListener('blur', ()=>{
-        setTimeout(hideFrontSuggest, 120);
-      });
-      frontInput.addEventListener('keydown', e=>{
-        if(e.key === 'Escape'){
-          hideFrontSuggest();
         }
       });
       frontInput.addEventListener('keyup', e=>{
@@ -2372,14 +2328,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     setFocusTranslation('');
     applyTranslationDirection('no-user', {triggerTranslation:false});
 
-    function currentFrontQuery(){
-      if(!frontInput){
-        return '';
-      }
-      const value = (frontInput.value || '').trim();
-      return value.length > 120 ? value.slice(-120) : value;
-    }
-
     function formatDictLabel(item){
       const langs = (item.langs || []).map(l=>{
         const v = (l||'').toLowerCase();
@@ -2404,150 +2352,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         source = item.source;
       }
       return { langLabel, source };
-    }
-
-    function hideFrontSuggest(){
-      if(!frontSuggest){
-        return;
-      }
-      if(frontSuggestList){
-        frontSuggestList.innerHTML = '';
-      } else {
-        frontSuggest.innerHTML = '';
-      }
-      frontSuggest.classList.remove('open');
-    }
-
-    function renderFrontSuggest(list, query){
-      if(!frontSuggest){
-        return;
-      }
-      if(frontSuggestCollapsed){
-        return;
-      }
-      const container = frontSuggestList || frontSuggest;
-      container.innerHTML = '';
-      if(!Array.isArray(list) || !list.length){
-        frontSuggest.classList.remove('open');
-        return;
-      }
-      list.forEach(item=>{
-        const btn = document.createElement('div');
-        btn.className = 'fokus-suggest-item';
-        const lemma = document.createElement('span');
-        lemma.className = 'lemma';
-        lemma.textContent = item.lemma || '';
-        const dict = document.createElement('span');
-        dict.className = 'dict';
-        const dictInfo = formatDictLabel(item);
-        const label = dictInfo.source || '';
-        dict.textContent = dictInfo.langLabel ? `${label} (${dictInfo.langLabel})` : label;
-        if(dictInfo.langLabel){
-          dict.title = dictInfo.langLabel;
-        }else{
-          dict.removeAttribute('title');
-        }
-        btn.appendChild(lemma);
-        btn.appendChild(dict);
-        btn.style.cursor = 'default';
-        container.appendChild(btn);
-      });
-      frontSuggest.classList.add('open');
-      setFrontSuggestToggleState(false);
-    }
-
-    function applyFrontSuggestion(value, query){
-      if(!frontInput || !value){
-        return;
-      }
-      let next = value;
-      if(query){
-        const current = frontInput.value || '';
-        const q = query.trim();
-        if(q){
-          const idx = current.toLowerCase().lastIndexOf(q.toLowerCase());
-          if(idx >= 0){
-            next = current.slice(0, idx) + value + current.slice(idx + q.length);
-          }
-        }
-      }
-      frontInput.value = next;
-      try{
-        frontInput.dispatchEvent(new Event('input', {bubbles:true}));
-        frontInput.dispatchEvent(new Event('autogrow:refresh'));
-        frontInput.focus();
-      }catch(_e){}
-    }
-
-    async function fetchFrontSuggest(query){
-      if(!frontSuggest){
-        return;
-      }
-      const seq = ++frontSuggestRequestSeq;
-      frontSuggestActive = query;
-      if(frontSuggestAbort){
-        try{ frontSuggestAbort.abort(); }catch(_e){}
-      }
-      frontSuggestAbort = new AbortController();
-      const key = query.toLowerCase();
-      if(frontSuggestCache[key]){
-        if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
-          frontSuggestRendered = query;
-          renderFrontSuggest(frontSuggestCache[key], query);
-        }
-        return;
-      }
-      try{
-        const resp = await api('front_suggest', {}, 'POST', {query}, {signal: frontSuggestAbort.signal});
-        const list = Array.isArray(resp) ? resp : [];
-        frontSuggestCache[key] = list;
-        if(seq === frontSuggestRequestSeq && frontSuggestActive === query){
-          frontSuggestRendered = query;
-          renderFrontSuggest(list, query);
-        }
-      }catch(err){
-        if(err?.name !== 'AbortError'){
-          console.error('[Flashcards] front suggest failed', err);
-        }
-        hideFrontSuggest();
-      }
-    }
-
-    function scheduleFrontSuggest(){
-      if(frontSuggestCollapsed){
-        return;
-      }
-      if(!frontInput){
-        return;
-      }
-      const wordCount = countWords(frontInput.value || '');
-      if(wordCount > 4){
-        if(frontSuggestAbort){
-          try{ frontSuggestAbort.abort(); }catch(_e){}
-          frontSuggestAbort = null;
-        }
-        hideFrontSuggest();
-        frontSuggestScheduledQuery = '';
-        return;
-      }
-      const q = currentFrontQuery();
-      if(frontSuggestTimer){
-        clearTimeout(frontSuggestTimer);
-      }
-      if(!q || q.length < 2){
-        hideFrontSuggest();
-        frontSuggestScheduledQuery = '';
-        return;
-      }
-      if(q === frontSuggestScheduledQuery && frontSuggestTimer){
-        return;
-      }
-      frontSuggestScheduledQuery = q;
-      // gentle debounce to wait for pauses and avoid repeated requests
-      frontSuggestTimer = setTimeout(()=>{
-        frontSuggestTimer = null;
-        fetchFrontSuggest(q);
-      }, FRONT_SUGGEST_DEBOUNCE);
     }
 
     const FOCUS_SUGGEST_DEBOUNCE = 170;
@@ -12692,3 +12496,4 @@ Rules:
 
   }
 export { flashcardsInit };
+
