@@ -322,14 +322,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const gesturePrefsToggle = document.getElementById('gesturePrefsToggle');
       const gestureSubmenuBack = document.getElementById('gestureSubmenuBack');
       const prefsClose = document.getElementById('prefsClose');
-      const prefsOriginLabel = document.getElementById('prefsOriginLabel');
       const prefsPageContent = document.getElementById('prefsPageContent');
       const GESTURE_SUBMENU_CLASS = 'gesture-open';
-      const tabLabels = {
-        quickInput: document.getElementById('t_tab_quickinput'),
-        study: document.getElementById('t_tab_study'),
-        dashboard: document.getElementById('t_tab_dashboard')
-      };
       let prefsOpen = false;
       let prefsEntryState = null;
 
@@ -366,14 +360,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       };
 
-      const updateOriginLabel = tabName => {
-        if (!prefsOriginLabel) {
-          return;
-        }
-        const source = tabLabels[tabName];
-        const label = (source && source.textContent && source.textContent.trim()) || '';
-        prefsOriginLabel.textContent = label || tabName || '';
-      };
 
       const lockBackgroundScroll = () => {
         if (document.body.classList.contains('pref-locked')) {
@@ -411,7 +397,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             focusEl: document.activeElement instanceof HTMLElement && root.contains(document.activeElement) ? document.activeElement : null
           };
           attachPrefsPanel();
-          updateOriginLabel(activeTab);
           lockBackgroundScroll();
           if (prefsPageContent) {
             prefsPageContent.scrollTo({ top: 0, behavior: 'auto' });
@@ -7316,6 +7301,59 @@ function renderComparisonResult(resultEl, comparison){
     }
 
 
+    function buildExampleDictationSlot(card){
+      if(!card) return null;
+      const parsedExamples = parseExamples(card.examples || [], card.exampleTranslations || null, userLang2);
+      const firstExample = parsedExamples.length ? parsedExamples[0] : null;
+      if(!firstExample || !firstExample.no){
+        return null;
+      }
+      const dictationId = 'dictation-' + Math.random().toString(36).substr(2, 9);
+      const exampleText = firstExample.no;
+      const exampleTranslation =
+        card.translation ||
+        (firstExample.translations && (firstExample.translations[userLang2] || firstExample.translations.en)) ||
+        '';
+      const safeExampleTextAttr = escapeHtml(exampleText).replace(/"/g, '&quot;');
+      const safeExampleTextDisplay = escapeHtml(exampleText);
+      const safePrompt = escapeHtml(exampleTranslation || '');
+
+      const el = document.createElement('div');
+      el.className = 'slot';
+      el.dataset.dictationId = dictationId;
+      el.dataset.slotType = 'dictation-example';
+      el.innerHTML = `
+        <div class="dictation-exercise example-dictation-exercise" data-dictation-id="${dictationId}">
+          <div class="dictation-translation-prompt">${safePrompt}</div>
+          <div class="dictation-input-wrapper">
+            <textarea
+              class="dictation-input"
+              placeholder="${aiStrings.dictationPlaceholder || 'Type what you hear...'}"
+              rows="3"
+              data-correct-text="${safeExampleTextAttr}"
+            ></textarea>
+          </div>
+          <div class="dictation-controls">
+            <button type="button" class="dictation-check-btn primary">
+              Check
+            </button>
+          </div>
+          <div class="dictation-result hidden"></div>
+          <div class="dictation-correct-answer hidden">
+            <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || ' :'}</div>
+            <div class="correct-answer-text">${safeExampleTextDisplay}</div>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        setupDictationExercise(el, card, dictationId);
+      }, 100);
+
+      return el;
+    }
+
+
     async function buildSlot(kind, card){
       const el=document.createElement("div");
       el.className="slot";
@@ -7375,56 +7413,12 @@ function renderComparisonResult(resultEl, comparison){
         return el;
       }
       if(kind==="translation" && card.translation){
-        // Try to build a translation-to-Norwegian exercise using the first example
-        const parsedExamples = parseExamples(card.examples || [], card.exampleTranslations || null, userLang2);
-        const firstExample = parsedExamples.length ? parsedExamples[0] : null;
-
-        if(firstExample && firstExample.no){
-          const exampleText = firstExample.no;
-          const exampleTranslation =
-            (firstExample.translations && (firstExample.translations[userLang2] || firstExample.translations.en)) ||
-            card.translation ||
-            '';
-          const dictationId = 'dictation-' + Math.random().toString(36).substr(2, 9);
-          const safeExampleTextAttr = escapeHtml(exampleText).replace(/"/g, '&quot;');
-          const safeExampleTextDisplay = escapeHtml(exampleText);
-          const safePrompt = escapeHtml(exampleTranslation || '');
-
-          el.innerHTML=`
-            <div class="dictation-exercise example-dictation-exercise" data-dictation-id="${dictationId}">
-              <div class="dictation-translation-prompt">${safePrompt}</div>
-              <div class="dictation-input-wrapper">
-                <textarea
-                  class="dictation-input"
-                  placeholder="${aiStrings.dictationPlaceholder || 'Type what you hear...'}"
-                  rows="3"
-                  data-correct-text="${safeExampleTextAttr}"
-                ></textarea>
-              </div>
-              <div class="dictation-controls">
-                <button type="button" class="dictation-check-btn primary">
-                  Check
-                </button>
-              </div>
-              <div class="dictation-result hidden"></div>
-              <div class="dictation-correct-answer hidden">
-                <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || ' :'}</div>
-                <div class="correct-answer-text">${safeExampleTextDisplay}</div>
-              </div>
-            </div>
-          `;
-
-          el.dataset.slotType = 'dictation-example';
-
-          setTimeout(() => {
-            setupDictationExercise(el, card, dictationId);
-          }, 100);
-
-          return el;
-        } else {
-          el.innerHTML=`<div class="back">${card.translation}</div>`;
-          return el;
+        const exampleSlot = buildExampleDictationSlot(card);
+        if(exampleSlot){
+          return exampleSlot;
         }
+        el.innerHTML=`<div class="back">${card.translation}</div>`;
+        return el;
       }
       if(kind==="image" && (card.image||card.imageKey)){
         const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image);
@@ -7479,6 +7473,16 @@ function renderComparisonResult(resultEl, comparison){
           allSlots.push(el);
         }
       }
+
+      // Ensure example-based dictation exercise is available even if translation layer is not in the order
+      const hasExampleExercise = allSlots.some(node => node.dataset && node.dataset.slotType === 'dictation-example');
+      if(!hasExampleExercise){
+        const extraExampleSlot = buildExampleDictationSlot(card);
+        if(extraExampleSlot){
+          allSlots.push(extraExampleSlot);
+        }
+      }
+
       const items=allSlots.slice(0,count);
       if(!items.length){
         const d=document.createElement("div");

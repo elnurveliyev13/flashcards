@@ -169,6 +169,7 @@ $string['font_scale_plus15'] = 'Large (+15%)';
 $string['font_scale_plus30'] = 'Extra large (+30%)';
 $string['preferences_toggle_label'] = 'Preferences menu';
 $string['header_preferences_label'] = 'Display preferences';
+$string['settings_page_label'] = 'Settings';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Transcription';
