@@ -2025,7 +2025,6 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable td:nth-child(4){
   text-align:center;
   width:70px;
-  border-bottom:none;
 }
 #listTable td:first-child{
   white-space:normal;
@@ -2033,7 +2032,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable td.actions-cell{
   justify-content:center;
-  border-bottom:none;
+  border-bottom:1px solid var(--border);
 }
 #listTable td{
   vertical-align:middle;
