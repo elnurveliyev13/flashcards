@@ -971,14 +971,16 @@ button[data-role="update"]:disabled::before {
 }
 .rec-lock-hint{
   --lock-progress:0;
+  --lock-rail-w:42px;
   position:absolute;
   top:calc(100% + 12px);
-  left:0;
-  transform:translate(-8px,0) scale(0.98);
+  left:50%;
+  transform:translate(calc(-50% + var(--lock-rail-w)/2),0) scale(0.98);
   display:flex;
+  flex-direction:row-reverse;
   align-items:center;
   gap:8px;
-  padding:8px 10px 8px 10px;
+  padding:8px 8px 8px 10px;
   background:rgba(15,23,42,0.85);
   border:1px solid rgba(148,163,184,0.35);
   border-radius:14px;
@@ -994,7 +996,7 @@ button[data-role="update"]:disabled::before {
 .rec-lock-hint.hidden{ display:none; }
 .rec-lock-hint.lock-visible{
   opacity:1;
-  transform:translate(-8px,0) scale(1);
+  transform:translate(calc(-50% + var(--lock-rail-w)/2),0) scale(1);
 }
 .rec-lock-hint.locked{
   background:linear-gradient(145deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25));
@@ -1003,7 +1005,7 @@ button[data-role="update"]:disabled::before {
 }
 .rec-lock-rail{
   position:relative;
-  width:42px;
+  width:var(--lock-rail-w);
   height:110px;
   border-radius:16px;
   background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
@@ -1062,16 +1064,16 @@ button[data-role="update"]:disabled::before {
   display:flex;
   flex-direction:column;
   gap:2px;
-  text-align:left;
+  text-align:right;
 }
 .rec-lock-label-title{
-  font-size:0.84rem;
+  font-size:0.8rem;
   font-weight:700;
   color:var(--text);
   line-height:1.1;
 }
 .rec-lock-label-sub{
-  font-size:0.7rem;
+  font-size:0.68rem;
   color:var(--text-muted);
   line-height:1.1;
 }
@@ -2568,12 +2570,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
    so they don't float upward. */
 .fc-standalone .tabs-toolbar .fc-tabs{
   bottom: 0;
-  padding: 8px 6px calc(6px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
-  padding-top: 10px;
+  /* Keep a consistent breathing room in PWA regardless of tab/stack state. */
+  padding: 10px 6px calc(8px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
 }
 .fc-standalone.fc-bottom-actions-visible .tabs-toolbar .fc-tabs{
-  padding-top: 12px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px) * 0.4);
+  padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px) * 0.4) 6px;
 }
 .fc-standalone .bottom-panel.bottom-actions{
   bottom: 0;
@@ -2582,16 +2583,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   bottom: calc(var(--bottom-actions-stack-offset, 0px) + 51px);
 }
 .fc-standalone #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 18px);
-}
-.fc-standalone #editActionsBar{
-  bottom: calc(var(--fc-tabs-height) + 18px) !important;
-}
-.fc-standalone.fc-bottom-actions-visible #bottomActions{
   bottom: calc(var(--fc-tabs-height) + 24px);
 }
-.fc-standalone.fc-bottom-actions-visible #editActionsBar{
+.fc-standalone #editActionsBar{
   bottom: calc(var(--fc-tabs-height) + 24px) !important;
+}
+.fc-standalone.fc-bottom-actions-visible #bottomActions{
+  bottom: calc(var(--fc-tabs-height) + 30px);
+}
+.fc-standalone.fc-bottom-actions-visible #editActionsBar{
+  bottom: calc(var(--fc-tabs-height) + 30px) !important;
 }
 
 .fc-tab{
