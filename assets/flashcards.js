@@ -321,7 +321,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const gestureSubmenu = document.getElementById('gestureSubmenu');
       const gesturePrefsToggle = document.getElementById('gesturePrefsToggle');
       const gestureSubmenuBack = document.getElementById('gestureSubmenuBack');
+      const prefsClose = document.getElementById('prefsClose');
+      const prefsOriginLabel = document.getElementById('prefsOriginLabel');
+      const prefsPageContent = document.getElementById('prefsPageContent');
       const GESTURE_SUBMENU_CLASS = 'gesture-open';
+      const tabLabels = {
+        quickInput: document.getElementById('t_tab_quickinput'),
+        study: document.getElementById('t_tab_study'),
+        dashboard: document.getElementById('t_tab_dashboard')
+      };
+      let prefsOpen = false;
+      let prefsEntryState = null;
 
       const setGestureSubmenuVisibility = visible => {
         if (!gestureSubmenu) {
@@ -351,25 +361,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
 
       const attachPrefsPanel = () => {
-        if (!document.body) {
-          return;
-        }
-        document.body.appendChild(prefsPanel);
-      };
-      const repositionPrefsPanel = () => {
-        const rect = prefsToggle.getBoundingClientRect();
-        const gutter = 12;
-        prefsPanel.style.top = `${Math.max(gutter, rect.bottom + gutter)}px`;
-        prefsPanel.style.right = `${Math.max(gutter, window.innerWidth - rect.right + gutter)}px`;
-        prefsPanel.style.left = 'auto';
-      };
-      const refreshPrefsPanelPosition = () => {
-        if (prefsPanel.classList.contains('open')) {
-          repositionPrefsPanel();
+        if (document.body && prefsPanel.parentElement !== document.body) {
+          document.body.appendChild(prefsPanel);
         }
       };
 
-      let prefsOpen = false;
+      const updateOriginLabel = tabName => {
+        if (!prefsOriginLabel) {
+          return;
+        }
+        const source = tabLabels[tabName];
+        const label = (source && source.textContent && source.textContent.trim()) || '';
+        prefsOriginLabel.textContent = label || tabName || '';
+      };
+
+      const lockBackgroundScroll = () => {
+        if (document.body.classList.contains('pref-locked')) {
+          return;
+        }
+        const scrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+        if (prefsEntryState) {
+          prefsEntryState.scrollTop = scrollTop;
+        }
+        document.body.style.top = `-${scrollTop}px`;
+        document.body.classList.add('pref-locked');
+      };
+
+      const unlockBackgroundScroll = () => {
+        const scrollTop = prefsEntryState?.scrollTop || 0;
+        document.body.classList.remove('pref-locked');
+        document.body.style.top = '';
+        window.scrollTo(0, scrollTop);
+      };
+
       const updatePrefsState = open => {
         prefsOpen = open;
         if (!open) {
@@ -379,14 +403,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         prefsPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
         prefsToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         if (open) {
+          prefsEntryState = {
+            tab: activeTab,
+            scrollTop: window.scrollY || document.documentElement.scrollTop || 0,
+            focusEl: document.activeElement instanceof HTMLElement && root.contains(document.activeElement) ? document.activeElement : null
+          };
           attachPrefsPanel();
-          repositionPrefsPanel();
+          updateOriginLabel(activeTab);
+          lockBackgroundScroll();
+          if (prefsPageContent) {
+            prefsPageContent.scrollTo({ top: 0, behavior: 'auto' });
+          }
+        } else {
+          if (prefsEntryState || document.body.classList.contains('pref-locked')) {
+            unlockBackgroundScroll();
+          }
+          if (prefsEntryState?.tab && tabSwitcher && activeTab !== prefsEntryState.tab) {
+            tabSwitcher(prefsEntryState.tab);
+          }
+          if (prefsEntryState?.focusEl) {
+            try {
+              prefsEntryState.focusEl.focus({ preventScroll: true });
+            } catch (_e) {}
+          }
+          prefsEntryState = null;
         }
       };
+
       prefsToggle.addEventListener('click', e => {
         e.preventDefault();
         e.stopPropagation();
         updatePrefsState(!prefsOpen);
+      });
+      prefsClose?.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        updatePrefsState(false);
       });
       document.addEventListener('click', event => {
         if (!prefsOpen) return;
@@ -413,10 +465,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
       window.addEventListener('resize', () => {
         if (prefsOpen) {
-          updatePrefsState(false);
+          attachPrefsPanel();
         }
       });
-      window.addEventListener('scroll', refreshPrefsPanelPosition, { passive: true });
+      window.addEventListener('orientationchange', () => {
+        if (prefsOpen) {
+          attachPrefsPanel();
+        }
+      });
       updatePrefsState(false);
     }
 
@@ -7317,8 +7373,56 @@ function renderComparisonResult(resultEl, comparison){
         return el;
       }
       if(kind==="translation" && card.translation){
-        el.innerHTML=`<div class="back">${card.translation}</div>`;
-        return el;
+        // Try to build a translation-to-Norwegian exercise using the first example
+        const parsedExamples = parseExamples(card.examples || [], card.exampleTranslations || null, userLang2);
+        const firstExample = parsedExamples.length ? parsedExamples[0] : null;
+
+        if(firstExample && firstExample.no){
+          const exampleText = firstExample.no;
+          const exampleTranslation =
+            (firstExample.translations && (firstExample.translations[userLang2] || firstExample.translations.en)) ||
+            card.translation ||
+            '';
+          const dictationId = 'dictation-' + Math.random().toString(36).substr(2, 9);
+          const safeExampleTextAttr = escapeHtml(exampleText).replace(/"/g, '&quot;');
+          const safeExampleTextDisplay = escapeHtml(exampleText);
+          const safePrompt = escapeHtml(exampleTranslation || '');
+
+          el.innerHTML=`
+            <div class="dictation-exercise example-dictation-exercise" data-dictation-id="${dictationId}">
+              <div class="dictation-translation-prompt">${safePrompt}</div>
+              <div class="dictation-input-wrapper">
+                <textarea
+                  class="dictation-input"
+                  placeholder="${aiStrings.dictationPlaceholder || 'Type what you hear...'}"
+                  rows="3"
+                  data-correct-text="${safeExampleTextAttr}"
+                ></textarea>
+              </div>
+              <div class="dictation-controls">
+                <button type="button" class="dictation-check-btn primary">
+                  Check
+                </button>
+              </div>
+              <div class="dictation-result hidden"></div>
+              <div class="dictation-correct-answer hidden">
+                <div class="correct-answer-label">${aiStrings.dictationCorrectAnswer || ' :'}</div>
+                <div class="correct-answer-text">${safeExampleTextDisplay}</div>
+              </div>
+            </div>
+          `;
+
+          el.dataset.slotType = 'dictation-example';
+
+          setTimeout(() => {
+            setupDictationExercise(el, card, dictationId);
+          }, 100);
+
+          return el;
+        } else {
+          el.innerHTML=`<div class="back">${card.translation}</div>`;
+          return el;
+        }
       }
       if(kind==="image" && (card.image||card.imageKey)){
         const url=card.imageKey?await urlForSafe(card.imageKey):resolveAsset(card.image);
