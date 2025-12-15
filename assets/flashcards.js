@@ -12021,10 +12021,17 @@ Regeln:
           </div>
         `);
       } else if (parsed.noMultiwordExpressions) {
+        const noExpressionNote =
+          parsed.multiwordExpressionsNote ||
+          parsed.noMultiwordExpressionsNote ||
+          parsed.multiwordExpressionsMessage ||
+          parsed.noMultiwordExpressionsMessage ||
+          t('ai_no_expressions') ||
+          'No fixed expressions found.';
         sections.push(`
           <div class="ai-answer-section">
             <div class="ai-answer-title">Expressions:</div>
-            <div class="ai-answer-note">${escapeHtml(parsed.recheck?.confidenceComment || (t('ai_no_expressions') || 'No fixed expressions found.'))}</div>
+            <div class="ai-answer-note">${escapeHtml(noExpressionNote)}</div>
           </div>
         `);
       }

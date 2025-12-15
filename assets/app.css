@@ -973,8 +973,8 @@ button[data-role="update"]:disabled::before {
   --lock-progress:0;
   position:absolute;
   top:calc(100% + 12px);
-  left:50%;
-  transform:translate(-50%,0) scale(0.98);
+  left:0;
+  transform:translate(-8px,0) scale(0.98);
   display:flex;
   align-items:center;
   gap:8px;
@@ -994,7 +994,7 @@ button[data-role="update"]:disabled::before {
 .rec-lock-hint.hidden{ display:none; }
 .rec-lock-hint.lock-visible{
   opacity:1;
-  transform:translate(-50%,0) scale(1);
+  transform:translate(-8px,0) scale(1);
 }
 .rec-lock-hint.locked{
   background:linear-gradient(145deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25));
@@ -1065,13 +1065,13 @@ button[data-role="update"]:disabled::before {
   text-align:left;
 }
 .rec-lock-label-title{
-  font-size:0.88rem;
+  font-size:0.84rem;
   font-weight:700;
   color:var(--text);
   line-height:1.1;
 }
 .rec-lock-label-sub{
-  font-size:0.75rem;
+  font-size:0.7rem;
   color:var(--text-muted);
   line-height:1.1;
 }
@@ -2582,16 +2582,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   bottom: calc(var(--bottom-actions-stack-offset, 0px) + 51px);
 }
 .fc-standalone #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 10px);
+  bottom: calc(var(--fc-tabs-height) + 18px);
 }
 .fc-standalone #editActionsBar{
-  bottom: calc(var(--fc-tabs-height) + 10px) !important;
+  bottom: calc(var(--fc-tabs-height) + 18px) !important;
 }
 .fc-standalone.fc-bottom-actions-visible #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 16px);
+  bottom: calc(var(--fc-tabs-height) + 24px);
 }
 .fc-standalone.fc-bottom-actions-visible #editActionsBar{
-  bottom: calc(var(--fc-tabs-height) + 16px) !important;
+  bottom: calc(var(--fc-tabs-height) + 24px) !important;
 }
 
 .fc-tab{
@@ -2624,7 +2624,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   transform: none !important;
   width: 100vw !important;
   max-width: 100vw;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px) !important;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 14px) !important;
   z-index: 2200 !important;
   box-sizing: border-box;
   margin: 0;
@@ -2648,7 +2648,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   transform: none;
   width: 100vw;
   max-width: 100vw;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 10px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--fc-tabs-height) + 14px);
   z-index: 2200;
   box-sizing: border-box;
   margin: 0;
