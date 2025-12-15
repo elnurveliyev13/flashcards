@@ -601,11 +601,12 @@ h1{
 
 .pref-floating-bar .pref-page-title{
   flex: 1;
-  text-align: center;
+  text-align: right;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-strong);
   margin: 0;
+  padding-right: 8px;
 }
 
 .pref-page-content{
@@ -651,12 +652,6 @@ h1{
   gap: 12px;
 }
 
-.pref-card-body-grid{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-2);
-}
-
 .pref-card-gesture-link .pref-card-body{
   padding: 0;
 }
@@ -687,7 +682,7 @@ body.pref-locked{
 }
 
 @media (min-width: 720px){
-  .pref-card-body-grid{grid-template-columns: repeat(2, minmax(0, 1fr));}
+  /* No grid layout needed for the updated cards */
 }
 
 @media (max-width: 720px){
@@ -1126,7 +1121,7 @@ button[data-role="update"]:disabled::before {
   --lock-progress:0;
   --lock-rail-w:42px;
   --rec-btn-width:44px;
-  --lock-align-adjust:-5px;
+  --lock-align-adjust:-40px;
   position:absolute;
   top:calc(100% + 12px);
   left:50%;
@@ -2757,7 +2752,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   bottom: calc(var(--bottom-actions-stack-offset, 0px) + 63px);
 }
 .fc-standalone #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 22px);
+  bottom: calc(var(--fc-tabs-height) + 21px);
 }
 .fc-standalone #editActionsBar{
   bottom: calc(var(--fc-tabs-height) + 24.5px) !important;
@@ -5102,8 +5097,8 @@ select.inline-prompt-field {
   font-size: 1rem;
   line-height: 1.5;
   color: #e2e8f0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(15, 23, 42, 0.9);
+  border: none;
+  background: transparent;
 }
 
 .dictation-input-wrapper {

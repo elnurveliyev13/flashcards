@@ -123,7 +123,7 @@
 
                     <div class="pref-card">
                       <div class="pref-card-title" data-i18n="interface_language_label">{{#str}} interface_language_label, mod_flashcards {{/str}}</div>
-                      <div class="pref-card-body pref-card-body-grid">
+                      <div class="pref-card-body">
                         <div class="pref-field pref-language-field">
                           <label class="pref-label sr-only" for="langSel">{{#str}} interface_language_label, mod_flashcards {{/str}}</label>
                           <select id="langSel" title="{{#str}} interface_language_label, mod_flashcards {{/str}}">
@@ -140,8 +140,13 @@
                             EN
                           </button>
                         </div>
+                      </div>
+                    </div>
+
+                    <div class="pref-card">
+                      <div class="pref-card-title" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</div>
+                      <div class="pref-card-body">
                         <div class="pref-field pref-voice-field">
-                          <div class="pref-heading" data-i18n="tts_voice">{{#str}} tts_voice, mod_flashcards {{/str}}</div>
                           <label class="pref-label sr-only" for="ttsVoice">{{#str}} tts_voice, mod_flashcards {{/str}}</label>
                           <select id="ttsVoice"></select>
                           <div class="small" id="ttsVoiceStatus" aria-live="polite"></div>
