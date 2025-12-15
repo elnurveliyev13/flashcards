@@ -2586,7 +2586,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   padding: 10px 6px calc(8px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
 }
 .fc-standalone.fc-bottom-actions-visible .tabs-toolbar .fc-tabs{
-  padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px) * 0.4) 6px;
+  padding: 10px 6px calc(8px + env(safe-area-inset-bottom, 0px) * 0.35) 6px;
 }
 .fc-standalone .bottom-panel.bottom-actions{
   bottom: 0;
