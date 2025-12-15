@@ -975,9 +975,9 @@ button[data-role="update"]:disabled::before {
   --rec-btn-width:44px;
   position:absolute;
   top:calc(100% + 12px);
-  right:0;
-  left:auto;
-  transform:translate(calc((var(--rec-btn-width) - var(--lock-rail-w))/2),0) scale(0.98);
+  left:50%;
+  right:auto;
+  transform:translate(calc(-1 * var(--lock-rail-w) / 2),0) scale(0.98);
   display:flex;
   flex-direction:row-reverse;
   align-items:center;
@@ -999,7 +999,7 @@ button[data-role="update"]:disabled::before {
 .rec-lock-hint.hidden{ display:none; }
 .rec-lock-hint.lock-visible{
   opacity:1;
-  transform:translate(calc((var(--rec-btn-width) - var(--lock-rail-w))/2),0) scale(1);
+  transform:translate(calc(-1 * var(--lock-rail-w) / 2),0) scale(1);
 }
 .rec-lock-hint.locked{
   background:linear-gradient(145deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25));
