@@ -565,18 +565,6 @@ h1{
   overflow: hidden;
 }
 
-.pref-page-header{
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2);
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-
 .pref-close-btn{
   display: inline-flex;
   align-items: center;
@@ -600,19 +588,6 @@ h1{
 .pref-close-icon{font-size:1rem;line-height:1;}
 .pref-close-text{font-size:0.9rem;}
 
-.pref-header-titles{
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.pref-page-title{
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-strong);
-}
-
 .pref-origin-chip{
   display: inline-flex;
   align-items: center;
@@ -630,10 +605,25 @@ h1{
   font-weight: 700;
 }
 
+.pref-floating-bar{
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-content: space-between;
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) * -1);
+  padding: 0 0 var(--space-1);
+  z-index: 3;
+}
+
+.pref-floating-bar .pref-origin-chip{
+  white-space: nowrap;
+}
+
 .pref-page-content{
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-2);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-2)) var(--space-2) var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -679,6 +669,10 @@ h1{
   gap: var(--space-2);
 }
 
+.pref-card-gesture-link .pref-card-body{
+  padding: 0;
+}
+
 .pref-card-gesture .pref-card-title{margin-bottom:4px;}
 
 .pref-submenu-header{
@@ -705,7 +699,6 @@ body.pref-locked{
 }
 
 @media (min-width: 720px){
-  .pref-page-header{padding: calc(var(--space-2) + 4px) var(--space-2);}
   .pref-card-body-grid{grid-template-columns: repeat(2, minmax(0, 1fr));}
 }
 
@@ -721,6 +714,11 @@ body.pref-locked{
   .pref-origin-chip{
     font-size: 0.8rem;
     padding: 6px 8px;
+  }
+  .pref-floating-bar{
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) * -1);
+    padding-inline: 0;
   }
 }
 
@@ -2775,13 +2773,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   bottom: calc(var(--bottom-actions-stack-offset, 0px) + 63px);
 }
 .fc-standalone #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 24.5px);
+  bottom: calc(var(--fc-tabs-height) + 23.5px);
 }
 .fc-standalone #editActionsBar{
   bottom: calc(var(--fc-tabs-height) + 24.5px) !important;
 }
 .fc-standalone.fc-bottom-actions-visible #bottomActions{
-  bottom: calc(var(--fc-tabs-height) + 28.5px);
+  bottom: calc(var(--fc-tabs-height) + 27.5px);
 }
 .fc-standalone.fc-bottom-actions-visible #editActionsBar{
   bottom: calc(var(--fc-tabs-height) + 28.5px) !important;

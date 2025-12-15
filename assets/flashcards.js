@@ -384,6 +384,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           prefsEntryState.scrollTop = scrollTop;
         }
         document.body.style.top = `-${scrollTop}px`;
+        document.body.style.position = 'fixed';
         document.body.classList.add('pref-locked');
       };
 
@@ -391,6 +392,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const scrollTop = prefsEntryState?.scrollTop || 0;
         document.body.classList.remove('pref-locked');
         document.body.style.top = '';
+        document.body.style.position = '';
         window.scrollTo(0, scrollTop);
       };
 

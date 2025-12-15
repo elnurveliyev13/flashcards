@@ -90,22 +90,19 @@
               <span aria-hidden="true" class="hexagon-icon">⚙</span>
             </button>
             <div id="prefsPanel" class="header-pref-panel" role="region" aria-label="{{#str}} header_preferences_label, mod_flashcards {{/str}}">
-              <div class="pref-page-shell">
-                <div class="pref-page-header">
-                  <button type="button" class="pref-close-btn" id="prefsClose" aria-label="{{#str}} back, mod_flashcards {{/str}}">
-                    <span class="pref-close-icon" aria-hidden="true">&#8592;</span>
-                    <span class="pref-close-text">{{#str}} back, mod_flashcards {{/str}}</span>
-                  </button>
-                  <div class="pref-header-titles">
-                    <div class="pref-page-title">{{#str}} header_preferences_label, mod_flashcards {{/str}}</div>
+            <div class="pref-page-shell">
+                <div class="pref-page-content" id="prefsPageContent">
+                  <div class="pref-floating-bar">
+                    <button type="button" class="pref-close-btn" id="prefsClose" aria-label="{{#str}} back, mod_flashcards {{/str}}">
+                      <span class="pref-close-icon" aria-hidden="true">&#8592;</span>
+                      <span class="pref-close-text">{{#str}} back, mod_flashcards {{/str}}</span>
+                    </button>
                     <div class="pref-origin-chip" id="prefsOriginChip">
                       <span class="pref-origin-label">{{#str}} back, mod_flashcards {{/str}}</span>
                       <span class="pref-origin-value" id="prefsOriginLabel">{{#str}} tab_quickinput, mod_flashcards {{/str}}</span>
                     </div>
                   </div>
-                </div>
 
-                <div class="pref-page-content" id="prefsPageContent">
                   <div id="prefsMain" class="pref-panel-main pref-page-section">
                     <div class="pref-card">
                       <div class="pref-card-title" data-i18n="font_scale_label">{{#str}} font_scale_label, mod_flashcards {{/str}}</div>
@@ -155,15 +152,12 @@
                       </div>
                     </div>
 
-                    <div class="pref-card">
-                      <div class="pref-card-title" data-i18n="gestures_heading">Gesture Controls</div>
+                    <div class="pref-card pref-card-gesture-link">
                       <div class="pref-card-body">
-                        <div class="pref-field pref-gestures-field">
-                          <button type="button" class="pref-gestures-toggle" id="gesturePrefsToggle" aria-haspopup="true" aria-expanded="false">
-                            <span data-i18n="gestures_heading">Gesture Controls</span>
-                            <span class="pref-gestures-toggle-icon" aria-hidden="true">??-</span>
-                          </button>
-                        </div>
+                        <button type="button" class="pref-gestures-toggle" id="gesturePrefsToggle" aria-haspopup="true" aria-expanded="false">
+                          <span data-i18n="gestures_heading">Gesture Controls</span>
+                          <span class="pref-gestures-toggle-icon" aria-hidden="true">&#8250;</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -172,7 +166,7 @@
                     <div class="pref-card pref-card-gesture">
                       <div class="pref-submenu-header">
                         <button type="button" class="pref-submenu-back" id="gestureSubmenuBack">
-                          <span class="pref-submenu-back-icon" aria-hidden="true">???</span>
+                          <span class="pref-submenu-back-icon" aria-hidden="true">&#8592;</span>
                           <span data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
                         </button>
                         <div class="pref-card-title" data-i18n="gestures_heading">Gesture Controls</div>
