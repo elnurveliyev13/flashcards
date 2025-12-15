@@ -974,8 +974,9 @@ button[data-role="update"]:disabled::before {
   --lock-rail-w:42px;
   position:absolute;
   top:calc(100% + 12px);
-  left:50%;
-  transform:translate(calc(-50% + var(--lock-rail-w)/2),0) scale(0.98);
+  right:0;
+  left:auto;
+  transform:translate(0,0) scale(0.98);
   display:flex;
   flex-direction:row-reverse;
   align-items:center;
@@ -992,11 +993,12 @@ button[data-role="update"]:disabled::before {
   min-width:160px;
   max-width:200px;
   overflow:hidden;
+  box-sizing:border-box;
 }
 .rec-lock-hint.hidden{ display:none; }
 .rec-lock-hint.lock-visible{
   opacity:1;
-  transform:translate(calc(-50% + var(--lock-rail-w)/2),0) scale(1);
+  transform:translate(0,0) scale(1);
 }
 .rec-lock-hint.locked{
   background:linear-gradient(145deg, rgba(16,185,129,0.25), rgba(5,150,105,0.25));
@@ -2517,6 +2519,16 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     + var(--bottom-actions-stack-offset, 0px)
     + var(--meta-panel-height, 0px)
     + var(--edit-actions-bar-height, 0px)
+  );
+}
+
+/* PWA: align study tab bottom padding with other tabs (avoid extra gutter) */
+.fc-standalone #studySection{
+  padding-bottom: calc(
+    var(--space-2)
+    + env(safe-area-inset-bottom, 0px)
+    + var(--fc-tabs-height, 0px)
+    + var(--bottom-actions-stack-offset, 0px)
   );
 }
 
