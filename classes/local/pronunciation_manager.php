@@ -33,6 +33,20 @@ class pronunciation_manager {
     ];
 
     /**
+     * Return an explicit binary collation for exact byte-wise comparisons on MySQL/MariaDB.
+     *
+     * Many Moodle installs use accent-insensitive collations (e.g. utf8mb4_unicode_ci), where 'å' = 'a'.
+     */
+    protected static function mysql_bin_collation(): ?string {
+        global $DB, $CFG;
+        if (!method_exists($DB, 'get_dbfamily') || $DB->get_dbfamily() !== 'mysql') {
+            return null;
+        }
+        $dbcollation = (string)($CFG->dboptions['dbcollation'] ?? '');
+        return (stripos($dbcollation, 'utf8mb4') !== false) ? 'utf8mb4_bin' : 'utf8_bin';
+    }
+
+    /**
      * Retrieve a dictionary entry for the provided wordform.
      */
     public static function lookup(string $wordform, ?string $pos = null): ?array {
@@ -43,7 +57,11 @@ class pronunciation_manager {
         }
         $normalized = core_text::strtolower($wordform);
         $params = ['wordform' => $normalized];
+        $bin = self::mysql_bin_collation();
         $wheresql = 'LOWER(wordform) = :wordform';
+        if ($bin) {
+            $wheresql = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+        }
         $poscode = self::normalize_pos($pos);
         if ($poscode !== null) {
             $params['pos'] = $poscode;
@@ -56,7 +74,11 @@ class pronunciation_manager {
             return null;
         }
         if (!$record && $poscode !== null) {
-            $record = $DB->get_record_select('flashcards_pron_dict', 'LOWER(wordform) = :wordform', ['wordform' => $normalized], '*', IGNORE_MULTIPLE);
+            $fallbackwhere = 'LOWER(wordform) = :wordform';
+            if ($bin) {
+                $fallbackwhere = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+            }
+            $record = $DB->get_record_select('flashcards_pron_dict', $fallbackwhere, ['wordform' => $normalized], '*', IGNORE_MULTIPLE);
         }
         if (!$record) {
             return null;

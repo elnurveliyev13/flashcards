@@ -18,6 +18,21 @@ class ordbank_helper {
     protected static $paradigmcache = [];
 
     /**
+     * Return an explicit binary collation for exact byte-wise comparisons on MySQL/MariaDB.
+     *
+     * We intentionally do NOT rely on the database default collation because many Moodle installs
+     * use accent-insensitive collations (e.g. utf8mb4_unicode_ci), where 'å' = 'a'.
+     */
+    protected static function mysql_bin_collation(): ?string {
+        global $DB, $CFG;
+        if (!method_exists($DB, 'get_dbfamily') || $DB->get_dbfamily() !== 'mysql') {
+            return null;
+        }
+        $dbcollation = (string)($CFG->dboptions['dbcollation'] ?? '');
+        return (stripos($dbcollation, 'utf8mb4') !== false) ? 'utf8mb4_bin' : 'utf8_bin';
+    }
+
+    /**
      * High level helper that returns the best guess for a token and supporting data.
      *
      * @param string $token The surface form from the text.
@@ -131,6 +146,11 @@ class ordbank_helper {
             return [];
         }
 
+        $bin = self::mysql_bin_collation();
+        $where = 'LOWER(f.OPPSLAG) = :w';
+        if ($bin) {
+            $where = 'LOWER(f.OPPSLAG) COLLATE ' . $bin . ' = :w';
+        }
         $sql = "SELECT f.LEMMA_ID,
                        f.OPPSLAG AS wordform,
                        f.TAG,
@@ -139,7 +159,7 @@ class ordbank_helper {
                        l.GRUNNFORM AS baseform
                   FROM {ordbank_fullform} f
              LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
-                 WHERE LOWER(f.OPPSLAG) = :w";
+                 WHERE {$where}";
 
         try {
             $records = $DB->get_records_sql($sql, ['w' => $normalized]);

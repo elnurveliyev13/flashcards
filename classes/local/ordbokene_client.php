@@ -319,7 +319,12 @@ class ordbokene_client {
                 if (($el['type_'] ?? '') === 'definition' || ($el['type_'] ?? '') === 'explanation') {
                     $content = $el['content'] ?? '';
                     if (is_string($content) && trim($content) !== '') {
-                        $out[] = trim($content);
+                        $clean = trim($content);
+                        // Some articles contain placeholder content like "$" - ignore it.
+                        if ($clean === '$') {
+                            continue;
+                        }
+                        $out[] = $clean;
                     }
                 }
             }
@@ -332,7 +337,11 @@ class ordbokene_client {
         foreach ($definitions as $def) {
             foreach ($def['elements'] ?? [] as $el) {
                 if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
-                    $out[] = trim($el['quote']['content']);
+                    $clean = trim((string)$el['quote']['content']);
+                    if ($clean === '' || $clean === '$') {
+                        continue;
+                    }
+                    $out[] = $clean;
                 }
             }
         }
