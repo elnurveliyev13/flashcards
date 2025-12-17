@@ -16,6 +16,8 @@ defined('MOODLE_INTERNAL') || die();
 class ordbank_helper {
     /** @var array<int,array<string,mixed>> */
     protected static $paradigmcache = [];
+    /** @var bool|null */
+    protected static $hasoppslaglc = null;
 
     /**
      * Return an explicit binary collation for exact byte-wise comparisons on MySQL/MariaDB.
@@ -30,6 +32,25 @@ class ordbank_helper {
         }
         $dbcollation = (string)($CFG->dboptions['dbcollation'] ?? '');
         return (stripos($dbcollation, 'utf8mb4') !== false) ? 'utf8mb4_bin' : 'utf8_bin';
+    }
+
+    /**
+     * True when the optimized indexed column exists (recommended for large tables).
+     */
+    protected static function has_oppslag_lc(): bool {
+        global $DB;
+        if (self::$hasoppslaglc !== null) {
+            return self::$hasoppslaglc;
+        }
+        try {
+            $dbman = $DB->get_manager();
+            $table = new \xmldb_table('ordbank_fullform');
+            $field = new \xmldb_field('oppslag_lc');
+            self::$hasoppslaglc = $dbman->field_exists($table, $field);
+        } catch (\Throwable $e) {
+            self::$hasoppslaglc = false;
+        }
+        return self::$hasoppslaglc;
     }
 
     /**
@@ -146,10 +167,14 @@ class ordbank_helper {
             return [];
         }
 
-        $bin = self::mysql_bin_collation();
-        $where = 'LOWER(f.OPPSLAG) = :w';
-        if ($bin) {
-            $where = 'LOWER(f.OPPSLAG) COLLATE ' . $bin . ' = :w';
+        if (self::has_oppslag_lc()) {
+            $where = 'f.OPPSLAG_LC = :w';
+        } else {
+            $bin = self::mysql_bin_collation();
+            $where = 'LOWER(f.OPPSLAG) = :w';
+            if ($bin) {
+                $where = 'LOWER(f.OPPSLAG) COLLATE ' . $bin . ' = :w';
+            }
         }
         $sql = "SELECT f.LEMMA_ID,
                        f.OPPSLAG AS wordform,

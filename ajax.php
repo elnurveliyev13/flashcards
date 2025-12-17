@@ -22,6 +22,24 @@ function mod_flashcards_mysql_bin_collation(): ?string {
     return (stripos($dbcollation, 'utf8mb4') !== false) ? 'utf8mb4_bin' : 'utf8_bin';
 }
 
+/**
+ * True when a column exists (MySQL/MariaDB only, used for optional performance upgrades).
+ */
+function mod_flashcards_mysql_has_field(string $tablename, string $fieldname): bool {
+    global $DB;
+    try {
+        if (!method_exists($DB, 'get_dbfamily') || $DB->get_dbfamily() !== 'mysql') {
+            return false;
+        }
+        $dbman = $DB->get_manager();
+        $table = new xmldb_table($tablename);
+        $field = new xmldb_field($fieldname);
+        return $dbman->field_exists($table, $field);
+    } catch (\Throwable $e) {
+        return false;
+    }
+}
+
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
 
@@ -837,12 +855,16 @@ switch ($action) {
                             'forms' => [],
                         ];
                 } else {
-                    $bin = mod_flashcards_mysql_bin_collation();
-                    $where = 'LOWER(OPPSLAG)=?';
-                    if ($bin) {
-                        $where = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = ?';
+                    if (mod_flashcards_mysql_has_field('ordbank_fullform', 'oppslag_lc')) {
+                        $exists = $DB->count_records_select('ordbank_fullform', 'OPPSLAG_LC = ?', [$focuscheck]);
+                    } else {
+                        $bin = mod_flashcards_mysql_bin_collation();
+                        $where = 'LOWER(OPPSLAG)=?';
+                        if ($bin) {
+                            $where = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = ?';
+                        }
+                        $exists = $DB->count_records_select('ordbank_fullform', $where, [$focuscheck]);
                     }
-                    $exists = $DB->count_records_select('ordbank_fullform', $where, [$focuscheck]);
                     if (!$exists) {
                         // Keep processing with minimal stub instead of erroring out.
                         $ob = [
@@ -860,11 +882,16 @@ switch ($action) {
                         ];
                     } else {
                         // Build a minimal selected from first match
-                        $where2 = 'LOWER(OPPSLAG)=:w';
-                        if ($bin) {
-                            $where2 = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = :w';
+                        if (mod_flashcards_mysql_has_field('ordbank_fullform', 'oppslag_lc')) {
+                            $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE OPPSLAG_LC = :w LIMIT 1", ['w' => $focuscheck]);
+                        } else {
+                            $bin = mod_flashcards_mysql_bin_collation();
+                            $where2 = 'LOWER(OPPSLAG)=:w';
+                            if ($bin) {
+                                $where2 = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = :w';
+                            }
+                            $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE {$where2} LIMIT 1", ['w' => $focuscheck]);
                         }
-                        $first = $DB->get_record_sql("SELECT * FROM {ordbank_fullform} WHERE {$where2} LIMIT 1", ['w' => $focuscheck]);
                         $ob = [
                             'selected' => [
                                 'lemma_id' => (int)$first->lemma_id,
@@ -1403,15 +1430,21 @@ switch ($action) {
             // Debug: check how many raw matches exist
             $debug = [];
             try {
-                $bin = mod_flashcards_mysql_bin_collation();
-                $where = 'LOWER(OPPSLAG)=?';
-                $where2 = 'LOWER(OPPSLAG)=:w';
-                if ($bin) {
-                    $where = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = ?';
-                    $where2 = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = :w';
+                $needle = core_text::strtolower($word);
+                if (mod_flashcards_mysql_has_field('ordbank_fullform', 'oppslag_lc')) {
+                    $debug['fullform_count'] = $DB->count_records_select('ordbank_fullform', 'OPPSLAG_LC = ?', [$needle]);
+                    $sample = $DB->get_records_sql("SELECT LEMMA_ID, OPPSLAG, TAG FROM {ordbank_fullform} WHERE OPPSLAG_LC = :w LIMIT 5", ['w' => $needle]);
+                } else {
+                    $bin = mod_flashcards_mysql_bin_collation();
+                    $where = 'LOWER(OPPSLAG)=?';
+                    $where2 = 'LOWER(OPPSLAG)=:w';
+                    if ($bin) {
+                        $where = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = ?';
+                        $where2 = 'LOWER(OPPSLAG) COLLATE ' . $bin . ' = :w';
+                    }
+                    $debug['fullform_count'] = $DB->count_records_select('ordbank_fullform', $where, [$needle]);
+                    $sample = $DB->get_records_sql("SELECT LEMMA_ID, OPPSLAG, TAG FROM {ordbank_fullform} WHERE {$where2} LIMIT 5", ['w' => $needle]);
                 }
-                $debug['fullform_count'] = $DB->count_records_select('ordbank_fullform', $where, [core_text::strtolower($word)]);
-                $sample = $DB->get_records_sql("SELECT LEMMA_ID, OPPSLAG, TAG FROM {ordbank_fullform} WHERE {$where2} LIMIT 5", ['w' => core_text::strtolower($word)]);
                 $debug['fullform_sample'] = array_values($sample);
             } catch (\Throwable $dbgex) {
                 $debug['fullform_count_error'] = $dbgex->getMessage();

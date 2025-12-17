@@ -32,6 +32,9 @@ class pronunciation_manager {
         'other' => null,
     ];
 
+    /** @var bool|null */
+    protected static $haswordformlc = null;
+
     /**
      * Return an explicit binary collation for exact byte-wise comparisons on MySQL/MariaDB.
      *
@@ -47,6 +50,25 @@ class pronunciation_manager {
     }
 
     /**
+     * True when the optimized indexed column exists (recommended for large tables).
+     */
+    protected static function has_wordform_lc(): bool {
+        global $DB;
+        if (self::$haswordformlc !== null) {
+            return self::$haswordformlc;
+        }
+        try {
+            $dbman = $DB->get_manager();
+            $table = new \xmldb_table('flashcards_pron_dict');
+            $field = new \xmldb_field('wordform_lc');
+            self::$haswordformlc = $dbman->field_exists($table, $field);
+        } catch (\Throwable $e) {
+            self::$haswordformlc = false;
+        }
+        return self::$haswordformlc;
+    }
+
+    /**
      * Retrieve a dictionary entry for the provided wordform.
      */
     public static function lookup(string $wordform, ?string $pos = null): ?array {
@@ -58,9 +80,13 @@ class pronunciation_manager {
         $normalized = core_text::strtolower($wordform);
         $params = ['wordform' => $normalized];
         $bin = self::mysql_bin_collation();
-        $wheresql = 'LOWER(wordform) = :wordform';
-        if ($bin) {
-            $wheresql = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+        if (self::has_wordform_lc()) {
+            $wheresql = 'wordform_lc = :wordform';
+        } else {
+            $wheresql = 'LOWER(wordform) = :wordform';
+            if ($bin) {
+                $wheresql = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+            }
         }
         $poscode = self::normalize_pos($pos);
         if ($poscode !== null) {
@@ -74,9 +100,13 @@ class pronunciation_manager {
             return null;
         }
         if (!$record && $poscode !== null) {
-            $fallbackwhere = 'LOWER(wordform) = :wordform';
-            if ($bin) {
-                $fallbackwhere = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+            if (self::has_wordform_lc()) {
+                $fallbackwhere = 'wordform_lc = :wordform';
+            } else {
+                $fallbackwhere = 'LOWER(wordform) = :wordform';
+                if ($bin) {
+                    $fallbackwhere = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
+                }
             }
             $record = $DB->get_record_select('flashcards_pron_dict', $fallbackwhere, ['wordform' => $normalized], '*', IGNORE_MULTIPLE);
         }
