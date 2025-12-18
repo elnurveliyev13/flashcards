@@ -326,7 +326,7 @@ class ordbank_helper {
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
         $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
 
-        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','dette','disse','hva','hvem','hvor','når'];
+        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','når'];
         $articles = ['en','ei','et','ein','eitt'];
         $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
         $auxverbs = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
@@ -371,6 +371,16 @@ class ordbank_helper {
                 $score += 5;
             }
             if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
+                $score += 2;
+            }
+            // Common reflexive pattern where "seg" is the second word after the verb ("dreier det seg ...").
+            if ($next2 === 'seg' && $isverb) {
+                $score += 6;
+            }
+            if ($next2 === 'seg' && $isnoun) {
+                $score -= 4;
+            }
+            if ($isverb && (str_contains($tag, '<refl') || str_contains($tag, 'refl'))) {
                 $score += 2;
             }
             // Question inversion: verb before pronoun/determiner (e.g. "Hva dreier det seg om").

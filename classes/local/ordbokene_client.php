@@ -336,8 +336,15 @@ class ordbokene_client {
                     $content = $el['content'] ?? '';
                     if (is_string($content) && trim($content) !== '') {
                         $clean = trim($content);
-                        // Some articles contain placeholder content like "$" - ignore it.
-                        if ($clean === '$') {
+                        // Some articles contain placeholder content like "$" - ignore/strip it.
+                        if (str_contains($clean, '$')) {
+                            $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
+                        }
+                        if ($clean === '' || $clean === '$') {
+                            continue;
+                        }
+                        // Drop degenerate leftovers like "og" after placeholder stripping.
+                        if (mb_strlen($clean) < 3) {
                             continue;
                         }
                         $out[] = $clean;
@@ -354,7 +361,13 @@ class ordbokene_client {
             foreach ($def['elements'] ?? [] as $el) {
                 if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
                     $clean = trim((string)$el['quote']['content']);
+                    if (str_contains($clean, '$')) {
+                        $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
+                    }
                     if ($clean === '' || $clean === '$') {
+                        continue;
+                    }
+                    if (mb_strlen($clean) < 3) {
                         continue;
                     }
                     $out[] = $clean;

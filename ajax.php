@@ -63,9 +63,6 @@ function mod_flashcards_ordbokene_wc_from_pos(string $pos): string {
     if (in_array($pos, ['pronomen', 'pronoun', 'pron'], true)) {
         return 'PRON';
     }
-    if (in_array($pos, ['preposisjon', 'preposition', 'prep'], true)) {
-        return 'PREP';
-    }
     return '';
 }
 
@@ -93,6 +90,65 @@ function mod_flashcards_token_in_text(string $token, string $text): bool {
     }
     $set = array_flip(mod_flashcards_word_tokens($text));
     return isset($set[$token]);
+}
+
+/**
+ * Build word-level context around the first occurrence of a clicked token in a sentence.
+ *
+ * This mirrors the client-side behavior (word tokens only, punctuation ignored) so Ordbank
+ * disambiguation can use surrounding tokens.
+ *
+ * @return array{prev?:string,next?:string,next2?:string}
+ */
+function mod_flashcards_context_from_sentence(string $sentence, string $clicked): array {
+    $sentence = core_text::strtolower(trim($sentence));
+    $clicked = core_text::strtolower(trim($clicked));
+    if ($sentence === '' || $clicked === '') {
+        return [];
+    }
+
+    $rawtokens = [];
+    foreach (array_values(array_filter(preg_split('/\s+/u', $sentence))) as $t) {
+        $clean = trim($t, " \t\n\r\0\x0B,.;:!?<>\"'()[]{}");
+        if ($clean !== '') {
+            $rawtokens[] = $clean;
+        }
+    }
+    if (empty($rawtokens)) {
+        return [];
+    }
+
+    $idx = null;
+    foreach ($rawtokens as $i => $tok) {
+        if ($tok === $clicked) {
+            $idx = $i;
+            break;
+        }
+    }
+    if ($idx === null) {
+        // Fallback: try substring match when the clicked token came with punctuation.
+        foreach ($rawtokens as $i => $tok) {
+            if ($tok !== '' && ($tok === $clicked || str_contains($tok, $clicked) || str_contains($clicked, $tok))) {
+                $idx = $i;
+                break;
+            }
+        }
+    }
+    if ($idx === null) {
+        return [];
+    }
+
+    $out = [];
+    if ($idx > 0) {
+        $out['prev'] = $rawtokens[$idx - 1];
+    }
+    if (isset($rawtokens[$idx + 1])) {
+        $out['next'] = $rawtokens[$idx + 1];
+    }
+    if (isset($rawtokens[$idx + 2])) {
+        $out['next2'] = $rawtokens[$idx + 2];
+    }
+    return $out;
 }
 
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
@@ -896,13 +952,14 @@ switch ($action) {
                     }
                 }
             }
+            $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
             $ob = null;
             if ($focuscheck !== '') {
-                $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
+                $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, $ctx);
             }
             // If helper didn't return, try clicked word as fallback.
             if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
-                $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), []);
+                $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), $ctx);
             }
             // If still nothing, try a direct lookup to confirm existence.
             if ((!$ob || empty($ob['selected']))) {
@@ -1043,11 +1100,17 @@ switch ($action) {
                         $wc = 'ADJ';
                     } else if (str_contains($taglower, 'adv')) {
                         $wc = 'ADV';
-                    } else if (str_contains($taglower, 'prep')) {
-                        $wc = 'PREP';
                     }
                 }
+                // Ordbøkene POS filter ("wc") is useful, but PREP in particular is unreliable and often returns nothing.
+                if ($wc === 'PREP') {
+                    $wc = '';
+                }
                 $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, $wc);
+                if (empty($entries) && $wc !== '') {
+                    // Retry without wc to avoid empty results due to overly strict/unsupported filters.
+                    $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, '');
+                }
                 if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
                     $entries = array_values(array_merge([[
                         'baseform' => $resolvedExpr['expression'],
