@@ -373,6 +373,13 @@ class ordbank_helper {
             if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
                 $score += 2;
             }
+            // Copula + "for" + adjective => should be adverb "for" (too), not verb "fare".
+            if ($prev === 'er' && $isadv && ($cand['wordform'] ?? '') === 'for' && $next !== null && !in_array($next, $articles, true)) {
+                $score += 18;
+            }
+            if ($prev === 'er' && $isverb && ($cand['wordform'] ?? '') === 'for') {
+                $score -= 15;
+            }
             // Common reflexive pattern where "seg" is the second word after the verb ("dreier det seg ...").
             if ($next2 === 'seg' && $isverb) {
                 $score += 6;
