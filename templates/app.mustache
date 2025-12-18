@@ -93,11 +93,13 @@
               <div class="pref-page-shell">
                 <div class="pref-page-content" id="prefsPageContent">
                   <div class="pref-floating-bar">
-                    <button type="button" class="pref-close-btn" id="prefsClose" aria-label="{{#str}} back, mod_flashcards {{/str}}">
-                      <span class="pref-close-icon" aria-hidden="true">&#8592;</span>
-                      <span class="pref-close-text">{{#str}} back, mod_flashcards {{/str}}</span>
+                    <button type="button" class="pref-nav-btn" id="prefsBack" aria-label="{{#str}} back, mod_flashcards {{/str}}" aria-hidden="true" hidden>
+                      <span aria-hidden="true">&#8592;</span>
                     </button>
                     <div class="pref-page-title">{{#str}} settings_page_label, mod_flashcards {{/str}}</div>
+                    <button type="button" class="pref-close-btn" id="prefsClose" aria-label="{{#str}} close, mod_flashcards {{/str}}">
+                      <span aria-hidden="true">&#10005;</span>
+                    </button>
                   </div>
 
                   <div id="prefsMain" class="pref-panel-main pref-page-section">
@@ -811,7 +813,7 @@
       <div id="ocrCropToolbar" class="ocr-crop-toolbar">
         <button id="ocrCropUndo" class="ghost icon-only" aria-label="{{#str}} undo, mod_flashcards {{/str}}"><span aria-hidden="true">&#8634;</span></button>
         <button id="ocrCropCancel" class="ghost icon-only" aria-label="{{#str}} cancel, mod_flashcards {{/str}}"><span aria-hidden="true">&times;</span></button>
-        <button id="ocrCropApply" class="ok">{{#str}} use_for_ocr, mod_flashcards {{/str}}</button>
+        <button id="ocrCropApply" class="ok icon-only" aria-label="{{#str}} use_for_ocr, mod_flashcards {{/str}}"><span aria-hidden="true">&#10003;</span></button>
       </div>
     </div>
   </div>

@@ -568,12 +568,14 @@ h1{
 .pref-close-btn{
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 999px;
-  color: var(--text);
-  padding: 10px 14px;
+  border-radius: 12px;
+  color: var(--text-strong);
+  padding: 0;
   font-weight: 700;
   box-shadow: 0 10px 26px rgba(0,0,0,0.25);
 }
@@ -585,8 +587,32 @@ h1{
   outline: none;
 }
 
-.pref-close-icon{font-size:1rem;line-height:1;}
-.pref-close-text{font-size:0.9rem;}
+.pref-close-btn span{font-size: 1rem; line-height: 1;}
+
+.pref-nav-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text-strong);
+  padding: 0;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.25);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.pref-nav-btn[hidden]{display:none;}
+
+.pref-nav-btn:hover,
+.pref-nav-btn:focus-visible{
+  background: var(--surface-3);
+  border-color: var(--primary);
+  outline: none;
+}
 
 .pref-floating-bar{
   display: flex;
@@ -601,12 +627,12 @@ h1{
 
 .pref-floating-bar .pref-page-title{
   flex: 1;
-  text-align: right;
+  text-align: center;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-strong);
   margin: 0;
-  padding-right: 8px;
+  padding: 0;
 }
 
 .pref-page-content{
@@ -1965,9 +1991,13 @@ audio{max-width:260px}
 #ocrCropRect .handle-s::before{width:44px;height:3px;bottom:2px;left:50%;transform:translateX(-50%)}
 #ocrCropRect .handle-w::before{width:3px;height:44px;left:2px;top:50%;transform:translateY(-50%)}
 #ocrCropRect .handle-e::before{width:3px;height:44px;right:2px;top:50%;transform:translateY(-50%)}
-#ocrCropModal .ocr-crop-toolbar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);left:50%;transform:translateX(-50%);display:flex;gap:12px;margin:0;padding:0 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;border:1px solid rgba(255,255,255,.08);height:52px}
-#ocrCropModal .ocr-crop-toolbar button{min-width:82px;height:52px;padding:0 20px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:600}
-#ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.35rem}
+#ocrCropModal .ocr-crop-toolbar{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);left:50%;transform:translateX(-50%);display:flex;gap:12px;margin:0;padding:6px 14px;background:#030711;border-radius:999px;box-shadow:0 18px 40px rgba(0,0,0,.55);backdrop-filter:blur(18px);width:min(100%,520px);justify-content:center;border:1px solid rgba(255,255,255,.08);height:64px}
+#ocrCropModal .ocr-crop-toolbar button{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:700;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e7ecf7;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#ocrCropModal .ocr-crop-toolbar button span{font-size:1.2rem;line-height:1}
+#ocrCropModal .ocr-crop-toolbar .icon-only{min-width:52px;width:52px;height:52px;padding:0;border-radius:16px;font-size:1.3rem}
+#ocrCropModal .ocr-crop-toolbar button.ok{background:var(--primary-gradient-strong);border-color:rgba(31,111,235,0.75);color:#f7fbff;box-shadow:0 10px 26px rgba(31,111,235,0.42)}
+#ocrCropModal .ocr-crop-toolbar button:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.22)}
+#ocrCropModal .ocr-crop-toolbar button:active{transform:translateY(0);box-shadow:0 4px 14px rgba(0,0,0,.4)}
 
 @media (max-width: 720px){
   /* nudge crop toolbar upward on compact screens */

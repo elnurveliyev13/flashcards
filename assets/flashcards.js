@@ -322,6 +322,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const gesturePrefsToggle = document.getElementById('gesturePrefsToggle');
       const gestureSubmenuBack = document.getElementById('gestureSubmenuBack');
       const prefsClose = document.getElementById('prefsClose');
+      const prefsBack = document.getElementById('prefsBack');
       const prefsPageContent = document.getElementById('prefsPageContent');
       const GESTURE_SUBMENU_CLASS = 'gesture-open';
       let prefsOpen = false;
@@ -338,6 +339,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gestureSubmenu.setAttribute('aria-hidden', visible ? 'false' : 'true');
         if (gesturePrefsToggle) {
           gesturePrefsToggle.setAttribute('aria-expanded', visible ? 'true' : 'false');
+        }
+        if (prefsBack) {
+          prefsBack.hidden = !visible;
+          prefsBack.setAttribute('aria-hidden', visible ? 'false' : 'true');
         }
       };
       const showGestureSubmenu = () => setGestureSubmenuVisibility(true);
@@ -401,6 +406,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if (prefsPageContent) {
             prefsPageContent.scrollTo({ top: 0, behavior: 'auto' });
           }
+          if (prefsBack) {
+            prefsBack.hidden = true;
+            prefsBack.setAttribute('aria-hidden', 'true');
+          }
         } else {
           if (prefsEntryState || document.body.classList.contains('pref-locked')) {
             unlockBackgroundScroll();
@@ -426,6 +435,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         e.preventDefault();
         e.stopPropagation();
         updatePrefsState(false);
+      });
+      prefsBack?.addEventListener('click', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        hideGestureSubmenu();
       });
       document.addEventListener('click', event => {
         if (!prefsOpen) return;
