@@ -1070,8 +1070,10 @@ switch ($action) {
             if (empty($data['parts']) && !empty($ob['parts'])) {
                 $data['parts'] = $ob['parts'];
             }
-            // If still no forms and we have a baseform (even when POS=phrase), try ordbank by baseform.
-            if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])) {
+            // If still no forms and we have a baseform, try ordbank by baseform.
+            // Important: only do this when POS/ordbank say it's a verb, to avoid pulling verb paradigms for adverbs like "for".
+            if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($data['focusBaseform'])
+                && ($data['pos'] === 'verb' || $ordbankpos === 'verb')) {
                 $tmp = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($data['focusBaseform']), []);
                 if (!empty($tmp['forms'])) {
                     $data['forms'] = $tmp['forms'];
@@ -1123,6 +1125,28 @@ switch ($action) {
                 }
                 $chosen = null;
                 if (!empty($entries)) {
+                    // Heuristic cleanup: drop clearly irrelevant trade/rail meanings for ADV "for".
+                    if ($wc === 'ADV' && core_text::strtolower($lookupWord) === 'for') {
+                        $entries = array_values(array_map(function($e){
+                            if (isset($e['meanings']) && is_array($e['meanings'])) {
+                                $e['meanings'] = array_values(array_filter($e['meanings'], function($m){
+                                    $m = core_text::strtolower((string)$m);
+                                    return !(
+                                        str_contains($m, 'handel') ||
+                                        str_contains($m, 'jernbane') ||
+                                        str_contains($m, 'kostnad') ||
+                                        str_contains($m, 'kjøper') ||
+                                        str_contains($m, 'frakt') ||
+                                        str_contains($m, 'leveres')
+                                    );
+                                }));
+                            }
+                            return $e;
+                        }, $entries));
+                        $entries = array_values(array_filter($entries, function($e){
+                            return !empty($e['meanings']);
+                        }));
+                    }
                     $deflist = [];
                     $map = [];
                     foreach ($entries as $ei => $entry) {
