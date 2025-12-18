@@ -2834,6 +2834,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   gap: 6px;
 }
 
+body.cropper-open #editActionsBar{
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
 #mod_flashcards_container[data-edit-bar-visible] #editActionsBar{
   visibility: visible !important;
   pointer-events: auto;

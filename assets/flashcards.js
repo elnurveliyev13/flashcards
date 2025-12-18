@@ -3597,7 +3597,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(expressionResolved){
           focusWordResolved = expressionResolved;
         } else {
-          // prefix infinitive/article
+          // prefix infinitive/article only when POS fits
           if(posVal === 'verb'){
             focusWordResolved = `(å) ${focusWordResolved}`;
           } else if(posVal === 'substantiv'){

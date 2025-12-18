@@ -331,6 +331,7 @@ class ordbank_helper {
         $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
         $auxverbs = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
         $prepseg = ['om','over','for','med','til','av','på','pa','i'];
+        $functionwords = ['for','til','av','på','paa','i','om','med','seg','det','som','å','åå','aa'];
 
         $best = null;
         $bestscore = -1;
@@ -350,6 +351,15 @@ class ordbank_helper {
             if ($isnoun) { $score += 2; }
             if ($isadj)  { $score += 1; }
             if ($isadv)  { $score += 1; }
+            // Function words (for/til/av/på/...) strongly prefer adv/prep/konj; penalize verb/subst.
+            if (in_array(core_text::strtolower((string)($cand['wordform'] ?? '')), $functionwords, true)) {
+                if ($isadv || $isprep || str_contains($tag, 'konj')) {
+                    $score += 15;
+                }
+                if ($isverb || $isnoun) {
+                    $score -= 20;
+                }
+            }
 
             if (in_array($prev, $pronouns, true) && $isverb) {
                 $score += 4;
