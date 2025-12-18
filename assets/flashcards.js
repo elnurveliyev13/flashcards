@@ -3008,6 +3008,44 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ordbokeneBlock.appendChild(citation);
     }
 
+    function tokenizeWordsForExpression(text){
+      if(!text) return [];
+      const lower = String(text).toLowerCase();
+      try{
+        const m = lower.match(/[\p{L}\p{M}]+/gu);
+        return m ? m.filter(Boolean) : [];
+      }catch(_e){
+        const m = lower.match(/[a-z0-9æøå]+/g);
+        return m ? m.filter(Boolean) : [];
+      }
+    }
+
+    function tokensInOrderForExpression(needleTokens, hayTokens, firstAlternatives = []){
+      if(!Array.isArray(needleTokens) || !needleTokens.length) return false;
+      if(!Array.isArray(hayTokens) || !hayTokens.length) return false;
+      const firstAlts = Array.isArray(firstAlternatives) ? firstAlternatives : [];
+      let pos = 0;
+      for(let i=0;i<needleTokens.length;i++){
+        const tok = needleTokens[i];
+        let found = false;
+        while(pos < hayTokens.length){
+          const h = hayTokens[pos];
+          if(i === 0){
+            if(h === tok || firstAlts.includes(h)){
+              found = true; pos++; break;
+            }
+          }else{
+            if(h === tok){
+              found = true; pos++; break;
+            }
+          }
+          pos++;
+        }
+        if(!found) return false;
+      }
+      return true;
+    }
+
     function applyFocusMeta(payload, opts = {}){
       if(opts && opts.silent){
         return;
@@ -3233,15 +3271,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       // Try to detect multiword expressions from ordbokene in the original front text.
       const dictExpressionAi = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
       let matchedExpression = '';
-      if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
-        const frontLower = frontInput.value.toLowerCase();
+      const sentenceTokens = tokenizeWordsForExpression(frontInput && frontInput.value ? frontInput.value : '');
+      const focusWordTok = tokenizeWordsForExpression(data.focusWord || '')[0] || '';
+      const focusLemmaTok = tokenizeWordsForExpression(data.focusBaseform || '')[0] || '';
+      const expressionMatches = (expr) => {
+        const toks = tokenizeWordsForExpression(expr);
+        if(toks.length < 2) return false;
+        const firstAlts = Array.from(new Set([toks[0], focusWordTok, focusLemmaTok].filter(Boolean)));
+        return tokensInOrderForExpression(toks, sentenceTokens, firstAlts);
+      };
+      if(Array.isArray(data.expressions) && data.expressions.length && sentenceTokens.length){
         matchedExpression = data.expressions
           .map(e => (e || '').trim())
           .filter(Boolean)
-          .filter(e => frontLower.includes(e.toLowerCase()))
+          .filter(e => expressionMatches(e))
           .sort((a,b) => b.length - a.length)[0] || '';
       }
-      const expressionResolvedAi = (dictExpressionAi || matchedExpression || '').trim();
+      const expressionResolvedAi = (expressionMatches(dictExpressionAi) ? dictExpressionAi : matchedExpression || '').trim();
       if((data.focusWord || expressionResolvedAi) && fokusInput){
         const posVal = resolvePosFromTag(data.pos || '');
         let focusVal = (expressionResolvedAi || data.focusWord || '').trim();
@@ -3412,6 +3458,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const data = await api('ai_focus_helper', {}, 'POST', payload, {signal: controller.signal});
         updateUsageFromResponse(data);
         const correctionMsg = applyAiPayload(data);
+        // If AI didn't resolve the full expression but Ordbank/Ordbøkene prefill did, keep the expression.
+        try{
+          if(prefillData && prefillData.ordbokene && prefillData.ordbokene.expression && fokusInput){
+            const current = (fokusInput.value || '').trim();
+            const expr = String(prefillData.ordbokene.expression || '').trim();
+            if(expr && expr.includes(' ') && (!current.includes(' ') || current.length < expr.length)){
+              const sentTokens = tokenizeWordsForExpression(frontInput && frontInput.value ? frontInput.value : '');
+              const exprTokens = tokenizeWordsForExpression(expr);
+              const firstAlts = Array.from(new Set([exprTokens[0], tokenizeWordsForExpression(token.text)[0], tokenizeWordsForExpression((prefillData.selected && prefillData.selected.baseform) ? prefillData.selected.baseform : '')[0]].filter(Boolean)));
+              if(tokensInOrderForExpression(exprTokens, sentTokens, firstAlts)){
+                fokusInput.value = expr;
+                try{ fokusInput.dispatchEvent(new Event('input', {bubbles:true})); }catch(_e){}
+              }
+            }
+          }
+        }catch(_e){}
         if(correctionMsg){
           setFocusStatus('correction', correctionMsg);
         }else{
@@ -3493,25 +3555,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(resp && resp.debug && resp.debug.ordbokene){
           console.info('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
         }
-        // Try to detect multiword expressions
-        const dictExpression = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
-        let matchedExpression = '';
-        if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
-          const frontLower = frontInput.value.toLowerCase();
-          matchedExpression = data.expressions
-            .map(e => (e || '').trim())
-            .filter(Boolean)
-            .filter(e => frontLower.includes(e.toLowerCase()))
-            .sort((a,b) => b.length - a.length)[0] || '';
-        }
+      // Try to detect multiword expressions
+      const dictExpression = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
+      let matchedExpression = '';
+      if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
+        const sentenceTokens = tokenizeWordsForExpression(frontInput.value);
+        matchedExpression = data.expressions
+          .map(e => (e || '').trim())
+          .filter(Boolean)
+          .filter(e => {
+            const toks = tokenizeWordsForExpression(e);
+            if(toks.length < 2) return false;
+            const firstAlts = Array.from(new Set([toks[0], tokenizeWordsForExpression(token.text)[0], tokenizeWordsForExpression((data.selected && data.selected.baseform) ? data.selected.baseform : '')[0]].filter(Boolean)));
+            return tokensInOrderForExpression(toks, sentenceTokens, firstAlts);
+          })
+          .sort((a,b) => b.length - a.length)[0] || '';
+      }
 
-        const expressionResolved = (dictExpression || matchedExpression || '').trim();
-
-        const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
-        let focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
-        if(silent){
-          return data;
+      let expressionResolved = '';
+      if(dictExpression && dictExpression.trim() && dictExpression.trim().includes(' ')){
+        const exprTokens = tokenizeWordsForExpression(dictExpression);
+        const sentTokens = tokenizeWordsForExpression(frontInput && frontInput.value ? frontInput.value : '');
+        const firstAlts = Array.from(new Set([exprTokens[0], tokenizeWordsForExpression(token.text)[0], tokenizeWordsForExpression((data.selected && data.selected.baseform) ? data.selected.baseform : '')[0]].filter(Boolean)));
+        if(tokensInOrderForExpression(exprTokens, sentTokens, firstAlts)){
+          expressionResolved = dictExpression.trim();
         }
+      }
+      if(!expressionResolved){
+        expressionResolved = (matchedExpression || '').trim();
+      }
+
+      const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
+      let focusWordResolved = data.selected.baseform || data.selected.wordform || token.text;
+      if(silent){
+        return data;
+      }
         if(expressionResolved){
           focusWordResolved = expressionResolved;
         } else {

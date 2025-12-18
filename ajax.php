@@ -40,6 +40,35 @@ function mod_flashcards_mysql_has_field(string $tablename, string $fieldname): b
     }
 }
 
+/**
+ * Map internal POS to Ordbøkene wc codes (optional filter to reduce ambiguity).
+ */
+function mod_flashcards_ordbokene_wc_from_pos(string $pos): string {
+    $pos = core_text::strtolower(trim($pos));
+    if ($pos === '') {
+        return '';
+    }
+    if (in_array($pos, ['verb', 'vb'], true)) {
+        return 'VERB';
+    }
+    if (in_array($pos, ['substantiv', 'noun', 'nn'], true)) {
+        return 'NOUN';
+    }
+    if (in_array($pos, ['adjektiv', 'adjective', 'jj'], true)) {
+        return 'ADJ';
+    }
+    if (in_array($pos, ['adverb', 'adv'], true)) {
+        return 'ADV';
+    }
+    if (in_array($pos, ['pronomen', 'pronoun', 'pron'], true)) {
+        return 'PRON';
+    }
+    if (in_array($pos, ['preposisjon', 'preposition', 'prep'], true)) {
+        return 'PREP';
+    }
+    return '';
+}
+
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
 
@@ -965,7 +994,22 @@ switch ($action) {
                 $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
                 $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
                 $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
-                $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6);
+                $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
+                if (!empty($selected['tag'])) {
+                    $taglower = core_text::strtolower((string)$selected['tag']);
+                    if (str_contains($taglower, 'verb')) {
+                        $wc = 'VERB';
+                    } else if (str_contains($taglower, 'subst')) {
+                        $wc = 'NOUN';
+                    } else if (str_contains($taglower, 'adj')) {
+                        $wc = 'ADJ';
+                    } else if (str_contains($taglower, 'adv')) {
+                        $wc = 'ADV';
+                    } else if (str_contains($taglower, 'prep')) {
+                        $wc = 'PREP';
+                    }
+                }
+                $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, $wc);
                 if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
                     $entries = array_values(array_merge([[
                         'baseform' => $resolvedExpr['expression'],
@@ -1087,7 +1131,16 @@ switch ($action) {
             }
             // Always prefer Ordbokene verb forms to mirror dictionary table.
             if (!empty($data['ordbokene'])) {
-                $baseLookup = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $lookupWord, $lang);
+                $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
+                if (!empty($selected['tag'])) {
+                    $taglower = core_text::strtolower((string)$selected['tag']);
+                    if (str_contains($taglower, 'verb')) {
+                        $wc = 'VERB';
+                    } else if (str_contains($taglower, 'subst')) {
+                        $wc = 'NOUN';
+                    }
+                }
+                $baseLookup = \mod_flashcards\local\ordbokene_client::lookup($data['focusBaseform'] ?? $lookupWord, $lang, $wc);
                 if (!empty($baseLookup['forms'])) {
                     $data['forms'] = $baseLookup['forms'];
                 }

@@ -29,10 +29,24 @@ class ordbokene_client {
     protected const ARTICLE = 'https://ord.uib.no/%s/article/%d.json';
 
     /**
+     * Build a search URL with optional part-of-speech filter (wc).
+     *
+     * Ordbøkene supports wc=VERB/ADJ/ADV/... and wc reduces ambiguity for entries like "slå" (noun vs verb).
+     */
+    protected static function build_search_url(string $param, string $value, string $lang, string $scope = 'e', string $wc = ''): string {
+        $url = self::SEARCH . '?' . $param . '=' . rawurlencode($value) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=' . rawurlencode($scope);
+        $wc = trim($wc);
+        if ($wc !== '') {
+            $url .= '&wc=' . rawurlencode($wc);
+        }
+        return $url;
+    }
+
+    /**
      * Lookup any expressions/lemma for a given span (multiword).
      * Returns ['expressions'=>[], 'baseform'=>string, 'dictmeta'=>[]]
      */
-    public static function search_expressions(string $span, string $lang = 'begge'): array {
+    public static function search_expressions(string $span, string $lang = 'begge', string $wc = ''): array {
         $span = trim($span);
         if ($span === '') {
             return [];
@@ -41,9 +55,9 @@ class ordbokene_client {
         $curl = new \curl();
         $searches = [];
         // Primary: legacy article search with w= (supports simple phrases).
-        $searches[] = self::SEARCH . '?w=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        $searches[] = self::build_search_url('w', $span, $lang, 'e', $wc);
         // Fallback: ord_2 API style with q= to match mid-phrase expressions (observed on ordbokene.no).
-        $searches[] = self::SEARCH . '?q=' . rawurlencode($span) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        $searches[] = self::build_search_url('q', $span, $lang, 'e', $wc);
 
         foreach ($searches as $searchurl) {
             try {
@@ -87,15 +101,16 @@ class ordbokene_client {
      *
      * @param string $word Word or phrase
      * @param string $lang bm|nn|begge
+     * @param string $wc Optional part-of-speech filter, e.g. VERB/ADJ/ADV
      * @return array Structured data (grunnform, forms, expressions, meanings, examples, meta)
      */
-    public static function lookup(string $word, string $lang = 'begge'): array {
+    public static function lookup(string $word, string $lang = 'begge', string $wc = ''): array {
         $word = trim($word);
         if ($word === '') {
             return [];
         }
         $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
-        $searchurl = self::SEARCH . '?w=' . rawurlencode($word) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        $searchurl = self::build_search_url('w', $word, $lang, 'e', $wc);
         try {
             $curl = new \curl();
             $resp = $curl->get($searchurl);
@@ -134,15 +149,16 @@ class ordbokene_client {
      * @param string $word
      * @param string $lang bm|nn|begge
      * @param int $limit total articles to fetch
+     * @param string $wc Optional part-of-speech filter
      * @return array<int,array<string,mixed>>
      */
-    public static function lookup_all(string $word, string $lang = 'begge', int $limit = 6): array {
+    public static function lookup_all(string $word, string $lang = 'begge', int $limit = 6, string $wc = ''): array {
         $word = trim($word);
         if ($word === '') {
             return [];
         }
         $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
-        $searchurl = self::SEARCH . '?w=' . rawurlencode($word) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=e';
+        $searchurl = self::build_search_url('w', $word, $lang, 'e', $wc);
         $out = [];
         try {
             $curl = new \curl();

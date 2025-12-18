@@ -326,8 +326,10 @@ class ordbank_helper {
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
         $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
 
-        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det'];
+        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','dette','disse','hva','hvem','hvor','når'];
         $articles = ['en','ei','et','ein','eitt'];
+        $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
+        $auxverbs = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
         $prepseg = ['om','over','for','med','til','av','på','pa','i'];
 
         $best = null;
@@ -338,6 +340,8 @@ class ordbank_helper {
             $isverb = str_contains($tag, 'verb');
             $isnoun = str_contains($tag, 'subst');
             $isadj  = str_contains($tag, 'adj');
+            $isadv  = str_contains($tag, 'adv');
+            $isprep = str_contains($tag, 'prep');
 
             if ($cand['paradigme_id'] ?? null) {
                 $score += 1;
@@ -345,6 +349,7 @@ class ordbank_helper {
             if ($isverb) { $score += 5; }
             if ($isnoun) { $score += 2; }
             if ($isadj)  { $score += 1; }
+            if ($isadv)  { $score += 1; }
 
             if (in_array($prev, $pronouns, true) && $isverb) {
                 $score += 4;
@@ -352,8 +357,12 @@ class ordbank_helper {
             if ($prev === 'å' && $isverb) {
                 $score += 3;
             }
-            if (in_array($prev, $articles, true) && $isnoun) {
-                $score += 3;
+            if ((in_array($prev, $articles, true) || in_array($prev, $determiners, true)) && $isnoun) {
+                $score += 12;
+            }
+            // Determiners/articles strongly disfavour verbs (e.g. "et får" should be noun, not "får"=verb).
+            if ((in_array($prev, $articles, true) || in_array($prev, $determiners, true)) && $isverb) {
+                $score -= 10;
             }
             if ($next !== null && $isadj && !in_array($next, $articles, true)) {
                 $score += 1;
@@ -363,6 +372,24 @@ class ordbank_helper {
             }
             if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
                 $score += 2;
+            }
+            // Question inversion: verb before pronoun/determiner (e.g. "Hva dreier det seg om").
+            if ($next !== null && (in_array($next, $pronouns, true) || in_array($next, $determiners, true)) && $isverb) {
+                $score += 8;
+            }
+            if ($next !== null && (in_array($next, $pronouns, true) || in_array($next, $determiners, true)) && $isnoun) {
+                $score -= 3;
+            }
+            // Aux + participle patterns (e.g. "har slått").
+            if (in_array($prev, $auxverbs, true) && $isverb && (str_contains($tag, 'perf-part') || str_contains($tag, '<perf-part>') || str_contains($tag, 'part'))) {
+                $score += 6;
+            }
+            // Special-case: "Det er for ADJ" ("for" = adverb 'too'), not preterit of "fare".
+            if (($cand['wordform'] ?? '') === 'for' && $prev === 'er' && $isadv) {
+                $score += 6;
+            }
+            if (($cand['wordform'] ?? '') === 'for' && $prev === 'er' && $isverb) {
+                $score -= 6;
             }
 
             if ($score > $bestscore) {
