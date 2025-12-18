@@ -1141,6 +1141,7 @@ switch ($action) {
                 }
                 $skipordbokene = true;
             }
+            $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
             if ($orbokeneenabled && !$skipordbokene) {
                 $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
                 $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
@@ -1309,7 +1310,7 @@ switch ($action) {
                 }
             }
             // Always prefer Ordbokene verb forms to mirror dictionary table.
-            if (!empty($data['ordbokene'])) {
+            if (!empty($data['ordbokene']) && ($data['ordbokene']['source'] ?? '') !== 'builtin') {
                 $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
                 if (!empty($selected['tag'])) {
                     $taglower = core_text::strtolower((string)$selected['tag']);
