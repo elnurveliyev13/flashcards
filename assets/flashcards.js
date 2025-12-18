@@ -3293,7 +3293,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         let focusVal = (expressionResolvedAi || data.focusWord || '').trim();
         if(!expressionResolvedAi){
           if(posVal === 'verb'){
-            focusVal = `(??) ${focusVal}`;
+            const lemma = (data.focusBaseform || '').trim();
+            if(lemma){
+              focusVal = lemma;
+            }
+            focusVal = `(å) ${focusVal}`;
           } else if(posVal === 'substantiv' && data.gender){
             focusVal = `(${data.gender}) ${focusVal}`;
           }

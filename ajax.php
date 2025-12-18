@@ -69,6 +69,32 @@ function mod_flashcards_ordbokene_wc_from_pos(string $pos): string {
     return '';
 }
 
+/**
+ * Tokenize to lowercase word tokens (letters only) for containment checks.
+ */
+function mod_flashcards_word_tokens(string $text): array {
+    $text = core_text::strtolower($text);
+    if ($text === '') {
+        return [];
+    }
+    if (!preg_match_all('/[\\p{L}\\p{M}]+/u', $text, $m)) {
+        return [];
+    }
+    return array_values(array_filter(array_map('trim', $m[0] ?? [])));
+}
+
+/**
+ * True when a lowercase token is present in text as a word token (diacritics-sensitive at PHP level).
+ */
+function mod_flashcards_token_in_text(string $token, string $text): bool {
+    $token = core_text::strtolower(trim($token));
+    if ($token === '' || $text === '') {
+        return false;
+    }
+    $set = array_flip(mod_flashcards_word_tokens($text));
+    return isset($set[$token]);
+}
+
 $cmid = optional_param('cmid', 0, PARAM_INT); // CHANGED: optional for global mode
 $action = required_param('action', PARAM_ALPHANUMEXT);
 
@@ -858,6 +884,18 @@ switch ($action) {
             $debugai = [];
             // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
             $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
+            // Guardrail: do not accept AI-proposed focus words that are not present in the learner sentence.
+            // This prevents rare but costly mismatches like "for" -> "fôr" when both exist as valid words.
+            if ($fronttext !== '' && $clickedword !== '') {
+                $clickedlc = core_text::strtolower($clickedword);
+                if ($focuscheck !== '' && $focuscheck !== $clickedlc) {
+                    $focusInText = mod_flashcards_token_in_text($focuscheck, $fronttext);
+                    $clickedInText = mod_flashcards_token_in_text($clickedlc, $fronttext);
+                    if (!$focusInText && $clickedInText) {
+                        $focuscheck = $clickedlc;
+                    }
+                }
+            }
             $ob = null;
             if ($focuscheck !== '') {
                 $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, []);
