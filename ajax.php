@@ -93,6 +93,44 @@ function mod_flashcards_token_in_text(string $token, string $text): bool {
 }
 
 /**
+ * Built-in meanings for частотных служебных слов, чтобы не ходить в Ordbøkene
+ * и не получать нерелевантные статьи (напр. «for» в торговом смысле).
+ *
+ * @return array{expression:string,meanings:array<int,string>,examples:array<int,string>,forms:array<int,string>,dictmeta:array<mixed>,source:string,chosenMeaning:int}|null
+ */
+function mod_flashcards_builtin_function_word(string $word): ?array {
+    $word = core_text::strtolower(trim($word));
+    $map = [
+        'for' => ['for (adv)', 'for mye / for stor / for vanskelig = too ...'],
+        'til' => ['til (prep)', 'til skolen / til Norge / til deg = to / for / until'],
+        'av' => ['av (prep)', 'et stykke av kaka = of / from / by'],
+        'på' => ['på (prep)', 'på bordet / på skolen / på vei = on / at / onto'],
+        'paa' => ['på (prep)', 'på bordet / på skolen / på vei = on / at / onto'], // грязный вариант
+        'i' => ['i (prep)', 'i huset / i Norge = in / inside'],
+        'om' => ['om (prep/konj)', 'snakke om / tenke om; hvis = about / around / if'],
+        'med' => ['med (prep)', 'med venner / med meg = with'],
+        'seg' => ['seg (refl)', 'refleksivt pronomen = oneself'],
+        'det' => ['det (pron/det)', 'det er / det var = it / that'],
+        'som' => ['som (konj/pron)', 'som lærer / som jeg sa = as / that / who'],
+        'å' => ['å (inf‑mark)', 'å lese / å skrive = infinitive marker'],
+        'åå' => ['å (inf‑mark)', 'å lese / å skrive = infinitive marker'], // возможный ввод с дубликатом
+    ];
+    if (!isset($map[$word])) {
+        return null;
+    }
+    $expression = $word === 'paa' ? 'på' : $word;
+    return [
+        'expression' => $expression,
+        'meanings' => $map[$word],
+        'examples' => [],
+        'forms' => [],
+        'dictmeta' => [],
+        'source' => 'builtin',
+        'chosenMeaning' => 0,
+    ];
+}
+
+/**
  * Build word-level context around the first occurrence of a clicked token in a sentence.
  *
  * This mirrors the client-side behavior (word tokens only, punctuation ignored) so Ordbank
@@ -1087,7 +1125,23 @@ switch ($action) {
             }
             // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
             $debugai = [];
-            if ($orbokeneenabled) {
+            $skipordbokene = false;
+            $builtin = mod_flashcards_builtin_function_word($data['focusWord'] ?? $clickedword);
+            $poslower = core_text::strtolower($data['pos'] ?? '');
+            $functionpos = ['adv', 'adverb', 'prep', 'preposisjon', 'konj', 'konjunksjon', 'pron', 'pronomen', 'det', 'determiner', 'inf', 'part', 'partikkel'];
+            if ($builtin && ($poslower === '' || in_array($poslower, $functionpos, true))) {
+                $data['ordbokene'] = $builtin;
+                $data['focusExpression'] = $builtin['expression'];
+                $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$builtin['expression']])));
+                if (empty($data['definition']) && !empty($builtin['meanings'][1])) {
+                    $data['definition'] = $builtin['meanings'][1];
+                }
+                if (empty($data['translation'])) {
+                    $data['translation'] = $builtin['meanings'][1] ?? ($builtin['meanings'][0] ?? '');
+                }
+                $skipordbokene = true;
+            }
+            if ($orbokeneenabled && !$skipordbokene) {
                 $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
                 $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
                 $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
