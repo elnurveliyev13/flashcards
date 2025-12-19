@@ -4284,11 +4284,92 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function refreshSelect(){const s=$("#deckSelect"); s.innerHTML=""; Object.values(registry||{}).forEach(d=>{const o=document.createElement("option");o.value=d.id;o.textContent=`${d.title} - ${d.cards.length} kort`; s.appendChild(o);});}
     function updateBadge(){const act=Object.keys(state?.active||{}).filter(id=>state.active[id]); const lbl=$('#badge'); if(!lbl) return; const base=(lbl.dataset&&lbl.dataset.label)||lbl.textContent; const actlbl=$('#btnActivate')? $('#btnActivate').textContent : 'Activate'; lbl.textContent = act.length?`${actlbl}: ${act.length}`:base; }
 
-    // UI helpers
+      // UI helpers
     const slotContainer=$("#slotContainer"), emptyState=$("#emptyState");
+    const dictationState = new Map();
 
-    // New pill-based stage visualization
-    // Stage 0-10: fill pill left-to-right, show number
+    function captureDictationState(card){
+      if(!slotContainer || !card || !card.id){
+        return;
+      }
+      if(slotContainer.dataset.currentCardId && slotContainer.dataset.currentCardId !== String(card.id)){
+        return;
+      }
+      const exercises = Array.from(slotContainer.querySelectorAll('.dictation-exercise'));
+      if(!exercises.length){
+        dictationState.delete(card.id);
+        return;
+      }
+      const snapshot = exercises.map(ex => {
+        const input = ex.querySelector('.dictation-input');
+        const result = ex.querySelector('.dictation-result');
+        const correct = ex.querySelector('.dictation-correct-answer');
+        const checkBtn = ex.querySelector('.dictation-check-btn');
+        return {
+          value: input ? input.value : '',
+          placeholder: input ? input.placeholder : '',
+          disabled: input ? input.disabled : false,
+          classes: input ? Array.from(input.classList || []) : [],
+          checkDisplay: checkBtn ? checkBtn.style.display : null,
+          checkDisabled: checkBtn ? checkBtn.disabled : false,
+          resultHTML: result ? result.innerHTML : '',
+          resultHidden: result ? result.classList.contains('hidden') : true,
+          correctHTML: correct ? correct.innerHTML : '',
+          correctHidden: correct ? correct.classList.contains('hidden') : true
+        };
+      });
+      dictationState.set(card.id, snapshot);
+    }
+
+    function restoreDictationState(card){
+      if(!slotContainer || !card || !card.id){
+        return;
+      }
+      const snapshot = dictationState.get(card.id);
+      if(!snapshot || !snapshot.length){
+        return;
+      }
+      const exercises = Array.from(slotContainer.querySelectorAll('.dictation-exercise'));
+      exercises.forEach((ex, idx) => {
+        const state = snapshot[idx];
+        if(!state){
+          return;
+        }
+        const input = ex.querySelector('.dictation-input');
+        if(input){
+          input.value = state.value || '';
+          input.disabled = !!state.disabled;
+          input.placeholder = state.placeholder || input.placeholder;
+          input.className = 'dictation-input';
+          (state.classes || []).forEach(cls => {
+            if(cls && cls !== 'dictation-input'){
+              input.classList.add(cls);
+            }
+          });
+          input.dispatchEvent(new Event('autogrow:refresh'));
+        }
+        const checkBtn = ex.querySelector('.dictation-check-btn');
+        if(checkBtn){
+          checkBtn.disabled = !!state.checkDisabled;
+          if(state.checkDisplay !== null){
+            checkBtn.style.display = state.checkDisplay;
+          }
+        }
+        const result = ex.querySelector('.dictation-result');
+        if(result && typeof state.resultHTML === 'string'){
+          result.innerHTML = state.resultHTML;
+          result.classList.toggle('hidden', !!state.resultHidden);
+        }
+        const correct = ex.querySelector('.dictation-correct-answer');
+        if(correct && typeof state.correctHTML === 'string'){
+          correct.innerHTML = state.correctHTML;
+          correct.classList.toggle('hidden', !!state.correctHidden);
+        }
+      });
+    }
+
+      // New pill-based stage visualization
+      // Stage 0-10: fill pill left-to-right, show number
     // Stage 11+: green pill with checkmark
     function setStage(step){
       if(step < 0) step = 0;
@@ -7605,6 +7686,7 @@ function renderComparisonResult(resultEl, comparison){
     async function renderCard(card, count, prevCount=0){
       console.log('[DEBUG renderCard] card.id:', card.id, 'card.order:', JSON.stringify(card.order));
       slotContainer.innerHTML="";
+      slotContainer.dataset.currentCardId = card && card.id ? String(card.id) : '';
       hidePlayIcons();
       audioURL=null;
       lastStudyAudioUrl=null;
@@ -7723,6 +7805,7 @@ function renderComparisonResult(resultEl, comparison){
       setDue(queue.length);
       if(queue.length===0){
         slotContainer.innerHTML="";
+        slotContainer.dataset.currentCardId = '';
         const sb=$("#stageBadge"); if(sb) sb.classList.add("hidden");
         emptyState.classList.remove("hidden");
         const br=$("#btnRevealNext"); if(br){ br.disabled=true; br.classList.remove("primary"); }
@@ -7811,19 +7894,27 @@ function renderComparisonResult(resultEl, comparison){
     async function showCurrent(forceRender=false, prevSlots=0){
       if(!currentItem){
         pendingStudyRender=false;
+        if(slotContainer){
+          slotContainer.dataset.currentCardId = '';
+        }
         updateRevealButton();
         setIconVisibility(false);
         hidePlayIcons();
-      updateRatingActionHints(null);
-      return;
+        updateRatingActionHints(null);
+        return;
       }
       if(!forceRender && activeTab!=='study'){
         pendingStudyRender=true;
         return;
       }
       pendingStudyRender=false;
+      const isSameCardRender = slotContainer && slotContainer.dataset.currentCardId === String(currentItem.card?.id);
+      if(isSameCardRender){
+        captureDictationState(currentItem.card);
+      }
       setStage(currentItem.rec.step||0);
       await renderCard(currentItem.card, visibleSlots, prevSlots);
+      restoreDictationState(currentItem.card);
       setIconVisibility(true);
       updateRevealButton();
       updateRatingActionHints(currentItem.rec || null);

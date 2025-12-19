@@ -162,6 +162,140 @@ function mod_flashcards_normalize_token(string $token): string {
 }
 
 /**
+ * Map an ordbank tag to coarse POS.
+ */
+function mod_flashcards_pos_from_tag(string $tag): string {
+    $t = core_text::strtolower($tag);
+    if (str_contains($t, 'adv')) { return 'ADV'; }
+    if (str_contains($t, 'verb')) { return 'VERB'; }
+    if (str_contains($t, 'subst')) { return 'NOUN'; }
+    if (str_contains($t, 'adj')) { return 'ADJ'; }
+    if (str_contains($t, 'prep')) { return 'ADP'; }
+    if (str_contains($t, 'pron')) { return 'PRON'; }
+    if (str_contains($t, 'konj')) { return 'CONJ'; }
+    return 'X';
+}
+
+/**
+ * Lightweight POS decoder (Viterbi) over the full sentence to disambiguate homographs.
+ * Returns the best candidate for the clicked token index, or null if cannot decode.
+ *
+ * @param array<int,string> $tokens normalized tokens
+ * @param int $clickedIdx index of clicked token in $tokens
+ * @return array<string,mixed>|null
+ */
+function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
+    global $DB;
+    if ($clickedIdx < 0 || $clickedIdx >= count($tokens)) {
+        return null;
+    }
+    // Build candidates per token.
+    $candlist = [];
+    foreach ($tokens as $tok) {
+        $cands = \mod_flashcards\local\ordbank_helper::find_candidates($tok);
+        if (empty($cands)) {
+            $candlist[] = [];
+            continue;
+        }
+        // Cap to 6 to avoid explosion.
+        $candlist[] = array_slice(array_values($cands), 0, 6);
+    }
+    if (empty($candlist[$clickedIdx])) {
+        return null;
+    }
+    $n = count($tokens);
+    $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','når'];
+    $articles = ['en','ei','et','ein','eitt'];
+    $determin = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
+    $aux = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
+    $prepseg = ['om','over','for','med','til','av','på','pa','i'];
+
+    $trans = function(string $prev, string $cur): int {
+        // transition weights between coarse POS
+        $score = 0;
+        if ($prev === 'DET' && $cur === 'NOUN') $score += 4;
+        if ($prev === 'PRON' && $cur === 'VERB') $score += 3;
+        if ($prev === 'ADP' && in_array($cur, ['NOUN','PRON'], true)) $score += 3;
+        if ($prev === 'AUX' && $cur === 'VERB') $score += 4;
+        if ($prev === 'VERB' && $cur === 'ADP') $score += 1;
+        if ($prev === 'ADV' && $cur === 'ADJ') $score += 1;
+        if ($cur === 'X') $score -= 2;
+        return $score;
+    };
+    $emission = function(array $cand, ?string $prevTok, ?string $nextTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
+        $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
+        $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
+        $score = 0;
+        if (in_array($pos, ['VERB','NOUN','ADJ','ADV'], true)) $score += 1;
+        if (in_array($prevTok, $articles, true) || in_array($prevTok, $determin, true)) {
+            if ($pos === 'NOUN') $score += 6;
+            if ($pos === 'VERB') $score -= 5;
+        }
+        if (in_array($prevTok, $pronouns, true) && $pos === 'VERB') {
+            $score += 3;
+        }
+        if ($prevTok === 'å' && $pos === 'VERB') {
+            $score += 5;
+        }
+        if ($pos === 'VERB' && $nextTok === 'seg') {
+            $score += 3;
+        }
+        if ($pos === 'VERB' && $nextTok === 'seg' && in_array($nextTok, $prepseg, true)) {
+            $score += 2;
+        }
+        if ($tok === 'for' && $pos === 'ADV') {
+            $score += 8;
+        }
+        if ($tok === 'for' && $pos === 'VERB') {
+            $score -= 8;
+        }
+        if ($tok === 'for' && $pos === 'NOUN') {
+            $score -= 6;
+        }
+        return $score;
+    };
+
+    $dp = [];
+    $back = [];
+    for ($i = 0; $i < $n; $i++) {
+        $dp[$i] = [];
+        $back[$i] = [];
+        $prevTok = $tokens[$i-1] ?? null;
+        $nextTok = $tokens[$i+1] ?? null;
+        foreach ($candlist[$i] as $k => $cand) {
+            $emit = $emission($cand, $prevTok, $nextTok);
+            if ($i === 0) {
+                $dp[$i][$k] = $emit;
+                $back[$i][$k] = -1;
+            } else {
+                $best = -INF;
+                $bestj = -1;
+                foreach ($dp[$i-1] as $j => $prevScore) {
+                    $prevPos = mod_flashcards_pos_from_tag($candlist[$i-1][$j]['tag'] ?? '');
+                    $curPos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
+                    $score = $prevScore + $emit + $trans($prevPos, $curPos);
+                    if ($score > $best) { $best = $score; $bestj = $j; }
+                }
+                $dp[$i][$k] = $best;
+                $back[$i][$k] = $bestj;
+            }
+        }
+    }
+    // Backtrack best path.
+    $last = $n - 1;
+    if (empty($dp[$last])) {
+        return null;
+    }
+    $bestk = array_keys($dp[$last], max($dp[$last]))[0];
+    $path = array_fill(0, $n, 0);
+    for ($i = $last; $i >= 0; $i--) {
+        $path[$i] = $bestk;
+        $bestk = $back[$i][$bestk] ?? 0;
+    }
+    $bestCand = $candlist[$clickedIdx][$path[$clickedIdx]] ?? null;
+    return $bestCand ?: null;
+}
+/**
  * Build word-level context around the first occurrence of a clicked token in a sentence.
  *
  * This mirrors the client-side behavior (word tokens only, punctuation ignored) so Ordbank
@@ -1022,13 +1156,31 @@ switch ($action) {
                 }
             }
             $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
-            $ob = null;
-            if ($focuscheck !== '') {
-                $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, $ctx);
+            // Try POS sequence decoding across the full sentence to pick the best candidate for the clicked token.
+            $tokens = mod_flashcards_word_tokens($fronttext);
+            $clickedIdx = array_search($clickedword, $tokens, true);
+            $dpSelected = null;
+            if ($clickedIdx !== false) {
+                $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx);
             }
-            // If helper didn't return, try clicked word as fallback.
-            if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
-                $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), $ctx);
+            $ob = null;
+            if ($dpSelected) {
+                // Build a minimal ob from the decoded candidate.
+                $selected = $dpSelected;
+                $ob = [
+                    'selected' => $selected,
+                    'forms' => \mod_flashcards\local\ordbank_helper::fetch_forms((int)($selected['lemma_id'] ?? 0), (string)($selected['tag'] ?? '')),
+                    'parts' => [],
+                    'ambiguous' => false,
+                ];
+            } else {
+                if ($focuscheck !== '') {
+                    $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, $ctx);
+                }
+                // If helper didn't return, try clicked word as fallback.
+                if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
+                    $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), $ctx);
+                }
             }
             // If still nothing, try a direct lookup to confirm existence.
             if ((!$ob || empty($ob['selected']))) {
