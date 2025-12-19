@@ -1330,6 +1330,9 @@ switch ($action) {
             }
             // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
             $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
+            if ($isbuiltin) {
+                $allowforms = false;
+            }
             if (!$data['pos']) {
                 if (str_contains($taglower, 'verb')) {
                     $data['pos'] = 'verb';
@@ -1342,6 +1345,10 @@ switch ($action) {
             }
             if (!empty($selected['gender'])) {
                 $data['gender'] = $selected['gender'];
+            }
+            if ($isbuiltin) {
+                // Do not carry over pronunciation/forms for function words.
+                $data['transcription'] = '';
             }
             $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
             if ($allowforms && !$isbuiltin && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
