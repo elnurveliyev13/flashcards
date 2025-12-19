@@ -141,6 +141,28 @@ function mod_flashcards_is_function_word(string $word): bool {
 }
 
 /**
+ * Parse arg codes from a tag (e.g., <trans11/på>, <refl4>).
+ *
+ * @return array<int,array{code:string,prep:string|null}>
+ */
+function mod_flashcards_extract_argcodes_from_tag(string $tag): array {
+    $out = [];
+    preg_match_all('/<([^>]+)>/', $tag, $m);
+    foreach ($m[1] ?? [] as $raw) {
+        if (preg_match('/^(trans|intrans|refl|ditrans|predik)/', $raw)) {
+            $code = $raw;
+            $prep = null;
+            if (str_contains($raw, '/')) {
+                [$code, $prep] = explode('/', $raw, 2);
+                $prep = trim($prep);
+            }
+            $out[] = ['code' => $code, 'prep' => $prep];
+        }
+    }
+    return $out;
+}
+
+/**
  * Normalize a whole text by applying token-level normalization to word chunks.
  */
 function mod_flashcards_normalize_text(string $text): string {
@@ -234,6 +256,7 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
     $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
         $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
         $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
+        $argcodes = mod_flashcards_extract_argcodes_from_tag((string)($cand['tag'] ?? ''));
         $score = 0;
         if ($curTok) {
             $curLower = core_text::strtolower($curTok);
@@ -258,11 +281,24 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         if ($prevTok === 'å' && $pos === 'VERB') {
             $score += 5;
         }
+        // Valency hints: seg + preposition
         if ($pos === 'VERB' && $nextTok === 'seg') {
-            $score += 3;
+            $score += 4;
         }
-        if ($pos === 'VERB' && $nextTok === 'seg' && in_array($nextTok, $prepseg, true)) {
-            $score += 2;
+        // If tag contains refl*/ditrans*/trans* with specific prep, reward matching next/next2.
+        foreach ($argcodes as $ac) {
+            if (!empty($ac['prep'])) {
+                if ($nextTok === $ac['prep'] || $prevTok === $ac['prep']) {
+                    $score += 5;
+                }
+                if ($nextTok === 'seg' || $prevTok === 'seg') {
+                    $score += 2;
+                }
+            } else {
+                if ($pos === 'VERB' && ($nextTok === 'seg' || $prevTok === 'seg')) {
+                    $score += 2;
+                }
+            }
         }
         if ($tok === 'for' && $pos === 'ADV') {
             $score += 8;
@@ -1180,12 +1216,12 @@ switch ($action) {
             }
             $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
             // Try POS sequence decoding across the full sentence to pick the best candidate for the clicked token.
-            $tokens = mod_flashcards_word_tokens($fronttext);
-            $clickedIdx = array_search($clickedword, $tokens, true);
-            $dpSelected = null;
-            if ($clickedIdx !== false) {
-                $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx);
-            }
+        $tokens = mod_flashcards_word_tokens($fronttext);
+        $clickedIdx = array_search($clickedword, $tokens, true);
+        $dpSelected = null;
+        if ($clickedIdx !== false) {
+            $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx);
+        }
             $ob = null;
             if ($dpSelected) {
                 // Build a minimal ob from the decoded candidate.
