@@ -169,9 +169,9 @@
                   <div class="pref-gesture-submenu" id="gestureSubmenu" aria-hidden="true">
                     <div class="pref-card pref-card-gesture">
                       <div class="pref-submenu-header">
-                        <button type="button" class="pref-submenu-back" id="gestureSubmenuBack">
+                        <button type="button" class="pref-submenu-back" id="gestureSubmenuBack" aria-label="{{#str}} back, mod_flashcards {{/str}}">
                           <span class="pref-submenu-back-icon" aria-hidden="true">&#8592;</span>
-                          <span data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
+                          <span class="sr-only" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
                         </button>
                         <div class="pref-card-title" data-i18n="gestures_heading">Gesture Controls</div>
                       </div>
@@ -196,14 +196,6 @@
                             <input type="checkbox" id="settingDoubleTapAudio" checked>
                             <span data-i18n="gesture_double_tap">Double tap to replay audio</span>
                           </label>
-
-                          <div class="pref-gesture-row pref-sensitivity-row">
-                            <label class="pref-gesture-label">
-                              <span data-i18n="gesture_sensitivity">Swipe Sensitivity</span>
-                              <input type="range" id="settingSensitivity" min="0.3" max="1.0" step="0.1" value="0.5" class="pref-sensitivity-slider">
-                              <span class="pref-sensitivity-value" id="sensitivityValue">Medium</span>
-                            </label>
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -767,17 +759,17 @@
   <!-- Fixed bottom action bar (feature-flagged via data-ux-bottom="1") -->
   <div id="bottomActions" class="bottom-panel bottom-actions hidden" hidden style="display:none" role="toolbar" aria-label="{{#str}} rating_actions, mod_flashcards {{/str}}">
     <button id="btnRevealNext" class="primary" data-i18n="showmore" hidden>{{#str}} showmore, mod_flashcards {{/str}}</button>
-    <button id="btnEasyBottom" class="ok">
-      <span class="rating-label" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</span>
-      <span class="rating-hint" id="btnEasyHint" aria-live="polite"></span>
+    <button id="btnHardBottom" class="hard">
+      <span class="rating-label" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</span>
+      <span class="rating-hint" id="btnHardHint" aria-live="polite"></span>
     </button>
     <button id="btnNormalBottom" class="mid">
       <span class="rating-label" data-i18n="normal">{{#str}} normal, mod_flashcards {{/str}}</span>
       <span class="rating-hint" id="btnNormalHint" aria-live="polite"></span>
     </button>
-    <button id="btnHardBottom" class="hard">
-      <span class="rating-label" data-i18n="hard">{{#str}} hard, mod_flashcards {{/str}}</span>
-      <span class="rating-hint" id="btnHardHint" aria-live="polite"></span>
+    <button id="btnEasyBottom" class="ok">
+      <span class="rating-label" data-i18n="easy">{{#str}} easy, mod_flashcards {{/str}}</span>
+      <span class="rating-hint" id="btnEasyHint" aria-live="polite"></span>
     </button>
   </div>
   <div id="metaRecorder" class="bottom-panel bottom-recorder rec-control rec-control-inline hidden" hidden role="toolbar" aria-label="{{#str}} record_practice, mod_flashcards {{/str}}">
@@ -812,16 +804,20 @@
   </div>
   <div id="listModal" class="modal modal-fullscreen" role="dialog" aria-modal="true">
     <div class="box">
-      <div id="yui_3_18_1_1_1765121778773_21" class="row" style="justify-content:space-between;align-items:center;padding:0 12px">
-        <div class="row" style="flex:1;min-width:0;align-items:center;gap:10px;flex-wrap:wrap">
-          <select id="listFilterDue" style="padding:6px">
-            <option value="all">All cards</option>
-            <option value="due">Due only</option>
-          </select>
-          <span id="listCount" class="badge">0</span>
+      <div id="yui_3_18_1_1_1765121778773_21" class="list-modal-header">
+        <div class="list-modal-top">
+          <div class="row list-modal-filters">
+            <select id="listFilterDue" style="padding:6px">
+              <option value="all">All cards</option>
+              <option value="due">Due only</option>
+            </select>
+            <span id="listCount" class="badge">0</span>
+          </div>
+          <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
+        </div>
+        <div class="list-modal-search">
           <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}" style="flex:1;min-width:220px;max-width:420px">
         </div>
-        <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
       </div>
       <div style="overflow:auto;margin-top:10px">
         <table class="table" id="listTable">

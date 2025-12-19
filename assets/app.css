@@ -1960,6 +1960,31 @@ audio{max-width:260px}
 #listModal{
   z-index:2400;
 }
+.list-modal-header{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:0;
+}
+.list-modal-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.list-modal-filters{
+  flex:1;
+  min-width:0;
+  align-items:center;
+  gap:10px;
+}
+.list-modal-search{
+  width:100%;
+}
+.list-modal-search #listSearch{
+  width:100%;
+  max-width:420px;
+}
 #ocrCropModal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1002;touch-action:none;padding:0}
 #ocrCropModal .box{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;border:none;padding:env(safe-area-inset-top,12px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;box-sizing:border-box}
 .ocr-crop-box{flex:1;display:flex;flex-direction:column;width:100%;min-height:0;max-height:100%;position:relative;overflow:hidden;background:transparent;justify-content:center;align-items:center;gap:12px}

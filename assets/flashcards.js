@@ -650,6 +650,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Interface language',
         font_scale_label: 'Font size',
+        gestures_heading: 'Gesture Controls',
+        gestures_enabled: 'Enable swipe gestures',
+        gesture_tap_reveal: 'Tap card to reveal next',
+        gesture_long_press: 'Long press for menu',
+        gesture_double_tap: 'Double tap to replay audio',
         tab_quickinput: 'Create',
         tab_study: 'Practice',
         tab_dashboard: 'Dashboard',
@@ -768,6 +773,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: '\u041c\u043e\u0432\u0430 \u0456\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0443',
         font_scale_label: '\u0420\u043e\u0437\u043c\u0456\u0440 \u0448\u0440\u0438\u0444\u0442\u0443',
+        gestures_heading: '\u041a\u0435\u0440\u0443\u0432\u0430\u043d\u043d\u044f \u0436\u0435\u0441\u0442\u0430\u043c\u0438',
+        gestures_enabled: '\u0423\u0432\u0456\u043c\u043a\u043d\u0443\u0442\u0438 \u0436\u0435\u0441\u0442\u0438 \u0437\u043c\u0430\u0445\u0443\u0432\u0430\u043d\u043d\u044f',
+        gesture_tap_reveal: '\u0422\u043e\u0440\u043a\u043d\u0456\u0442\u044c \u043a\u0430\u0440\u0442\u043a\u0443, \u0449\u043e\u0431 \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u0438 \u043d\u0430\u0441\u0442\u0443\u043f\u043d\u0443',
+        gesture_long_press: '\u0414\u043e\u0432\u0433\u0435 \u043d\u0430\u0442\u0438\u0441\u043a\u0430\u043d\u043d\u044f \u0432\u0456\u0434\u043a\u0440\u0438\u0432\u0430\u0454 \u043c\u0435\u043d\u044e',
+        gesture_double_tap: '\u041f\u043e\u0434\u0432\u0456\u0439\u043d\u0435 \u0442\u043e\u0440\u043a\u0430\u043d\u043d\u044f - \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0438 \u0430\u0443\u0434\u0456\u043e',
         tab_quickinput: '\u0421\u0442\u0432\u043e\u0440\u0438\u0442\u0438',
         tab_study: '\u041d\u0430\u0432\u0447\u0430\u043d\u043d\u044f',
         tab_dashboard: '\u041f\u0430\u043d\u0435\u043b\u044c',
@@ -884,6 +894,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: '\u042f\u0437\u044b\u043a \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430',
         font_scale_label: '\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430',
+        gestures_heading: 'Управление жестами',
+        gestures_enabled: 'Включить жесты смахивания',
+        gesture_tap_reveal: 'Нажмите на карту, чтобы открыть следующую',
+        gesture_long_press: 'Долгое нажатие открывает меню',
+        gesture_double_tap: 'Двойное нажатие - повтор аудио',
         tab_quickinput: '\u0421\u043e\u0437\u0434\u0430\u0442\u044c',
         tab_study: '\u041e\u0431\u0443\u0447\u0435\u043d\u0438\u0435',
         tab_dashboard: '\u041f\u0430\u043d\u0435\u043b\u044c',
@@ -1000,6 +1015,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Langue de l\'interface',
         font_scale_label: 'Taille du texte',
+        gestures_heading: 'Commandes gestuelles',
+        gestures_enabled: 'Activer les gestes de balayage',
+        gesture_tap_reveal: 'Touchez la carte pour afficher la suivante',
+        gesture_long_press: 'Appui long pour le menu',
+        gesture_double_tap: 'Double tap pour relire l\\'audio',
         tab_quickinput: 'Creer',
         tab_study: 'Pratique',
         tab_dashboard: 'Tableau',
@@ -1100,6 +1120,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Idioma de la interfaz',
         font_scale_label: 'Tamano de fuente',
+        gestures_heading: 'Controles por gestos',
+        gestures_enabled: 'Activar gestos de deslizamiento',
+        gesture_tap_reveal: 'Toca la tarjeta para mostrar la siguiente',
+        gesture_long_press: 'Mantén pulsado para abrir el menú',
+        gesture_double_tap: 'Toca dos veces para repetir el audio',
         tab_quickinput: 'Crear',
         tab_study: 'Práctica',
         tab_dashboard: 'Panel',
@@ -1200,6 +1225,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Jezyk interfejsu',
         font_scale_label: 'Rozmiar czcionki',
+        gestures_heading: 'Sterowanie gestami',
+        gestures_enabled: 'Wlacz gesty przesuniecia',
+        gesture_tap_reveal: 'Stuknij karte, aby odslonic nastepna',
+        gesture_long_press: 'Przytrzymaj, aby otworzyc menu',
+        gesture_double_tap: 'Podwojne stukniecie odtwarza audio ponownie',
         tab_quickinput: 'Utworz',
         tab_study: 'Praktyka',
         tab_dashboard: 'Panel',
@@ -1316,6 +1346,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Lingua dell\'interfaccia',
         font_scale_label: 'Dimensione del testo',
+        gestures_heading: 'Controlli gestuali',
+        gestures_enabled: 'Abilita i gesti di scorrimento',
+        gesture_tap_reveal: 'Tocca la carta per mostrare la successiva',
+        gesture_long_press: 'Pressione prolungata per il menu',
+        gesture_double_tap: 'Doppio tocco per riascoltare l\'audio',
         tab_quickinput: 'Crea',
         tab_study: 'Pratica',
         tab_dashboard: 'Pannello',
@@ -1416,6 +1451,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         app_title: 'MyMemory',
         interface_language_label: 'Sprache der Oberflache',
         font_scale_label: 'Schriftgro?e',
+        gestures_heading: 'Gestensteuerung',
+        gestures_enabled: 'Wischgesten aktivieren',
+        gesture_tap_reveal: 'Tippe auf die Karte, um die nachste anzuzeigen',
+        gesture_long_press: 'Langes Tippen offnet das Menu',
+        gesture_double_tap: 'Doppelt tippen, um Audio erneut abzuspielen',
         tab_quickinput: 'Erstellen',
         tab_study: 'Praxis',
         tab_dashboard: 'Dashboard',
@@ -9732,12 +9772,16 @@ function renderComparisonResult(resultEl, comparison){
       function getGestureSetting(key, defaultValue) {
         // Fixed swipe directions (not customizable)
         const FIXED_SETTINGS = {
-          swipeRight: 'hard',
-          swipeLeft: 'easy'
+          swipeRight: 'easy',
+          swipeLeft: 'hard'
         };
 
         if (FIXED_SETTINGS.hasOwnProperty(key)) {
           return FIXED_SETTINGS[key];
+        }
+
+        if (key === 'velocityThreshold') {
+          return 0.5;
         }
 
         // Customizable settings from localStorage
@@ -9747,8 +9791,7 @@ function renderComparisonResult(resultEl, comparison){
             enabled: true,
             tapToReveal: true,
             longPressMenu: true,
-            doubleTapAudio: true,
-            velocityThreshold: 0.5
+            doubleTapAudio: true
           };
         }
         return settings.gestures[key] ?? defaultValue;
@@ -10060,9 +10103,11 @@ function renderComparisonResult(resultEl, comparison){
             enabled: true,
             tapToReveal: true,
             longPressMenu: true,
-            doubleTapAudio: true,
-            velocityThreshold: 0.5
+            doubleTapAudio: true
           };
+        } else if (Object.prototype.hasOwnProperty.call(settings.gestures, 'velocityThreshold')) {
+          delete settings.gestures.velocityThreshold;
+          saveGestureSettings(settings);
         }
         return settings;
       }
@@ -10070,21 +10115,6 @@ function renderComparisonResult(resultEl, comparison){
       // Save settings to localStorage
       function saveGestureSettings(settings) {
         localStorage.setItem('flashcards_settings', JSON.stringify(settings));
-      }
-
-      // Update sensitivity value display
-      function updateSensitivityDisplay(value) {
-        const display = $("#sensitivityValue");
-        if (!display) return;
-
-        let label = 'Medium';
-        if (value <= 0.3) label = 'Very Easy';
-        else if (value <= 0.4) label = 'Easy';
-        else if (value <= 0.6) label = 'Medium';
-        else if (value <= 0.8) label = 'Hard';
-        else label = 'Very Hard';
-
-        display.textContent = label;
       }
 
       // Initialize settings UI
@@ -10139,23 +10169,6 @@ function renderComparisonResult(resultEl, comparison){
         doubleTapCheckbox.checked = settings.gestures.doubleTapAudio;
         doubleTapCheckbox.addEventListener('change', (e) => {
           settings.gestures.doubleTapAudio = e.target.checked;
-          saveGestureSettings(settings);
-        });
-      }
-
-      // Set sensitivity slider
-      const sensitivitySlider = $("#settingSensitivity");
-      if (sensitivitySlider) {
-        sensitivitySlider.value = settings.gestures.velocityThreshold;
-        updateSensitivityDisplay(settings.gestures.velocityThreshold);
-
-        sensitivitySlider.addEventListener('input', (e) => {
-          const value = parseFloat(e.target.value);
-          updateSensitivityDisplay(value);
-        });
-
-        sensitivitySlider.addEventListener('change', (e) => {
-          settings.gestures.velocityThreshold = parseFloat(e.target.value);
           saveGestureSettings(settings);
         });
       }
