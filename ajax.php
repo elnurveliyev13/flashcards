@@ -170,8 +170,8 @@ function mod_flashcards_normalize_token(string $token): string {
  * @return array{prev?:string,next?:string,next2?:string}
  */
 function mod_flashcards_context_from_sentence(string $sentence, string $clicked): array {
-    $sentence = core_text::strtolower(trim($sentence));
-    $clicked = core_text::strtolower(trim($clicked));
+    $sentence = mod_flashcards_normalize_text(core_text::strtolower(trim($sentence)));
+    $clicked = mod_flashcards_normalize_token(core_text::strtolower(trim($clicked)));
     if ($sentence === '' || $clicked === '') {
         return [];
     }
