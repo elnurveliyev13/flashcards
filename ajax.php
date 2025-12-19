@@ -131,6 +131,19 @@ function mod_flashcards_builtin_function_word(string $word): ?array {
 }
 
 /**
+ * Normalize a single token to handle common dirty inputs (pa->på, aa->å, a->å for inf marker).
+ * Kept conservative to avoid breaking real words.
+ */
+function mod_flashcards_normalize_token(string $token): string {
+    $t = core_text::strtolower(trim($token));
+    if ($t === 'pa') { return 'på'; }
+    if ($t === 'aa' || $t === 'a') { return 'å'; }
+    if ($t === 'ae') { return 'æ'; }
+    if ($t === 'oe') { return 'ø'; }
+    return $t;
+}
+
+/**
  * Build word-level context around the first occurrence of a clicked token in a sentence.
  *
  * This mirrors the client-side behavior (word tokens only, punctuation ignored) so Ordbank
@@ -943,7 +956,7 @@ switch ($action) {
             throw new invalid_parameter_exception('Invalid payload');
         }
         $fronttext = trim($payload['frontText'] ?? '');
-        $clickedword = trim($payload['focusWord'] ?? '');
+        $clickedword = mod_flashcards_normalize_token(trim($payload['focusWord'] ?? ''));
         if ($fronttext === '' || $clickedword === '') {
             throw new invalid_parameter_exception('Missing text');
         }
@@ -977,7 +990,7 @@ switch ($action) {
             ]);
             $debugai = [];
             // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
-            $focuscheck = core_text::strtolower(trim($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
+            $focuscheck = mod_flashcards_normalize_token((string)($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
             // Guardrail: do not accept AI-proposed focus words that are not present in the learner sentence.
             // This prevents rare but costly mismatches like "for" -> "fôr" when both exist as valid words.
             if ($fronttext !== '' && $clickedword !== '') {
@@ -1638,18 +1651,18 @@ switch ($action) {
     case 'ordbank_focus_helper':
         try {
             $raw = file_get_contents('php://input');
-            $payload = json_decode($raw, true);
-            if (!is_array($payload)) {
-                throw new invalid_parameter_exception('Invalid payload');
-            }
-            $word = trim($payload['word'] ?? '');
-            $fronttext = trim($payload['frontText'] ?? '');
-            $prev = trim($payload['prev'] ?? '');
-            $next = trim($payload['next'] ?? '');
-            $next2 = trim($payload['next2'] ?? '');
-            if ($word === '') {
-                throw new invalid_parameter_exception('Missing word');
-            }
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $word = mod_flashcards_normalize_token(trim($payload['word'] ?? ''));
+        $fronttext = trim($payload['frontText'] ?? '');
+        $prev = mod_flashcards_normalize_token(trim($payload['prev'] ?? ''));
+        $next = mod_flashcards_normalize_token(trim($payload['next'] ?? ''));
+        $next2 = mod_flashcards_normalize_token(trim($payload['next2'] ?? ''));
+        if ($word === '') {
+            throw new invalid_parameter_exception('Missing word');
+        }
             $context = [];
             if ($prev !== '') {
                 $context['prev'] = $prev;
