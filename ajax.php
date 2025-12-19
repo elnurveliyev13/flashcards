@@ -1298,7 +1298,7 @@ switch ($action) {
                 $data['gender'] = $selected['gender'];
             }
             $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
-            if ($allowforms && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
+            if ($allowforms && !$isbuiltin && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
                 $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
             }
             if (empty($data['parts']) && !empty($ob['parts'])) {
@@ -1328,14 +1328,33 @@ switch ($action) {
             $isbuiltin = false;
             if ($builtin && ($poslower === '' || in_array($poslower, $functionpos, true))) {
                 $data['ordbokene'] = $builtin;
-                $data['focusExpression'] = $builtin['expression'];
-                $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$builtin['expression']])));
-                // Force focus word/baseform to the surface form for function words.
-                $data['focusWord'] = $builtin['expression'];
-                $data['focusBaseform'] = $builtin['expression'];
+                $surface = $clickedword ?: ($data['focusWord'] ?? $builtin['expression']);
+                $data['focusExpression'] = $surface;
+                $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$surface])));
+                // Force focus word/baseform to the clicked surface form for function words.
+                $data['focusWord'] = $surface;
+                $data['focusBaseform'] = $surface;
+                $data['pos'] = 'adverb';
+                // Minimal selected stub to avoid leaking forms from other paths.
+                $selected = [
+                    'lemma_id' => 0,
+                    'wordform' => $surface,
+                    'baseform' => $surface,
+                    'tag' => 'adv',
+                    'paradigme_id' => null,
+                    'boy_nummer' => 0,
+                    'ipa' => null,
+                    'gender' => '',
+                ];
+                $ob = [
+                    'selected' => $selected,
+                    'forms' => [],
+                    'parts' => [$surface],
+                    'ambiguous' => false,
+                ];
                 // Do not show verb forms for function words.
                 $data['forms'] = [];
-                $data['parts'] = [$builtin['expression']];
+                $data['parts'] = [$surface];
                 $isbuiltin = true;
                 if (empty($data['definition']) && !empty($builtin['meanings'][1])) {
                     $data['definition'] = $builtin['meanings'][1];
