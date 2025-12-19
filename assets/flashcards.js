@@ -1019,7 +1019,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         gestures_enabled: 'Activer les gestes de balayage',
         gesture_tap_reveal: 'Touchez la carte pour afficher la suivante',
         gesture_long_press: 'Appui long pour le menu',
-        gesture_double_tap: 'Double tap pour relire l\\'audio',
+        gesture_double_tap: "Double tap pour relire l'audio",
         tab_quickinput: 'Creer',
         tab_study: 'Pratique',
         tab_dashboard: 'Tableau',
