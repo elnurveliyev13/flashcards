@@ -71,6 +71,7 @@ function mod_flashcards_ordbokene_wc_from_pos(string $pos): string {
  */
 function mod_flashcards_word_tokens(string $text): array {
     $text = core_text::strtolower($text);
+    $text = mod_flashcards_normalize_text($text);
     if ($text === '') {
         return [];
     }
@@ -128,6 +129,23 @@ function mod_flashcards_builtin_function_word(string $word): ?array {
         'source' => 'builtin',
         'chosenMeaning' => 0,
     ];
+}
+
+/**
+ * Normalize a whole text by applying token-level normalization to word chunks.
+ */
+function mod_flashcards_normalize_text(string $text): string {
+    if ($text === '') {
+        return $text;
+    }
+    $parts = preg_split('/(\\s+)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+    foreach ($parts as $i => $p) {
+        // Only normalize pure word chunks (letters/marks).
+        if (preg_match('/^[\\p{L}\\p{M}]+$/u', $p)) {
+            $parts[$i] = mod_flashcards_normalize_token($p);
+        }
+    }
+    return implode('', $parts);
 }
 
 /**
