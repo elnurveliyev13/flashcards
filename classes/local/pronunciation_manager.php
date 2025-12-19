@@ -99,17 +99,6 @@ class pronunciation_manager {
             debugging('[flashcards] Pronunciation lookup failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             return null;
         }
-        if (!$record && $poscode !== null) {
-            if (self::has_wordform_lc()) {
-                $fallbackwhere = 'wordform_lc = :wordform';
-            } else {
-                $fallbackwhere = 'LOWER(wordform) = :wordform';
-                if ($bin) {
-                    $fallbackwhere = 'LOWER(wordform) COLLATE ' . $bin . ' = :wordform';
-                }
-            }
-            $record = $DB->get_record_select('flashcards_pron_dict', $fallbackwhere, ['wordform' => $normalized], '*', IGNORE_MULTIPLE);
-        }
         if (!$record) {
             return null;
         }

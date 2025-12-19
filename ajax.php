@@ -1349,6 +1349,7 @@ switch ($action) {
             if ($isbuiltin) {
                 // Do not carry over pronunciation/forms for function words.
                 $data['transcription'] = '';
+                $selected['ipa'] = null;
             }
             $data['forms'] = $allowforms ? ($ob['forms'] ?? []) : [];
             if ($allowforms && !$isbuiltin && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
