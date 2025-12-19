@@ -333,6 +333,8 @@ class ordbank_helper {
         $prepseg = ['om','over','for','med','til','av','på','pa','i'];
         $functionwords = ['for','til','av','på','paa','i','om','med','seg','det','som','å','åå','aa'];
 
+        $wordLower = core_text::strtolower((string)($candidates[array_key_first($candidates)]['wordform'] ?? ''));
+
         $best = null;
         $bestscore = -1;
         foreach ($candidates as $cand) {
@@ -343,6 +345,16 @@ class ordbank_helper {
             $isadj  = str_contains($tag, 'adj');
             $isadv  = str_contains($tag, 'adv');
             $isprep = str_contains($tag, 'prep');
+
+            $candword = core_text::strtolower((string)($cand['wordform'] ?? ''));
+            // Prefer exact surface match (avoid 'for' -> 'fôr').
+            if ($wordLower !== '' && $candword === $wordLower) {
+                $score += 12;
+            }
+            // Penalize diacritics drift (e.g., 'for' vs 'fôr').
+            if ($wordLower !== '' && $candword !== $wordLower && iconv('UTF-8', 'ASCII//TRANSLIT', $candword) === $wordLower) {
+                $score -= 15;
+            }
 
             if ($cand['paradigme_id'] ?? null) {
                 $score += 1;

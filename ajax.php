@@ -1316,6 +1316,12 @@ switch ($action) {
                 $data['ordbokene'] = $builtin;
                 $data['focusExpression'] = $builtin['expression'];
                 $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$builtin['expression']])));
+                // Force focus word/baseform to the surface form for function words.
+                $data['focusWord'] = $builtin['expression'];
+                $data['focusBaseform'] = $builtin['expression'];
+                // Do not show verb forms for function words.
+                $data['forms'] = [];
+                $data['parts'] = [$builtin['expression']];
                 if (empty($data['definition']) && !empty($builtin['meanings'][1])) {
                     $data['definition'] = $builtin['meanings'][1];
                 }
