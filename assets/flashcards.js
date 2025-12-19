@@ -3316,6 +3316,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             focusVal = `(${data.gender}) ${focusVal}`;
           }
         }
+        if(posVal !== 'verb'){
+          focusVal = focusVal.replace(/^\(å\)\s*/i, '').replace(/^\(a\)\s*/i, '');
+        }
         fokusInput.value = focusVal;
         try{
           fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
@@ -3621,6 +3624,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }
           }
         }
+        if(posVal !== 'verb'){
+          focusWordResolved = focusWordResolved.replace(/^\(å\)\s*/i, '').replace(/^\(a\)\s*/i, '');
+        }
         focusWordResolved = (focusWordResolved || '').trim();
         if(fokusInput){
           fokusInput.value = focusWordResolved;
@@ -3690,9 +3696,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function resolvePosFromTag(tag){
       const t = (tag||'').toLowerCase();
+      // Check narrower tokens first to avoid "adverb" being misread as "verb"
+      if(t.includes('adv')) return 'adverb';
       if(t.includes('verb')) return 'verb';
       if(t.includes('subst')) return 'substantiv';
       if(t.includes('adj')) return 'adjektiv';
+      if(t.includes('prep')) return 'preposisjon';
       return '';
     }
 
