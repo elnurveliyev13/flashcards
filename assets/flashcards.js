@@ -3323,7 +3323,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         correctionMessage = data.correction.trim();
       }
       // Try to detect multiword expressions from ordbokene in the original front text.
-      const dictExpressionAi = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
+      const dictExpressionAi = (data.ordbokene && data.ordbokene.source === 'builtin')
+        ? ''
+        : (data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '');
       let matchedExpression = '';
       const sentenceTokens = tokenizeWordsForExpression(frontInput && frontInput.value ? frontInput.value : '');
       const focusWordTok = tokenizeWordsForExpression(data.focusWord || '')[0] || '';
@@ -3617,7 +3619,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           console.info('[Flashcards][Ordbokene debug]', resp.debug.ordbokene);
         }
       // Try to detect multiword expressions
-      const dictExpression = data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '';
+      const dictExpression = (data.ordbokene && data.ordbokene.source === 'builtin')
+        ? ''
+        : (data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '');
       let matchedExpression = '';
       if(Array.isArray(data.expressions) && data.expressions.length && frontInput && frontInput.value){
         const sentenceTokens = tokenizeWordsForExpression(frontInput.value);
