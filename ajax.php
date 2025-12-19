@@ -222,10 +222,22 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         if ($cur === 'X') $score -= 2;
         return $score;
     };
-    $emission = function(array $cand, ?string $prevTok, ?string $nextTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
+    $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
         $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
         $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
         $score = 0;
+        if ($curTok) {
+            $curLower = core_text::strtolower($curTok);
+            if ($tok === $curLower) {
+                $score += 12; // exact surface match
+            } else {
+                $asciiTok = @iconv('UTF-8', 'ASCII//TRANSLIT', $tok);
+                $asciiCur = @iconv('UTF-8', 'ASCII//TRANSLIT', $curLower);
+                if ($asciiTok && $asciiCur && $asciiTok === $asciiCur) {
+                    $score -= 12; // penalize diacritic drift (for vs fôr)
+                }
+            }
+        }
         if (in_array($pos, ['VERB','NOUN','ADJ','ADV'], true)) $score += 1;
         if (in_array($prevTok, $articles, true) || in_array($prevTok, $determin, true)) {
             if ($pos === 'NOUN') $score += 6;
@@ -262,8 +274,9 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         $back[$i] = [];
         $prevTok = $tokens[$i-1] ?? null;
         $nextTok = $tokens[$i+1] ?? null;
+        $curTok = $tokens[$i] ?? null;
         foreach ($candlist[$i] as $k => $cand) {
-            $emit = $emission($cand, $prevTok, $nextTok);
+            $emit = $emission($cand, $prevTok, $nextTok, $curTok);
             if ($i === 0) {
                 $dp[$i][$k] = $emit;
                 $back[$i][$k] = -1;
@@ -1312,6 +1325,7 @@ switch ($action) {
             $builtin = mod_flashcards_builtin_function_word($data['focusWord'] ?? $clickedword);
             $poslower = core_text::strtolower($data['pos'] ?? '');
             $functionpos = ['adv', 'adverb', 'prep', 'preposisjon', 'konj', 'konjunksjon', 'pron', 'pronomen', 'det', 'determiner', 'inf', 'part', 'partikkel'];
+            $isbuiltin = false;
             if ($builtin && ($poslower === '' || in_array($poslower, $functionpos, true))) {
                 $data['ordbokene'] = $builtin;
                 $data['focusExpression'] = $builtin['expression'];
@@ -1322,6 +1336,7 @@ switch ($action) {
                 // Do not show verb forms for function words.
                 $data['forms'] = [];
                 $data['parts'] = [$builtin['expression']];
+                $isbuiltin = true;
                 if (empty($data['definition']) && !empty($builtin['meanings'][1])) {
                     $data['definition'] = $builtin['meanings'][1];
                 }
@@ -1515,7 +1530,7 @@ switch ($action) {
                 }
             }
             // Ensure focus baseform stays on the lemma (not the expression surface form).
-            if (!empty($selected['baseform'])) {
+            if (!$isbuiltin && !empty($selected['baseform'])) {
                 $data['focusBaseform'] = $selected['baseform'];
             }
             // Final form cleanup for verbs to avoid noisy variants.
