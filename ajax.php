@@ -1368,7 +1368,7 @@ switch ($action) {
             // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
             $debugai = [];
             $skipordbokene = false;
-            $builtin = mod_flashcards_builtin_function_word($data['focusWord'] ?? $clickedword);
+            $builtin = mod_flashcards_builtin_function_word($clickedword);
             $poslower = core_text::strtolower($data['pos'] ?? '');
             $functionpos = ['adv', 'adverb', 'prep', 'preposisjon', 'konj', 'konjunksjon', 'pron', 'pronomen', 'det', 'determiner', 'inf', 'part', 'partikkel'];
             $isbuiltin = false;
