@@ -132,6 +132,15 @@ function mod_flashcards_builtin_function_word(string $word): ?array {
 }
 
 /**
+ * Check if a token is a common function word we want to keep as-is.
+ */
+function mod_flashcards_is_function_word(string $word): bool {
+    $w = core_text::strtolower(trim($word));
+    $functionwords = ['for','til','av','på','paa','i','om','med','seg','det','som','å','åå','aa'];
+    return in_array($w, $functionwords, true);
+}
+
+/**
  * Normalize a whole text by applying token-level normalization to word chunks.
  */
 function mod_flashcards_normalize_text(string $text): string {
@@ -1125,6 +1134,7 @@ switch ($action) {
         if ($fronttext === '' || $clickedword === '') {
             throw new invalid_parameter_exception('Missing text');
         }
+        $isfunctionword = mod_flashcards_is_function_word($clickedword);
         $language = clean_param($payload['language'] ?? 'no', PARAM_ALPHANUMEXT);
         $level = strtoupper(clean_param($payload['level'] ?? '', PARAM_ALPHANUMEXT));
         if (!in_array($level, ['A1', 'A2', 'B1'], true)) {
@@ -1326,12 +1336,11 @@ switch ($action) {
             $poslower = core_text::strtolower($data['pos'] ?? '');
             $functionpos = ['adv', 'adverb', 'prep', 'preposisjon', 'konj', 'konjunksjon', 'pron', 'pronomen', 'det', 'determiner', 'inf', 'part', 'partikkel'];
             $isbuiltin = false;
-            if ($builtin && ($poslower === '' || in_array($poslower, $functionpos, true))) {
+            if ($isfunctionword && $builtin) {
                 $data['ordbokene'] = $builtin;
                 $surface = $clickedword ?: ($data['focusWord'] ?? $builtin['expression']);
                 $data['focusExpression'] = $surface;
-                $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$surface])));
-                // Force focus word/baseform to the clicked surface form for function words.
+                $data['expressions'] = [$surface];
                 $data['focusWord'] = $surface;
                 $data['focusBaseform'] = $surface;
                 $data['pos'] = 'adverb';
@@ -1352,7 +1361,6 @@ switch ($action) {
                     'parts' => [$surface],
                     'ambiguous' => false,
                 ];
-                // Do not show verb forms for function words.
                 $data['forms'] = [];
                 $data['parts'] = [$surface];
                 $isbuiltin = true;
