@@ -1328,6 +1328,9 @@ switch ($action) {
                     $ordbankpos = 'adjektiv';
                 }
             }
+            if ($ordbankpos !== '') {
+                $data['pos'] = $ordbankpos;
+            }
             // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
             $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
             if ($isbuiltin) {
