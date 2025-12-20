@@ -355,6 +355,8 @@ class ordbank_helper {
             if ($wordLower !== '' && $candword !== $wordLower && iconv('UTF-8', 'ASCII//TRANSLIT', $candword) === $wordLower) {
                 $score -= 15;
             }
+            // Extract arg codes from tag (<trans1>, <refl4/på>, etc.).
+            $argcodes = self::extract_argcodes_from_tag($tag);
 
             if ($cand['paradigme_id'] ?? null) {
                 $score += 1;
@@ -394,6 +396,22 @@ class ordbank_helper {
             }
             if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
                 $score += 2;
+            }
+            // Valency/arg codes: reward matching prepositions or seg.
+            foreach ($argcodes as $ac) {
+                $code = $ac['code'] ?? '';
+                $prep = $ac['prep'] ?? null;
+                if ($isverb && $next === 'seg') {
+                    $score += 3;
+                }
+                if ($prep !== null) {
+                    if ($next === $prep || $prev === $prep || $next2 === $prep) {
+                        $score += 4;
+                    }
+                }
+                if ($code && str_contains($code, 'refl') && ($next === 'seg' || $next2 === 'seg')) {
+                    $score += 4;
+                }
             }
             // Copula + "for" + adjective => should be adverb "for" (too), not verb "fare".
             if ($prev === 'er' && $isadv && ($cand['wordform'] ?? '') === 'for' && $next !== null && !in_array($next, $articles, true)) {
