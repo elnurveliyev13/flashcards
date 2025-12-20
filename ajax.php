@@ -1604,6 +1604,9 @@ switch ($action) {
             if (!$isbuiltin && !empty($selected['baseform'])) {
                 $data['focusBaseform'] = $selected['baseform'];
             }
+            if ($isbuiltin) {
+                $data['transcription'] = '';
+            }
             // Final form cleanup for verbs to avoid noisy variants.
             $data['forms'] = mod_flashcards_prune_verb_forms($data['forms'] ?? []);
             if (empty($data['gender']) && !empty($selected['gender'])) {
