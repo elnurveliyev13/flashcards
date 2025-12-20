@@ -1448,7 +1448,12 @@ switch ($action) {
                 if ($wc === 'PREP') {
                     $wc = '';
                 }
-                $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, $wc);
+                // For verbs, avoid pulling noun-only entries; skip Ordbøkene when wc=VERB.
+                if ($wc === 'VERB') {
+                    $entries = [];
+                } else {
+                    $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, $wc);
+                }
                 if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
                     $entries = array_values(array_merge([[
                         'baseform' => $resolvedExpr['expression'],
@@ -1525,9 +1530,7 @@ switch ($action) {
                             'url' => $entry['dictmeta']['url'] ?? '',
                             'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
                         ];
-                        $data['focusExpression'] = $expression;
-                        $data['focusWord'] = $expression;
-                        $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$expression])));
+                        // Do not override focusWord/expression chosen from Ordbank.
                         $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
                         $seed = !empty($entry['examples']) ? $entry['examples'] : [];
                         if ($openaiexpr->is_enabled()) {

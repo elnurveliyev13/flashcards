@@ -5742,6 +5742,17 @@ let lastStudyAudioRate=1;
     let editingCardId=null; // Track which card is being edited to prevent cross-contamination
     // Top-right action icons helpers
     const btnEdit = $("#btnEdit"), btnDel=$("#btnDel"), btnPlayBtn=$("#btnPlay"), btnPlaySlowBtn=$("#btnPlaySlow"), btnUpdate=$("#btnUpdate");
+    const draftHintBox = $("#draftHint");
+    function setDraftHint(card){
+      if(!draftHintBox) return;
+      if(card && card.tokenDraft){
+        draftHintBox.classList.remove('hidden');
+        draftHintBox.innerHTML = `<span class="draft-dot" aria-hidden="true"></span><span class="draft-hint-text">Draft card — tap Edit to add details.</span>`;
+      }else{
+        draftHintBox.classList.add('hidden');
+        draftHintBox.textContent = '';
+      }
+    }
     function setIconVisibility(hasCard){
       // Edit/Delete should remain visible even if no card (like original), but disabled.
       if(btnEdit){ btnEdit.classList.remove('hidden'); btnEdit.disabled = !hasCard; }
@@ -7901,6 +7912,7 @@ function renderComparisonResult(resultEl, comparison){
         if(slotContainer){
           slotContainer.dataset.currentCardId = '';
         }
+        setDraftHint(null);
         updateRevealButton();
         setIconVisibility(false);
         hidePlayIcons();
@@ -7922,6 +7934,7 @@ function renderComparisonResult(resultEl, comparison){
       setIconVisibility(true);
       updateRevealButton();
       updateRatingActionHints(currentItem.rec || null);
+      setDraftHint(currentItem.card);
       if(pendingShowMoreScroll){
         pendingShowMoreScroll=false;
         ensureStudyLayerVisible();
@@ -9755,16 +9768,18 @@ function renderComparisonResult(resultEl, comparison){
       // Render paginated rows
       paginated.forEach(async r=>{
         const tr=document.createElement("tr");
-        tr.innerHTML=`<td class="clickable-word">${r.fokus||"-"}</td><td>${formatStageBadge(r.stage)}</td><td>${fmtDateTime(r.due)}</td><td class="row playcell actions-cell" style="gap:6px"></td>`;
+        const isDraft = !!r.card.tokenDraft;
+        const fokusText = (r.fokus && r.fokus.trim()) || (isDraft ? (r.card.text || "-") : "-");
+        tr.innerHTML=`<td class="clickable-word"></td><td></td><td></td><td class="row playcell actions-cell" style="gap:6px"></td>`;
         const cell=tr.lastElementChild;
         const wordCell=tr.firstElementChild;
-        const isDraft = !!r.card.tokenDraft;
+        const stageCell=tr.children[1];
+        const dueCell=tr.children[2];
+        wordCell.textContent = fokusText;
+        stageCell.innerHTML = formatStageBadge(r.stage);
+        dueCell.textContent = fmtDateTime(r.due);
         if(isDraft){
           tr.classList.add('card-row-draft');
-          const badge=document.createElement('span');
-          badge.className='card-draft-badge';
-          badge.textContent='Draft';
-          wordCell.prepend(badge);
         }
         wordCell.style.cursor="pointer";
         wordCell.title="Open card";

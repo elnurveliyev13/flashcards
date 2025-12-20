@@ -562,6 +562,7 @@
         </div>
         <video id="cam" class="hidden capture-video" autoplay playsinline muted></video>
         <div id="slotContainer"></div>
+        <div id="draftHint" class="draft-hint hidden" role="note" aria-live="polite"></div>
         <div class="playRow">
           <button id="btnPlay" class="iconbtn hidden" title="{{#str}} title_play, mod_flashcards {{/str}}">&#128266;</button>
           <button id="btnPlaySlow" class="iconbtn hidden" title="{{#str}} title_slow, mod_flashcards {{/str}}">&#128034;</button>
@@ -807,7 +808,7 @@
       <div id="yui_3_18_1_1_1765121778773_21" class="list-modal-header">
         <div class="list-modal-top">
           <div class="row list-modal-filters">
-            <select id="listFilterDue" style="padding:6px">
+            <select id="listFilterDue">
               <option value="all">All cards</option>
               <option value="due">Due only</option>
             </select>
