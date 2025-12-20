@@ -1442,10 +1442,6 @@ switch ($action) {
                     $wc = '';
                 }
                 $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, $wc);
-                if (empty($entries) && $wc !== '') {
-                    // Retry without wc to avoid empty results due to overly strict/unsupported filters.
-                    $entries = \mod_flashcards\local\ordbokene_client::lookup_all($lookupWord, $lang, 6, '');
-                }
                 if ($resolvedExpr && !empty($resolvedExpr['expression'])) {
                     $entries = array_values(array_merge([[
                         'baseform' => $resolvedExpr['expression'],
