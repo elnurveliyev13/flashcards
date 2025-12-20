@@ -256,7 +256,7 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
     $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
         $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
         $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
-        $argcodes = mod_flashcards_extract_argcodes_from_tag((string)($cand['tag'] ?? ''));
+        $argcodes = \mod_flashcards\local\ordbank_helper::extract_argcodes_from_tag((string)($cand['tag'] ?? ''));
         $score = 0;
         if ($curTok) {
             $curLower = core_text::strtolower($curTok);

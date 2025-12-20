@@ -154,6 +154,35 @@ class ordbank_helper {
     }
 
     /**
+     * Extract valency codes (trans/refl/ditrans/predik) from a tag.
+     *
+     * @return array<int,array{code:string,prep:?string}>
+     */
+    public static function extract_argcodes_from_tag(string $tag): array {
+        $out = [];
+        if ($tag === '') {
+            return $out;
+        }
+        if (!preg_match_all('/<([^>]+)>/u', $tag, $m)) {
+            return $out;
+        }
+        foreach ($m[1] as $raw) {
+            $raw = core_text::strtolower(trim($raw));
+            if (!preg_match('/^(trans|intrans|refl|ditrans|predik)/', $raw)) {
+                continue;
+            }
+            $code = $raw;
+            $prep = null;
+            if (str_contains($raw, '/')) {
+                [$code, $prep] = explode('/', $raw, 2);
+                $prep = trim($prep);
+            }
+            $out[] = ['code' => $code, 'prep' => $prep ?: null];
+        }
+        return $out;
+    }
+
+    /**
      * Find all ordbank entries matching a surface form.
      *
      * @param string $wordform
