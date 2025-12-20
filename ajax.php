@@ -1330,6 +1330,13 @@ switch ($action) {
             }
             if ($ordbankpos !== '') {
                 $data['pos'] = $ordbankpos;
+                // If AI POS differed, drop AI meaning/examples to avoid noun/verb drift.
+                if ($aiPos && $aiPos !== $ordbankpos) {
+                    $data['definition'] = '';
+                    $data['analysis'] = [];
+                    $data['examples'] = [];
+                    $data['collocations'] = [];
+                }
             }
             // Avoid injecting verb paradigms when AI decided this is not a verb (e.g., phrases like "være klar over").
             $allowforms = !($aiPos && $aiPos !== 'verb' && $ordbankpos === 'verb');
@@ -1543,6 +1550,8 @@ switch ($action) {
                                 ],
                             ];
                         }
+                    } else {
+                        unset($data['ordbokene']);
                     }
                 }
             }
