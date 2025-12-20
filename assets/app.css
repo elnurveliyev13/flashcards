@@ -2096,8 +2096,15 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   border:1px solid var(--border) !important;
   color:var(--text) !important;
   height:36px;
-  padding:8px 16px;
+  padding:8px 34px 8px 16px;
   border-radius:var(--radius-xl) !important;
+  line-height:20px;
+  min-width:148px;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-size:14px 14px;
+  background-position:right 12px center;
 }
 
 #listTable{
@@ -2112,17 +2119,20 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable th:nth-child(2),
 #listTable td:nth-child(2){
   text-align:center;
-  width:80px;
+  width:72px;
+  white-space:nowrap;
 }
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
   text-align:center;
-  width:110px;
+  width:104px;
+  white-space:nowrap;
 }
 #listTable th:nth-child(4),
 #listTable td:nth-child(4){
   text-align:center;
-  width:70px;
+  width:64px;
+  white-space:nowrap;
 }
 #listTable td:first-child{
   white-space:normal;
