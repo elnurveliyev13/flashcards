@@ -431,16 +431,20 @@ class ordbank_helper {
                 $code = $ac['code'] ?? '';
                 $prep = $ac['prep'] ?? null;
                 if ($isverb && $next === 'seg') {
-                    $score += 3;
+                    $score += 4;
                 }
                 if ($prep !== null) {
                     if ($next === $prep || $prev === $prep || $next2 === $prep) {
-                        $score += 4;
+                        $score += 8;
                     }
                 }
                 if ($code && str_contains($code, 'refl') && ($next === 'seg' || $next2 === 'seg')) {
-                    $score += 4;
+                    $score += 8;
                 }
+            }
+            // Strong reflexive pattern: "X det seg om" -> prefer verb with refl
+            if ($next2 === 'seg' && ($next === 'det' || in_array($next, $pronouns, true)) && $isverb) {
+                $score += 10;
             }
             // Copula + "for" + adjective => should be adverb "for" (too), not verb "fare".
             if ($prev === 'er' && $isadv && ($cand['wordform'] ?? '') === 'for' && $next !== null && !in_array($next, $articles, true)) {
