@@ -2103,7 +2103,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   color:var(--text) !important;
   min-height:36px;
   height:auto;
-  padding:9px calc(var(--list-field-xpad) + 18px) 9px var(--list-field-xpad);
+  padding:8px calc(var(--list-field-xpad) + 18px) 8px var(--list-field-xpad);
   border-radius:var(--radius-xl) !important;
   line-height:20px;
   min-width:148px;
@@ -2145,24 +2145,32 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 /* Tighter columns on narrow screens to free space for Focus */
 @media (max-width: 560px){
   #listTable{
-    table-layout:auto;
-  }
-  #listTable thead tr,
-  #listTable tbody tr{
-    display:grid;
-    grid-template-columns: 1fr 56px 78px 52px;
-    align-items:center;
-    column-gap:8px;
+    table-layout:fixed;
   }
   #listTable th,
   #listTable td{
-    padding:6px;
+    padding:6px 6px;
   }
   #listTable th:first-child,
   #listTable td:first-child{
     width:auto;
     min-width:0;
     white-space:normal;
+  }
+  #listTable th:nth-child(2),
+  #listTable td:nth-child(2){
+    width:52px;
+    white-space:nowrap;
+  }
+  #listTable th:nth-child(3),
+  #listTable td:nth-child(3){
+    width:78px;
+    white-space:nowrap;
+  }
+  #listTable th:nth-child(4),
+  #listTable td:nth-child(4){
+    width:52px;
+    white-space:nowrap;
   }
   .actions-cell .iconbtn{
     width:36px;
