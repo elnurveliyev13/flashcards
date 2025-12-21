@@ -2004,6 +2004,7 @@ audio{max-width:260px}
 }
 .list-modal-header{
   --list-modal-hpad:10px;
+  --list-field-xpad:14px;
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -2093,7 +2094,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   border:1px solid var(--border) !important;
   color:var(--text) !important;
   height:36px;
-  padding:8px 16px;
+  padding:8px var(--list-field-xpad);
   border-radius:var(--radius-xl) !important;
 }
 #listFilterDue{
@@ -2102,7 +2103,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   color:var(--text) !important;
   min-height:36px;
   height:auto;
-  padding:9px 34px 9px 16px;
+  padding:9px calc(var(--list-field-xpad) + 18px) 9px var(--list-field-xpad);
   border-radius:var(--radius-xl) !important;
   line-height:20px;
   min-width:148px;
@@ -2146,6 +2147,13 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   #listTable{
     table-layout:auto;
   }
+  #listTable thead tr,
+  #listTable tbody tr{
+    display:grid;
+    grid-template-columns: 1fr 56px 78px 52px;
+    align-items:center;
+    column-gap:8px;
+  }
   #listTable th,
   #listTable td{
     padding:6px;
@@ -2156,21 +2164,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
     min-width:0;
     white-space:normal;
   }
-  #listTable th:nth-child(2),
-  #listTable td:nth-child(2){
-    width:50px;
-  }
-  #listTable th:nth-child(3),
-  #listTable td:nth-child(3){
-    width:76px;
-  }
-  #listTable th:nth-child(4),
-  #listTable td:nth-child(4){
-    width:52px;
-  }
   .actions-cell .iconbtn{
-    width:40px;
-    height:40px;
+    width:36px;
+    height:36px;
   }
 }
 #listTable td:first-child{
@@ -2183,6 +2179,19 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable td.actions-cell{
   justify-content:center;
+}
+#listTable tbody tr{
+  position:relative;
+}
+#listTable tbody tr::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:1px;
+  background:var(--border);
+  pointer-events:none;
 }
 #listTable td{
   vertical-align:middle;
