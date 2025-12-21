@@ -2013,6 +2013,7 @@ audio{max-width:260px}
   align-items:center;
   justify-content:space-between;
   gap:12px;
+  padding:0 6px;
 }
 .list-modal-filters{
   flex:1;
@@ -2022,6 +2023,7 @@ audio{max-width:260px}
 }
 .list-modal-search{
   width:100%;
+  padding:0 6px;
 }
 .list-modal-search #listSearch{
   width:100%;
@@ -2076,7 +2078,9 @@ audio{max-width:260px}
 
 body.cropper-open{overflow:hidden;height:100vh;touch-action:none}
 .table{width:100%;border-collapse:collapse}
-.table th,.table td{border-bottom:1px solid var(--border);padding:8px;text-align:left;font-size:0.875rem} /* 14px */
+.table th{border-bottom:1px solid var(--border);padding:8px;text-align:left;font-size:0.875rem} /* 14px */
+.table td{padding:8px;text-align:left;font-size:0.875rem;border-bottom:0} /* 14px */
+.table tbody tr{border-bottom:1px solid var(--border);}
 .table th{color:var(--text-subtle);font-weight:600;position:sticky;top:0;background:var(--surface-2)}
 .table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}
 
@@ -2095,8 +2099,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   background:var(--surface-2) !important;
   border:1px solid var(--border) !important;
   color:var(--text) !important;
-  height:36px;
-  padding:8px 34px 8px 16px;
+  min-height:36px;
+  height:auto;
+  padding:9px 34px 9px 16px;
   border-radius:var(--radius-xl) !important;
   line-height:20px;
   min-width:148px;
@@ -2139,7 +2144,6 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   word-break:break-word;
 }
 #listTable td.playcell{
-  border-bottom:1px solid var(--border);
   padding-top:10px;
   padding-bottom:10px;
 }
