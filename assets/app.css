@@ -2025,7 +2025,7 @@ audio{max-width:260px}
 }
 .list-modal-search{
   width:100%;
-  padding:0 var(--list-modal-hpad);
+  padding:0 var(--list-modal-hpad) 0 0;
 }
 .list-modal-search #listSearch{
   width:100%;
@@ -2149,7 +2149,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th,
   #listTable td{
-    padding:6px 6px;
+    padding:4px 6px;
+    font-size:0.94rem;
   }
   #listTable th:first-child,
   #listTable td:first-child{
@@ -2159,22 +2160,22 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:52px;
+    width:46px;
     white-space:nowrap;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:78px;
+    width:70px;
     white-space:nowrap;
   }
   #listTable th:nth-child(4),
   #listTable td:nth-child(4){
-    width:52px;
+    width:44px;
     white-space:nowrap;
   }
   .actions-cell .iconbtn{
-    width:36px;
-    height:36px;
+    width:32px;
+    height:32px;
   }
 }
 #listTable td:first-child{
