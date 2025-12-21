@@ -2007,14 +2007,14 @@ audio{max-width:260px}
   display:flex;
   flex-direction:column;
   gap:10px;
-  padding:0 var(--list-modal-hpad);
+  padding:0;
 }
 .list-modal-top{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:0;
+  padding:0 var(--list-modal-hpad);
 }
 .list-modal-filters{
   flex:1;
@@ -2024,7 +2024,7 @@ audio{max-width:260px}
 }
 .list-modal-search{
   width:100%;
-  padding:0;
+  padding:0 var(--list-modal-hpad);
 }
 .list-modal-search #listSearch{
   width:100%;
@@ -2080,7 +2080,8 @@ audio{max-width:260px}
 body.cropper-open{overflow:hidden;height:100vh;touch-action:none}
 .table{width:100%;border-collapse:collapse}
 .table th{border-bottom:1px solid var(--border);padding:8px;text-align:left;font-size:0.875rem} /* 14px */
-.table td{padding:8px;text-align:left;font-size:0.875rem;border-bottom:1px solid var(--border)} /* 14px */
+.table td{padding:8px;text-align:left;font-size:0.875rem;border-bottom:0} /* 14px */
+.table tbody tr{border-bottom:1px solid var(--border);}
 .table th{color:var(--text-subtle);font-weight:600;position:sticky;top:0;background:var(--surface-2)}
 .table td.playcell{border-bottom:0;padding-top:4px;padding-bottom:4px}
 
@@ -2143,23 +2144,29 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 /* Tighter columns on narrow screens to free space for Focus */
 @media (max-width: 560px){
   #listTable{
-    table-layout:fixed;
+    table-layout:auto;
   }
   #listTable th,
   #listTable td{
     padding:6px;
   }
+  #listTable th:first-child,
+  #listTable td:first-child{
+    width:auto;
+    min-width:0;
+    white-space:normal;
+  }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:58px;
+    width:50px;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:82px;
+    width:76px;
   }
   #listTable th:nth-child(4),
   #listTable td:nth-child(4){
-    width:54px;
+    width:52px;
   }
   .actions-cell .iconbtn{
     width:40px;
@@ -2171,7 +2178,6 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   word-break:break-word;
 }
 #listTable td.playcell{
-  border-bottom:1px solid var(--border);
   padding-top:10px;
   padding-bottom:10px;
 }
@@ -2210,7 +2216,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable tr.card-row-draft .iconbtn{
   border-color:rgba(245,158,11,0.32);
-  background:rgba(0,0,0,0.18);
+  background:transparent;
+  box-shadow:none;
 }
 #listTable .actions-cell .iconbtn{
   padding:8px;
