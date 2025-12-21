@@ -9729,6 +9729,11 @@ function renderComparisonResult(resultEl, comparison){
         });
       });
 
+      // Compute base counts
+      const totalCount=rows.length;
+      const now=today0();
+      const dueCount=rows.filter(r=> (r.due ?? 0) <= now).length;
+
       // Apply search filter
       const q=$("#listSearch").value.toLowerCase();
       let filtered=rows.filter(r=>!q || r.fokus.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
@@ -9736,15 +9741,14 @@ function renderComparisonResult(resultEl, comparison){
       // Apply due date filter
       const dueFilter=$("#listFilterDue").value;
       if(dueFilter==='due'){
-        const now=today0();
         filtered=filtered.filter(r=> (r.due ?? 0) <= now);
       }
 
       // Sort by due date
       filtered.sort((a,b)=> (a.due||0)-(b.due||0) );
 
-      // Update count
-      $("#listCount").textContent=filtered.length;
+      // Update count: show total for "all", due-only for "due"
+      $("#listCount").textContent= dueFilter==='due' ? dueCount : totalCount;
 
       // Calculate pagination
       const totalPages=Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
