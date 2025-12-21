@@ -2160,22 +2160,22 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:46px;
+    width:40px;
     white-space:nowrap;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:70px;
+    width:64px;
     white-space:nowrap;
   }
   #listTable th:nth-child(4),
   #listTable td:nth-child(4){
-    width:44px;
+    width:40px;
     white-space:nowrap;
   }
   .actions-cell .iconbtn{
-    width:32px;
-    height:32px;
+    width:30px;
+    height:30px;
   }
 }
 #listTable td:first-child{
