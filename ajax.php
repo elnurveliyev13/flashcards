@@ -1385,6 +1385,7 @@ switch ($action) {
             }
             // Always try Ordbokene: resolve expression/meaning first, then regenerate translation/definition/examples for that expression.
             $debugai = [];
+            $resolvedExpr = null;
             $skipordbokene = false;
             $builtin = mod_flashcards_builtin_function_word($clickedword);
             $poslower = core_text::strtolower($data['pos'] ?? '');
@@ -1425,6 +1426,27 @@ switch ($action) {
                     $data['translation'] = $builtin['meanings'][1] ?? ($builtin['meanings'][0] ?? '');
                 }
                 $skipordbokene = true;
+            }
+            // Pre-compute wc from POS/tag and short-circuit Ordbokene for verbs to avoid noun leakage.
+            $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
+            if (!empty($selected['tag'])) {
+                $taglower = core_text::strtolower((string)$selected['tag']);
+                if (str_contains($taglower, 'verb')) {
+                    $wc = 'VERB';
+                } else if (str_contains($taglower, 'subst')) {
+                    $wc = 'NOUN';
+                } else if (str_contains($taglower, 'adj')) {
+                    $wc = 'ADJ';
+                } else if (str_contains($taglower, 'adv')) {
+                    $wc = 'ADV';
+                }
+            }
+            if ($wc === 'PREP') {
+                $wc = '';
+            }
+            if ($wc === 'VERB') {
+                $skipordbokene = true;
+                $debugai['ordbokene'] = ['expression' => null];
             }
             $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
             if ($orbokeneenabled && !$skipordbokene) {
@@ -1558,7 +1580,7 @@ switch ($action) {
                     }
                 }
             }
-            if (!isset($data['ordbokene'])) {
+            if (!isset($data['ordbokene']) && !$skipordbokene) {
                 $fallbackExpr = $resolvedExpr ?: mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $data['focusBaseform'] ?? '', $lang);
                 if ($fallbackExpr) {
                     $data['ordbokene'] = $fallbackExpr;

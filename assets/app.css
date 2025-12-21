@@ -2138,9 +2138,13 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   white-space:normal;
   word-break:break-word;
 }
+#listTable td.playcell{
+  border-bottom:1px solid var(--border);
+  padding-top:10px;
+  padding-bottom:10px;
+}
 #listTable td.actions-cell{
   justify-content:center;
-  border-bottom:1px solid var(--border);
 }
 #listTable td{
   vertical-align:middle;
