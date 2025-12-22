@@ -2160,27 +2160,38 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:34px;
+    width:30px;
+    min-width:30px;
     white-space:nowrap;
-    padding:3px 4px;
-    font-size:0.86rem;
+    padding:2px;
+    font-size:0.82rem;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:60px;
+    width:54px;
+    min-width:54px;
     white-space:nowrap;
-    padding:3px 4px;
-    font-size:0.9rem;
+    padding:2px;
+    font-size:0.86rem;
   }
   #listTable th:nth-child(4),
   #listTable td:nth-child(4){
-    width:34px;
+    width:30px;
+    min-width:30px;
     white-space:nowrap;
-    padding:3px 4px;
+    padding:2px;
+  }
+  #thActions .th-label{
+    display:none;
+  }
+  #listTable td.actions-cell{
+    padding:2px;
   }
   .actions-cell .iconbtn{
-    width:28px;
-    height:28px;
+    width:26px;
+    height:26px;
+    min-width:26px;
+    padding:4px;
   }
 }
 #listTable td:first-child{
