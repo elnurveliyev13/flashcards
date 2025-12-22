@@ -2073,7 +2073,8 @@ audio{max-width:260px}
 }
 .list-modal-search #listSearch{
   width:100%;
-  max-width:420px;
+  max-width:none;
+  min-width:0;
 }
 #ocrCropModal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1002;touch-action:none;padding:0}
 #ocrCropModal .box{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;border:none;padding:env(safe-area-inset-top,12px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;box-sizing:border-box}
@@ -2198,8 +2199,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable th:nth-child(2),
 #listTable td:nth-child(2){
   text-align:right;
-  width:36px;
-  min-width:36px;
+  min-width:32px;
   white-space:nowrap;
 }
 #listTable th:nth-child(3),
@@ -2213,12 +2213,10 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   display:flex;
   justify-content:center;
   align-items:center;
-  gap:6px;
-  width:36px;
-  min-width:36px;
-  margin-right:3px;
-  padding-left:4px;
-  padding-right:4px;
+  gap:0;
+  min-width:32px;
+  padding:0;
+  box-sizing:border-box;
 }
 #listTable tr > td:not(:first-child):not(.stage-cell):not(.actions-cell){
   display:none!important;
@@ -2242,10 +2240,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:28px;
-    min-width:28px;
+    min-width:30px;
     white-space:nowrap;
-    padding:2px 3px;
     font-size:0.86rem;
   }
   #listTable th:nth-child(3),
@@ -2256,10 +2252,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
     padding:2px 6px 2px 2px;
   }
   #listTable td.stage-cell{
-    width:30px;
     min-width:30px;
-    margin-right:3px;
-    padding:2px 4px;
+    padding:0;
+    box-sizing:border-box;
   }
   #listTable td.actions-cell{
     padding:2px 15px 2px 2px;
@@ -2268,7 +2263,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
     width:26px;
     height:26px;
     min-width:26px;
-    padding:4px;
+    padding:0;
+    box-sizing:border-box;
   }
 }
 #listTable td:first-child{
@@ -2289,12 +2285,14 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable tbody tr{
   position:relative;
   display:grid;
-  grid-template-columns: minmax(0,1fr) minmax(32px,auto) 32px;
+  grid-template-columns: minmax(0,1fr) auto 32px;
   align-items:center;
-  column-gap:8px;
+  column-gap:3px;
   padding:10px var(--list-field-xpad);
   border-bottom:1px solid var(--border);
   box-sizing:border-box;
+  width:100%;
+  max-width:100%;
 }
 #listTable tbody tr::after{
   display:none;
@@ -2321,8 +2319,13 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   display:flex;
   justify-content:center;
   align-items:center;
-  margin-right:3px;
+  padding:0;
+  margin:0;
   min-width:32px;
+  box-sizing:border-box;
+}
+#listTable tbody tr > td:first-child{
+  padding-right:9px; /* Keep space between Focus and Stage without widening the row */
 }
 #listTable tbody tr:last-child{
   border-bottom:0;
@@ -2365,7 +2368,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   width:32px;
   height:32px;
   min-width:32px;
-  padding:6px;
+  padding:0;
+  box-sizing:border-box;
   font-size:18px;
 }
 #listPagination{
