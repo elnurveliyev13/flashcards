@@ -2026,7 +2026,7 @@ audio{max-width:260px}
 }
 .list-modal-search{
   width:100%;
-  padding:0 var(--list-modal-hpad) 0 0;
+  padding:0 var(--list-modal-hpad);
 }
 .list-modal-search #listSearch{
   width:100%;
@@ -2108,9 +2108,10 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   padding:8px calc(var(--list-field-xpad) + 18px) 8px var(--list-field-xpad);
   border-radius:var(--radius-xl) !important;
   line-height:20px;
-  min-width:148px;
-  max-width:100%;
-  flex:1 1 0;
+  min-width:100px;
+  max-width:140px;
+  width:auto;
+  flex:0 0 auto;
   appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;

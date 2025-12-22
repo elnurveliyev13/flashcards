@@ -9760,12 +9760,14 @@ function renderComparisonResult(resultEl, comparison){
       const showMoreBtn = $("#btnListShowMore");
       const pageInfo = $("#pageInfo");
       const hasMore = filteredTotal > visibleCount;
+      const showMoreLabel = t('showmore') || 'Show more';
 
       if(hasMore){
         if(paginationRow) paginationRow.style.display="flex";
         if(showMoreBtn){
           showMoreBtn.disabled = false;
-          showMoreBtn.textContent = t('showmore') || showMoreBtn.textContent || 'Show more';
+          showMoreBtn.textContent = "\u25BC"; // Down arrow
+          showMoreBtn.setAttribute("aria-label", showMoreLabel);
         }
       } else {
         if(showMoreBtn) showMoreBtn.disabled = true;
@@ -9864,6 +9866,9 @@ function renderComparisonResult(resultEl, comparison){
     });
     const btnListShowMore = $("#btnListShowMore");
     if(btnListShowMore){
+      const showMoreLabel = t('showmore') || 'Show more';
+      btnListShowMore.textContent = "\u25BC";
+      btnListShowMore.setAttribute("aria-label", showMoreLabel);
       btnListShowMore.addEventListener("click", ()=>{
         listVisibleCount += LIST_BATCH_SIZE;
         buildListRows();
