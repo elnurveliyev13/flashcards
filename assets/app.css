@@ -2002,10 +2002,29 @@ audio{max-width:260px}
 #listModal{
   z-index:2400;
 }
+#listModal .box{
+  max-width:100%;
+}
+#listModal .box>*{
+  max-width:100%;
+}
 #listModal.modal-fullscreen>.box{
   /* Prevent stray horizontal scrollbars inside the cards list modal */
   overflow-x:hidden;
   overflow-y:auto;
+}
+.list-table-wrap{
+  width:100%;
+  margin-top:10px;
+  overflow-x:hidden;
+}
+.list-table-wrap table{
+  width:100%;
+  max-width:100%;
+}
+.list-table-wrap tbody,
+.list-table-wrap tr{
+  width:100%;
 }
 .list-modal-header{
   --list-modal-hpad:var(--list-field-xpad);
@@ -2021,6 +2040,25 @@ audio{max-width:260px}
   justify-content:space-between;
   gap:12px;
   padding:0 var(--list-modal-hpad);
+}
+.list-modal-top #btnCloseList{
+  width:40px;
+  height:40px;
+  border-radius:var(--radius-xl);
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-size:20px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  line-height:1;
+}
+.list-modal-top #btnCloseList:hover,
+.list-modal-top #btnCloseList:focus-visible{
+  background:var(--hover);
+  border-color:var(--primary);
 }
 .list-modal-filters{
   display:flex;

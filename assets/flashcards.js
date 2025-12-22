@@ -9779,11 +9779,15 @@ function renderComparisonResult(resultEl, comparison){
         if(paginationRow) paginationRow.style.display="flex";
         if(showMoreBtn){
           showMoreBtn.disabled = false;
+          showMoreBtn.style.display = "inline-flex";
           showMoreBtn.textContent = "\u25BC"; // Down arrow
           showMoreBtn.setAttribute("aria-label", showMoreLabel);
         }
       } else {
-        if(showMoreBtn) showMoreBtn.disabled = true;
+        if(showMoreBtn){
+          showMoreBtn.disabled = true;
+          showMoreBtn.style.display = "none";
+        }
         if(paginationRow) paginationRow.style.display = filteredTotal > LIST_BATCH_SIZE ? "flex" : "none";
       }
       if(pageInfo){
