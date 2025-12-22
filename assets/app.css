@@ -2289,9 +2289,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable tbody tr{
   position:relative;
   display:grid;
-  grid-template-columns: minmax(0,1fr) auto auto;
+  grid-template-columns: minmax(0,1fr) minmax(32px,auto) 32px;
   align-items:center;
-  gap:12px;
+  column-gap:8px;
   padding:10px var(--list-field-xpad);
   border-bottom:1px solid var(--border);
   box-sizing:border-box;
