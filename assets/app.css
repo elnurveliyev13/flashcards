@@ -2003,7 +2003,7 @@ audio{max-width:260px}
   z-index:2400;
 }
 .list-modal-header{
-  --list-modal-hpad:0px;
+  --list-modal-hpad:var(--list-field-xpad);
   --list-field-xpad:12px;
   display:flex;
   flex-direction:column;
@@ -2026,7 +2026,7 @@ audio{max-width:260px}
 }
 .list-modal-search{
   width:100%;
-  padding:0 var(--list-modal-hpad);
+  padding:0 var(--list-field-xpad);
 }
 .list-modal-search #listSearch{
   width:100%;
@@ -2241,20 +2241,38 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable tbody tr{
   position:relative;
-  border-bottom:0;
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  align-items:center;
+  gap:12px;
+  padding:10px var(--list-field-xpad);
+  border-bottom:1px solid var(--border);
 }
 #listTable tbody tr::after{
   display:none;
 }
 #listTable td{
   vertical-align:middle;
-  padding-top:10px;
-  padding-bottom:10px;
-  padding-left:var(--list-field-xpad);
-  padding-right:var(--list-field-xpad);
-  border-bottom:1px solid var(--border);
+  padding:0;
+  border:0;
 }
-#listTable tbody tr:last-child td{
+#listTable td:nth-child(3){
+  display:none; /* hide due column in compact view */
+}
+#listTable td.actions-cell{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:8px;
+  padding:0;
+}
+#listTable td.stage-cell{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-width:36px;
+}
+#listTable tbody tr:last-child{
   border-bottom:0;
 }
 #listTable .card-draft-badge{
