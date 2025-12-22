@@ -9231,18 +9231,31 @@ function renderComparisonResult(resultEl, comparison){
         activePointerToken = (e.pointerId !== undefined) ? e.pointerId : (e.type.indexOf('touch') === 0 ? 'touch' : 'mouse');
         try{ e.preventDefault(); }catch(_e){}
         ensureStudyAudioContextUnlocked().catch(()=>{});
-        const iosPermissionPending = IS_IOS && iosMicPermissionState !== 'granted';
-        if(iosPermissionPending){
-          markIOSMicPermissionRequesting();
-          requestIOSMicPermission().catch(()=>{});
-        }else{
-          // Short delay (150ms) before recording starts to avoid accidental taps
+
+        const startIfStillHolding = () => {
+          if(!holdActive) return;
+          if(holdTimeout){
+            clearTimeout(holdTimeout);
+            holdTimeout = null;
+          }
+          // Short delay to avoid accidental taps; keep small for responsiveness
           holdTimeout = setTimeout(() => {
+            if(!holdActive) return;
             const startPromise = startStudyRecording();
             if(startPromise && typeof startPromise.then === 'function'){
               startPromise.catch(err=>{ console.log('[PronunciationPractice] Start promise rejected: '+(err?.message||err)); });
             }
-          }, 150);
+          }, 40);
+        };
+
+        const iosPermissionPending = IS_IOS && iosMicPermissionState !== 'granted';
+        if(iosPermissionPending){
+          markIOSMicPermissionRequesting();
+          requestIOSMicPermission()
+            .catch(()=>{})
+            .finally(()=>{ startIfStillHolding(); });
+        }else{
+          startIfStillHolding();
         }
 
         function onceUp(ev){

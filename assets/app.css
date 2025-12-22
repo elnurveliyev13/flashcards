@@ -2004,7 +2004,7 @@ audio{max-width:260px}
 }
 .list-modal-header{
   --list-modal-hpad:10px;
-  --list-field-xpad:14px;
+  --list-field-xpad:12px;
   display:flex;
   flex-direction:column;
   gap:10px;
@@ -2109,7 +2109,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   border-radius:var(--radius-xl) !important;
   line-height:20px;
   min-width:100px;
-  max-width:140px;
+  max-width:120px;
   width:auto;
   flex:0 0 auto;
   appearance:none;
@@ -2147,17 +2147,23 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   letter-spacing:0.01em;
   font-size:0.8rem;
 }
+#listTable thead th:not(:first-child):not(.col-stage):not(.col-actions){
+  display:none!important;
+}
 #listTable th:nth-child(2),
 #listTable td:nth-child(2){
-  text-align:center;
-  width:48px;
+  text-align:right;
+  width:36px;
   white-space:nowrap;
 }
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
   text-align:right;
-  width:40px;
+  width:32px;
   white-space:nowrap;
+}
+#listTable tr > td:not(:first-child):not(.stage-cell):not(.actions-cell){
+  display:none!important;
 }
 
 /* Tighter columns on narrow screens to free space for Focus */
@@ -2178,21 +2184,21 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:30px;
-    min-width:30px;
+    width:26px;
+    min-width:26px;
     white-space:nowrap;
     padding:2px;
     font-size:0.82rem;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:28px;
-    min-width:28px;
+    width:26px;
+    min-width:26px;
     white-space:nowrap;
     padding:2px;
   }
   #listTable td.actions-cell{
-    padding:2px;
+    padding:2px 8px 2px 2px;
   }
   .actions-cell .iconbtn{
     width:26px;
@@ -2214,6 +2220,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   justify-content:flex-end;
   align-items:center;
   gap:6px;
+  padding-right:8px;
 }
 #listTable tbody tr{
   position:relative;
