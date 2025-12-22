@@ -822,11 +822,10 @@
       </div>
       <div style="overflow:auto;margin-top:10px">
         <table class="table" id="listTable">
-          <thead>
+          <thead style="display:none">
             <tr>
               <th id="thFront">Focus</th>
               <th id="thStage" class="col-stage">Stage</th>
-              <th id="thDue" class="col-due">Due</th>
               <th id="thActions" class="col-actions"><span class="th-label">Action</span></th>
             </tr>
           </thead>
@@ -834,9 +833,8 @@
         </table>
       </div>
       <div class="row" id="listPagination" style="margin-top:10px;justify-content:center;gap:10px;display:none">
-        <button id="btnPagePrev" class="btn">Previous</button>
-        <span id="pageInfo" class="badge">Page 1 of 1</span>
-        <button id="btnPageNext" class="btn">Next</button>
+        <button id="btnListShowMore" class="btn">{{#str}} showmore, mod_flashcards {{/str}}</button>
+        <span id="pageInfo" class="badge">0 / 0</span>
       </div>
     </div>
   </div>

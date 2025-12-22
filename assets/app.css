@@ -2018,6 +2018,7 @@ audio{max-width:260px}
   padding:0 var(--list-modal-hpad);
 }
 .list-modal-filters{
+  display:flex;
   flex:1;
   min-width:0;
   align-items:center;
@@ -2101,22 +2102,44 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   background:var(--surface-2) !important;
   border:1px solid var(--border) !important;
   color:var(--text) !important;
+  box-sizing:border-box;
   min-height:36px;
   height:auto;
   padding:8px calc(var(--list-field-xpad) + 18px) 8px var(--list-field-xpad);
   border-radius:var(--radius-xl) !important;
   line-height:20px;
   min-width:148px;
+  max-width:100%;
+  flex:1 1 0;
   appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;
   background-size:14px 14px;
   background-position:right 12px center;
 }
+#listCount{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:8px var(--list-field-xpad);
+  border-radius:var(--radius-xl);
+  font-size:1rem;
+  font-weight:500;
+  line-height:20px;
+  flex-shrink:0;
+  white-space:nowrap;
+}
 
 #listTable{
   table-layout:fixed;
   width:100%;
+}
+#listTable thead{
+  display:none;
 }
 #listTable thead th{
   text-transform:none;
@@ -2126,19 +2149,13 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable th:nth-child(2),
 #listTable td:nth-child(2){
   text-align:center;
-  width:72px;
+  width:56px;
   white-space:nowrap;
 }
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
   text-align:center;
-  width:104px;
-  white-space:nowrap;
-}
-#listTable th:nth-child(4),
-#listTable td:nth-child(4){
-  text-align:center;
-  width:64px;
+  width:44px;
   white-space:nowrap;
 }
 
@@ -2168,21 +2185,10 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:54px;
-    min-width:54px;
-    white-space:nowrap;
-    padding:2px;
-    font-size:0.86rem;
-  }
-  #listTable th:nth-child(4),
-  #listTable td:nth-child(4){
     width:30px;
     min-width:30px;
     white-space:nowrap;
     padding:2px;
-  }
-  #thActions .th-label{
-    display:none;
   }
   #listTable td.actions-cell{
     padding:2px;

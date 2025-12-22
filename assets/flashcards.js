@@ -9714,8 +9714,8 @@ function renderComparisonResult(resultEl, comparison){
       return `<span class="badge" style="background:${bg};color:${textColor};padding:4px 8px;border-radius:12px;">${step}</span>`;
     }
     // Pagination state for Cards List
-    let listCurrentPage = 1;
-    const LIST_PAGE_SIZE = 50; // Cards per page
+    const LIST_BATCH_SIZE = 30; // Cards per batch
+    let listVisibleCount = LIST_BATCH_SIZE;
 
     function buildListRows(){
       const tbody=$("#listTable tbody");
@@ -9750,27 +9750,33 @@ function renderComparisonResult(resultEl, comparison){
       // Update count: show total for "all", due-only for "due"
       $("#listCount").textContent= dueFilter==='due' ? dueCount : totalCount;
 
-      // Calculate pagination
-      const totalPages=Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
-      if(listCurrentPage > totalPages) listCurrentPage = totalPages;
-      if(listCurrentPage < 1) listCurrentPage = 1;
+      // Determine how many rows to show (load-more style)
+      listVisibleCount = Math.max(LIST_BATCH_SIZE, listVisibleCount);
+      const filteredTotal = filtered.length;
+      const visibleCount = Math.min(filteredTotal, listVisibleCount);
+      const visibleRows = filtered.slice(0, visibleCount);
 
-      const startIdx=(listCurrentPage - 1) * LIST_PAGE_SIZE;
-      const endIdx=Math.min(startIdx + LIST_PAGE_SIZE, filtered.length);
-      const paginated=filtered.slice(startIdx, endIdx);
+      const paginationRow = $("#listPagination");
+      const showMoreBtn = $("#btnListShowMore");
+      const pageInfo = $("#pageInfo");
+      const hasMore = filteredTotal > visibleCount;
 
-      // Show/hide pagination controls
-      if(filtered.length > LIST_PAGE_SIZE){
-        $("#listPagination").style.display="flex";
-        $("#pageInfo").textContent=`Page ${listCurrentPage} of ${totalPages}`;
-        $("#btnPagePrev").disabled = listCurrentPage <= 1;
-        $("#btnPageNext").disabled = listCurrentPage >= totalPages;
+      if(hasMore){
+        if(paginationRow) paginationRow.style.display="flex";
+        if(showMoreBtn){
+          showMoreBtn.disabled = false;
+          showMoreBtn.textContent = t('showmore') || showMoreBtn.textContent || 'Show more';
+        }
       } else {
-        $("#listPagination").style.display="none";
+        if(showMoreBtn) showMoreBtn.disabled = true;
+        if(paginationRow) paginationRow.style.display = filteredTotal > LIST_BATCH_SIZE ? "flex" : "none";
+      }
+      if(pageInfo){
+        pageInfo.textContent = `${visibleCount} / ${filteredTotal}`;
       }
 
-      // Render paginated rows
-      paginated.forEach(async r=>{
+      // Render visible rows
+      visibleRows.forEach(async r=>{
         const tr=document.createElement("tr");
         const isDraft = !!r.card.tokenDraft;
         const fokusText = (r.fokus && r.fokus.trim()) || (isDraft ? (r.card.text || "-") : "-");
@@ -9827,7 +9833,7 @@ function renderComparisonResult(resultEl, comparison){
       });
     }
     function openCardsListModal(){
-      listCurrentPage = 1; // Reset to page 1 when opening modal
+      listVisibleCount = LIST_BATCH_SIZE; // Reset when opening modal
       $("#listModal").style.display="flex";
       buildListRows();
     }
@@ -9849,23 +9855,20 @@ function renderComparisonResult(resultEl, comparison){
 
     $("#btnCloseList").addEventListener("click",()=>{ $("#listModal").style.display="none"; });
     $("#listSearch").addEventListener("input", ()=>{
-      listCurrentPage = 1; // Reset to page 1 when searching
+      listVisibleCount = LIST_BATCH_SIZE; // Reset when searching
       buildListRows();
     });
     $("#listFilterDue").addEventListener("change", ()=>{
-      listCurrentPage = 1; // Reset to page 1 when filtering
+      listVisibleCount = LIST_BATCH_SIZE; // Reset when filtering
       buildListRows();
     });
-    $("#btnPagePrev").addEventListener("click", ()=>{
-      if(listCurrentPage > 1) {
-        listCurrentPage--;
+    const btnListShowMore = $("#btnListShowMore");
+    if(btnListShowMore){
+      btnListShowMore.addEventListener("click", ()=>{
+        listVisibleCount += LIST_BATCH_SIZE;
         buildListRows();
-      }
-    });
-    $("#btnPageNext").addEventListener("click", ()=>{
-      listCurrentPage++;
-      buildListRows();
-    });
+      });
+    }
 
     document.addEventListener("keydown",e=>{ if($("#listModal").style.display==="flex") return; const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||e.target.isContentEditable) return; if(e.code==="Space"){ e.preventDefault(); const br=$("#btnRevealNext"); if(br && !br.disabled) br.click(); } if(e.key==="e"||e.key==="E") rateEasy(); if(e.key==="n"||e.key==="N") rateNormal(); if(e.key==="h"||e.key==="H") rateHard(); });
 
