@@ -9800,6 +9800,7 @@ function renderComparisonResult(resultEl, comparison){
         const wordCell=tr.firstElementChild;
         const stageCell=tr.children[1];
         const dueCell=tr.children[2];
+        stageCell.classList.add("stage-cell");
         wordCell.textContent = fokusText;
         stageCell.innerHTML = formatStageBadge(r.stage);
         dueCell.textContent = fmtDateTime(r.due);

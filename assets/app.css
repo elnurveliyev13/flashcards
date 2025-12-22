@@ -2003,7 +2003,7 @@ audio{max-width:260px}
   z-index:2400;
 }
 .list-modal-header{
-  --list-modal-hpad:10px;
+  --list-modal-hpad:0px;
   --list-field-xpad:12px;
   display:flex;
   flex-direction:column;
@@ -2241,21 +2241,21 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable tbody tr{
   position:relative;
+  border-bottom:0;
 }
 #listTable tbody tr::after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:0;
-  height:1px;
-  background:var(--border);
-  pointer-events:none;
+  display:none;
 }
 #listTable td{
   vertical-align:middle;
   padding-top:10px;
   padding-bottom:10px;
+  padding-left:var(--list-field-xpad);
+  padding-right:var(--list-field-xpad);
+  border-bottom:1px solid var(--border);
+}
+#listTable tbody tr:last-child td{
+  border-bottom:0;
 }
 #listTable .card-draft-badge{
   display:inline-flex;
