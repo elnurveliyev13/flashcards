@@ -2149,13 +2149,13 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable th:nth-child(2),
 #listTable td:nth-child(2){
   text-align:center;
-  width:56px;
+  width:48px;
   white-space:nowrap;
 }
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
-  text-align:center;
-  width:44px;
+  text-align:right;
+  width:40px;
   white-space:nowrap;
 }
 
@@ -2185,8 +2185,8 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:30px;
-    min-width:30px;
+    width:28px;
+    min-width:28px;
     white-space:nowrap;
     padding:2px;
   }
@@ -2209,7 +2209,10 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   padding-bottom:10px;
 }
 #listTable td.actions-cell{
-  justify-content:center;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:6px;
 }
 #listTable tbody tr{
   position:relative;
