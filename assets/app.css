@@ -2166,7 +2166,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 }
 #listTable td.stage-cell{
   display:flex;
-  justify-content:flex-end;
+  justify-content:center;
   align-items:center;
   gap:6px;
   width:36px;
@@ -2210,12 +2210,12 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
     padding:2px 6px 2px 2px;
   }
   #listTable td.stage-cell{
-    width:28px;
-    min-width:28px;
+    width:30px;
+    min-width:30px;
     padding:2px 4px;
   }
   #listTable td.actions-cell{
-    padding:2px 8px 2px 2px;
+    padding:2px 15px 2px 2px;
   }
   .actions-cell .iconbtn{
     width:26px;
@@ -2237,7 +2237,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   justify-content:flex-end;
   align-items:center;
   gap:6px;
-  padding-right:10px;
+  padding-right:15px;
 }
 #listTable tbody tr{
   position:relative;
@@ -5051,7 +5051,7 @@ input.example-input-trans {
   top: calc(100% + 0.75rem);
   left: 50%;
   transform: translateX(-50%);
-  z-index: 50;
+  z-index: 2305; /* above editActionsBar (2200) so suggestions overlay action bar */
   width: min(100%, var(--slot-content-max-width));
   display: none;
   padding: 0;
