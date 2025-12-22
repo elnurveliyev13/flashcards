@@ -2154,13 +2154,25 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable td:nth-child(2){
   text-align:right;
   width:36px;
+  min-width:36px;
   white-space:nowrap;
 }
 #listTable th:nth-child(3),
 #listTable td:nth-child(3){
   text-align:right;
   width:32px;
+  min-width:32px;
   white-space:nowrap;
+}
+#listTable td.stage-cell{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  gap:6px;
+  width:36px;
+  min-width:36px;
+  padding-left:4px;
+  padding-right:4px;
 }
 #listTable tr > td:not(:first-child):not(.stage-cell):not(.actions-cell){
   display:none!important;
@@ -2184,18 +2196,23 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:26px;
-    min-width:26px;
+    width:28px;
+    min-width:28px;
     white-space:nowrap;
-    padding:2px;
-    font-size:0.82rem;
+    padding:2px 3px;
+    font-size:0.86rem;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:26px;
-    min-width:26px;
+    width:28px;
+    min-width:28px;
     white-space:nowrap;
-    padding:2px;
+    padding:2px 6px 2px 2px;
+  }
+  #listTable td.stage-cell{
+    width:28px;
+    min-width:28px;
+    padding:2px 4px;
   }
   #listTable td.actions-cell{
     padding:2px 8px 2px 2px;
@@ -2220,7 +2237,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   justify-content:flex-end;
   align-items:center;
   gap:6px;
-  padding-right:8px;
+  padding-right:10px;
 }
 #listTable tbody tr{
   position:relative;
@@ -2273,6 +2290,44 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
 #listTable .actions-cell .iconbtn{
   padding:8px;
   min-width:32px;
+}
+#listPagination{
+  width:100%;
+  justify-content:center;
+  gap:12px;
+  margin-top:12px;
+}
+#btnListShowMore{
+  width:44px;
+  height:44px;
+  padding:0;
+  border-radius:12px;
+  background:var(--primary-gradient);
+  border:1px solid rgba(47,140,226,0.8);
+  color:#f7fbff;
+  font-size:22px;
+  line-height:1;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 12px 26px rgba(10,32,71,0.38), 0 1px 0 rgba(255,255,255,0.08);
+  transition:transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+#btnListShowMore:hover{
+  background:var(--primary-gradient-strong);
+  border-color:rgba(47,140,226,0.95);
+  transform:translateY(-1px);
+  box-shadow:0 14px 30px rgba(16,46,96,0.46), 0 1px 0 rgba(255,255,255,0.1);
+}
+#btnListShowMore:focus-visible{
+  outline:2px solid var(--focus);
+  outline-offset:2px;
+}
+#btnListShowMore:disabled{
+  opacity:0.5;
+  cursor:default;
+  transform:none;
+  box-shadow:none;
 }
 /* Dropzone for file uploads */
 .dropzone {
