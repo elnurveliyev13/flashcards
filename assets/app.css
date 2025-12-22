@@ -2149,7 +2149,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th,
   #listTable td{
-    padding:4px 6px;
+    padding:4px 4px;
     font-size:0.94rem;
   }
   #listTable th:first-child,
@@ -2160,22 +2160,27 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   }
   #listTable th:nth-child(2),
   #listTable td:nth-child(2){
-    width:40px;
+    width:34px;
     white-space:nowrap;
+    padding:3px 4px;
+    font-size:0.86rem;
   }
   #listTable th:nth-child(3),
   #listTable td:nth-child(3){
-    width:64px;
+    width:60px;
     white-space:nowrap;
+    padding:3px 4px;
+    font-size:0.9rem;
   }
   #listTable th:nth-child(4),
   #listTable td:nth-child(4){
-    width:40px;
+    width:34px;
     white-space:nowrap;
+    padding:3px 4px;
   }
   .actions-cell .iconbtn{
-    width:30px;
-    height:30px;
+    width:28px;
+    height:28px;
   }
 }
 #listTable td:first-child{
