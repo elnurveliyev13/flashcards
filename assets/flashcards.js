@@ -2822,8 +2822,166 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       handleExpressionSelection(focusHelperState.expressionSuggestions[rowIndex], rowIndex);
     }
 
-    function createCardFromToken(tokenText, expressionData){
-      const text = (tokenText || '').trim();
+    function stripInfinitivePrefix(value){
+      return (value || '').replace(/^\s*\(å\)\s*/i,'').replace(/^\s*å\s+/i,'').trim();
+    }
+
+    function pickFirstForm(val){
+      if(Array.isArray(val)){
+        const first = val.find(v => v && String(v).trim());
+        return first ? String(first).trim() : '';
+      }
+      return (val || '').toString().trim();
+    }
+
+    function parseIndefiniteNoun(value){
+      const raw = pickFirstForm(value);
+      if(!raw){
+        return {article:'', lemma:''};
+      }
+      const m = raw.match(/^\(?\s*(en|ei|et)\s*\)?\s+(.+)$/i);
+      if(m){
+        return {article:m[1].toLowerCase(), lemma:m[2].trim()};
+      }
+      return {article:'', lemma:raw.trim()};
+    }
+
+    function resolveExpressionFromCorpusData(data, tokenText){
+      if(!data){
+        return '';
+      }
+      const sentenceTokens = tokenizeWordsForExpression(frontInput && frontInput.value ? frontInput.value : '');
+      if(!sentenceTokens.length){
+        return '';
+      }
+      const dictExpression = (data.ordbokene && data.ordbokene.source === 'builtin')
+        ? ''
+        : (data.focusExpression || (data.ordbokene && data.ordbokene.expression) || '');
+      let matchedExpression = '';
+      if(Array.isArray(data.expressions) && data.expressions.length){
+        matchedExpression = data.expressions
+          .map(e => (e || '').trim())
+          .filter(Boolean)
+          .filter(expr => {
+            const toks = tokenizeWordsForExpression(expr);
+            if(toks.length < 2) return false;
+            const firstAlts = Array.from(new Set([
+              toks[0],
+              tokenizeWordsForExpression(tokenText)[0] || '',
+              tokenizeWordsForExpression((data.selected && data.selected.baseform) ? data.selected.baseform : '')[0] || ''
+            ].filter(Boolean)));
+            return tokensInOrderForExpression(toks, sentenceTokens, firstAlts);
+          })
+          .sort((a,b)=> b.length - a.length)[0] || '';
+      }
+      let resolved = '';
+      if(dictExpression && dictExpression.trim() && dictExpression.trim().includes(' ')){
+        const exprTokens = tokenizeWordsForExpression(dictExpression);
+        const firstAlts = Array.from(new Set([
+          exprTokens[0],
+          tokenizeWordsForExpression(tokenText)[0] || '',
+          tokenizeWordsForExpression((data.selected && data.selected.baseform) ? data.selected.baseform : '')[0] || ''
+        ].filter(Boolean)));
+        if(tokensInOrderForExpression(exprTokens, sentenceTokens, firstAlts)){
+          resolved = dictExpression.trim();
+        }
+      }
+      if(!resolved){
+        resolved = (matchedExpression || '').trim();
+      }
+      return resolved;
+    }
+
+    async function deriveFocusFromCorpus(tokenText, tokenIndex, expressionData){
+      const cleanToken = (tokenText || '').trim();
+      if(!cleanToken){
+        return null;
+      }
+      const sentence = frontInput ? (frontInput.value || '') : '';
+      const tokens = extractFocusTokens(sentence);
+      const wordTokens = tokens.filter(t=>t.isWord);
+      let targetToken = null;
+      if(Number.isInteger(tokenIndex)){
+        targetToken = wordTokens.find(t => t.index === tokenIndex) || null;
+      }
+      if(!targetToken){
+        targetToken = wordTokens.find(t => t.text === cleanToken) || null;
+      }
+      const prev = wordTokens.filter(t=> t.index < (targetToken ? targetToken.index : 0)).pop();
+      const next = wordTokens.filter(t=> t.index > (targetToken ? targetToken.index : -1)).shift();
+      const next2 = wordTokens.filter(t=> t.index > (targetToken ? targetToken.index : -1)).slice(0,2)[1];
+      let data = null;
+      try{
+        const payload = {
+          word: cleanToken,
+          prev: prev ? prev.text : '',
+          next: next ? next.text : '',
+          next2: next2 ? next2.text : '',
+          frontText: sentence
+        };
+        const resp = await api('ordbank_focus_helper', {}, 'POST', payload);
+        data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
+      }catch(err){
+        console.warn('[Flashcards] draft focus corpus lookup failed', err);
+      }
+      if(!data || !data.selected){
+        const rawExpression = (expressionData?.expression || cleanToken);
+        const parsedFallbackNoun = parseIndefiniteNoun(rawExpression);
+        let fallbackBase = stripInfinitivePrefix(parsedFallbackNoun.lemma || rawExpression);
+        let focusWord = parsedFallbackNoun.article ? `(${parsedFallbackNoun.article}) ${fallbackBase}` : rawExpression;
+        if(/^\s*\(?å\)?\s+/i.test(rawExpression)){
+          const base = stripInfinitivePrefix(rawExpression);
+          if(base){
+            fallbackBase = base;
+            focusWord = `(å) ${base}`;
+          }
+        }
+        return {
+          focusWord: focusWord,
+          focusBase: fallbackBase
+        };
+      }
+      const expressionResolved = resolveExpressionFromCorpusData(data, cleanToken);
+      const posVal = resolvePosFromTag(data.selected.tag || data.pos || '');
+      let focusBase = stripInfinitivePrefix(data.selected.baseform || data.selected.wordform || cleanToken);
+      let focusWord = focusBase;
+      let genderVal = (data.selected.gender || data.gender || '').trim();
+      const formsVal = (data.forms && typeof data.forms === 'object') ? data.forms : null;
+
+      if(expressionResolved){
+        focusWord = expressionResolved;
+        focusBase = expressionResolved;
+      } else if(posVal === 'verb'){
+        const infinitive = stripInfinitivePrefix(pickFirstForm(data.forms?.verb?.infinitiv));
+        if(infinitive){
+          focusBase = infinitive;
+        }
+        focusWord = `(å) ${focusBase}`.trim();
+      } else if(posVal === 'substantiv'){
+        const parsed = parseIndefiniteNoun(data.forms?.noun?.indef_sg);
+        if(parsed.lemma){
+          focusBase = parsed.lemma;
+        }
+        if(parsed.article){
+          genderVal = parsed.article;
+        }
+        const articleVal = genderVal || parsed.article;
+        focusWord = articleVal ? `(${articleVal}) ${focusBase}` : focusBase;
+      }
+
+      return {
+        focusWord: (focusWord || cleanToken).trim(),
+        focusBase: (focusBase || cleanToken).trim(),
+        pos: posVal,
+        gender: genderVal,
+        forms: formsVal
+      };
+    }
+
+    async function createCardFromToken(tokenText, expressionData){
+      const tokenValue = (typeof tokenText === 'object' && tokenText !== null) ? (tokenText.text || '') : tokenText;
+      const idx = (typeof tokenText === 'object' && tokenText !== null && Number.isInteger(tokenText.index)) ? tokenText.index : null;
+      const text = (tokenValue || '').trim();
       if(!text){
         return;
       }
@@ -2836,15 +2994,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const examplesParsed = Array.isArray(expressionData?.examples)
         ? parseExamples(expressionData.examples || [], null, userLang2).map(e => e.no || '').filter(Boolean)
         : [];
+      let normalizedFocus = null;
+      try{
+        normalizedFocus = await deriveFocusFromCorpus(text, idx, expressionData);
+      }catch(err){
+        console.warn('[Flashcards] draft focus normalization failed', err);
+      }
+      const fokusVal = (normalizedFocus?.focusWord || expressionData?.expression || text || '').trim();
+      const focusBaseVal = (normalizedFocus?.focusBase || expressionData?.expression || text || '').trim();
+      const translationVal = (expressionData?.translation || '').trim();
       const cardPayload = {
         id,
-        text,
-        fokus: '',
+        text: '',
+        fokus: fokusVal,
+        focusBase: focusBaseVal,
         explanation: (expressionData?.explanation || '').trim(),
         examples: examplesParsed,
         order: [...DEFAULT_ORDER],
         tokenDraft: true
       };
+      if(translationVal){
+        cardPayload.translation = translationVal;
+      }
+      if(normalizedFocus?.pos){
+        cardPayload.pos = normalizedFocus.pos;
+      }
+      if(normalizedFocus?.gender){
+        cardPayload.gender = normalizedFocus.gender;
+      }
+      if(normalizedFocus?.forms){
+        cardPayload.forms = normalizedFocus.forms;
+      }
       registry[deckId].cards.push(cardPayload);
       saveRegistry();
       ensureDeckProgress(deckId, registry[deckId].cards);
@@ -2933,7 +3113,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
           attachFocusChipMenuHandlers(btn, token.text, {
-            onCreate: ()=>createCardFromToken(token.text)
+            onCreate: ()=>createCardFromToken(token)
           });
           btn.addEventListener('click', ()=>{
             focusHelperState.activeExpressionIndex = null;
@@ -7694,6 +7874,17 @@ function renderComparisonResult(resultEl, comparison){
       slotContainer.dataset.currentCardId = card && card.id ? String(card.id) : '';
       hidePlayIcons();
       audioURL=null;
+      if(card && card.tokenDraft){
+        const focusLabel = (card.fokus || card.focusBase || card.text || '').trim() || '-';
+        const draftSlot = document.createElement("div");
+        draftSlot.className = "slot";
+        draftSlot.dataset.slotType = "draft-preview";
+        draftSlot.innerHTML = `<div class="front">${escapeHtml(focusLabel)}</div>`;
+        slotContainer.appendChild(draftSlot);
+        card._availableSlots = 1;
+        hideInlineFieldPrompt();
+        return;
+      }
       lastStudyAudioUrl=null;
       lastStudyAudioRate=1;
       const allSlots=[];
