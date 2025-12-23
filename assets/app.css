@@ -2001,6 +2001,9 @@ audio{max-width:260px}
 }
 #listModal{
   z-index:2400;
+  /* Shared paddings for header + table */
+  --list-field-xpad:12px;
+  --list-modal-hpad:var(--list-field-xpad);
 }
 #listModal .box{
   max-width:100%;
@@ -2012,6 +2015,7 @@ audio{max-width:260px}
   /* Prevent stray horizontal scrollbars inside the cards list modal */
   overflow-x:hidden;
   overflow-y:auto;
+  scrollbar-gutter: stable;
 }
 .list-table-wrap{
   width:100%;
@@ -2027,21 +2031,30 @@ audio{max-width:260px}
   width:100%;
 }
 .list-modal-header{
-  --list-field-xpad:12px;
-  --list-modal-hpad:12px;
   display:flex;
   flex-direction:column;
   gap:10px;
   padding:0;
 }
-.list-modal-top{
-  display:flex;
+.list-modal-grid{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  grid-template-areas:
+    "filter count close"
+    "search . .";
   align-items:center;
-  justify-content:flex-start;
-  gap:10px;
+  column-gap:10px;
+  row-gap:10px;
   padding:0 var(--list-modal-hpad);
+  width:100%;
+  box-sizing:border-box;
 }
-.list-modal-top #btnCloseList{
+.list-modal-grid #listFilterDue{ grid-area:filter; }
+.list-modal-grid #listCount{ grid-area:count; }
+.list-modal-grid #btnCloseList{ grid-area:close; }
+.list-modal-grid #listSearch{ grid-area:search; width:100%; }
+
+#listModal #btnCloseList{
   width:40px;
   height:40px;
   border-radius:var(--radius-xl);
@@ -2055,26 +2068,10 @@ audio{max-width:260px}
   padding:0;
   line-height:1;
 }
-.list-modal-top #btnCloseList:hover,
-.list-modal-top #btnCloseList:focus-visible{
+#listModal #btnCloseList:hover,
+#listModal #btnCloseList:focus-visible{
   background:var(--hover);
   border-color:var(--primary);
-}
-.list-modal-filters{
-  display:flex;
-  flex:1;
-  min-width:0;
-  align-items:center;
-  gap:8px;
-}
-.list-modal-search{
-  width:100%;
-  padding:0 var(--list-modal-hpad);
-}
-.list-modal-search #listSearch{
-  width:100%;
-  max-width:none;
-  min-width:0;
 }
 #ocrCropModal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:1002;touch-action:none;padding:0}
 #ocrCropModal .box{width:100vw;height:100vh;max-width:none;max-height:none;background:transparent;border:none;padding:env(safe-area-inset-top,12px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;box-sizing:border-box}
@@ -2152,10 +2149,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   border-radius:var(--radius-xl) !important;
   font-size:15px;
   line-height:20px;
-  min-width:100px;
-  max-width:120px;
-  width:auto;
-  flex:0 0 auto;
+  width:100%;
+  min-width:0;
+  max-width:100%;
   appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat:no-repeat;
@@ -2288,7 +2284,7 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   grid-template-columns: minmax(0,1fr) auto 32px;
   align-items:center;
   column-gap:3px;
-  padding:10px var(--list-field-xpad);
+  padding:10px var(--list-field-xpad, 12px);
   border-bottom:1px solid var(--border);
   box-sizing:border-box;
   width:100%;

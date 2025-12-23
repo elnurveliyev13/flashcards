@@ -806,17 +806,13 @@
   <div id="listModal" class="modal modal-fullscreen" role="dialog" aria-modal="true">
     <div class="box">
       <div id="yui_3_18_1_1_1765121778773_21" class="list-modal-header">
-        <div class="list-modal-top">
-          <div class="row list-modal-filters">
-            <select id="listFilterDue">
-              <option value="all">All cards</option>
-              <option value="due">Due only</option>
-            </select>
-            <span id="listCount" class="badge">0</span>
-          </div>
+        <div class="list-modal-grid">
+          <select id="listFilterDue">
+            <option value="all">All cards</option>
+            <option value="due">Due only</option>
+          </select>
+          <span id="listCount" class="badge">0</span>
           <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
-        </div>
-        <div class="list-modal-search">
           <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}">
         </div>
       </div>
