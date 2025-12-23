@@ -2311,6 +2311,9 @@ input[type=search]{background:var(--surface-2);border:1px solid var(--border);bo
   padding:0;
   min-width:32px;
 }
+#listTable tbody tr > td.actions-cell{
+  padding-right:6px;
+}
 #listTable td.stage-cell{
   display:flex;
   justify-content:center;

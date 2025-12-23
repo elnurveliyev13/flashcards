@@ -2363,11 +2363,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           applyTranslationDirection('no-user', {triggerTranslation:false});
         }
       });
-      frontInput.addEventListener('keyup', e=>{
-        if(e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey){
-          triggerTranslation('no-user');
-        }
-      });
     }
     if(fokusInput){
       fokusInput.addEventListener('input', ()=>{
@@ -2409,11 +2404,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       });
       translationInputLocal.addEventListener('blur', ()=>{
-      });
-      translationInputLocal.addEventListener('keyup', e=>{
-        if(e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey){
-          triggerTranslation('user-no');
-        }
       });
     }
     const wordRegex = (()=>{ try { void new RegExp('\\p{L}', 'u'); return /[\p{L}\p{M}\d'`{\[\]\}-]+/gu; } catch(_e){ return /[A-Za-z0-9'`{\[\]\}-]+/g; } })();
