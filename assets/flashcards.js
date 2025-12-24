@@ -2067,6 +2067,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
 
     const INDEFINITE_ARTICLES = new Set(['en','ei','et']);
+    const INFINITIVE_MARKERS = new Set(['a','å','aa']);
+    const FRONT_EXAMPLE_MIN_WORDS = 3;
     const countMeaningfulFrontWords = (text) => {
       if(!text){
         return 0;
@@ -2085,6 +2087,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         count++;
       });
       return count;
+    };
+    const shouldMirrorFrontExample = (text) => {
+      if(!text) return false;
+      return countMeaningfulFrontWords(text) >= FRONT_EXAMPLE_MIN_WORDS;
+    };
+    const setExampleOneFromFront = (frontText) => {
+      const trimmed = (frontText || '').trim();
+      if(!trimmed || !shouldMirrorFrontExample(trimmed)){
+        return false;
+      }
+      const current = examplesData[0] || null;
+      const currentTranslations = current && typeof current.translations === 'object'
+        ? Object.keys(current.translations).filter(Boolean)
+        : [];
+      if(current && current.no === trimmed && currentTranslations.length === 0){
+        return false;
+      }
+      const next = { no: trimmed, translations: {} };
+      if(examplesData.length){
+        examplesData[0] = next;
+      } else {
+        examplesData = [next];
+      }
+      return true;
     };
 
     function createItemElement(type, index, data) {
@@ -3723,18 +3749,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(parsedExamples.length){
           examplesData = parsedExamples;
           const frontTextForExample = frontInput ? (frontInput.value || '').trim() : '';
-          if(frontTextForExample && countMeaningfulFrontWords(frontTextForExample) >= 3){
-            if(!examplesData.length){
-              examplesData = [{ no: frontTextForExample, translations: {} }];
-            } else {
-              const primary = examplesData[0] || {};
-              examplesData[0] = {
-                ...primary,
-                no: frontTextForExample,
-                translations: {}
-              };
-            }
-          }
+          setExampleOneFromFront(frontTextForExample);
           renderExamples();
           const examplesEl = document.getElementById('uExamples');
           if(examplesEl){
@@ -10639,9 +10654,9 @@ function renderComparisonResult(resultEl, comparison){
         menu.style.top = `${y}px`;
 
         const actions = [
-          { label: 'Edit Card', icon: '✏️', handler: () => { $("#btnEdit").click(); } },
-          { label: 'Delete Card', icon: '🗑️', handler: () => { $("#btnDel").click(); } },
-          { label: 'Card List', icon: '📋', handler: () => { $("#btnList").click(); } }
+          { label: 'Edit Card', icon: '??', handler: () => { $("#btnEdit").click(); } },
+          { label: 'Delete Card', icon: '???', handler: () => { $("#btnDel").click(); } },
+          { label: 'Card List', icon: '??', handler: () => { $("#btnList").click(); } }
         ];
 
         actions.forEach(action => {
@@ -10655,6 +10670,21 @@ function renderComparisonResult(resultEl, comparison){
           menu.appendChild(btn);
         });
 
+        document.body.appendChild(menu);
+
+        // Ensure menu stays within the viewport horizontal bounds
+        const viewportPadding = 12;
+        const menuRect = menu.getBoundingClientRect();
+        const viewportRight = window.innerWidth - viewportPadding;
+        let adjustedLeft = x;
+
+        if (menuRect.right > viewportRight) {
+          adjustedLeft -= menuRect.right - viewportRight;
+        }
+
+        adjustedLeft = Math.max(adjustedLeft, viewportPadding);
+        menu.style.left = `${adjustedLeft}px`;
+
         // Close on outside click
         setTimeout(() => {
           document.addEventListener('click', function closeMenu(e) {
@@ -10664,8 +10694,6 @@ function renderComparisonResult(resultEl, comparison){
             }
           });
         }, 100);
-
-        document.body.appendChild(menu);
       }
 
       // Touch start handler
@@ -12534,6 +12562,9 @@ Regeln:
         frontInput.value = normalizedText;
         const inputEvent = new Event('input', { bubbles: true });
         frontInput.dispatchEvent(inputEvent);
+        if(setExampleOneFromFront(normalizedText)){
+          renderExamples();
+        }
       }
 
       if (window.onFrontChange) {

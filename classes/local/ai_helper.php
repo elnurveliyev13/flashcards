@@ -130,11 +130,14 @@ class ai_helper {
         $errors = [];
         if ($this->tts->is_enabled()) {
             $voice = $options['voice'] ?? null;
+            $frontAudioText = $this->select_front_audio_text($fronttext, $result['examples'] ?? []);
             try {
-                $audio['front'] = $this->tts->synthesize($userid, $fronttext, [
-                    'voice' => $voice,
-                    'label' => 'front',
-                ]);
+                if ($frontAudioText !== '') {
+                    $audio['front'] = $this->tts->synthesize($userid, $frontAudioText, [
+                        'voice' => $voice,
+                        'label' => 'front',
+                    ]);
+                }
             } catch (Throwable $e) {
                 $message = $e->getMessage();
                 debugging('[flashcards] TTS front_text failed: ' . $message, DEBUG_DEVELOPER);
@@ -1944,5 +1947,25 @@ If NO constructions found, return empty constructions array.";
         ];
 
         return $baseResponse;
+    }
+
+    protected function select_front_audio_text(string $fronttext, array $examples): string {
+        $base = trim($fronttext);
+        if ($base === '') {
+            return '';
+        }
+        foreach ($examples as $example) {
+            $candidate = '';
+            if (is_string($example)) {
+                $parts = explode('|', $example, 2);
+                $candidate = trim($parts[0] ?? '');
+            } elseif (is_array($example)) {
+                $candidate = trim((string)($example['text'] ?? $example['no'] ?? ''));
+            }
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
+        return $base;
     }
 }
