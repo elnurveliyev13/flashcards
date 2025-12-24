@@ -2781,11 +2781,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   transition:opacity 0.22s ease, transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease;
   --rec-ring-size:8px;
   --rec-ring-band:7px;
-  --rec-gap-angle:112deg;       /* fixed gap for the timer */
-  --rec-gap-offset:-56deg;
-  --rec-ring-color-a:rgba(92,193,255,0.98);
-  --rec-ring-color-b:rgba(118,139,255,0.95);
-  --rec-ring-glow:rgba(118,139,255,0.26);
+  --rec-gap-angle:116deg;       /* fixed gap for the timer */
+  --rec-gap-offset:-58deg;
+  --rec-ring-color-a:rgba(125,208,255,0.98);
+  --rec-ring-color-b:rgba(170,126,255,0.95);
+  --rec-ring-glow:rgba(170,126,255,0.28);
   --rec-ring-opacity:0;        /* hidden by default */
   --rec-ring-bg:none;
   --rec-spin:0deg;
@@ -2823,9 +2823,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   visibility:hidden;
 }
 .bottom-recorder #btnRecordStudy.recording{
-  background:linear-gradient(155deg, #16294d 0%, #1e3a6f 100%) !important;
-  box-shadow:0 16px 32px rgba(10,20,40,0.55), 0 0 0 4px rgba(63,139,255,0.12);
-  transform:translateY(-1px) scale(1.05);
+  background:linear-gradient(155deg, #13223c 0%, #1b2f5c 45%, #2a3c7a 100%) !important;
+  box-shadow:0 18px 34px rgba(10,20,40,0.6), 0 0 0 5px rgba(170,126,255,0.15);
+  transform:translateY(-1px) scale(1.06);
   opacity:1;
   --rec-ring-opacity:0.9;
   --rec-ring-band:8px;
@@ -2833,14 +2833,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   --rec-ring-bg:repeating-radial-gradient(circle at center,
     transparent 0%,
     transparent 38%,
-    rgba(92,193,255,0.38) 42%,
-    rgba(92,193,255,0.38) 44%,
+    rgba(125,208,255,0.35) 42%,
+    rgba(125,208,255,0.35) 44%,
     transparent 48%,
-    rgba(118,139,255,0.22) 54%,
+    rgba(170,126,255,0.2) 54%,
     transparent 58%,
-    rgba(92,193,255,0.16) 66%,
+    rgba(125,208,255,0.14) 66%,
     transparent 70%,
-    rgba(118,139,255,0.1) 76%,
+    rgba(170,126,255,0.1) 76%,
     transparent 80%);
 }
 .bottom-recorder #btnRecordStudy.recording::after{
@@ -2859,13 +2859,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   --rec-ring-opacity:0.5;
   --rec-ring-band:3px;
   --rec-ring-size:8px;
-  --rec-ring-bg:conic-gradient(from var(--rec-gap-offset), rgba(118,139,255,0.5) 0deg 360deg);
-  box-shadow:0 6px 14px rgba(8,16,30,0.22), 0 0 0 2px rgba(118,139,255,0.08);
+  --rec-ring-bg:conic-gradient(from var(--rec-gap-offset), rgba(170,126,255,0.5) 0deg 360deg);
+  box-shadow:0 10px 18px rgba(8,16,30,0.32), 0 0 0 2px rgba(170,126,255,0.12);
   background:linear-gradient(145deg, #0f1828 0%, #101c2f 50%, #0f1726 100%) !important;
-  animation:rec-icon-pulse 2s ease-in-out infinite;
+  animation:rec-icon-pulse 2.2s ease-in-out infinite;
 }
 .bottom-recorder #btnRecordStudy.recording-prompt::after{
-  animation:recorder-ring-pulse 2s ease-in-out infinite;
+  animation:recorder-ring-pulse 2.2s ease-in-out infinite;
   transform:scale(1);
   visibility:visible;
 }
@@ -2884,9 +2884,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   100%{ opacity:0.15; transform:scale(0.96); }
 }
 @keyframes rec-icon-pulse{
-  0%{ transform:scale(1); }
-  50%{ transform:scale(1.04); }
-  100%{ transform:scale(1); }
+  0%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(170,126,255,0)); }
+  50%{ transform:scale(1.02); filter:drop-shadow(0 0 12px rgba(170,126,255,0.25)); }
+  100%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(170,126,255,0)); }
 }
 .bottom-recorder #metaRecorder .iconbtn:hover,
 .bottom-recorder #metaRecorder .iconbtn:focus-visible{

@@ -11854,7 +11854,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025122402"; // Must match version.php
+    const CACHE_VERSION = "2025122502"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
@@ -12795,6 +12795,10 @@ Regeln:
         .replace(/'/g, '&#39;');
     }
 
+    function escapeRegExp(value) {
+      return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     function highlightDifferences(original, corrected, errors) {
       let highlighted = corrected;
 
@@ -12808,7 +12812,10 @@ Regeln:
           // Wrap corrected parts in span with title showing explanation
           const explanation = err.issue || '';
           const wrappedCorrection = `<span class="text-correction" data-explanation="${escapeHtml(explanation)}" title="${escapeHtml(explanation)}">${escapeHtml(err.corrected)}</span>`;
-          highlighted = highlighted.replace(err.corrected, wrappedCorrection);
+          // Replace whole-token matches only (avoid wrapping inside longer words like "hjemme")
+          const escaped = escapeRegExp(err.corrected);
+          const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})(?![\\p{L}\\p{N}])`, 'gu');
+          highlighted = highlighted.replace(pattern, (_, prefix, word) => `${prefix}${wrappedCorrection}`);
         }
       });
 

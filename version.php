@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025122501; // YYYYMMDDXX. Card report flow + gesture menu clamp + email link fix
+$plugin->version   = 2025122502; // YYYYMMDDXX. Recorder pulse + color refresh
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.14.0-push-notifications'; // Added push notifications for due cards reminders
