@@ -1652,6 +1652,13 @@ switch ($action) {
             if (empty($data['gender']) && !empty($selected['gender'])) {
                 $data['gender'] = $selected['gender'];
             }
+            // Ensure compound parts are present: split by lemma/baseform if missing.
+            if ((empty($data['parts']) || $data['parts'] === []) && !empty($selected['lemma_id'])) {
+                $data['parts'] = \mod_flashcards\local\ordbank_helper::split_compound(
+                    (int)$selected['lemma_id'],
+                    $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
+                );
+            }
             // Normalize compound parts to clean array for UI.
             if (!empty($data['parts']) && is_array($data['parts'])) {
                 $data['parts'] = array_values(array_filter($data['parts'], function($v){

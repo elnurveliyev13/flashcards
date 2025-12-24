@@ -2071,10 +2071,32 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const actions = document.createElement('div');
       actions.className = 'example-actions';
 
+      const translationLanguageName = (typeof languageName === 'function' ? languageName(userLang2) : '') || '';
+      const translationActionTitleBase = translationLanguageName ? `${translationLanguageName} translation` : 'translation';
+
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
       toggleBtn.className = 'example-icon-btn example-toggle';
-      toggleBtn.innerHTML = '&#9776;'; // simple lines icon for toggle
+      toggleBtn.setAttribute('aria-pressed', 'false');
+
+      const toggleIcon = document.createElement('span');
+      toggleIcon.className = 'example-icon';
+      toggleIcon.innerHTML = '<svg class="example-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7.5h5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 11h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14.5h5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17 7c-2 0-2 2-2 5s0 5 2 5c1.5 0 2-1.5 2-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15 11.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 6l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 6l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+
+      const toggleText = document.createElement('span');
+      toggleText.className = 'example-label';
+
+      const setToggleState = (isOpen) => {
+        toggleBtn.classList.toggle('is-open', isOpen);
+        toggleBtn.setAttribute('aria-pressed', isOpen ? 'true' : 'false');
+        const verb = isOpen ? 'Hide' : 'Show';
+        const label = `${verb} ${translationActionTitleBase}`;
+        toggleText.textContent = label;
+        toggleBtn.title = label;
+        toggleBtn.setAttribute('aria-label', label);
+      };
+
+      toggleBtn.append(toggleIcon, toggleText);
 
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
@@ -2124,11 +2146,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       // default: translation hidden
       transWrap.classList.remove('is-open');
+      setToggleState(false);
 
       toggleBtn.addEventListener('click', e => {
         e.preventDefault();
         const isOpen = transWrap.classList.toggle('is-open');
-        toggleBtn.classList.toggle('is-open', isOpen);
+        setToggleState(isOpen);
       });
 
       btnRemove.addEventListener('click', () => {
