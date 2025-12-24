@@ -4183,16 +4183,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         console.log('[STATS] Dashboard stats refreshed:', data.stats);
         const dueToday = data.stats.dueToday || 0;
         const activeVocabValue = data.stats.activeVocab ?? 0;
+        const totalCardsRaw = data.stats.totalCardsCreated;
+        const totalCards = Number.isFinite(totalCardsRaw) ? totalCardsRaw : null;
+        const displayedTotalCards = totalCards ?? 0;
 
         // Update stats in dashboard tab
         const statTotalCards = $('#statTotalCards');
-        if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
+        if (statTotalCards) statTotalCards.textContent = displayedTotalCards;
         const statActiveVocab = $('#statActiveVocab');
         if (statActiveVocab) statActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
         // Update stats in header
         const headerTotalCards = $('#headerTotalCards');
-        if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
+        if (headerTotalCards) headerTotalCards.textContent = displayedTotalCards;
         const headerActiveVocab = $('#headerActiveVocab');
         if (headerActiveVocab) headerActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
@@ -4202,6 +4205,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
           studyBadge.classList.toggle('hidden', dueToday <= 0);
         }
+        maybeAutoShowIosHint(totalCards);
       } catch (err) {
         console.error('[STATS] Error refreshing stats:', err);
       }
@@ -10177,6 +10181,8 @@ function renderComparisonResult(resultEl, comparison){
 
     function buildListRows(){
       const tbody=$("#listTable tbody");
+      const scrollHost = document.getElementById("listTable") ? document.getElementById("listTable").parentElement : null;
+      const prevScroll = scrollHost ? scrollHost.scrollTop : 0;
       tbody.innerHTML="";
       const rows=[];
       Object.values(registry||{}).forEach(d=>{
@@ -10219,21 +10225,20 @@ function renderComparisonResult(resultEl, comparison){
       const pageInfo = $("#pageInfo");
       const hasMore = filteredTotal > visibleCount;
       const showMoreLabel = t('showmore') || 'Show more';
+      const shouldShowPagination = filteredTotal > LIST_BATCH_SIZE;
 
-      if(hasMore){
-        if(paginationRow) paginationRow.style.display="flex";
-        if(showMoreBtn){
+      if(paginationRow) paginationRow.style.display = shouldShowPagination ? "flex" : "none";
+      if(showMoreBtn){
+        showMoreBtn.textContent = "\u25BC"; // Down arrow
+        showMoreBtn.setAttribute("aria-label", showMoreLabel);
+        if(hasMore){
           showMoreBtn.disabled = false;
-          showMoreBtn.style.display = "inline-flex";
-          showMoreBtn.textContent = "\u25BC"; // Down arrow
-          showMoreBtn.setAttribute("aria-label", showMoreLabel);
-        }
-      } else {
-        if(showMoreBtn){
+          showMoreBtn.style.visibility = "visible";
+        } else {
           showMoreBtn.disabled = true;
-          showMoreBtn.style.display = "none";
+          // Keep space so badge doesn't shift when arrow is gone
+          showMoreBtn.style.visibility = shouldShowPagination ? "hidden" : "hidden";
         }
-        if(paginationRow) paginationRow.style.display = filteredTotal > LIST_BATCH_SIZE ? "flex" : "none";
       }
       if(pageInfo){
         pageInfo.textContent = `${visibleCount} / ${filteredTotal}`;
@@ -10296,6 +10301,9 @@ function renderComparisonResult(resultEl, comparison){
         cell.appendChild(del);
         tbody.appendChild(tr);
       });
+      if(scrollHost){
+        scrollHost.scrollTop = prevScroll;
+      }
     }
     function openCardsListModal(){
       listVisibleCount = LIST_BATCH_SIZE; // Reset when opening modal
@@ -10966,7 +10974,9 @@ function renderComparisonResult(resultEl, comparison){
 
     // iOS Install Hint (since iOS doesn't support beforeinstallprompt)
     const iosInstallHint = $("#iosInstallHint");
+    const iosHintBackdrop = $("#iosHintBackdrop");
     const iosHintClose = $("#iosHintClose");
+    const iosHintTrigger = $("#showIosInstallHint");
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
     const isDisplayModeStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
@@ -10985,25 +10995,56 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Check if user previously dismissed the hint
-    const isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
+    let isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
+    let iosAutoHintTriggered = false;
 
-    if(iosInstallHint && isIOS && !isInStandaloneMode && !isHintDismissed) {
-      // Show iOS install hint for iOS users who haven't installed the app yet
+    function showIosInstallHintPopup({force = false} = {}) {
+      if(!iosInstallHint) return false;
+      if(!isIOS || isStandaloneApp) {
+        debugLog('[PWA] iOS hint skipped (device not eligible)');
+        return false;
+      }
+      if(!force && isHintDismissed) {
+        debugLog('[PWA] iOS hint already dismissed, skipping auto show');
+        return false;
+      }
       iosInstallHint.classList.remove('hidden');
+      iosHintBackdrop?.classList.remove('hidden');
+      document.documentElement?.classList.add('ios-hint-open');
+      document.body?.classList.add('ios-hint-open');
       debugLog('[PWA] iOS install hint shown');
-    } else if(iosInstallHint) {
-      debugLog('[PWA] iOS hint hidden (not iOS, already installed, or dismissed by user)');
+      return true;
     }
 
-    // Handle close button click
+    function hideIosInstallHintPopup(saveDismiss = true) {
+      if(!iosInstallHint) return;
+      iosInstallHint.classList.add('hidden');
+      iosHintBackdrop?.classList.add('hidden');
+      document.documentElement?.classList.remove('ios-hint-open');
+      document.body?.classList.remove('ios-hint-open');
+      if(saveDismiss) {
+        localStorage.setItem(hintDismissedKey, 'true');
+        isHintDismissed = true;
+        debugLog('[PWA] iOS hint dismissed by user');
+      }
+    }
+
     if(iosHintClose) {
-      iosHintClose.addEventListener('click', () => {
-        if(iosInstallHint) {
-          iosInstallHint.classList.add('hidden');
-          localStorage.setItem(hintDismissedKey, 'true');
-          debugLog('[PWA] iOS hint dismissed by user');
-        }
-      });
+      iosHintClose.addEventListener('click', () => hideIosInstallHintPopup(true));
+    }
+    if(iosHintBackdrop) {
+      iosHintBackdrop.addEventListener('click', () => hideIosInstallHintPopup(true));
+    }
+    if(iosHintTrigger) {
+      iosHintTrigger.addEventListener('click', () => showIosInstallHintPopup({force: true}));
+    }
+
+    function maybeAutoShowIosHint(totalCards) {
+      if(iosAutoHintTriggered) return;
+      if(totalCards === 0) {
+        iosAutoHintTriggered = true;
+        showIosInstallHintPopup();
+      }
     }
 
     if(!localStorage.getItem(PROFILE_KEY)) localStorage.setItem(PROFILE_KEY,"Guest");
@@ -11743,13 +11784,16 @@ function renderComparisonResult(resultEl, comparison){
           debugLog('[Dashboard] Loaded data:', data);
           const dueToday = data.stats.dueToday || 0;
           const activeVocabValue = data.stats.activeVocab ?? 0;
+          const totalCardsRaw = data.stats.totalCardsCreated;
+          const totalCards = Number.isFinite(totalCardsRaw) ? totalCardsRaw : null;
+          const displayedTotalCards = totalCards ?? 0;
 
           // Update stats
           const statTotalCards = $('#statTotalCards');
           const statStreak = $('#statStreak');
           const statActiveVocab = $('#statActiveVocab');
 
-          if (statTotalCards) statTotalCards.textContent = data.stats.totalCardsCreated || 0;
+          if (statTotalCards) statTotalCards.textContent = displayedTotalCards;
           if (statStreak) statStreak.textContent = data.stats.currentStreak || 0;
           if (statActiveVocab) statActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
@@ -11757,7 +11801,7 @@ function renderComparisonResult(resultEl, comparison){
           const headerTotalCards = $('#headerTotalCards');
           const headerStreak = $('#headerStreak');
           const headerActiveVocab = $('#headerActiveVocab');
-          if (headerTotalCards) headerTotalCards.textContent = data.stats.totalCardsCreated || 0;
+          if (headerTotalCards) headerTotalCards.textContent = displayedTotalCards;
           if (headerStreak) headerStreak.textContent = data.stats.currentStreak || 0;
           if (headerActiveVocab) headerActiveVocab.textContent = formatActiveVocab(activeVocabValue);
 
@@ -11774,6 +11818,7 @@ function renderComparisonResult(resultEl, comparison){
 
           // Update achievements
           updateAchievements(data.stats);
+          maybeAutoShowIosHint(totalCards);
         } catch (err) {
           debugLog('[Dashboard] Error loading data:', err);
         }

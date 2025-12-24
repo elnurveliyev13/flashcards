@@ -167,6 +167,14 @@
                     </div>
                   </div>
 
+                  <div class="pref-card pref-card-install-app">
+                    <div class="pref-card-title">{{#str}} install_app, mod_flashcards {{/str}}</div>
+                    <div class="pref-card-body">
+                      <p class="small pref-install-note">Install as app</p>
+                      <button type="button" id="showIosInstallHint" class="pref-link-button">{{#str}} install_app, mod_flashcards {{/str}}</button>
+                    </div>
+                  </div>
+
                   <div class="pref-gesture-submenu" id="gestureSubmenu" aria-hidden="true">
                     <div class="pref-card pref-card-gesture">
                       <div class="pref-submenu-header">
@@ -571,7 +579,8 @@
         <button id="btnInstallApp" class="hidden install-btn install-btn-block" title="{{#str}} install_app, mod_flashcards {{/str}}">
           📱 {{#str}} install_app, mod_flashcards {{/str}}
         </button>
-        <div id="iosInstallHint" class="ios-hint hidden" role="note">
+        <div id="iosHintBackdrop" class="ios-hint-backdrop hidden" aria-hidden="true"></div>
+        <div id="iosInstallHint" class="ios-hint hidden ios-hint-popup" role="note">
           <button id="iosHintClose" class="ios-hint-close" title="Close" aria-label="Close">&times;</button>
           <div class="ios-hint-title">📱 {{#str}} ios_install_title, mod_flashcards {{/str}}</div>
           <div class="ios-hint-steps">
