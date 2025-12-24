@@ -1659,11 +1659,20 @@ switch ($action) {
                     $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
                 );
             }
-            // Normalize compound parts to clean array for UI.
+            // Normalize compound parts to clean array for UI, and if only one chunk, try to re-split via leddanalyse.
             if (!empty($data['parts']) && is_array($data['parts'])) {
                 $data['parts'] = array_values(array_filter($data['parts'], function($v){
                     return is_string($v) && trim($v) !== '';
                 }));
+                if (count($data['parts']) === 1 && !empty($selected['lemma_id'])) {
+                    $reparts = \mod_flashcards\local\ordbank_helper::split_compound(
+                        (int)$selected['lemma_id'],
+                        $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
+                    );
+                    if (!empty($reparts) && is_array($reparts) && count($reparts) > 1) {
+                        $data['parts'] = array_values($reparts);
+                    }
+                }
             }
             // Note: usage from operation is already in $data, don't overwrite with snapshot
             $resp = ['ok' => true, 'data' => $data];

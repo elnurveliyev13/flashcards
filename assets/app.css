@@ -639,7 +639,7 @@ h1{
 .pref-page-content{
   flex: 1;
   overflow-y: auto;
-  padding: calc(env(safe-area-inset-top, 0px) + var(--space-2) + var(--pref-header-height)) var(--space-2) var(--space-2);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-2)) var(--space-2) var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -2779,17 +2779,18 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
     var(--rec-ring-color-a) 0deg 210deg,
     var(--rec-ring-color-b) 210deg 360deg);
   mask:
-    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px)),
+    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 6px), #000 calc(50% - var(--rec-ring-size) - 2px)),
     conic-gradient(from var(--rec-gap-offset), transparent 0deg var(--rec-gap-angle), #000 var(--rec-gap-angle) 360deg);
   -webkit-mask:
-    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px)),
+    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 6px), #000 calc(50% - var(--rec-ring-size) - 2px)),
     conic-gradient(from var(--rec-gap-offset), transparent 0deg var(--rec-gap-angle), #000 var(--rec-gap-angle) 360deg);
   opacity:var(--rec-ring-opacity);
   pointer-events:none;
   filter:drop-shadow(0 6px 12px rgba(12,18,32,0.5));
   transition:opacity 0.22s ease, filter 0.22s ease, transform 0.28s ease;
-  z-index:0;
+  z-index:0; /* keep under timer */
   transform:scale(0.94);
+  visibility:hidden;
 }
 .bottom-recorder #btnRecordStudy.recording{
   background:linear-gradient(155deg, #16294d 0%, #1e3a6f 100%) !important;
@@ -2802,6 +2803,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   filter:drop-shadow(0 0 10px var(--rec-ring-glow));
   animation:recorder-ring-spin 6s linear infinite;
   transform:scale(1.02);
+  visibility:visible;
 }
 .bottom-recorder #btnRecordStudy:not(.recording)::after{
   animation:none;
@@ -2810,12 +2812,14 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   transform:scale(0.98);
 }
 .bottom-recorder #btnRecordStudy.recording-prompt{
-  --rec-ring-opacity:0.55;
-  box-shadow:0 12px 24px rgba(8,16,30,0.45), 0 0 0 3px rgba(63,139,255,0.12);
+  --rec-ring-opacity:0.4;
+  box-shadow:0 8px 18px rgba(8,16,30,0.35), 0 0 0 2px rgba(63,139,255,0.08);
+  background:linear-gradient(145deg, #0f1828 0%, #101c2f 50%, #0f1726 100%) !important;
 }
 .bottom-recorder #btnRecordStudy.recording-prompt::after{
   animation:recorder-ring-pulse 1.6s ease-in-out infinite;
   transform:scale(0.98);
+  visibility:visible;
 }
 @property --rec-spin{
   syntax: '<angle>';
@@ -2849,6 +2853,7 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   left:50%;
   transform:translateX(-50%);
   box-shadow:0 4px 10px rgba(15,23,42,0.35);
+  z-index:3;
 }
 .bottom-panel.bottom-actions{
   bottom: env(safe-area-inset-bottom, 0px);
@@ -7419,29 +7424,6 @@ select.inline-prompt-field {
   display: none;
   flex-direction: column;
   gap: var(--space-2);
-}
-
-.pref-submenu-back {
-  border: none;
-  background: none;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.pref-submenu-back:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-.pref-submenu-back-icon {
-  font-size: 1rem;
-  line-height: 1;
 }
 
 .header-pref-panel.gesture-open .pref-panel-main {

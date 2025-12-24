@@ -320,10 +320,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const prefsMain = document.getElementById('prefsMain');
       const gestureSubmenu = document.getElementById('gestureSubmenu');
       const gesturePrefsToggle = document.getElementById('gesturePrefsToggle');
-      const gestureSubmenuBack = document.getElementById('gestureSubmenuBack');
       const prefsClose = document.getElementById('prefsClose');
       const prefsBack = document.getElementById('prefsBack');
       const prefsPageContent = document.getElementById('prefsPageContent');
+      const installCard = document.querySelector('.pref-card-install-app');
       const GESTURE_SUBMENU_CLASS = 'gesture-open';
       let prefsOpen = false;
       let prefsEntryState = null;
@@ -344,6 +344,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           prefsBack.hidden = !visible;
           prefsBack.setAttribute('aria-hidden', visible ? 'false' : 'true');
         }
+        if (installCard) {
+          installCard.style.display = visible ? 'none' : '';
+        }
       };
       const showGestureSubmenu = () => setGestureSubmenuVisibility(true);
       const hideGestureSubmenu = () => setGestureSubmenuVisibility(false);
@@ -353,12 +356,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         event.stopPropagation();
         showGestureSubmenu();
       });
-      gestureSubmenuBack?.addEventListener('click', event => {
-        event.preventDefault();
-        event.stopPropagation();
-        hideGestureSubmenu();
-      });
-
       const attachPrefsPanel = () => {
         if (document.body && prefsPanel.parentElement !== document.body) {
           document.body.appendChild(prefsPanel);
@@ -10422,6 +10419,10 @@ function renderComparisonResult(resultEl, comparison){
       let longPressTimer = null;
       let tapCount = 0;
       let tapTimer = null;
+      const VERTICAL_SWIPE_THRESHOLD = 3;
+      const VERTICAL_ANGLE_TOLERANCE = 15; // degrees off straight down allowed
+      const HORIZONTAL_ANGLE_TOLERANCE = 45; // degrees off horizontal still treated as horizontal
+      const HORIZONTAL_DISTANCE_THRESHOLD = 100;
 
       const studySection = $("#studySection");
       if (!studySection) return;
@@ -10511,21 +10512,10 @@ function renderComparisonResult(resultEl, comparison){
         container.style.boxShadow = '';
       }
 
-      // Helper: Handle tap
-      function handleTap(e) {
-        // Ignore taps on interactive elements
-        if (e.target.closest('.iconbtn, input, textarea, select, .playRow, button, a')) {
-          return;
-        }
-
-        // Check if tap-to-reveal is enabled
-        if (!getGestureSetting('tapToReveal', true)) return;
-
-        // Show next slot
-        const revealBtn = $("#btnRevealNext");
-        if (revealBtn && !revealBtn.classList.contains('hidden') && !revealBtn.disabled) {
-          revealBtn.click();
-        }
+      // Helper: angle difference (0-180)
+      function angleDifference(a, b) {
+        const diff = Math.abs(a - b) % 360;
+        return diff > 180 ? 360 - diff : diff;
       }
 
       // Helper: Handle double tap (play audio)
@@ -10669,8 +10659,11 @@ function renderComparisonResult(resultEl, comparison){
         const deltaTime = Date.now() - touchStartTime;
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
         const velocity = distance / deltaTime;
-
         const velocityThreshold = getGestureSetting('velocityThreshold', 0.5);
+        const rawAngleDeg = (Math.atan2(deltaY, deltaX) * 180) / Math.PI;
+        const angleDeg = (rawAngleDeg + 360) % 360; // 0:right, 90:down
+        const downDeviation = angleDifference(angleDeg, 90);
+        const horizontalDeviation = Math.min(angleDifference(angleDeg, 0), angleDifference(angleDeg, 180));
 
         // Check if gestures are enabled
         if (!getGestureSetting('enabled', true)) {
@@ -10679,10 +10672,23 @@ function renderComparisonResult(resultEl, comparison){
           return;
         }
 
-        // Detect gesture type
-        if (velocity > velocityThreshold && Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Down swipe to reveal (very low distance threshold but strict angle)
+        if (deltaY >= VERTICAL_SWIPE_THRESHOLD && downDeviation <= VERTICAL_ANGLE_TOLERANCE) {
+          if (getGestureSetting('tapToReveal', true)) {
+            const revealBtn = $("#btnRevealNext");
+            if (revealBtn && !revealBtn.classList.contains('hidden') && !revealBtn.disabled) {
+              revealBtn.click();
+            }
+          }
+          resetCardPosition();
+        } else if (
+          velocity > velocityThreshold &&
+          Math.abs(deltaX) > Math.abs(deltaY) &&
+          Math.abs(deltaX) >= HORIZONTAL_DISTANCE_THRESHOLD &&
+          horizontalDeviation <= HORIZONTAL_ANGLE_TOLERANCE
+        ) {
           // Horizontal swipe
-          if (deltaX > 100) {
+          if (deltaX > 0) {
             // Swipe right
             const action = getGestureSetting('swipeRight', 'easy');
             if (action === 'easy') {
@@ -10694,7 +10700,7 @@ function renderComparisonResult(resultEl, comparison){
             } else {
               resetCardPosition();
             }
-          } else if (deltaX < -100) {
+          } else if (deltaX < 0) {
             // Swipe left
             const action = getGestureSetting('swipeLeft', 'hard');
             if (action === 'easy') {
@@ -10716,8 +10722,6 @@ function renderComparisonResult(resultEl, comparison){
           if (tapCount === 1) {
             // Wait for potential double tap
             tapTimer = setTimeout(() => {
-              // Single tap
-              handleTap(e);
               tapCount = 0;
             }, 300);
           } else if (tapCount === 2) {
@@ -11095,6 +11099,8 @@ function renderComparisonResult(resultEl, comparison){
         e.preventDefault();
         showIosInstallHintPopup({force: true});
       });
+      // Ensure hint stays hidden until the user clicks
+      hideIosInstallHintPopup();
     }
 
     if(!localStorage.getItem(PROFILE_KEY)) localStorage.setItem(PROFILE_KEY,"Guest");
