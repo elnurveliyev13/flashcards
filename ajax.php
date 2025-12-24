@@ -505,6 +505,10 @@ if ($globalmode) {
             }
             return !preg_match('~ende$~ui', $item) && !preg_match('~s$~ui', $item);
         });
+        // Avoid long lists like "har gjennomførte": keep only the first clean perfektum.
+        if (count($v['presens_perfektum']) > 1) {
+            $v['presens_perfektum'] = [$v['presens_perfektum'][0]];
+        }
         // Perfektum partisipp: drop -ende noise; keep core forms.
         $v['perfektum_partisipp'] = $filter($v['perfektum_partisipp'] ?? [], function(string $item){
             return !preg_match('~ende$~ui', $item);
