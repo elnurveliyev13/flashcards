@@ -2054,6 +2054,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     };
 
+    const stripNonLetterEdges = (value) => {
+      const text = value ? String(value) : '';
+      if(!text){
+        return '';
+      }
+      try{
+        return text.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+      }catch(_e){
+        return text.replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+      }
+    };
+
+    const INDEFINITE_ARTICLES = new Set(['en','ei','et']);
+    const countMeaningfulFrontWords = (text) => {
+      if(!text){
+        return 0;
+      }
+      const input = String(text).split(/\s+/);
+      let count = 0;
+      input.forEach(part => {
+        const cleaned = stripNonLetterEdges(part);
+        if(!cleaned){
+          return;
+        }
+        const lower = cleaned.toLowerCase();
+        if(INDEFINITE_ARTICLES.has(lower) || lower === 'å'){
+          return;
+        }
+        count++;
+      });
+      return count;
+    };
+
     function createItemElement(type, index, data) {
       const container = document.createElement('div');
       container.className = 'example-card';
@@ -3689,6 +3722,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const parsedExamples = parseExamples(data.examples, data.exampleTranslations || null, userLang2);
         if(parsedExamples.length){
           examplesData = parsedExamples;
+          const frontTextForExample = frontInput ? (frontInput.value || '').trim() : '';
+          if(frontTextForExample && countMeaningfulFrontWords(frontTextForExample) >= 3){
+            if(!examplesData.length){
+              examplesData = [{ no: frontTextForExample, translations: {} }];
+            } else {
+              const primary = examplesData[0] || {};
+              examplesData[0] = {
+                ...primary,
+                no: frontTextForExample,
+                translations: {}
+              };
+            }
+          }
           renderExamples();
           const examplesEl = document.getElementById('uExamples');
           if(examplesEl){

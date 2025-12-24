@@ -606,7 +606,10 @@ h1{
   transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.pref-nav-btn[hidden]{display:none;}
+.pref-nav-btn[hidden]{
+  visibility:hidden;
+  pointer-events:none;
+}
 
 .pref-nav-btn:hover,
 .pref-nav-btn:focus-visible{
@@ -620,10 +623,16 @@ h1{
   align-items: center;
   gap: var(--space-1);
   justify-content: space-between;
-  position: relative;
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 0 var(--space-1);
-  margin-bottom: var(--space-2);
-  background: transparent;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-1)) var(--space-2) var(--space-1);
+  margin-bottom: var(--space-1);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 
 .pref-floating-bar .pref-page-title{
@@ -639,7 +648,7 @@ h1{
 .pref-page-content{
   flex: 1;
   overflow-y: auto;
-  padding: calc(env(safe-area-inset-top, 0px) + var(--space-2)) var(--space-2) var(--space-2);
+  padding: var(--space-2) var(--space-2) var(--space-2);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -743,9 +752,12 @@ body.pref-locked{
   }
   .pref-close-text{display:none;}
   .pref-floating-bar{
-    position: relative;
-    top: auto;
-    padding-inline: 0;
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding-inline: var(--space-2);
+    margin-bottom: var(--space-1);
   }
 }
 
