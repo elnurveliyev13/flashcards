@@ -1652,6 +1652,12 @@ switch ($action) {
             if (empty($data['gender']) && !empty($selected['gender'])) {
                 $data['gender'] = $selected['gender'];
             }
+            // Normalize compound parts to clean array for UI.
+            if (!empty($data['parts']) && is_array($data['parts'])) {
+                $data['parts'] = array_values(array_filter($data['parts'], function($v){
+                    return is_string($v) && trim($v) !== '';
+                }));
+            }
             // Note: usage from operation is already in $data, don't overwrite with snapshot
             $resp = ['ok' => true, 'data' => $data];
             if (!empty($debugai)) {

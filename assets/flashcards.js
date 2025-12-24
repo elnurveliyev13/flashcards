@@ -3482,7 +3482,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         addTableRow(tbody, 'Presens', forms.verb.presens || []);
         addTableRow(tbody, 'Preteritum', forms.verb.preteritum || []);
         const presPerfBase = uniqVals(forms.verb.presens_perfektum || []);
-        const presPerfDerived = uniqVals((forms.verb.perfektum_partisipp || []).map(v => `har ${v}`));
+        const presPerfDerived = (() => {
+          // If backend already provided presens_perfektum, do not derive more variants.
+          if(presPerfBase.length){
+            return [];
+          }
+          const firstPart = uniqVals(forms.verb.perfektum_partisipp || [])[0];
+          return firstPart ? [`har ${firstPart}`] : [];
+        })();
         const presPerfCombined = Array.from(new Set([...presPerfBase, ...presPerfDerived]));
         addTableRow(tbody, 'Presens perfektum', presPerfCombined);
         addTableRow(tbody, 'Imperativ', forms.verb.imperativ || []);
@@ -10202,14 +10209,40 @@ function renderComparisonResult(resultEl, comparison){
       const q=$("#listSearch").value.toLowerCase();
       let filtered=rows.filter(r=>!q || r.fokus.toLowerCase().includes(q) || (r.deckTitle||"").toLowerCase().includes(q));
 
+      // Build quick lookup for current Study queue ordering (deckId:cardId -> index)
+      const queueOrder = new Map(queue.map((item, idx)=> [`${item.deckId}:${item.card?.id}`, idx]));
+
       // Apply due date filter
       const dueFilter=$("#listFilterDue").value;
       if(dueFilter==='due'){
         filtered=filtered.filter(r=> (r.due ?? 0) <= now);
       }
 
-      // Sort by due date
-      filtered.sort((a,b)=> (a.due||0)-(b.due||0) );
+      // Sort based on selected filter:
+      // - "due": mirror Study queue order
+      // - "all": newest added first (reverse chronology)
+      if(dueFilter === 'due'){
+        filtered.sort((a,b)=>{
+          const aKey = `${a.deckId}:${a.id}`;
+          const bKey = `${b.deckId}:${b.id}`;
+          const aOrder = queueOrder.has(aKey) ? queueOrder.get(aKey) : Number.MAX_SAFE_INTEGER;
+          const bOrder = queueOrder.has(bKey) ? queueOrder.get(bKey) : Number.MAX_SAFE_INTEGER;
+          if(aOrder !== bOrder) return aOrder - bOrder;
+
+          // Fallback: mimic queue tie-breakers (newer added first, then earlier due)
+          const aAdded = a.added ?? 0;
+          const bAdded = b.added ?? 0;
+          if(aAdded !== bAdded) return bAdded - aAdded;
+          return (a.due ?? 0) - (b.due ?? 0);
+        });
+      } else {
+        filtered.sort((a,b)=>{
+          const aAdded = a.added ?? 0;
+          const bAdded = b.added ?? 0;
+          if(aAdded !== bAdded) return bAdded - aAdded;
+          return (a.due ?? 0) - (b.due ?? 0);
+        });
+      }
 
       // Update count: show total for "all", due-only for "due"
       $("#listCount").textContent= dueFilter==='due' ? dueCount : totalCount;
@@ -10974,7 +11007,6 @@ function renderComparisonResult(resultEl, comparison){
 
     // iOS Install Hint (since iOS doesn't support beforeinstallprompt)
     const iosInstallHint = $("#iosInstallHint");
-    const iosHintBackdrop = $("#iosHintBackdrop");
     const iosHintClose = $("#iosHintClose");
     const iosHintTrigger = $("#showIosInstallHint");
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -10998,6 +11030,15 @@ function renderComparisonResult(resultEl, comparison){
     let isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
     let iosAutoHintTriggered = false;
 
+    const ensurePrefsOpenForHint = () => {
+      if (!prefsPanel || !prefsToggle) return false;
+      const open = prefsPanel.classList.contains('open');
+      if (!open) {
+        prefsToggle.dispatchEvent(new Event('click', { bubbles: true }));
+      }
+      return true;
+    };
+
     function showIosInstallHintPopup({force = false} = {}) {
       if(!iosInstallHint) return false;
       if(!isIOS || isStandaloneApp) {
@@ -11008,10 +11049,10 @@ function renderComparisonResult(resultEl, comparison){
         debugLog('[PWA] iOS hint already dismissed, skipping auto show');
         return false;
       }
+      ensurePrefsOpenForHint();
       iosInstallHint.classList.remove('hidden');
-      iosHintBackdrop?.classList.remove('hidden');
-      document.documentElement?.classList.add('ios-hint-open');
-      document.body?.classList.add('ios-hint-open');
+      iosHintTrigger?.setAttribute('aria-expanded', 'true');
+      iosInstallHint.scrollIntoView({ behavior: 'smooth', block: 'start' });
       debugLog('[PWA] iOS install hint shown');
       return true;
     }
@@ -11019,9 +11060,7 @@ function renderComparisonResult(resultEl, comparison){
     function hideIosInstallHintPopup(saveDismiss = true) {
       if(!iosInstallHint) return;
       iosInstallHint.classList.add('hidden');
-      iosHintBackdrop?.classList.add('hidden');
-      document.documentElement?.classList.remove('ios-hint-open');
-      document.body?.classList.remove('ios-hint-open');
+      iosHintTrigger?.setAttribute('aria-expanded', 'false');
       if(saveDismiss) {
         localStorage.setItem(hintDismissedKey, 'true');
         isHintDismissed = true;
@@ -11032,11 +11071,11 @@ function renderComparisonResult(resultEl, comparison){
     if(iosHintClose) {
       iosHintClose.addEventListener('click', () => hideIosInstallHintPopup(true));
     }
-    if(iosHintBackdrop) {
-      iosHintBackdrop.addEventListener('click', () => hideIosInstallHintPopup(true));
-    }
     if(iosHintTrigger) {
-      iosHintTrigger.addEventListener('click', () => showIosInstallHintPopup({force: true}));
+      iosHintTrigger.addEventListener('click', e => {
+        e.preventDefault();
+        showIosInstallHintPopup({force: true});
+      });
     }
 
     function maybeAutoShowIosHint(totalCards) {
@@ -11413,7 +11452,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025121300"; // Must match version.php
+    const CACHE_VERSION = "2025122401"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);

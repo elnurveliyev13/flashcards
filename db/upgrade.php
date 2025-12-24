@@ -1016,5 +1016,11 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025121300, 'flashcards');
     }
 
+    // Cache buster bump for recorder UI visuals (no DB changes).
+    if ($oldversion < 2025122401) {
+        mtrace('Flashcards: Cache version bump for recorder UI refresh...');
+        upgrade_mod_savepoint(true, 2025122401, 'flashcards');
+    }
+
     return true;
 }
