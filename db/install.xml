@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<XMLDB PATH="mod/flashcards/db" VERSION="2025122403" COMMENT="Flashcards module">
+<XMLDB PATH="mod/flashcards/db" VERSION="2025122500" COMMENT="Flashcards module">
   <TABLES>
     <TABLE NAME="flashcards" COMMENT="Flashcards activity instances">
       <FIELDS>
@@ -253,6 +253,30 @@
         <INDEX NAME="user_provider_period_uix" UNIQUE="true" FIELDS="userid, provider, period_start"/>
         <INDEX NAME="provider_idx" UNIQUE="false" FIELDS="provider"/>
         <INDEX NAME="period_idx" UNIQUE="false" FIELDS="period_start"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="flashcards_reports" COMMENT="User reports for cards">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="deckid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="cardid" TYPE="char" LENGTH="64" NOTNULL="true" DEFAULT=""/>
+        <FIELD NAME="cardtitle" TYPE="char" LENGTH="255" NOTNULL="false"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="cmid" TYPE="int" LENGTH="10" NOTNULL="false"/>
+        <FIELD NAME="message" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="status" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="open"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="deck_idx" UNIQUE="false" FIELDS="deckid"/>
+        <INDEX NAME="card_idx" UNIQUE="false" FIELDS="cardid"/>
+        <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+        <INDEX NAME="status_idx" UNIQUE="false" FIELDS="status"/>
       </INDEXES>
     </TABLE>
   </TABLES>

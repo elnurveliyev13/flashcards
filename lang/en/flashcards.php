@@ -269,6 +269,7 @@ $string['access_days_remaining'] = '{$a} days remaining';
 $string['messageprovider:grace_period_started'] = 'Flashcards grace period started';
 $string['messageprovider:access_expiring_soon'] = 'Flashcards access expiring soon';
 $string['messageprovider:access_expired'] = 'Flashcards access expired';
+$string['messageprovider:card_report'] = 'Card issue reports';
 
 $string['notification_grace_subject'] = 'Flashcards: Grace period started';
 $string['notification_grace_message'] = 'You are no longer enrolled in a flashcards course. You can review your existing cards for {$a} days. To create new cards, please enrol in a course.';
@@ -281,6 +282,22 @@ $string['notification_expiring_message_html'] = '<p><strong>Your flashcards acce
 $string['notification_expired_subject'] = 'Flashcards: Access expired';
 $string['notification_expired_message'] = 'Your flashcards access has expired. Enrol in a course to regain access.';
 $string['notification_expired_message_html'] = '<p><strong>Your flashcards access has expired.</strong></p><p>Enrol in a course to regain access to your cards.</p>';
+$string['report_issue'] = 'Report issue';
+$string['report_hint'] = 'Optional note for admins';
+$string['report_placeholder'] = 'Describe what is wrong with this card...';
+$string['report_submit'] = 'Send report';
+$string['report_sent'] = 'Report sent to admins';
+$string['report_sending'] = 'Sending report...';
+$string['report_error'] = 'Could not send report. Please try again.';
+$string['report_no_card'] = 'Select a card first';
+$string['report_for'] = 'Card';
+$string['report_card'] = 'Card';
+$string['report_admin_list'] = 'Recent reports';
+$string['report_empty'] = 'No reports yet';
+$string['report_open_card'] = 'Open card';
+$string['report_notification_subject'] = 'Flashcards: report for "{$a->card}"';
+$string['report_notification_body'] = 'User {$a->user} reported an issue for "{$a->card}". Message: {$a->message}';
+$string['report_notification_body_html'] = '<p>User <strong>{$a->user}</strong> reported an issue for "<strong>{$a->card}</strong>".</p><p>Message: {$a->message}</p><p><a href="{$a->url}">Open card</a></p>';
 
 // Global page strings
 $string['myflashcards'] = 'My Flashcards';

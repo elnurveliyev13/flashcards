@@ -10513,6 +10513,171 @@ function renderComparisonResult(resultEl, comparison){
         buildListRows();
       });
     }
+    const btnReport = $("#btnReport");
+    const reportModal = $("#reportModal");
+    const reportText = $("#reportText");
+    const reportStatus = $("#reportStatus");
+    const reportCardLabel = $("#reportCardLabel");
+    const reportAdminList = $("#reportAdminList");
+    const reportAdminItems = $("#reportAdminItems");
+    const btnCloseReport = $("#btnCloseReport");
+    const btnSubmitReport = $("#btnSubmitReport");
+
+    function closeReportModal(){
+      if(reportModal){
+        reportModal.style.display = "none";
+      }
+    }
+
+    function formatReportCardLabel(){
+      const card = currentItem && currentItem.card ? currentItem.card : null;
+      const fallback = getModString('report_no_card') || 'No card selected';
+      if(!card){
+        return fallback;
+      }
+      const label = (card.fokus || card.focus || card.text || card.translation || card.front || '').trim();
+      const prefix = getModString('report_for') || 'Card';
+      return label ? `${prefix}: ${label}` : fallback;
+    }
+
+    function formatReportDate(ts){
+      if(!ts) return '';
+      const d = new Date(ts * 1000);
+      return d.toLocaleString();
+    }
+
+    function renderReportList(items){
+      if(!reportAdminItems) return;
+      reportAdminItems.innerHTML = '';
+      if(!items || !items.length){
+        const empty = document.createElement('div');
+        empty.className = 'report-empty';
+        empty.textContent = getModString('report_empty') || 'No reports yet';
+        reportAdminItems.appendChild(empty);
+        return;
+      }
+      items.forEach(rep => {
+        const row = document.createElement('div');
+        row.className = 'report-row';
+        const main = document.createElement('div');
+        main.className = 'report-row-main';
+        const title = document.createElement('div');
+        title.className = 'report-row-title';
+        title.textContent = rep.cardtitle || rep.cardid || getModString('report_card') || 'Card';
+        const meta = document.createElement('div');
+        meta.className = 'report-row-meta';
+        const reporter = rep.user || '';
+        const when = formatReportDate(rep.timecreated);
+        const msg = (rep.message || '').trim();
+        meta.textContent = [reporter, when, msg].filter(Boolean).join(' · ');
+        main.appendChild(title);
+        main.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'report-row-actions';
+        const openBtn = document.createElement('button');
+        openBtn.className = 'btn';
+        openBtn.textContent = getModString('report_open_card') || 'Open card';
+        openBtn.addEventListener('click', () => {
+          closeReportModal();
+          const deckId = rep.deckid ? String(rep.deckid) : currentItem?.deckId;
+          if(deckId && rep.cardid){
+            focusQueueCard(deckId, rep.cardid);
+          }
+        });
+        actions.appendChild(openBtn);
+
+        row.appendChild(main);
+        row.appendChild(actions);
+        reportAdminItems.appendChild(row);
+      });
+    }
+
+    async function maybeLoadReportList(){
+      if(!reportAdminList || !reportAdminItems){
+        return;
+      }
+      try{
+        const data = await api('list_reports');
+        if(data && Array.isArray(data.reports)){
+          renderReportList(data.reports);
+          reportAdminList.classList.remove('hidden');
+        } else {
+          reportAdminList.classList.add('hidden');
+        }
+      }catch(_e){
+        reportAdminList.classList.add('hidden');
+      }
+    }
+
+    function openReportModal(){
+      if(!reportModal){
+        return;
+      }
+      if(reportCardLabel){
+        reportCardLabel.textContent = formatReportCardLabel();
+      }
+      if(reportStatus){
+        reportStatus.textContent = '';
+      }
+      if(reportText){
+        reportText.value = '';
+      }
+      reportModal.style.display = "flex";
+      setTimeout(()=>{
+        reportText?.focus();
+      }, 30);
+      maybeLoadReportList();
+    }
+
+    async function submitReport(){
+      if(!currentItem || !currentItem.card){
+        if(reportStatus){
+          reportStatus.textContent = getModString('report_no_card') || 'Select a card first';
+        }
+        return;
+      }
+      const payload = {
+        deckid: currentItem.deckId,
+        cardid: currentItem.card.id,
+        cardtitle: (currentItem.card.fokus || currentItem.card.focus || currentItem.card.text || currentItem.card.translation || '').trim(),
+        message: (reportText && reportText.value ? reportText.value.trim() : '')
+      };
+      try{
+        if(reportStatus){
+          reportStatus.textContent = getModString('report_sending') || 'Sending...';
+        }
+        await api('submit_report', {}, 'POST', payload);
+        if(reportStatus){
+          reportStatus.textContent = getModString('report_sent') || 'Report sent';
+        }
+        if(reportText){
+          reportText.value = '';
+        }
+        maybeLoadReportList();
+      }catch(_e){
+        if(reportStatus){
+          reportStatus.textContent = getModString('report_error') || 'Could not send report';
+        }
+      }
+    }
+
+    if(btnReport){
+      btnReport.addEventListener('click', openReportModal);
+    }
+    if(btnSubmitReport){
+      btnSubmitReport.addEventListener('click', submitReport);
+    }
+    if(btnCloseReport){
+      btnCloseReport.addEventListener('click', closeReportModal);
+    }
+    if(reportModal){
+      reportModal.addEventListener('click', (e)=>{
+        if(e.target === reportModal){
+          closeReportModal();
+        }
+      });
+    }
 
     document.addEventListener("keydown",e=>{ if($("#listModal").style.display==="flex") return; const tag=(e.target.tagName||"").toLowerCase(); if(tag==="input"||tag==="textarea"||e.target.isContentEditable) return; if(e.code==="Space"){ e.preventDefault(); const br=$("#btnRevealNext"); if(br && !br.disabled) br.click(); } if(e.key==="e"||e.key==="E") rateEasy(); if(e.key==="n"||e.key==="N") rateNormal(); if(e.key==="h"||e.key==="H") rateHard(); });
 
@@ -10525,7 +10690,7 @@ function renderComparisonResult(resultEl, comparison){
       let longPressTimer = null;
       let tapCount = 0;
       let tapTimer = null;
-      const VERTICAL_SWIPE_THRESHOLD = 3;
+      const VERTICAL_SWIPE_THRESHOLD = 50;
       const VERTICAL_ANGLE_TOLERANCE = 15; // degrees off straight down allowed
       const HORIZONTAL_ANGLE_TOLERANCE = 45; // degrees off horizontal still treated as horizontal
       const HORIZONTAL_DISTANCE_THRESHOLD = 100;
@@ -10654,9 +10819,10 @@ function renderComparisonResult(resultEl, comparison){
         menu.style.top = `${y}px`;
 
         const actions = [
-          { label: 'Edit Card', icon: '??', handler: () => { $("#btnEdit").click(); } },
-          { label: 'Delete Card', icon: '???', handler: () => { $("#btnDel").click(); } },
-          { label: 'Card List', icon: '??', handler: () => { $("#btnList").click(); } }
+          { label: 'Edit Card', icon: '✏️', handler: () => { $("#btnEdit").click(); } },
+          { label: 'Delete Card', icon: '🗑️', handler: () => { $("#btnDel").click(); } },
+          { label: 'Card List', icon: '📋', handler: () => { $("#btnList").click(); } },
+          { label: 'Report', icon: '❓', handler: () => { openReportModal(); } }
         ];
 
         actions.forEach(action => {
@@ -10672,18 +10838,26 @@ function renderComparisonResult(resultEl, comparison){
 
         document.body.appendChild(menu);
 
-        // Ensure menu stays within the viewport horizontal bounds
+        // Ensure menu stays within the viewport bounds (padding 12px)
         const viewportPadding = 12;
         const menuRect = menu.getBoundingClientRect();
         const viewportRight = window.innerWidth - viewportPadding;
+        const viewportBottom = window.innerHeight - viewportPadding;
         let adjustedLeft = x;
+        let adjustedTop = y;
 
         if (menuRect.right > viewportRight) {
           adjustedLeft -= menuRect.right - viewportRight;
         }
 
+        if (menuRect.bottom > viewportBottom) {
+          adjustedTop -= menuRect.bottom - viewportBottom;
+        }
+
         adjustedLeft = Math.max(adjustedLeft, viewportPadding);
+        adjustedTop = Math.max(adjustedTop, viewportPadding);
         menu.style.left = `${adjustedLeft}px`;
+        menu.style.top = `${adjustedTop}px`;
 
         // Close on outside click
         setTimeout(() => {

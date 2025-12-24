@@ -3,6 +3,7 @@ define('AJAX_SCRIPT', true);
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
+require_once($CFG->libdir . '/weblib.php');
 require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/local/ordbank_helper.php');
 require_once(__DIR__ . '/classes/local/ordbokene_client.php');
@@ -160,6 +161,55 @@ function mod_flashcards_extract_argcodes_from_tag(string $tag): array {
         }
     }
     return $out;
+}
+
+/**
+ * Notify course/site admins about a new card report.
+ */
+function mod_flashcards_notify_report(object $report, ?stdClass $course, ?stdClass $cm, int $userid): void {
+    global $DB;
+
+    $userfrom = $DB->get_record('user', ['id' => $userid]);
+    $recipients = [];
+    if ($course) {
+        $coursecontext = context_course::instance($course->id);
+        $recipients = get_enrolled_users($coursecontext, 'moodle/course:manageactivities');
+    }
+    if (empty($recipients)) {
+        $recipients = get_admins();
+    }
+    if (empty($recipients)) {
+        return;
+    }
+
+    $cardlabel = $report->cardtitle ?: $report->cardid;
+    $url = $cm
+        ? (new moodle_url('/mod/flashcards/view.php', ['id' => $cm->id, 'cardid' => $report->cardid]))->out(false)
+        : (new moodle_url('/mod/flashcards/view.php'))->out(false);
+
+    foreach ($recipients as $admin) {
+        $message = new \core\message\message();
+        $message->component = 'mod_flashcards';
+        $message->name = 'card_report';
+        $message->userfrom = $userfrom ?: \core_user::get_support_user();
+        $message->userto = $admin;
+        $message->notification = 1;
+        $message->subject = get_string('report_notification_subject', 'mod_flashcards', (object)['card' => $cardlabel]);
+        $message->fullmessage = get_string('report_notification_body', 'mod_flashcards', (object)[
+            'user' => $userfrom ? fullname($userfrom) : '',
+            'card' => $cardlabel,
+            'message' => $report->message ?? '',
+            'url' => $url,
+        ]);
+        $message->fullmessagehtml = get_string('report_notification_body_html', 'mod_flashcards', (object)[
+            'user' => $userfrom ? fullname($userfrom) : '',
+            'card' => $cardlabel,
+            'message' => format_text($report->message ?? '', FORMAT_PLAIN),
+            'url' => $url,
+        ]);
+        $message->fullmessageformat = FORMAT_HTML;
+        message_send($message);
+    }
 }
 
 /**
@@ -2364,6 +2414,72 @@ if (!empty($ordbokene_debug)) {
             throw new moodle_exception('Push notifications not configured');
         }
         echo json_encode(['ok' => true, 'data' => ['publicKey' => $vapidpublic]]);
+        break;
+
+    case 'submit_report':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $deckid = isset($payload['deckid']) ? (int)$payload['deckid'] : null;
+        $cardid = clean_param($payload['cardid'] ?? '', PARAM_ALPHANUMEXT);
+        $cardtitle = clean_param($payload['cardtitle'] ?? '', PARAM_TEXT);
+        $message = clean_param($payload['message'] ?? '', PARAM_TEXT);
+        if ($cardid === '') {
+            throw new invalid_parameter_exception('Missing card');
+        }
+        $now = time();
+        $rec = (object)[
+            'deckid' => $deckid ?: null,
+            'cardid' => $cardid,
+            'cardtitle' => $cardtitle ?: null,
+            'userid' => $userid,
+            'courseid' => $course->id ?? null,
+            'cmid' => $cmid ?: null,
+            'message' => $message ?: null,
+            'status' => 'open',
+            'timecreated' => $now,
+            'timemodified' => $now,
+        ];
+        $rec->id = $DB->insert_record('flashcards_reports', $rec);
+        mod_flashcards_notify_report($rec, $course ?? null, $cm ?? null, $userid);
+        echo json_encode(['ok' => true, 'data' => ['id' => $rec->id]]);
+        break;
+
+    case 'list_reports':
+        if ($globalmode) {
+            require_capability('moodle/site:config', $context);
+        } else {
+            require_capability('moodle/course:manageactivities', $context);
+        }
+        $where = '1=1';
+        $params = [];
+        if (!$globalmode && $course) {
+            $where = '(courseid = :courseid OR courseid IS NULL)';
+            $params['courseid'] = $course->id;
+        }
+        $records = $DB->get_records_select('flashcards_reports', $where, $params, 'timecreated DESC', '*', 0, 50);
+        $userids = [];
+        foreach ($records as $recUser) {
+            $userids[] = (int)$recUser->userid;
+        }
+        $userids = array_unique($userids);
+        $users = $userids ? $DB->get_records_list('user', 'id', $userids, '', 'id,firstname,lastname') : [];
+        $out = [];
+        foreach ($records as $r) {
+            $out[] = [
+                'id' => (int)$r->id,
+                'deckid' => $r->deckid,
+                'cardid' => $r->cardid,
+                'cardtitle' => $r->cardtitle,
+                'message' => $r->message,
+                'status' => $r->status,
+                'timecreated' => (int)$r->timecreated,
+                'user' => isset($users[$r->userid]) ? fullname($users[$r->userid]) : '',
+            ];
+        }
+        echo json_encode(['ok' => true, 'data' => ['reports' => $out]]);
         break;
 
     default:

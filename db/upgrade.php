@@ -1022,5 +1022,34 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025122403, 'flashcards');
     }
 
+    if ($oldversion < 2025122500) {
+        mtrace('Flashcards: Adding card reports table...');
+        $table = new xmldb_table('flashcards_reports');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('deckid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('cardid', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, '');
+        $table->add_field('cardtitle', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('cmid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+        $table->add_field('message', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('status', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'open');
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('deck_idx', XMLDB_INDEX_NOTUNIQUE, ['deckid']);
+        $table->add_index('card_idx', XMLDB_INDEX_NOTUNIQUE, ['cardid']);
+        $table->add_index('userid_idx', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+        $table->add_index('status_idx', XMLDB_INDEX_NOTUNIQUE, ['status']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_reports table');
+        }
+
+        upgrade_mod_savepoint(true, 2025122500, 'flashcards');
+    }
+
     return true;
 }

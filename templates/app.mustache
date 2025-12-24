@@ -569,6 +569,7 @@
             </div>
           </div>
           <div class="card-toolbar-actions">
+            <button id="btnReport" class="iconbtn" title="{{#str}} report_issue, mod_flashcards {{/str}}" aria-label="{{#str}} report_issue, mod_flashcards {{/str}}">&#10067;</button>
             <button id="btnList" class="iconbtn" title="{{#str}} list, mod_flashcards {{/str}}" aria-label="{{#str}} list, mod_flashcards {{/str}}">&#128220;</button>
             <button id="btnEdit" class="iconbtn hidden" title="{{#str}} title_edit, mod_flashcards {{/str}}">
               <svg role="presentation" focusable="false" viewBox="0 0 24 24" aria-hidden="true">
@@ -854,6 +855,26 @@
       <div class="row" id="listPagination" style="margin-top:10px;justify-content:center;gap:10px;display:none">
         <button id="btnListShowMore" class="btn" aria-label="{{#str}} showmore, mod_flashcards {{/str}}">&#x25BC;</button>
         <span id="pageInfo" class="badge">0 / 0</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="reportModal" class="modal" role="dialog" aria-modal="true">
+    <div class="box report-box">
+      <div class="report-header">
+        <h3 id="reportTitle" data-i18n="report_issue">{{#str}} report_issue, mod_flashcards {{/str}}</h3>
+        <button id="btnCloseReport" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
+      </div>
+      <div class="report-cardline" id="reportCardLabel"></div>
+      <label for="reportText" class="report-label">{{#str}} report_hint, mod_flashcards {{/str}}</label>
+      <textarea id="reportText" class="autogrow report-textarea" rows="3" placeholder="{{#str}} report_placeholder, mod_flashcards {{/str}}"></textarea>
+      <div class="report-actions">
+        <button id="btnSubmitReport" class="ok">{{#str}} report_submit, mod_flashcards {{/str}}</button>
+      </div>
+      <div id="reportStatus" class="report-status"></div>
+      <div id="reportAdminList" class="report-admin hidden">
+        <div class="report-admin-header">{{#str}} report_admin_list, mod_flashcards {{/str}}</div>
+        <div id="reportAdminItems" class="report-list"></div>
       </div>
     </div>
   </div>
