@@ -4238,7 +4238,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           studyBadge.textContent = dueToday > 0 ? String(dueToday) : '';
           studyBadge.classList.toggle('hidden', dueToday <= 0);
         }
-        maybeAutoShowIosHint(totalCards);
       } catch (err) {
         console.error('[STATS] Error refreshing stats:', err);
       }
@@ -4653,6 +4652,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
 let audioURL=null; const player=new Audio();
+
+function setRecorderPrompt(active){
+  try{
+    const btn = document.getElementById('btnRecordStudy');
+    if(btn){
+      btn.classList.toggle('recording-prompt', !!active);
+    }
+  }catch(_e){}
+}
+
+try{
+  player.addEventListener('play', ()=>setRecorderPrompt(false));
+  player.addEventListener('ended', ()=>setRecorderPrompt(true));
+}catch(_e){}
 let lastStudyAudioUrl=null;
 let lastStudyAudioRate=1;
     let lastImageKey=null,lastAudioKey=null; let lastImageUrl=null,lastAudioUrl=null; let lastAudioBlob=null; let rec=null,recChunks=[];
@@ -9554,6 +9567,7 @@ function renderComparisonResult(resultEl, comparison){
             await iosRecorderInstance.start();
             setIOSMicPermissionState('granted');
             isRecording = true;
+            btnRecordStudy.classList.remove("recording-prompt");
             btnRecordStudy.classList.add("recording");
             startTimer();
             autoStopTimer = setTimeout(()=>{ if(isRecording){ stopStudyRecording().catch(()=>{}); } }, 30000); // 30s max
@@ -9637,6 +9651,7 @@ function renderComparisonResult(resultEl, comparison){
           try{ studyRecorder.start(1000); }catch(_e){ studyRecorder.start(); }
 
           isRecording = true;
+          btnRecordStudy.classList.remove("recording-prompt");
           btnRecordStudy.classList.add("recording");
           startTimer();
           autoStopTimer = setTimeout(()=>{
@@ -9787,13 +9802,16 @@ function renderComparisonResult(resultEl, comparison){
       }
 
       // Public function to set current audio URL
-      window.setStudyRecorderAudio = function(url){
-        console.log('[PronunciationPractice] setStudyRecorderAudio called with:', url);
-        currentCardAudioUrl = url;
-        capturedCardAudioUrl = url; // Also update captured URL so it's ready for recording
-        studentRecordingBlob = null; // Reset student recording when card changes
-        stopPlaybackLoop(); // Stop any active playback
-      };
+    window.setStudyRecorderAudio = function(url){
+      console.log('[PronunciationPractice] setStudyRecorderAudio called with:', url);
+      currentCardAudioUrl = url;
+      capturedCardAudioUrl = url; // Also update captured URL so it's ready for recording
+      studentRecordingBlob = null; // Reset student recording when card changes
+      stopPlaybackLoop(); // Stop any active playback
+      if(!url){
+        setRecorderPrompt(false);
+      }
+    };
 
       // If a card audio URL was attached before the recorder initialized,
       // reuse it immediately so the first recording has something to play back.
@@ -11039,7 +11057,6 @@ function renderComparisonResult(resultEl, comparison){
     const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
     const isDisplayModeStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
     const isStandaloneApp = isInStandaloneMode || isDisplayModeStandalone;
-    const hintDismissedKey = 'ios-install-hint-dismissed';
 
     debugLog('[PWA] iOS device:', isIOS);
     debugLog('[PWA] Standalone mode:', isInStandaloneMode);
@@ -11051,10 +11068,6 @@ function renderComparisonResult(resultEl, comparison){
         root.classList.add('fc-standalone');
       }
     }
-
-    // Check if user previously dismissed the hint
-    let isHintDismissed = localStorage.getItem(hintDismissedKey) === 'true';
-    let iosAutoHintTriggered = false;
 
     const ensurePrefsOpenForHint = () => {
       if (!prefsPanel || !prefsToggle) return false;
@@ -11071,10 +11084,6 @@ function renderComparisonResult(resultEl, comparison){
         debugLog('[PWA] iOS hint skipped (device not eligible)');
         return false;
       }
-      if(!force && isHintDismissed) {
-        debugLog('[PWA] iOS hint already dismissed, skipping auto show');
-        return false;
-      }
       ensurePrefsOpenForHint();
       iosInstallHint.classList.remove('hidden');
       iosHintTrigger?.setAttribute('aria-expanded', 'true');
@@ -11083,33 +11092,21 @@ function renderComparisonResult(resultEl, comparison){
       return true;
     }
 
-    function hideIosInstallHintPopup(saveDismiss = true) {
+    function hideIosInstallHintPopup() {
       if(!iosInstallHint) return;
       iosInstallHint.classList.add('hidden');
       iosHintTrigger?.setAttribute('aria-expanded', 'false');
-      if(saveDismiss) {
-        localStorage.setItem(hintDismissedKey, 'true');
-        isHintDismissed = true;
-        debugLog('[PWA] iOS hint dismissed by user');
-      }
+      debugLog('[PWA] iOS hint dismissed by user');
     }
 
     if(iosHintClose) {
-      iosHintClose.addEventListener('click', () => hideIosInstallHintPopup(true));
+      iosHintClose.addEventListener('click', () => hideIosInstallHintPopup());
     }
     if(iosHintTrigger) {
       iosHintTrigger.addEventListener('click', e => {
         e.preventDefault();
         showIosInstallHintPopup({force: true});
       });
-    }
-
-    function maybeAutoShowIosHint(totalCards) {
-      if(iosAutoHintTriggered) return;
-      if(totalCards === 0) {
-        iosAutoHintTriggered = true;
-        showIosInstallHintPopup();
-      }
     }
 
     if(!localStorage.getItem(PROFILE_KEY)) localStorage.setItem(PROFILE_KEY,"Guest");
@@ -11478,7 +11475,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025122401"; // Must match version.php
+    const CACHE_VERSION = "2025122402"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
@@ -11883,7 +11880,6 @@ function renderComparisonResult(resultEl, comparison){
 
           // Update achievements
           updateAchievements(data.stats);
-          maybeAutoShowIosHint(totalCards);
         } catch (err) {
           debugLog('[Dashboard] Error loading data:', err);
         }

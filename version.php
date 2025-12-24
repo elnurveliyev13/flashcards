@@ -7,7 +7,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_flashcards';
-$plugin->version   = 2025122401; // YYYYMMDDXX. Recorder UI refresh + cache bust
+$plugin->version   = 2025122402; // YYYYMMDDXX. Recorder UI ring gap + prompt pulse
 $plugin->requires  = 2022041900; // Moodle 4.0 (adjust if needed).
 $plugin->maturity  = MATURITY_ALPHA;
 $plugin->release   = '0.14.0-push-notifications'; // Added push notifications for due cards reminders

@@ -620,11 +620,10 @@ h1{
   align-items: center;
   gap: var(--space-1);
   justify-content: space-between;
-  position: sticky;
-  top: 0;
-  padding: calc(env(safe-area-inset-top, 0px) + 6px) 0 var(--space-1);
-  z-index: 3;
-  background: linear-gradient(180deg, rgba(10,18,32,0.98) 0%, rgba(10,18,32,0.94) 100%);
+  position: relative;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 0 var(--space-1);
+  margin-bottom: var(--space-2);
+  background: transparent;
 }
 
 .pref-floating-bar .pref-page-title{
@@ -686,11 +685,6 @@ h1{
 
 .pref-card-gesture .pref-card-title{margin-bottom:4px;}
 
-.pref-card-install-app .pref-install-note{
-  margin: 0;
-  color: var(--text-muted);
-}
-
 .pref-link-button{
   border: 1px solid rgba(59,130,246,0.6);
   background: rgba(59,130,246,0.12);
@@ -706,6 +700,10 @@ h1{
 .pref-link-button:hover{
   transform: translateY(-1px);
   background: rgba(59,130,246,0.2);
+}
+.pref-card-install-body .pref-link-button{
+  width: 100%;
+  text-align: center;
 }
 
 .pref-submenu-header{
@@ -745,8 +743,8 @@ body.pref-locked{
   }
   .pref-close-text{display:none;}
   .pref-floating-bar{
-    position: sticky;
-    top: calc(env(safe-area-inset-top, 0px) * -1);
+    position: relative;
+    top: auto;
     padding-inline: 0;
   }
 }
@@ -2749,12 +2747,13 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   letter-spacing:-0.01em;
   transition:opacity 0.22s ease, transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease;
   --rec-ring-size:8px;
-  --rec-gap-angle:80deg;       /* leave a clean gap for the timer */
-  --rec-ring-start:-40deg;
+  --rec-gap-angle:88deg;       /* fixed gap for the timer */
+  --rec-gap-offset:-44deg;
   --rec-ring-color-a:rgba(63,139,255,0.9);
   --rec-ring-color-b:rgba(120,199,255,0.9);
   --rec-ring-glow:rgba(63,139,255,0.22);
-  --rec-ring-opacity:0;
+  --rec-ring-opacity:0;        /* hidden by default */
+  --rec-spin:0deg;
   font-size:3.2rem !important;
   line-height:1;
   flex:0 0 auto;
@@ -2776,12 +2775,15 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   inset: calc(var(--rec-ring-size) * -1);
   border-radius:50%;
   background:conic-gradient(
-    from var(--rec-ring-start),
-    transparent 0deg var(--rec-gap-angle),
-    var(--rec-ring-color-a) var(--rec-gap-angle) 210deg,
+    from var(--rec-spin),
+    var(--rec-ring-color-a) 0deg 210deg,
     var(--rec-ring-color-b) 210deg 360deg);
-  mask:radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px));
-  -webkit-mask:radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px));
+  mask:
+    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px)),
+    conic-gradient(from var(--rec-gap-offset), transparent 0deg var(--rec-gap-angle), #000 var(--rec-gap-angle) 360deg);
+  -webkit-mask:
+    radial-gradient(circle at center, transparent calc(50% - var(--rec-ring-size) - 3px), #000 calc(50% - var(--rec-ring-size) + 1px)),
+    conic-gradient(from var(--rec-gap-offset), transparent 0deg var(--rec-gap-angle), #000 var(--rec-gap-angle) 360deg);
   opacity:var(--rec-ring-opacity);
   pointer-events:none;
   filter:drop-shadow(0 6px 12px rgba(12,18,32,0.5));
@@ -2794,17 +2796,12 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   box-shadow:0 16px 32px rgba(10,20,40,0.55), 0 0 0 4px rgba(63,139,255,0.12);
   transform:translateY(-1px) scale(1.05);
   opacity:1;
+  --rec-ring-opacity:0.9;
 }
 .bottom-recorder #btnRecordStudy.recording::after{
-  opacity:0.9;
   filter:drop-shadow(0 0 10px var(--rec-ring-glow));
-  animation:recorder-ring-rotate 6s linear infinite;
-  background:conic-gradient(
-    from var(--rec-ring-start),
-    transparent 0deg var(--rec-gap-angle),
-    var(--rec-ring-color-a) var(--rec-gap-angle) 210deg,
-    var(--rec-ring-color-b) 210deg 360deg);
-  transform:scale(1.06);
+  animation:recorder-ring-spin 6s linear infinite;
+  transform:scale(1.02);
 }
 .bottom-recorder #btnRecordStudy:not(.recording)::after{
   animation:none;
@@ -2812,9 +2809,27 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 .bottom-recorder #btnRecordStudy.recording .rec-icon{
   transform:scale(0.98);
 }
-@keyframes recorder-ring-rotate{
-  from{ transform:scale(1.06) rotate(0deg); }
-  to{ transform:scale(1.06) rotate(360deg); }
+.bottom-recorder #btnRecordStudy.recording-prompt{
+  --rec-ring-opacity:0.55;
+  box-shadow:0 12px 24px rgba(8,16,30,0.45), 0 0 0 3px rgba(63,139,255,0.12);
+}
+.bottom-recorder #btnRecordStudy.recording-prompt::after{
+  animation:recorder-ring-pulse 1.6s ease-in-out infinite;
+  transform:scale(0.98);
+}
+@property --rec-spin{
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes recorder-ring-spin{
+  from{ --rec-spin:0deg; }
+  to{ --rec-spin:360deg; }
+}
+@keyframes recorder-ring-pulse{
+  0%{ opacity:0.15; transform:scale(0.96); }
+  50%{ opacity:0.45; transform:scale(1); }
+  100%{ opacity:0.15; transform:scale(0.96); }
 }
 .bottom-recorder #metaRecorder .iconbtn:hover,
 .bottom-recorder #metaRecorder .iconbtn:focus-visible{
