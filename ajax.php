@@ -489,22 +489,25 @@ if ($globalmode) {
             }
             return array_values(array_unique($out));
         };
-        $dropS = function($item) {
-            // Drop reflexive-like "handles" noise when we want plain infinitive/presens/imperativ.
-            return !preg_match('~/s$~i', $item);
+        $dropPassiveS = function(string $item): bool {
+            // Drop passives (-s/-es) when we want active forms.
+            return !preg_match('~s$~ui', $item);
         };
-        $v['infinitiv'] = $filter($v['infinitiv'] ?? [], $dropS);
-        $v['presens'] = $filter($v['presens'] ?? [], $dropS);
-        $v['imperativ'] = $filter($v['imperativ'] ?? [], function($item) use ($dropS){
-            return $dropS($item);
+        // Active slots: remove passives.
+        $v['infinitiv'] = $filter($v['infinitiv'] ?? [], $dropPassiveS);
+        $v['presens'] = $filter($v['presens'] ?? [], $dropPassiveS);
+        $v['imperativ'] = $filter($v['imperativ'] ?? [], $dropPassiveS);
+        // Presens perfektum: keep only "har + perfektum_partisipp" (one word), no -ende/-s/-es.
+        $v['presens_perfektum'] = $filter($v['presens_perfektum'] ?? [], function(string $item){
+            $item = trim($item);
+            if (!preg_match('~^har\\s+.+t$~ui', $item)) {
+                return false;
+            }
+            return !preg_match('~ende$~ui', $item) && !preg_match('~s$~ui', $item);
         });
-        // Presens perfektum: drop derived noisy variants with handlede/handlende/handlete.
-        $v['presens_perfektum'] = $filter($v['presens_perfektum'] ?? [], function($item){
-            return !preg_match('/handlede|handlende|handlete/i', $item);
-        });
-        // Perfektum partisipp: drop handlende/handlede/handlete noise; keep core forms.
-        $v['perfektum_partisipp'] = $filter($v['perfektum_partisipp'] ?? [], function($item){
-            return !preg_match('/handlende|handlede|handlete/i', $item);
+        // Perfektum partisipp: drop -ende noise; keep core forms.
+        $v['perfektum_partisipp'] = $filter($v['perfektum_partisipp'] ?? [], function(string $item){
+            return !preg_match('~ende$~ui', $item);
         });
         $forms['verb'] = $v;
         return $forms;

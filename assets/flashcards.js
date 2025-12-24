@@ -3028,6 +3028,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       registry[deckId].cards.push(cardPayload);
       saveRegistry();
       ensureDeckProgress(deckId, registry[deckId].cards);
+      // Make sure progress record exists and is "newest" so it appears first in Study queue
+      if(!state.decks[deckId]){
+        state.decks[deckId] = {};
+      }
+      state.decks[deckId][id] = state.decks[deckId][id] || {step:0,due:today0(),addedAt:today0(),lastAt:null};
+      state.decks[deckId][id].addedAt = Date.now();
+      state.decks[deckId][id].due = today0();
       state.active[deckId] = true;
       saveState();
       buildQueue();
@@ -7969,8 +7976,9 @@ function renderComparisonResult(resultEl, comparison){
 
     function buildQueue(){
       const now=today0();
-      queue=[]; current=-1; currentItem=null;
+      current=-1; currentItem=null;
       const act=Object.keys(state?.active||{}).filter(id=>state.active[id]);
+      const pending=[];
 
       act.forEach(id=>{
         const d=registry[id];
@@ -7992,10 +8000,23 @@ function renderComparisonResult(resultEl, comparison){
             debugLog(`Card ${c.id} not due -> ${r.due}`);
           } else {
             debugLog(`Card ${c.id} due -> ${r.due}`);
-            queue.push({deckId:id,card:nc,rec:r,index:queue.length});
+            pending.push({deckId:id,card:nc,rec:r});
           }
         });
       });
+
+      // Sort newest added first so freshly created drafts appear at the top
+      pending.sort((a,b)=>{
+        const aAdd = a.rec?.addedAt ?? 0;
+        const bAdd = b.rec?.addedAt ?? 0;
+        if(aAdd !== bAdd) return bAdd - aAdd;
+        const aDue = a.rec?.due ?? 0;
+        const bDue = b.rec?.due ?? 0;
+        if(aDue !== bDue) return aDue - bDue;
+        return 0;
+      });
+
+      queue = pending.map((entry, idx)=>({...entry, index: idx}));
 
       debugLog(`Total due cards: ${queue.length}`);
       setDue(queue.length);

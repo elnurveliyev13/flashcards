@@ -86,11 +86,14 @@ class ordbank_helper {
             $paradigm = self::build_paradigm((int)$selected['paradigme_id']);
         }
 
-        // Ensure transcription present if available in pron dict.
+        // Ensure transcription present if available in pron dict: prefer baseform first, then surface.
         if (empty($selected['ipa'])) {
-            $pron = pronunciation_manager::lookup((string)($selected['wordform'] ?? $token), null);
-            if (!$pron && !empty($selected['baseform'])) {
+            $pron = null;
+            if (!empty($selected['baseform'])) {
                 $pron = pronunciation_manager::lookup((string)$selected['baseform'], null);
+            }
+            if (!$pron) {
+                $pron = pronunciation_manager::lookup((string)($selected['wordform'] ?? $token), null);
             }
             if ($pron) {
                 $selected['ipa'] = $pron['ipa'] ?? null;
@@ -99,7 +102,7 @@ class ordbank_helper {
             }
         }
 
-        $parts = self::split_compound($selected['lemma_id'] ?? null, $selected['wordform'] ?? $token);
+        $parts = self::split_compound($selected['lemma_id'] ?? null, $selected['baseform'] ?? $selected['wordform'] ?? $token);
         $forms = self::fetch_forms($selected['lemma_id'] ?? 0, $selected['tag'] ?? '');
         $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
 
@@ -376,13 +379,9 @@ class ordbank_helper {
             $isprep = str_contains($tag, 'prep');
 
             $candword = core_text::strtolower((string)($cand['wordform'] ?? ''));
-            // Prefer exact surface match (avoid 'for' -> 'fôr').
+            // Prefer exact surface match.
             if ($wordLower !== '' && $candword === $wordLower) {
                 $score += 12;
-            }
-            // Penalize diacritics drift (e.g., 'for' vs 'fôr').
-            if ($wordLower !== '' && $candword !== $wordLower && iconv('UTF-8', 'ASCII//TRANSLIT', $candword) === $wordLower) {
-                $score -= 15;
             }
             // Extract arg codes from tag (<trans1>, <refl4/på>, etc.).
             $argcodes = self::extract_argcodes_from_tag($tag);
