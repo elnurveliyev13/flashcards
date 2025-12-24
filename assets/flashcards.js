@@ -2892,6 +2892,45 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return {article:'', lemma:raw.trim()};
     }
 
+    const GENDER_ARTICLE_MAP = {
+      male: 'en',
+      masculine: 'en',
+      hannkjonn: 'en',
+      hankjonn: 'en',
+      hankjønn: 'en',
+      female: 'ei',
+      feminine: 'ei',
+      hunnkjonn: 'ei',
+      hunkjonn: 'ei',
+      hunkjønn: 'ei',
+      neuter: 'et',
+      intetkjonn: 'et',
+      intetkjønn: 'et',
+      m: 'en',
+      f: 'ei',
+      n: 'et'
+    };
+
+    function mapGenderToArticle(gender){
+      if(!gender){
+        return '';
+      }
+      const key = String(gender).trim().toLowerCase();
+      return GENDER_ARTICLE_MAP[key] || '';
+    }
+
+    function resolveNounArticle(payload){
+      if(!payload){
+        return '';
+      }
+      const parsed = parseIndefiniteNoun(payload?.forms?.noun?.indef_sg);
+      if(parsed.article){
+        return parsed.article;
+      }
+      const genderSource = payload?.selected?.gender || payload?.gender || '';
+      return mapGenderToArticle(genderSource);
+    }
+
     function resolveExpressionFromCorpusData(data, tokenText){
       if(!data){
         return '';
@@ -3008,10 +3047,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(parsed.lemma){
           focusBase = parsed.lemma;
         }
-        if(parsed.article){
-          genderVal = parsed.article;
-        }
-        const articleVal = genderVal || parsed.article;
+        const articleVal = parsed.article || mapGenderToArticle(genderVal);
         focusWord = articleVal ? `(${articleVal}) ${focusBase}` : focusBase;
       }
 
@@ -3584,8 +3620,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               focusVal = lemma;
             }
             focusVal = `(å) ${focusVal}`;
-          } else if(posVal === 'substantiv' && data.gender){
-            focusVal = `(${data.gender}) ${focusVal}`;
+          } else if(posVal === 'substantiv'){
+            const articleVal = resolveNounArticle(data);
+            if(articleVal){
+              focusVal = `(${articleVal}) ${focusVal}`;
+            }
           }
         }
         if(posVal !== 'verb'){
@@ -3985,9 +4024,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(posVal === 'verb'){
           focusWordResolved = `(å) ${focusWordResolved}`;
         } else if(posVal === 'substantiv'){
-          const art = data.selected.gender || '';
-          if(art){
-            focusWordResolved = `(${art}) ${focusWordResolved}`;
+          const articleVal = resolveNounArticle(data);
+          if(articleVal){
+            focusWordResolved = `(${articleVal}) ${focusWordResolved}`;
           }
         }
         if(fokusInput){
