@@ -18,6 +18,8 @@ class ordbank_helper {
     protected static $paradigmcache = [];
     /** @var bool|null */
     protected static $hasoppslaglc = null;
+    /** @var array<string,array<string,mixed>>|null */
+    protected static $argstrmap = null;
 
     /**
      * Return an explicit binary collation for exact byte-wise comparisons on MySQL/MariaDB.
@@ -121,7 +123,34 @@ class ordbank_helper {
     /**
      * Normalize ordbank tag to POS string for pronunciation lookup.
      */
-    protected static function normalize_tag_to_pos(string $tag): ?string {
+    protected static function normalize_tag_to_pos(string $tag, string $ordklasse = ''): ?string {
+        $ok = core_text::strtolower(trim($ordklasse));
+        if ($ok !== '') {
+            if (str_contains($ok, 'subst')) {
+                return 'substantiv';
+            }
+            if (str_contains($ok, 'verb')) {
+                return 'verb';
+            }
+            if (str_contains($ok, 'adj')) {
+                return 'adjektiv';
+            }
+            if (str_contains($ok, 'adv')) {
+                return 'adverb';
+            }
+            if (str_contains($ok, 'pron')) {
+                return 'pronomen';
+            }
+            if (str_contains($ok, 'det')) {
+                return 'determinativ';
+            }
+            if (str_contains($ok, 'prep')) {
+                return 'preposisjon';
+            }
+            if (str_contains($ok, 'konj')) {
+                return 'konjunksjon';
+            }
+        }
         $lower = core_text::strtolower(trim($tag));
         if (str_contains($lower, 'subst')) {
             return 'substantiv';
@@ -157,6 +186,162 @@ class ordbank_helper {
     }
 
     /**
+     * Local token normalizer (keeps logic close to mod_flashcards_normalize_token without hard dependency).
+     */
+    protected static function normalize_token_local(string $token): string {
+        $token = core_text::strtolower(trim($token));
+        $token = strtr($token, [
+            'å' => 'a',
+            'æ' => 'ae',
+            'ø' => 'o',
+            'ƒ?' => 'a',
+            'ƒ³' => 'o',
+            'ƒñ' => 'a',
+            'ƒ¦' => 'ae',
+            'ƒ¶' => 'o',
+        ]);
+        if (function_exists('mod_flashcards_normalize_token')) {
+            $token = mod_flashcards_normalize_token($token);
+        }
+        return trim($token);
+    }
+
+    /**
+     * Parse a raw argstr definition into a lightweight metadata structure.
+     *
+     * @return array{requires_pp:bool,preps:array<int,string>}
+     */
+    protected static function parse_argstr_definition(string $raw): array {
+        $raw = core_text::strtolower($raw);
+        $requirespp = str_contains($raw, 'pp:');
+        $preps = [];
+        if (preg_match_all('/kjerne\\s*=\\s*([a-zƒ?]+)/iu', $raw, $m)) {
+            foreach ($m[1] as $prep) {
+                $prep = self::normalize_token_local($prep);
+                if ($prep !== '' && $prep !== 'var') {
+                    $preps[] = $prep;
+                }
+            }
+        }
+        $preps = array_values(array_unique(array_filter($preps)));
+        return ['requires_pp' => $requirespp, 'preps' => $preps];
+    }
+
+    /**
+     * Load argument structure metadata from DB (ordbank_argstr) or local corpus file.
+     *
+     * @return array<string,array{requires_pp:bool,preps:array<int,string>}>
+     */
+    protected static function load_argstr_map(): array {
+        global $DB, $CFG;
+        if (self::$argstrmap !== null) {
+            return self::$argstrmap;
+        }
+        $map = [];
+        try {
+            $dbman = $DB->get_manager();
+            $table = new \xmldb_table('ordbank_argstr');
+            if ($dbman->table_exists($table)) {
+                $columns = array_keys($DB->get_columns('ordbank_argstr'));
+                $codecol = '';
+                $defcol = '';
+                foreach ($columns as $col) {
+                    $lc = core_text::strtolower($col);
+                    if ($codecol === '' && (str_contains($lc, 'kode') || str_contains($lc, 'code'))) {
+                        $codecol = $col;
+                    }
+                    if ($defcol === '' && (str_contains($lc, 'def') || str_contains($lc, 'struk') || str_contains($lc, 'arg'))) {
+                        $defcol = $col;
+                    }
+                }
+                foreach ($DB->get_records('ordbank_argstr') as $row) {
+                    $code = '';
+                    if ($codecol !== '' && isset($row->$codecol)) {
+                        $code = (string)$row->$codecol;
+                    } else {
+                        $first = (array)$row;
+                        $code = (string)reset($first);
+                    }
+                    $code = core_text::strtolower(trim($code));
+                    if ($code === '') {
+                        continue;
+                    }
+                    $def = '';
+                    if ($defcol !== '' && isset($row->$defcol)) {
+                        $def = (string)$row->$defcol;
+                    }
+                    $map[$code] = self::parse_argstr_definition($def);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore DB lookup failures and fall back to corpus file.
+        }
+
+        if (empty($map)) {
+            $paths = [
+                $CFG->dirroot . '/mod/flashcards/.corpus/ordlist/norsk_ordbank_argstr.txt',
+                __DIR__ . '/../../.corpus/ordlist/norsk_ordbank_argstr.txt',
+            ];
+            foreach ($paths as $path) {
+                if (!is_readable($path)) {
+                    continue;
+                }
+                $lines = @file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+                if (!$lines) {
+                    continue;
+                }
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (!preg_match('/^arg_code\\(([^,]+),\\[(.*)\\]\\)\\./i', $line, $m)) {
+                        continue;
+                    }
+                    $code = core_text::strtolower(trim($m[1]));
+                    if ($code === '') {
+                        continue;
+                    }
+                    $map[$code] = self::parse_argstr_definition($m[2]);
+                }
+                if (!empty($map)) {
+                    break;
+                }
+            }
+        }
+        self::$argstrmap = $map;
+        return self::$argstrmap;
+    }
+
+    /**
+     * Aggregate argstr metadata for a list of arg codes (<trans1>, <refl4/om>, ...).
+     *
+     * @param array<int,array{code:string,prep:?string}> $codes
+     * @return array{preps:array<int,string>,requires_pp:bool}
+     */
+    public static function argcode_meta(array $codes): array {
+        $map = self::load_argstr_map();
+        $meta = ['preps' => [], 'requires_pp' => false];
+        foreach ($codes as $ac) {
+            $code = core_text::strtolower((string)($ac['code'] ?? $ac ?? ''));
+            if (!empty($ac['prep'])) {
+                $p = self::normalize_token_local((string)$ac['prep']);
+                if ($p !== '') {
+                    $meta['preps'][] = $p;
+                }
+            }
+            if ($code === '') {
+                continue;
+            }
+            if (isset($map[$code])) {
+                $meta['preps'] = array_merge($meta['preps'], $map[$code]['preps'] ?? []);
+                if (!empty($map[$code]['requires_pp'])) {
+                    $meta['requires_pp'] = true;
+                }
+            }
+        }
+        $meta['preps'] = array_values(array_unique(array_filter($meta['preps'])));
+        return $meta;
+    }
+
+    /**
      * Extract valency codes (trans/refl/ditrans/predik) from a tag.
      *
      * @return array<int,array{code:string,prep:?string}>
@@ -178,7 +363,7 @@ class ordbank_helper {
             $prep = null;
             if (str_contains($raw, '/')) {
                 [$code, $prep] = explode('/', $raw, 2);
-                $prep = trim($prep);
+                $prep = self::normalize_token_local($prep);
             }
             $out[] = ['code' => $code, 'prep' => $prep ?: null];
         }
@@ -213,9 +398,16 @@ class ordbank_helper {
                        f.TAG,
                        f.PARADIGME_ID,
                        f.BOY_NUMMER,
-                       l.GRUNNFORM AS baseform
+                       l.GRUNNFORM AS baseform,
+                       p.ORDKLASSE,
+                       p.ORDKLASSE_UTDYPING,
+                       b.BOY_GRUPPE,
+                       b.BOY_TEKST,
+                       b.ORDBOK_TEKST
                   FROM {ordbank_fullform} f
              LEFT JOIN {ordbank_lemma} l ON l.LEMMA_ID = f.LEMMA_ID
+             LEFT JOIN {ordbank_paradigme} p ON p.PARADIGME_ID = f.PARADIGME_ID
+             LEFT JOIN {ordbank_boying} b ON b.BOY_NUMMER = f.BOY_NUMMER
                  WHERE {$where}";
 
         try {
@@ -234,7 +426,7 @@ class ordbank_helper {
                 (int)$rec->boy_nummer,
             ]);
             if (!isset($out[$key])) {
-                $pos = self::normalize_tag_to_pos($rec->tag ?? '');
+                $pos = self::normalize_tag_to_pos($rec->tag ?? '', $rec->ordklasse ?? '');
                 $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->wordform, $pos);
                 if (!$pron && !empty($rec->baseform)) {
                     $pron = \mod_flashcards\local\pronunciation_manager::lookup((string)$rec->baseform, $pos);
@@ -252,6 +444,11 @@ class ordbank_helper {
                     'xsampa' => $xsampa,
                     'nofabet' => $nofabet,
                     'baseform' => $rec->baseform ?? null,
+                    'ordklasse' => $rec->ordklasse ?? null,
+                    'ordklasse_utdyping' => $rec->ordklasse_utdyping ?? null,
+                    'boy_group' => $rec->boy_gruppe ?? ($rec->boy_group ?? null),
+                    'boy_text' => $rec->boy_tekst ?? null,
+                    'ordbok_boy_text' => $rec->ordbok_tekst ?? null,
                 ];
             }
         }
@@ -355,46 +552,48 @@ class ordbank_helper {
         }
 
         $prev = isset($context['prev']) ? core_text::strtolower((string)$context['prev']) : null;
+        $prev2 = isset($context['prev2']) ? core_text::strtolower((string)$context['prev2']) : null;
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
         $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
 
-        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','når'];
+        $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','nar'];
         $articles = ['en','ei','et','ein','eitt'];
-        $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
-        $auxverbs = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
-        $prepseg = ['om','over','for','med','til','av','på','pa','i'];
-        $functionwords = ['for','til','av','på','paa','i','om','med','seg','det','som','å','åå','aa'];
+        $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','var','vart','vare','deres'];
+        $auxverbs = ['er','var','har','hadde','blir','ble','vil','skal','kan','ma','bor','kunne','skulle','ville'];
+        $prepseg = ['om','over','for','med','til','av','pa','paa','i'];
+        $functionwords = ['for','til','av','pa','paa','i','om','med','seg','det','som','aa'];
 
         $wordLower = core_text::strtolower((string)($candidates[array_key_first($candidates)]['wordform'] ?? ''));
 
         $best = null;
-        $bestscore = -1;
+        $bestscore = -INF;
         foreach ($candidates as $cand) {
             $tag = core_text::strtolower((string)($cand['tag'] ?? ''));
+            $ordklasse = core_text::strtolower((string)($cand['ordklasse'] ?? ''));
+            $boygroup = core_text::strtolower((string)($cand['boy_group'] ?? ($cand['boy_gruppe'] ?? '')));
+            $boynum = (int)($cand['boy_nummer'] ?? 0);
             $score = 0;
-            $isverb = str_contains($tag, 'verb');
-            $isnoun = str_contains($tag, 'subst');
-            $isadj  = str_contains($tag, 'adj');
-            $isadv  = str_contains($tag, 'adv');
-            $isprep = str_contains($tag, 'prep');
+            $isverb = str_contains($tag, 'verb') || str_contains($ordklasse, 'verb');
+            $isnoun = str_contains($tag, 'subst') || str_contains($ordklasse, 'subst');
+            $isadj  = str_contains($tag, 'adj') || str_contains($ordklasse, 'adj');
+            $isadv  = str_contains($tag, 'adv') || str_contains($ordklasse, 'adv');
+            $isprep = str_contains($tag, 'prep') || str_contains($ordklasse, 'prep');
 
             $candword = core_text::strtolower((string)($cand['wordform'] ?? ''));
-            // Prefer exact surface match.
             if ($wordLower !== '' && $candword === $wordLower) {
                 $score += 12;
             }
-            // Extract arg codes from tag (<trans1>, <refl4/på>, etc.).
             $argcodes = self::extract_argcodes_from_tag($tag);
+            $argmeta = self::argcode_meta($argcodes);
 
             if ($cand['paradigme_id'] ?? null) {
                 $score += 1;
             }
-            if ($isverb) { $score += 5; }
-            if ($isnoun) { $score += 2; }
-            if ($isadj)  { $score += 1; }
+            if ($isnoun) { $score += 3; }
+            if ($isverb) { $score += 3; }
+            if ($isadj)  { $score += 2; }
             if ($isadv)  { $score += 1; }
-            // Function words (for/til/av/på/...) strongly prefer adv/prep/konj; penalize verb/subst.
-            if (in_array(core_text::strtolower((string)($cand['wordform'] ?? '')), $functionwords, true)) {
+            if ($candword !== '' && in_array($candword, $functionwords, true)) {
                 if ($isadv || $isprep || str_contains($tag, 'konj')) {
                     $score += 15;
                 }
@@ -403,19 +602,27 @@ class ordbank_helper {
                 }
             }
 
-            if (in_array($prev, $pronouns, true) && $isverb) {
-                $score += 4;
-            }
-            if ($prev === 'å' && $isverb) {
-                $score += 3;
-            }
-            if ((in_array($prev, $articles, true) || in_array($prev, $determiners, true)) && $isnoun) {
+            $articleNear = (in_array($prev, $articles, true) || in_array($prev, $determiners, true) ||
+                            in_array($prev2, $articles, true) || in_array($prev2, $determiners, true));
+            if ($articleNear && $isnoun) {
                 $score += 12;
             }
-            // Determiners/articles strongly disfavour verbs (e.g. "et får" should be noun, not "får"=verb).
-            if ((in_array($prev, $articles, true) || in_array($prev, $determiners, true)) && $isverb) {
-                $score -= 10;
+            if ($articleNear && $isverb) {
+                $score -= 12;
             }
+            if ($articleNear && $boygroup !== '' && str_contains($boygroup, 'substantiv')) {
+                $score += 6;
+            }
+            if ($articleNear && $boygroup !== '' && str_contains($boygroup, 'verb')) {
+                $score -= 6;
+            }
+            if ($articleNear && $boynum === 1) {
+                $score += 6;
+            }
+            if ($articleNear && $boynum === 11) {
+                $score -= 6;
+            }
+
             if ($next !== null && $isadj && !in_array($next, $articles, true)) {
                 $score += 1;
             }
@@ -425,34 +632,47 @@ class ordbank_helper {
             if ($next === 'seg' && $isverb && in_array($next2, $prepseg, true)) {
                 $score += 2;
             }
-            // Valency/arg codes: reward matching prepositions or seg.
+            $prepMatched = false;
             foreach ($argcodes as $ac) {
                 $code = $ac['code'] ?? '';
                 $prep = $ac['prep'] ?? null;
-                if ($isverb && $next === 'seg') {
+                if ($isverb && ($next === 'seg' || $prev === 'seg' || $prev2 === 'seg')) {
                     $score += 4;
                 }
                 if ($prep !== null) {
-                    if ($next === $prep || $prev === $prep || $next2 === $prep) {
+                    if ($next === $prep || $prev === $prep || $next2 === $prep || $prev2 === $prep) {
                         $score += 8;
+                        $prepMatched = true;
                     }
                 }
-                if ($code && str_contains($code, 'refl') && ($next === 'seg' || $next2 === 'seg')) {
+                if ($code && str_contains($code, 'refl') && ($next === 'seg' || $next2 === 'seg' || $prev2 === 'seg')) {
                     $score += 8;
                 }
             }
-            // Strong reflexive pattern: "X det seg om" -> prefer verb with refl
+            foreach ($argmeta['preps'] as $p) {
+                if ($p !== '' && ($next === $p || $prev === $p || $next2 === $p || $prev2 === $p)) {
+                    $score += 6;
+                    $prepMatched = true;
+                }
+            }
+            if (($argmeta['requires_pp'] ?? false) && $isverb && !$prepMatched && ($next || $next2)) {
+                $score -= 2;
+            }
+            if (in_array($prev, $pronouns, true) && $isverb) {
+                $score += 4;
+            }
+            if ($prev === 'a' && $isverb) {
+                $score += 3;
+            }
             if ($next2 === 'seg' && ($next === 'det' || in_array($next, $pronouns, true)) && $isverb) {
                 $score += 10;
             }
-            // Copula + "for" + adjective => should be adverb "for" (too), not verb "fare".
             if ($prev === 'er' && $isadv && ($cand['wordform'] ?? '') === 'for' && $next !== null && !in_array($next, $articles, true)) {
                 $score += 18;
             }
             if ($prev === 'er' && $isverb && ($cand['wordform'] ?? '') === 'for') {
                 $score -= 15;
             }
-            // Common reflexive pattern where "seg" is the second word after the verb ("dreier det seg ...").
             if ($next2 === 'seg' && $isverb) {
                 $score += 6;
             }
@@ -462,18 +682,15 @@ class ordbank_helper {
             if ($isverb && (str_contains($tag, '<refl') || str_contains($tag, 'refl'))) {
                 $score += 2;
             }
-            // Question inversion: verb before pronoun/determiner (e.g. "Hva dreier det seg om").
             if ($next !== null && (in_array($next, $pronouns, true) || in_array($next, $determiners, true)) && $isverb) {
                 $score += 8;
             }
             if ($next !== null && (in_array($next, $pronouns, true) || in_array($next, $determiners, true)) && $isnoun) {
                 $score -= 3;
             }
-            // Aux + participle patterns (e.g. "har slått").
             if (in_array($prev, $auxverbs, true) && $isverb && (str_contains($tag, 'perf-part') || str_contains($tag, '<perf-part>') || str_contains($tag, 'part'))) {
                 $score += 6;
             }
-            // Special-case: "Det er for ADJ" ("for" = adverb 'too'), not preterit of "fare".
             if (($cand['wordform'] ?? '') === 'for' && $prev === 'er' && $isadv) {
                 $score += 6;
             }

@@ -155,9 +155,9 @@ function mod_flashcards_extract_argcodes_from_tag(string $tag): array {
             $prep = null;
             if (str_contains($raw, '/')) {
                 [$code, $prep] = explode('/', $raw, 2);
-                $prep = trim($prep);
+                $prep = mod_flashcards_normalize_token(trim($prep));
             }
-            $out[] = ['code' => $code, 'prep' => $prep];
+            $out[] = ['code' => $code, 'prep' => $prep ?: null];
         }
     }
     return $out;
@@ -183,9 +183,13 @@ function mod_flashcards_notify_report(object $report, ?stdClass $course, ?stdCla
     }
 
     $cardlabel = $report->cardtitle ?: $report->cardid;
-    $url = $cm
-        ? (new moodle_url('/mod/flashcards/view.php', ['id' => $cm->id, 'cardid' => $report->cardid]))->out(false)
-        : (new moodle_url('/mod/flashcards/view.php'))->out(false);
+    if (!empty($report->cmid)) {
+        $url = (new moodle_url('/mod/flashcards/view.php', ['id' => $report->cmid, 'cardid' => $report->cardid]))->out(false);
+    } else if ($cm) {
+        $url = (new moodle_url('/mod/flashcards/view.php', ['id' => $cm->id, 'cardid' => $report->cardid]))->out(false);
+    } else {
+        $url = (new moodle_url('/mod/flashcards/view.php'))->out(false);
+    }
 
     foreach ($recipients as $admin) {
         $message = new \core\message\message();
@@ -245,7 +249,18 @@ function mod_flashcards_normalize_token(string $token): string {
 /**
  * Map an ordbank tag to coarse POS.
  */
-function mod_flashcards_pos_from_tag(string $tag): string {
+function mod_flashcards_pos_from_tag(string $tag, string $ordklasse = ''): string {
+    $ok = core_text::strtolower(trim($ordklasse));
+    if ($ok !== '') {
+        if (str_contains($ok, 'adv')) { return 'ADV'; }
+        if (str_contains($ok, 'verb')) { return 'VERB'; }
+        if (str_contains($ok, 'subst')) { return 'NOUN'; }
+        if (str_contains($ok, 'adj')) { return 'ADJ'; }
+        if (str_contains($ok, 'prep')) { return 'ADP'; }
+        if (str_contains($ok, 'pron')) { return 'PRON'; }
+        if (str_contains($ok, 'det')) { return 'DET'; }
+        if (str_contains($ok, 'konj')) { return 'CONJ'; }
+    }
     $t = core_text::strtolower($tag);
     if (str_contains($t, 'adv')) { return 'ADV'; }
     if (str_contains($t, 'verb')) { return 'VERB'; }
@@ -289,7 +304,6 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
     $articles = ['en','ei','et','ein','eitt'];
     $determin = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','vår','vårt','våre','deres'];
     $aux = ['er','var','har','hadde','blir','ble','vil','skal','kan','må','bør','kunne','skulle','ville'];
-    $prepseg = ['om','over','for','med','til','av','på','pa','i'];
 
     $trans = function(string $prev, string $cur): int {
         // transition weights between coarse POS
@@ -303,10 +317,14 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         if ($cur === 'X') $score -= 2;
         return $score;
     };
-    $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok) use ($pronouns,$articles,$determin,$aux,$prepseg): int {
-        $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
+    $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok, ?string $prev2Tok, ?string $next2Tok) use ($pronouns,$articles,$determin,$aux): int {
+        $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '', $cand['ordklasse'] ?? '');
         $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
         $argcodes = \mod_flashcards\local\ordbank_helper::extract_argcodes_from_tag((string)($cand['tag'] ?? ''));
+        $argmeta = \mod_flashcards\local\ordbank_helper::argcode_meta($argcodes);
+        $boygroup = core_text::strtolower((string)($cand['boy_group'] ?? ($cand['boy_gruppe'] ?? '')));
+        $boynum = (int)($cand['boy_nummer'] ?? 0);
+        $taglower = core_text::strtolower((string)($cand['tag'] ?? ''));
         $score = 0;
         if ($curTok) {
             $curLower = core_text::strtolower($curTok);
@@ -316,39 +334,61 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
                 $asciiTok = @iconv('UTF-8', 'ASCII//TRANSLIT', $tok);
                 $asciiCur = @iconv('UTF-8', 'ASCII//TRANSLIT', $curLower);
                 if ($asciiTok && $asciiCur && $asciiTok === $asciiCur) {
-                    $score -= 12; // penalize diacritic drift (for vs fôr)
+                    $score -= 12; // penalize diacritic drift (for vs for)
                 }
             }
         }
         if (in_array($pos, ['VERB','NOUN','ADJ','ADV'], true)) $score += 1;
+        $articleNear = (in_array($prevTok, $articles, true) || in_array($prevTok, $determin, true) ||
+                        in_array($prev2Tok, $articles, true) || in_array($prev2Tok, $determin, true));
+        if ($articleNear && $pos === 'NOUN') { $score += 10; }
+        if ($articleNear && $pos === 'VERB') { $score -= 8; }
+        if ($articleNear && $boygroup !== '' && str_contains($boygroup, 'substantiv')) { $score += 5; }
+        if ($articleNear && $boynum === 1) { $score += 4; }
+        if ($articleNear && $boynum === 11) { $score -= 4; }
+
         if (in_array($prevTok, $articles, true) || in_array($prevTok, $determin, true)) {
-            if ($pos === 'NOUN') $score += 6;
-            if ($pos === 'VERB') $score -= 5;
+            if ($pos === 'NOUN') $score += 4;
+            if ($pos === 'VERB') $score -= 3;
         }
         if (in_array($prevTok, $pronouns, true) && $pos === 'VERB') {
             $score += 3;
         }
-        if ($prevTok === 'å' && $pos === 'VERB') {
+        if ($prevTok === 'a' && $pos === 'VERB') {
             $score += 5;
         }
-        // Valency hints: seg + preposition
         if ($pos === 'VERB' && $nextTok === 'seg') {
             $score += 4;
         }
-        // If tag contains refl*/ditrans*/trans* with specific prep, reward matching next/next2.
+        $prepMatched = false;
         foreach ($argcodes as $ac) {
-            if (!empty($ac['prep'])) {
-                if ($nextTok === $ac['prep'] || $prevTok === $ac['prep']) {
-                    $score += 5;
-                }
-                if ($nextTok === 'seg' || $prevTok === 'seg') {
-                    $score += 2;
-                }
-            } else {
-                if ($pos === 'VERB' && ($nextTok === 'seg' || $prevTok === 'seg')) {
-                    $score += 2;
-                }
+            $prep = $ac['prep'] ?? null;
+            $code = $ac['code'] ?? '';
+            if ($prep !== null && ($nextTok === $prep || $prevTok === $prep || $next2Tok === $prep || $prev2Tok === $prep)) {
+                $score += 5;
+                $prepMatched = true;
             }
+            if ($pos === 'VERB' && ($nextTok === 'seg' || $prevTok === 'seg' || $prev2Tok === 'seg')) {
+                $score += 2;
+            }
+            if ($code && str_contains($code, 'refl') && ($nextTok === 'seg' || $next2Tok === 'seg' || $prev2Tok === 'seg')) {
+                $score += 6;
+            }
+        }
+        foreach ($argmeta['preps'] as $p) {
+            if ($p !== '' && ($nextTok === $p || $prevTok === $p || $next2Tok === $p || $prev2Tok === $p)) {
+                $score += 5;
+                $prepMatched = true;
+            }
+        }
+        if (($argmeta['requires_pp'] ?? false) && $pos === 'VERB' && !$prepMatched && ($nextTok || $next2Tok)) {
+            $score -= 2;
+        }
+        if (in_array($prevTok, $pronouns, true) && $pos === 'VERB') {
+            $score += 3;
+        }
+        if (in_array($prevTok, $aux, true) && $pos === 'VERB' && (str_contains($taglower, 'perf') || str_contains($taglower, 'part'))) {
+            $score += 3;
         }
         if ($tok === 'for' && $pos === 'ADV') {
             $score += 8;
@@ -368,10 +408,12 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         $dp[$i] = [];
         $back[$i] = [];
         $prevTok = $tokens[$i-1] ?? null;
+        $prev2Tok = $tokens[$i-2] ?? null;
         $nextTok = $tokens[$i+1] ?? null;
+        $next2Tok = $tokens[$i+2] ?? null;
         $curTok = $tokens[$i] ?? null;
         foreach ($candlist[$i] as $k => $cand) {
-            $emit = $emission($cand, $prevTok, $nextTok, $curTok);
+            $emit = $emission($cand, $prevTok, $nextTok, $curTok, $prev2Tok, $next2Tok);
             if ($i === 0) {
                 $dp[$i][$k] = $emit;
                 $back[$i][$k] = -1;
@@ -379,8 +421,8 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
                 $best = -INF;
                 $bestj = -1;
                 foreach ($dp[$i-1] as $j => $prevScore) {
-                    $prevPos = mod_flashcards_pos_from_tag($candlist[$i-1][$j]['tag'] ?? '');
-                    $curPos = mod_flashcards_pos_from_tag($cand['tag'] ?? '');
+                    $prevPos = mod_flashcards_pos_from_tag($candlist[$i-1][$j]['tag'] ?? '', $candlist[$i-1][$j]['ordklasse'] ?? '');
+                    $curPos = mod_flashcards_pos_from_tag($cand['tag'] ?? '', $cand['ordklasse'] ?? '');
                     $score = $prevScore + $emit + $trans($prevPos, $curPos);
                     if ($score > $best) { $best = $score; $bestj = $j; }
                 }
@@ -409,7 +451,7 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
  * This mirrors the client-side behavior (word tokens only, punctuation ignored) so Ordbank
  * disambiguation can use surrounding tokens.
  *
- * @return array{prev?:string,next?:string,next2?:string}
+ * @return array{prev?:string,prev2?:string,next?:string,next2?:string}
  */
 function mod_flashcards_context_from_sentence(string $sentence, string $clicked): array {
     $sentence = mod_flashcards_normalize_text(core_text::strtolower(trim($sentence)));
@@ -452,6 +494,9 @@ function mod_flashcards_context_from_sentence(string $sentence, string $clicked)
     $out = [];
     if ($idx > 0) {
         $out['prev'] = $rawtokens[$idx - 1];
+    }
+    if ($idx > 1) {
+        $out['prev2'] = $rawtokens[$idx - 2];
     }
     if (isset($rawtokens[$idx + 1])) {
         $out['next'] = $rawtokens[$idx + 1];
@@ -2035,6 +2080,7 @@ switch ($action) {
         $word = mod_flashcards_normalize_token(trim($payload['word'] ?? ''));
         $fronttext = trim($payload['frontText'] ?? '');
         $prev = mod_flashcards_normalize_token(trim($payload['prev'] ?? ''));
+        $prev2 = mod_flashcards_normalize_token(trim($payload['prev2'] ?? ''));
         $next = mod_flashcards_normalize_token(trim($payload['next'] ?? ''));
         $next2 = mod_flashcards_normalize_token(trim($payload['next2'] ?? ''));
         if ($word === '') {
@@ -2043,6 +2089,9 @@ switch ($action) {
             $context = [];
             if ($prev !== '') {
                 $context['prev'] = $prev;
+            }
+            if ($prev2 !== '') {
+                $context['prev2'] = $prev2;
             }
             if ($next !== '') {
                 $context['next'] = $next;

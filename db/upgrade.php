@@ -1051,5 +1051,10 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025122500, 'flashcards');
     }
 
+    if ($oldversion < 2025122501) {
+        // No schema changes; bump for notification link fix.
+        upgrade_mod_savepoint(true, 2025122501, 'flashcards');
+    }
+
     return true;
 }

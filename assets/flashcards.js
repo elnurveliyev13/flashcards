@@ -3051,14 +3051,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!targetToken){
         targetToken = wordTokens.find(t => t.text === cleanToken) || null;
       }
-      const prev = wordTokens.filter(t=> t.index < (targetToken ? targetToken.index : 0)).pop();
-      const next = wordTokens.filter(t=> t.index > (targetToken ? targetToken.index : -1)).shift();
-      const next2 = wordTokens.filter(t=> t.index > (targetToken ? targetToken.index : -1)).slice(0,2)[1];
+      const before = wordTokens.filter(t=> t.index < (targetToken ? targetToken.index : 0));
+      const prev = before.slice(-1)[0];
+      const prev2 = before.slice(-2, -1)[0];
+      const after = wordTokens.filter(t=> t.index > (targetToken ? targetToken.index : -1));
+      const next = after[0];
+      const next2 = after[1];
       let data = null;
       try{
         const payload = {
           word: cleanToken,
           prev: prev ? prev.text : '',
+          prev2: prev2 ? prev2.text : '',
           next: next ? next.text : '',
           next2: next2 ? next2.text : '',
           frontText: sentence
@@ -3904,13 +3908,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setFocusStatus('loading', aiStrings.detecting);
       }
       const wordTokens = tokens.filter(t=>t.isWord);
-      const prev = wordTokens.filter(t=>t.index < idx).pop();
-      const next = wordTokens.filter(t=>t.index > idx).shift();
-      const next2 = wordTokens.filter(t=>t.index > idx).slice(0,2)[1];
+      const before = wordTokens.filter(t=>t.index < idx);
+      const prev = before.slice(-1)[0];
+      const prev2 = before.slice(-2, -1)[0];
+      const after = wordTokens.filter(t=>t.index > idx);
+      const next = after[0];
+      const next2 = after[1];
       try{
         const payload = {
           word: token.text,
           prev: prev ? prev.text : '',
+          prev2: prev2 ? prev2.text : '',
           next: next ? next.text : '',
           next2: next2 ? next2.text : '',
           frontText: frontInput.value || ''
@@ -10694,6 +10702,7 @@ function renderComparisonResult(resultEl, comparison){
       const VERTICAL_ANGLE_TOLERANCE = 15; // degrees off straight down allowed
       const HORIZONTAL_ANGLE_TOLERANCE = 45; // degrees off horizontal still treated as horizontal
       const HORIZONTAL_DISTANCE_THRESHOLD = 100;
+      const HORIZONTAL_VISUAL_THRESHOLD = 80;
 
       const studySection = $("#studySection");
       if (!studySection) return;
@@ -10840,24 +10849,43 @@ function renderComparisonResult(resultEl, comparison){
 
         // Ensure menu stays within the viewport bounds (padding 12px)
         const viewportPadding = 12;
-        const menuRect = menu.getBoundingClientRect();
         const viewportRight = window.innerWidth - viewportPadding;
         const viewportBottom = window.innerHeight - viewportPadding;
         let adjustedLeft = x;
         let adjustedTop = y;
 
-        if (menuRect.right > viewportRight) {
-          adjustedLeft -= menuRect.right - viewportRight;
-        }
+        const clampPosition = () => {
+          const rect = menu.getBoundingClientRect();
+          let changed = false;
+          if (rect.right > viewportRight) {
+            adjustedLeft -= rect.right - viewportRight;
+            changed = true;
+          }
+          if (rect.left < viewportPadding) {
+            adjustedLeft = viewportPadding;
+            changed = true;
+          }
+          if (rect.bottom > viewportBottom) {
+            adjustedTop -= rect.bottom - viewportBottom;
+            changed = true;
+          }
+          if (rect.top < viewportPadding) {
+            adjustedTop = viewportPadding;
+            changed = true;
+          }
+          if (changed) {
+            menu.style.left = `${adjustedLeft}px`;
+            menu.style.top = `${adjustedTop}px`;
+          }
+          return changed;
+        };
 
-        if (menuRect.bottom > viewportBottom) {
-          adjustedTop -= menuRect.bottom - viewportBottom;
-        }
-
-        adjustedLeft = Math.max(adjustedLeft, viewportPadding);
-        adjustedTop = Math.max(adjustedTop, viewportPadding);
         menu.style.left = `${adjustedLeft}px`;
         menu.style.top = `${adjustedTop}px`;
+        let tries = 0;
+        while (tries < 3 && clampPosition()) {
+          tries += 1;
+        }
 
         // Close on outside click
         setTimeout(() => {
@@ -10913,25 +10941,22 @@ function renderComparisonResult(resultEl, comparison){
         const container = $("#slotContainer");
         if (!container) return;
 
-        // Show visual feedback during swipe
-        if (Math.abs(deltaX) > 30 || Math.abs(deltaY) > 30) {
+        // Show visual feedback during swipe (horizontal only)
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > HORIZONTAL_VISUAL_THRESHOLD) {
           isSwiping = true;
+          const visualDeltaX = deltaX > 0 ? deltaX - HORIZONTAL_VISUAL_THRESHOLD : deltaX + HORIZONTAL_VISUAL_THRESHOLD;
+          const rotation = visualDeltaX * 0.05; // Subtle rotation
+          container.style.transform = `translate(${visualDeltaX}px, 0px) rotate(${rotation}deg)`;
 
-          // Apply transform (horizontal movement only)
-          const rotation = deltaX * 0.05; // Subtle rotation
-          container.style.transform = `translate(${deltaX}px, 0px) rotate(${rotation}deg)`;
-
-          // Show preview based on direction
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            // Horizontal swipe
-            if (deltaX > 50) {
-              const action = getGestureSetting('swipeRight', 'easy');
-              if (action !== 'disabled') showPreview(action);
-            } else if (deltaX < -50) {
-              const action = getGestureSetting('swipeLeft', 'hard');
-              if (action !== 'disabled') showPreview(action);
-            }
+          if (deltaX > 0) {
+            const action = getGestureSetting('swipeRight', 'easy');
+            if (action !== 'disabled') showPreview(action);
+          } else if (deltaX < 0) {
+            const action = getGestureSetting('swipeLeft', 'hard');
+            if (action !== 'disabled') showPreview(action);
           }
+        } else {
+          resetCardPosition();
         }
       }, { passive: true });
 

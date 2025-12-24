@@ -2014,7 +2014,9 @@ audio{max-width:260px}
 .modal.modal-fullscreen{background:var(--surface-1);padding:0;align-items:stretch;justify-content:flex-start}
 .modal.modal-fullscreen>.box{max-width:none;width:100%;max-height:none;height:100vh;min-height:100vh;overflow:auto;border-radius:0;border:none;padding:16px 16px 24px;padding:calc(16px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));box-sizing:border-box}
 /* Report modal */
+#reportModal{z-index:2500}
 .report-box{max-width:540px}
+.report-title{color:var(--text)}
 .report-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .report-cardline{color:var(--text-muted);margin-bottom:8px;font-size:var(--font-size-sm)}
 .report-label{display:block;margin-bottom:6px;color:var(--text-muted);font-weight:600;font-size:0.9rem}
