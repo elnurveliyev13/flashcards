@@ -1372,7 +1372,7 @@ switch ($action) {
             if ($allowforms && !$isbuiltin && (empty($data['forms']) || $data['forms'] === []) && !empty($selected['lemma_id'])) {
                 $data['forms'] = \mod_flashcards\local\ordbank_helper::fetch_forms((int)$selected['lemma_id'], (string)($selected['tag'] ?? ''));
             }
-            if (empty($data['parts']) && !empty($ob['parts'])) {
+            if (!empty($ob['parts'])) {
                 $data['parts'] = $ob['parts'];
             }
             // If still no forms and we have a baseform, try ordbank by baseform.
