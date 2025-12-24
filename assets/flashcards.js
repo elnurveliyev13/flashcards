@@ -2103,7 +2103,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       revealCover.setAttribute('role', 'button');
       revealCover.setAttribute('aria-expanded', 'false');
       revealCover.innerHTML = `
-        <span class="example-reveal-icon" aria-hidden="true">👁</span>
+        <span class="example-reveal-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+            <path d="M12 5c-5 0-9 7-9 7s4 7 9 7 9-7 9-7-4-7-9-7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle cx="12" cy="12" r="3.2" fill="currentColor"/>
+            <circle cx="12" cy="12" r="1.1" fill="#0b1220"/>
+          </svg>
+        </span>
         <span class="example-reveal-text">Show translation</span>
       `;
 
