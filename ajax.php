@@ -1796,6 +1796,46 @@ switch ($action) {
         }
         break;
 
+    case 'generate_front_audio':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $text = trim($payload['text'] ?? '');
+        if ($text === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $voiceId = trim($payload['voiceId'] ?? $payload['voice'] ?? '');
+        $tts = new \mod_flashcards\local\tts_service();
+        try {
+            $audio = $tts->synthesize($userid, $text, [
+                'voice' => $voiceId,
+                'label' => 'front',
+            ]);
+            echo json_encode([
+                'ok' => true,
+                'data' => [
+                    'audio' => [
+                        'front' => $audio,
+                    ],
+                ],
+            ]);
+        } catch (\moodle_exception $e) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'tts_failure',
+                'details' => $e->getMessage(),
+            ]);
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'ok' => false,
+                'error' => 'tts_failure',
+                'details' => $e->getMessage(),
+            ]);
+        }
+        break;
+
     case 'ordbokene_suggest':
         $raw = file_get_contents('php://input');
         $payload = json_decode($raw, true);

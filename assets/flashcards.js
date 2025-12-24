@@ -2069,6 +2069,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const INDEFINITE_ARTICLES = new Set(['en','ei','et']);
     const INFINITIVE_MARKERS = new Set(['a','å','aa']);
     const FRONT_EXAMPLE_MIN_WORDS = 3;
+    const AUDIO_REGEN_DELAY_MS = 900;
+    let frontAudioRegenerationTimer = 0;
+    let frontAudioRegenerationController = null;
+    let pendingFrontAudioText = '';
+
+    const regenerateFrontAudioFromText = async (text) => {
+      const trimmed = (text || '').trim();
+      if(!trimmed || !aiConfig.ttsEnabled){
+        return;
+      }
+      if(frontAudioRegenerationController){
+        frontAudioRegenerationController.abort();
+      }
+      const controller = new AbortController();
+      frontAudioRegenerationController = controller;
+      try{
+        const payload = {
+          text: trimmed,
+          voiceId: selectedVoice || ''
+        };
+        const data = await api('generate_front_audio', {}, 'POST', payload, {signal: controller.signal});
+        const url = data?.audio?.front?.url;
+        if(url){
+          setFrontAudioUrl(url);
+        }
+      }catch(err){
+        if(controller.signal.aborted){
+          return;
+        }
+        console.error('[Flashcards][TTS] regenerate front audio failed', err);
+      }finally{
+        if(frontAudioRegenerationController === controller){
+          frontAudioRegenerationController = null;
+        }
+      }
+    };
+
+    const scheduleFrontAudioRegeneration = (text) => {
+      const trimmed = (text || '').trim();
+      pendingFrontAudioText = trimmed;
+      if(!trimmed || !aiConfig.ttsEnabled){
+        return;
+      }
+      if(frontAudioRegenerationTimer){
+        clearTimeout(frontAudioRegenerationTimer);
+      }
+      frontAudioRegenerationTimer = window.setTimeout(() => {
+        frontAudioRegenerationTimer = 0;
+        regenerateFrontAudioFromText(pendingFrontAudioText);
+      }, AUDIO_REGEN_DELAY_MS);
+    };
+
     const countMeaningfulFrontWords = (text) => {
       if(!text){
         return 0;
@@ -2081,7 +2133,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           return;
         }
         const lower = cleaned.toLowerCase();
-        if(INDEFINITE_ARTICLES.has(lower) || lower === 'å'){
+        if(INDEFINITE_ARTICLES.has(lower) || INFINITIVE_MARKERS.has(lower)){
           return;
         }
         count++;
@@ -2110,6 +2162,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else {
         examplesData = [next];
       }
+      scheduleFrontAudioRegeneration(trimmed);
       return true;
     };
 
@@ -2149,8 +2202,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       inputNo.className = 'example-input-base example-textarea autogrow';
       inputNo.value = data.no || '';
       inputNo.addEventListener('input', (e) => {
-        if(type === 'Example') examplesData[index].no = e.target.value;
-        else collocationsData[index].no = e.target.value;
+        if(type === 'Example'){
+          examplesData[index].no = e.target.value;
+          if(index === 0){
+            scheduleFrontAudioRegeneration(e.target.value);
+          }
+        } else {
+          collocationsData[index].no = e.target.value;
+        }
       });
       body.appendChild(inputNo);
 
@@ -3765,16 +3824,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       if(data.audio && data.audio.front && data.audio.front.url){
-        lastAudioUrl = data.audio.front.url;
-        lastAudioKey = null;
-        showAudioBadge(aiStrings.frontAudio);
-        const prev=document.getElementById('audPrev');
-        if(prev){
-          try{prev.pause();}catch(_e){}
-          prev.src = lastAudioUrl;
-          prev.classList.remove('hidden');
-          try{prev.load();}catch(_e){}
-        }
+        setFrontAudioUrl(data.audio.front.url);
       }
       if(data.audio && data.audio.focus && data.audio.focus.url){
         setFocusAudio(data.audio.focus.url, aiStrings.focusAudio);
@@ -5971,6 +6021,23 @@ let lastStudyAudioRate=1;
       if(nameEl) nameEl.textContent = label || '';
       if(badge){
         badge.classList.remove('hidden');
+      }
+    }
+
+    function setFrontAudioUrl(url){
+      if(!url){
+        return;
+      }
+      lastAudioUrl = url;
+      lastAudioKey = null;
+      lastAudioBlob = null;
+      showAudioBadge(aiStrings.frontAudio);
+      const prev=document.getElementById('audPrev');
+      if(prev){
+        try{prev.pause();}catch(_e){}
+        prev.src = url;
+        prev.classList.remove('hidden');
+        try{prev.load();}catch(_e){}
       }
     }
     function hideAudioBadge(){
@@ -12801,14 +12868,21 @@ Regeln:
       // Get original text
       const originalText = $('#uFront').value || '';
 
-      // Highlight corrections in the corrected text
-      const highlightedText = highlightDifferences(originalText, result.correctedText, result.errors);
+      // Filter out errors where original and corrected are identical (no-op)
+      const filteredErrors = (result.errors || []).filter(err => {
+        const original = (err.original || '').trim();
+        const corrected = (err.corrected || '').trim();
+        return original !== corrected;
+      });
+
+      // Highlight corrections in the corrected text using only meaningful differences
+      const highlightedText = highlightDifferences(originalText, result.correctedText, filteredErrors);
 
       // Build compact errors list
       let errorsListHtml = '';
-      if (result.errors && result.errors.length > 0) {
+      if (filteredErrors.length > 0) {
         errorsListHtml = '<div class="error-details-list">';
-        result.errors.forEach((err, idx) => {
+        filteredErrors.forEach((err, idx) => {
           errorsListHtml += `
             <div class="error-detail-item">
               <span class="error-icon">❌</span>
