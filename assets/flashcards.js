@@ -10794,6 +10794,7 @@ function renderComparisonResult(resultEl, comparison){
       const HORIZONTAL_ANGLE_TOLERANCE = 45; // degrees off horizontal still treated as horizontal
       const HORIZONTAL_DISTANCE_THRESHOLD = 100;
       const HORIZONTAL_VISUAL_THRESHOLD = 80;
+      const LONG_PRESS_MOVE_TOLERANCE = 8;
 
       const studySection = $("#studySection");
       if (!studySection) return;
@@ -10995,14 +10996,15 @@ function renderComparisonResult(resultEl, comparison){
       studySection.addEventListener('touchmove', (e) => {
         if (touchStartX === null || touchStartY === null) return;
 
-        // Clear long-press timer
-        if (longPressTimer) {
+        const deltaX = e.touches[0].clientX - touchStartX;
+        const deltaY = e.touches[0].clientY - touchStartY;
+        const moveDistance = Math.hypot(deltaX, deltaY);
+
+        // Clear long-press timer only after meaningful movement
+        if (longPressTimer && moveDistance > LONG_PRESS_MOVE_TOLERANCE) {
           clearTimeout(longPressTimer);
           longPressTimer = null;
         }
-
-        const deltaX = e.touches[0].clientX - touchStartX;
-        const deltaY = e.touches[0].clientY - touchStartY;
 
         const container = $("#slotContainer");
         if (!container) return;

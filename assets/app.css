@@ -6614,15 +6614,33 @@ select.inline-prompt-field {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
+  gap: 0.15rem;
+  padding: 0 8px;
+  height: 28px;
+  min-width: 0;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: rgba(15, 23, 42, 0.75);
   color: #fff;
-  font-size: 18px;
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
+}
+
+.error-check-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.error-check-toggle-text {
+  font-size: 0.85em;
+}
+
+.error-check-toggle-check {
+  color: #34d399;
+  font-size: 1.1em;
+  line-height: 1;
 }
 
 .error-check-toggle-btn.status-inline-toggle {

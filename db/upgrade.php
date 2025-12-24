@@ -1051,9 +1051,9 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025122500, 'flashcards');
     }
 
-    if ($oldversion < 2025122501) {
-        // No schema changes; bump for notification link fix.
-        upgrade_mod_savepoint(true, 2025122501, 'flashcards');
+    if ($oldversion < 2025122504) {
+        // No schema changes; bump for report deep-linking and gesture menu clamp adjustments.
+        upgrade_mod_savepoint(true, 2025122504, 'flashcards');
     }
 
     return true;
