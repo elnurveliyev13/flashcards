@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<XMLDB PATH="mod/flashcards/db" VERSION="2025122504" COMMENT="Flashcards module">
+<XMLDB PATH="mod/flashcards/db" VERSION="2025122505" COMMENT="Flashcards module">
   <TABLES>
     <TABLE NAME="flashcards" COMMENT="Flashcards activity instances">
       <FIELDS>

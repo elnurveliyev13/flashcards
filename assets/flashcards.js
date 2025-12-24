@@ -4853,6 +4853,13 @@ let lastStudyAudioRate=1;
     const CANVAS_DPR = 1;
     let focusAudioUrl=null;
     const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent);
+    const RECORDING_AUDIO_CONSTRAINTS = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: false,
+      channelCount: 1
+    };
+    const RECORDING_AUDIO_BITS_PER_SECOND = 128000;
     const DEBUG_REC = (function(){
       try{
         const qs = new URLSearchParams(location.search);
@@ -4866,6 +4873,30 @@ let lastStudyAudioRate=1;
       if(!DEBUG_REC) return;
       try{ debugLog('[Recorder] ' + message); }catch(_e){}
     };
+    function createMediaRecorderWithFallback(stream, mime, bitsPerSecond){
+      const hasBits = Number.isFinite(bitsPerSecond) && bitsPerSecond > 0;
+      const baseOptions = {};
+      if(mime) baseOptions.mimeType = mime;
+      if(hasBits) baseOptions.audioBitsPerSecond = bitsPerSecond;
+      const tryCreate = options => {
+        try{
+          return options ? new MediaRecorder(stream, options) : new MediaRecorder(stream);
+        }catch(_e){
+          return null;
+        }
+      };
+      let recorder = tryCreate(Object.keys(baseOptions).length ? baseOptions : null);
+      if(recorder) return recorder;
+      if(mime){
+        recorder = tryCreate({mimeType: mime});
+        if(recorder) return recorder;
+      }
+      if(hasBits){
+        recorder = tryCreate({audioBitsPerSecond: bitsPerSecond});
+        if(recorder) return recorder;
+      }
+      return tryCreate(null);
+    }
     const sttStatusEl = $("#sttStatus");
     const sttRetryBtn = $("#sttRetry");
     const sttUndoBtn = $("#sttUndo");
@@ -4904,7 +4935,7 @@ let lastStudyAudioRate=1;
     let iosRecorderGlobal = null;
     if(IS_IOS){
       try{
-        iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog);
+        iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog, {audioConstraints: RECORDING_AUDIO_CONSTRAINTS});
       }catch(_e){
         iosRecorderGlobal = null;
       }
@@ -4984,7 +5015,7 @@ let lastStudyAudioRate=1;
       let granted = false;
       try{
         if(navigator?.mediaDevices?.getUserMedia){
-          const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+          const stream = await navigator.mediaDevices.getUserMedia({audio: RECORDING_AUDIO_CONSTRAINTS});
           granted = true;
           try{
             stream.getTracks().forEach(track=>{ try{ track.stop(); }catch(_e){}; });
@@ -9049,10 +9080,10 @@ function renderComparisonResult(resultEl, comparison){
       var autoStopTimer=null;
       if(IS_IOS && !iosRecorderGlobal){
         try{
-          iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog);
-        }catch(_e){
-          iosRecorderGlobal = null;
-        }
+        iosRecorderGlobal = createIOSRecorder(IOS_WORKER_URL, debugLog, {audioConstraints: RECORDING_AUDIO_CONSTRAINTS});
+      }catch(_e){
+        iosRecorderGlobal = null;
+      }
       }
       const useIOSRecorder = !!(IS_IOS && iosRecorderGlobal && iosRecorderGlobal.supported());
       useIOSRecorderGlobal = useIOSRecorder;
@@ -9221,14 +9252,16 @@ function renderComparisonResult(resultEl, comparison){
         try{
           if(!window.MediaRecorder){ fallbackCapture(); return; }
           stopMicStream();
-          const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+          const stream = await navigator.mediaDevices.getUserMedia({audio: RECORDING_AUDIO_CONSTRAINTS, video:false});
           micStream = stream;
           recChunks = [];
           let mime = bestMime();
-          try{ rec = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream); }
-          catch(_er){
-            try{ rec = new MediaRecorder(stream); mime = rec.mimeType || mime || ''; }
-            catch(_er2){ stopMicStream(); fallbackCapture(); return; }
+          try{ rec = createMediaRecorderWithFallback(stream, mime, RECORDING_AUDIO_BITS_PER_SECOND); }
+          catch(_er){ rec = null; }
+          if(!rec){
+            stopMicStream();
+            fallbackCapture();
+            return;
           }
           try{ if(rec && rec.mimeType){ mime = rec.mimeType; } }catch(_e){}
           rec.ondataavailable = e => { if(e.data && e.data.size>0) recChunks.push(e.data); };
@@ -9778,22 +9811,20 @@ function renderComparisonResult(resultEl, comparison){
           }
 
           stopStudyMicStream();
-          const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+          const stream = await navigator.mediaDevices.getUserMedia({audio: RECORDING_AUDIO_CONSTRAINTS, video:false});
           studyMicStream = stream;
           studyRecorderChunks = [];
 
           let mime = bestMime();
           try{
-            studyRecorder = mime ? new MediaRecorder(stream, {mimeType:mime}) : new MediaRecorder(stream);
+            studyRecorder = createMediaRecorderWithFallback(stream, mime, RECORDING_AUDIO_BITS_PER_SECOND);
           }catch(_er){
-            try{
-              studyRecorder = new MediaRecorder(stream);
-              mime = studyRecorder.mimeType || mime || '';
-            }catch(_er2){
-              stopStudyMicStream();
-              console.log('[PronunciationPractice] MediaRecorder creation failed');
-              return;
-            }
+            studyRecorder = null;
+          }
+          if(!studyRecorder){
+            stopStudyMicStream();
+            console.log('[PronunciationPractice] MediaRecorder creation failed');
+            return;
           }
 
           if(studyRecorder.mimeType) mime = studyRecorder.mimeType;
@@ -11855,7 +11886,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025122503"; // Must match version.php
+    const CACHE_VERSION = "2025122505"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);

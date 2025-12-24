@@ -1017,9 +1017,9 @@ function xmldb_flashcards_upgrade($oldversion) {
     }
 
     // Cache buster bump for recorder UI visuals (no DB changes).
-    if ($oldversion < 2025122503) {
-        mtrace('Flashcards: Cache version bump for recorder depth + unity polish...');
-        upgrade_mod_savepoint(true, 2025122503, 'flashcards');
+    if ($oldversion < 2025122505) {
+        mtrace('Flashcards: Cache version bump for recorder strict palette refresh...');
+        upgrade_mod_savepoint(true, 2025122505, 'flashcards');
     }
 
     if ($oldversion < 2025122500) {

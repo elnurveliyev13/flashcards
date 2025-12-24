@@ -132,11 +132,13 @@ function encodeWAV(samples) {
   }
 
   class IOSRecorder extends Emitter {
-    constructor(workerUrl, debugFn){
+    constructor(workerUrl, debugFn, options){
       super();
+      const opts = options || {};
       this.workerUrl = workerUrl;
       this.debug = typeof debugFn === 'function' ? debugFn : function(){};
       this.config = {bufferLength:4096,numChannels:1};
+      this.audioConstraints = opts.audioConstraints || true;
       this.state = 'inactive';
       this.worker = null;
       this.workerPromise = null;
@@ -203,7 +205,7 @@ function encodeWAV(samples) {
       this.userMediaPromise = (async()=>{
         await this._ensureWorker();
         try{
-          const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+          const stream = await navigator.mediaDevices.getUserMedia({audio:this.audioConstraints});
           this.stream = stream;
           await this._setupAudioProcessing(stream);
           return stream;
@@ -258,6 +260,6 @@ function encodeWAV(samples) {
     }
   }
 
-  export function createIOSRecorder(workerUrl, debugFn){
-    return new IOSRecorder(workerUrl, debugFn);
+  export function createIOSRecorder(workerUrl, debugFn, options){
+    return new IOSRecorder(workerUrl, debugFn, options);
   }

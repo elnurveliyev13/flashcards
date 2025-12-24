@@ -2809,9 +2809,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   --rec-ring-band:7px;
   --rec-gap-angle:116deg;       /* fixed gap for the timer */
   --rec-gap-offset:-58deg;
-  --rec-ring-color-a:rgba(125,208,255,0.98);
-  --rec-ring-color-b:rgba(170,126,255,0.95);
-  --rec-ring-glow:rgba(170,126,255,0.28);
+  --rec-ring-color-a:rgba(140,178,196,0.95);
+  --rec-ring-color-b:rgba(96,136,168,0.95);
+  --rec-ring-glow:rgba(96,136,168,0.25);
   --rec-ring-opacity:0;        /* hidden by default */
   --rec-ring-bg:none;
   --rec-spin:0deg;
@@ -2858,19 +2858,19 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
 }
 .bottom-recorder #btnRecordStudy.recording{
   background:
-    radial-gradient(circle at 30% 28%, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 26%, transparent 48%),
-    linear-gradient(160deg, #111f38 0%, #1b2d5a 52%, #2c3d83 100%) !important;
-  box-shadow:0 18px 36px rgba(8,18,36,0.65), 0 0 0 6px rgba(170,126,255,0.18);
+    radial-gradient(circle at 30% 28%, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.05) 26%, transparent 48%),
+    linear-gradient(160deg, #0f1a2b 0%, #15243d 52%, #1f3352 100%) !important;
+  box-shadow:0 18px 36px rgba(6,14,26,0.7), 0 0 0 6px rgba(96,136,168,0.16);
   transform:translateY(-1px) scale(1.06);
   opacity:1;
   --rec-ring-opacity:0.9;
   --rec-ring-band:8px;
   --rec-ring-size:18px;
   --rec-ring-bg:
-    radial-gradient(circle at center, transparent 46%, rgba(98,214,255,0.38) 49%, transparent 52%),
-    radial-gradient(circle at center, transparent 56%, rgba(170,126,255,0.32) 59%, transparent 62%),
-    radial-gradient(circle at center, transparent 66%, rgba(112,176,255,0.24) 69%, transparent 72%),
-    radial-gradient(circle at center, transparent 76%, rgba(220,190,255,0.18) 79%, transparent 82%);
+    radial-gradient(circle at center, transparent 46%, rgba(150,196,212,0.34) 49%, transparent 52%),
+    radial-gradient(circle at center, transparent 56%, rgba(96,136,168,0.3) 59%, transparent 62%),
+    radial-gradient(circle at center, transparent 66%, rgba(138,164,188,0.22) 69%, transparent 72%),
+    radial-gradient(circle at center, transparent 76%, rgba(190,210,226,0.16) 79%, transparent 82%);
 }
 .bottom-recorder #btnRecordStudy.recording::before{
   opacity:0.85;
@@ -2892,11 +2892,11 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   --rec-ring-opacity:0.42;
   --rec-ring-band:2px;
   --rec-ring-size:7px;
-  --rec-ring-bg:conic-gradient(from var(--rec-gap-offset), rgba(170,126,255,0.55) 0deg 360deg);
-  box-shadow:0 12px 20px rgba(8,16,30,0.35), inset 0 1px 0 rgba(255,255,255,0.06);
+  --rec-ring-bg:conic-gradient(from var(--rec-gap-offset), rgba(140,178,196,0.55) 0deg 360deg);
+  box-shadow:0 12px 20px rgba(6,14,26,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
   background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.05) 28%, transparent 52%),
-    linear-gradient(150deg, #101b30 0%, #14223a 55%, #1a2b4e 100%) !important;
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 28%, transparent 52%),
+    linear-gradient(150deg, #0f1828 0%, #132136 55%, #1a2b44 100%) !important;
   animation:rec-icon-pulse 2.4s ease-in-out infinite;
 }
 .bottom-recorder #btnRecordStudy.recording-prompt::before{
@@ -2923,9 +2923,9 @@ background-image:url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/
   100%{ opacity:0.12; transform:scale(0.97); }
 }
 @keyframes rec-icon-pulse{
-  0%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(170,126,255,0)); }
-  50%{ transform:scale(1.035); filter:drop-shadow(0 0 14px rgba(170,126,255,0.35)); }
-  100%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(170,126,255,0)); }
+  0%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(96,136,168,0)); }
+  50%{ transform:scale(1.03); filter:drop-shadow(0 0 12px rgba(96,136,168,0.32)); }
+  100%{ transform:scale(1); filter:drop-shadow(0 0 0 rgba(96,136,168,0)); }
 }
 .bottom-recorder #metaRecorder .iconbtn:hover,
 .bottom-recorder #metaRecorder .iconbtn:focus-visible{
