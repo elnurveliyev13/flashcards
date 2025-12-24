@@ -836,7 +836,9 @@
             <option value="due">Due only</option>
           </select>
           <span id="listCount" class="badge">0</span>
-          <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
+          <button id="btnCloseList" class="iconbtn cross" title="{{#str}} close, mod_flashcards {{/str}}" aria-label="{{#str}} close, mod_flashcards {{/str}}">
+            <span class="icon-cross" aria-hidden="true"></span>
+          </button>
           <input id="listSearch" type="search" placeholder="{{#str}} search_ph, mod_flashcards {{/str}}">
         </div>
       </div>

@@ -183,12 +183,18 @@ function mod_flashcards_notify_report(object $report, ?stdClass $course, ?stdCla
     }
 
     $cardlabel = $report->cardtitle ?: $report->cardid;
+    $linkparams = ['cardid' => $report->cardid];
+    if (!empty($report->deckid)) {
+        $linkparams['deckid'] = $report->deckid;
+    }
     if (!empty($report->cmid)) {
-        $url = (new moodle_url('/mod/flashcards/view.php', ['id' => $report->cmid, 'cardid' => $report->cardid]))->out(false);
+        $linkparams['id'] = $report->cmid;
+        $url = (new moodle_url('/mod/flashcards/view.php', $linkparams))->out(false);
     } else if ($cm) {
-        $url = (new moodle_url('/mod/flashcards/view.php', ['id' => $cm->id, 'cardid' => $report->cardid]))->out(false);
+        $linkparams['id'] = $cm->id;
+        $url = (new moodle_url('/mod/flashcards/view.php', $linkparams))->out(false);
     } else {
-        $url = (new moodle_url('/mod/flashcards/view.php'))->out(false);
+        $url = (new moodle_url('/mod/flashcards/my/index.php', $linkparams))->out(false);
     }
 
     foreach ($recipients as $admin) {

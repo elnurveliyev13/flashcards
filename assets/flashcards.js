@@ -476,6 +476,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     // Global mode detection: cmid = 0 OR globalMode = true
     const isGlobalMode = globalMode === true || cmid === 0;
+    const urlParams = new URLSearchParams(window.location.search || '');
+    const urlCardId = (urlParams.get('cardid') || '').trim();
+    const urlDeckId = (urlParams.get('deckid') || '').trim();
+    let pendingFocus = urlCardId ? { deckId: urlDeckId || null, cardId: urlCardId } : null;
     const runtimeConfig = window.__flashcardsRuntimeConfig || {};
     const aiConfig = runtimeConfig.ai || {};
     const sttConfig = runtimeConfig.stt || {};
@@ -8477,6 +8481,24 @@ function renderComparisonResult(resultEl, comparison){
 
       queue = pending.map((entry, idx)=>({...entry, index: idx}));
 
+      if(pendingFocus && pendingFocus.cardId && !pendingFocus.deckId){
+        const lookupDeckId = Object.keys(registry || {}).find(deckKey => {
+          const deck = registry[deckKey];
+          return deck && Array.isArray(deck.cards) && deck.cards.some(c => c && c.id === pendingFocus.cardId);
+        });
+        if(lookupDeckId){
+          pendingFocus.deckId = lookupDeckId;
+        }
+      }
+
+      let focused = false;
+      if(pendingFocus && pendingFocus.cardId && pendingFocus.deckId){
+        focused = focusQueueCard(pendingFocus.deckId, pendingFocus.cardId);
+        if(focused){
+          pendingFocus = null;
+        }
+      }
+
       debugLog(`Total due cards: ${queue.length}`);
       setDue(queue.length);
       if(queue.length===0){
@@ -8490,9 +8512,11 @@ function renderComparisonResult(resultEl, comparison){
         return;
       }
         emptyState.classList.add("hidden");
-      current = 0;
-      currentItem = queue[current];
-      visibleSlots = initialVisibleSlots(currentItem?.card);
+      if(!focused){
+        current = 0;
+        currentItem = queue[current];
+        visibleSlots = initialVisibleSlots(currentItem?.card);
+      }
       showCurrent();
     }
     // Ensure the Study queue highlights the requested card (even if it needs a temporary entry).
@@ -10918,41 +10942,16 @@ function renderComparisonResult(resultEl, comparison){
         const viewportPadding = 12;
         const viewportRight = window.innerWidth - viewportPadding;
         const viewportBottom = window.innerHeight - viewportPadding;
-        let adjustedLeft = x;
-        let adjustedTop = y;
+        const rect = menu.getBoundingClientRect();
 
-        const clampPosition = () => {
-          const rect = menu.getBoundingClientRect();
-          let changed = false;
-          if (rect.right > viewportRight) {
-            adjustedLeft -= rect.right - viewportRight;
-            changed = true;
-          }
-          if (rect.left < viewportPadding) {
-            adjustedLeft = viewportPadding;
-            changed = true;
-          }
-          if (rect.bottom > viewportBottom) {
-            adjustedTop -= rect.bottom - viewportBottom;
-            changed = true;
-          }
-          if (rect.top < viewportPadding) {
-            adjustedTop = viewportPadding;
-            changed = true;
-          }
-          if (changed) {
-            menu.style.left = `${adjustedLeft}px`;
-            menu.style.top = `${adjustedTop}px`;
-          }
-          return changed;
-        };
+        let adjustedLeft = Math.min(x, viewportRight - rect.width);
+        let adjustedTop = Math.min(y, viewportBottom - rect.height);
+
+        adjustedLeft = Math.max(adjustedLeft, viewportPadding);
+        adjustedTop = Math.max(adjustedTop, viewportPadding);
 
         menu.style.left = `${adjustedLeft}px`;
         menu.style.top = `${adjustedTop}px`;
-        let tries = 0;
-        while (tries < 3 && clampPosition()) {
-          tries += 1;
-        }
 
         // Close on outside click
         setTimeout(() => {
@@ -11854,7 +11853,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025122502"; // Must match version.php
+    const CACHE_VERSION = "2025122503"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
