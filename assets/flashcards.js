@@ -2071,33 +2071,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const actions = document.createElement('div');
       actions.className = 'example-actions';
 
-      const translationLanguageName = (typeof languageName === 'function' ? languageName(userLang2) : '') || '';
-      const translationActionTitleBase = translationLanguageName ? `${translationLanguageName} translation` : 'translation';
-
-      const toggleBtn = document.createElement('button');
-      toggleBtn.type = 'button';
-      toggleBtn.className = 'example-icon-btn example-toggle';
-      toggleBtn.setAttribute('aria-pressed', 'false');
-
-      const toggleIcon = document.createElement('span');
-      toggleIcon.className = 'example-icon';
-      toggleIcon.innerHTML = '<svg class="example-icon-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 7.5h5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 11h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M7 14.5h5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M17 7c-2 0-2 2-2 5s0 5 2 5c1.5 0 2-1.5 2-2.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M15 11.5h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 6l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M12 6l-2 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
-
-      const toggleText = document.createElement('span');
-      toggleText.className = 'example-label';
-
-      const setToggleState = (isOpen) => {
-        toggleBtn.classList.toggle('is-open', isOpen);
-        toggleBtn.setAttribute('aria-pressed', isOpen ? 'true' : 'false');
-        const verb = isOpen ? 'Hide' : 'Show';
-        const label = `${verb} ${translationActionTitleBase}`;
-        toggleText.textContent = label;
-        toggleBtn.title = label;
-        toggleBtn.setAttribute('aria-label', label);
-      };
-
-      toggleBtn.append(toggleIcon, toggleText);
-
       const btnRemove = document.createElement('button');
       btnRemove.type = 'button';
       btnRemove.className = 'example-icon-btn example-remove';
@@ -2106,7 +2079,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       btnRemove.title = removeLabel;
       btnRemove.innerHTML = '&#128465;'; // trash
 
-      actions.appendChild(toggleBtn);
       actions.appendChild(btnRemove);
       topRow.appendChild(label);
       topRow.appendChild(actions);
@@ -2128,6 +2100,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const transWrap = document.createElement('div');
       transWrap.className = 'example-trans-wrap';
+
+      const translationLanguageName = (typeof languageName === 'function' ? languageName(userLang2) : '') || '';
+      const revealLabel = translationLanguageName ? `Show ${translationLanguageName} translation` : 'Show translation';
+      const hideLabel = translationLanguageName ? `Hide ${translationLanguageName} translation` : 'Hide translation';
+
+      const revealBtn = document.createElement('button');
+      revealBtn.type = 'button';
+      revealBtn.className = 'example-reveal-btn';
+      revealBtn.setAttribute('aria-expanded', 'false');
+      revealBtn.innerHTML = `
+        <span class="example-reveal-icon" aria-hidden="true">👁</span>
+        <span class="example-reveal-text">${revealLabel}</span>
+      `;
+      transWrap.appendChild(revealBtn);
+
       const inputTrans = document.createElement('textarea');
       inputTrans.rows = 2;
       inputTrans.placeholder = `${t('back')} (${languageName(userLang2)})...`;
@@ -2140,18 +2127,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           collocationsData[index].trans = e.target.value;
         }
       });
+
+      const hideBtn = document.createElement('button');
+      hideBtn.type = 'button';
+      hideBtn.className = 'example-hide-btn';
+      hideBtn.textContent = hideLabel;
+
+      transWrap.appendChild(hideBtn);
       transWrap.appendChild(inputTrans);
       body.appendChild(transWrap);
       container.appendChild(body);
 
       // default: translation hidden
       transWrap.classList.remove('is-open');
-      setToggleState(false);
-
-      toggleBtn.addEventListener('click', e => {
+      revealBtn.addEventListener('click', e => {
         e.preventDefault();
-        const isOpen = transWrap.classList.toggle('is-open');
-        setToggleState(isOpen);
+        const isOpen = true;
+        transWrap.classList.add('is-open');
+        revealBtn.setAttribute('aria-expanded', 'true');
+        hideBtn.classList.remove('hidden');
+        setTimeout(() => inputTrans.focus(), 10);
+      });
+
+      hideBtn.addEventListener('click', e => {
+        e.preventDefault();
+        transWrap.classList.remove('is-open');
+        revealBtn.setAttribute('aria-expanded', 'false');
+        hideBtn.classList.add('hidden');
+        revealBtn.focus();
       });
 
       btnRemove.addEventListener('click', () => {
