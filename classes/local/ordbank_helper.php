@@ -339,7 +339,7 @@ class ordbank_helper {
             $rec->etterledd ?? '',
         ], fn(string $v) => $v !== '');
 
-        return $parts ?: [$oppslag];
+        return $parts ? array_values($parts) : [$oppslag];
     }
 
     /**
