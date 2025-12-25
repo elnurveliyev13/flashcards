@@ -1928,6 +1928,7 @@ switch ($action) {
             $debugai = [];
             $resolvedExpr = null;
             $skipordbokene = false;
+            $exprAutoSelected = false;
             $builtin = mod_flashcards_builtin_function_word($clickedword);
             $poslower = core_text::strtolower($data['pos'] ?? '');
             $functionpos = ['adv', 'adverb', 'prep', 'preposisjon', 'konj', 'konjunksjon', 'pron', 'pronomen', 'det', 'determiner', 'inf', 'part', 'partikkel'];
@@ -2114,10 +2115,9 @@ switch ($action) {
                     $data['focusExpression'] = $spacyAutoExpr;
                     $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$spacyAutoExpr])));
                     $data['focusWord'] = $spacyAutoExpr;
-                    $data['focusBaseform'] = $spacyAutoExpr;
                     $data['pos'] = 'phrase';
                     $data['parts'] = [$spacyAutoExpr];
-                    $skipordbokene = true;
+                    $exprAutoSelected = true;
                     $debugai['ordbokene']['expressionSource'] = 'spacy_auto';
                 } else if (empty($spacyMatches) && empty($resolvedExpr) && !empty($spacyExprs)) {
                     $exprs = array_values(array_unique(array_filter($spacyExprs)));
@@ -2374,7 +2374,7 @@ switch ($action) {
                 );
             }
             // If Ordbokene was skipped due to VERB, still surface spaCy expression candidates for manual choice.
-            if ($orbokeneenabled && $skipordbokene && empty($data['expressionNeedsConfirmation']) && !empty($spacyExprs)) {
+            if ($orbokeneenabled && $skipordbokene && empty($data['expressionNeedsConfirmation']) && !$exprAutoSelected && !empty($spacyExprs)) {
                 $spacyMatches = [];
                 foreach ($spacyExprs as $expr) {
                     $spacyResolved = mod_flashcards_lookup_or_search_expression($expr, $lang);
@@ -2432,6 +2432,29 @@ switch ($action) {
                     $data['errors'] = [];
                 }
                 $data['errors']['tts_front'] = $e->getMessage();
+            }
+            // Ensure focus audio exists for the chosen focus word/expression.
+            try {
+                $tts = $tts ?? new \mod_flashcards\local\tts_service();
+                if ($tts->is_enabled()) {
+                    $focusAudioText = trim((string)($data['focusExpression'] ?? $data['focusWord'] ?? $data['focusBaseform'] ?? $clickedword));
+                    if ($focusAudioText !== '') {
+                        if (!isset($data['audio']) || !is_array($data['audio'])) {
+                            $data['audio'] = [];
+                        }
+                        if (empty($data['audio']['focus'])) {
+                            $data['audio']['focus'] = $tts->synthesize($userid, $focusAudioText, [
+                                'voice' => $voiceid ?: null,
+                                'label' => 'focus',
+                            ]);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                if (!isset($data['errors']) || !is_array($data['errors'])) {
+                    $data['errors'] = [];
+                }
+                $data['errors']['tts_focus'] = $e->getMessage();
             }
             // Normalize compound parts to clean array for UI, and if only one chunk, try to re-split via leddanalyse.
             if (!empty($data['parts']) && is_array($data['parts'])) {
