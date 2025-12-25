@@ -260,7 +260,7 @@ class ordbokene_client {
         // Meanings/examples: collect from nested definition elements.
         $defelements = self::collect_definition_elements($article['body']['definitions'] ?? []);
         $out['meanings'] = self::extract_meanings($defelements);
-        $out['examples'] = self::extract_examples($defelements);
+        $out['examples'] = self::extract_examples($defelements, (string)($out['baseform'] ?? ''));
 
         return array_filter($out, fn($v) => !empty($v));
     }
@@ -409,14 +409,34 @@ class ordbokene_client {
         return array_values(array_unique(array_filter($out)));
     }
 
-    protected static function extract_examples(array $elements): array {
+    protected static function extract_examples(array $elements, string $lemma = ''): array {
         $out = [];
         foreach ($elements as $el) {
             if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
                 $clean = trim((string)$el['quote']['content']);
                 if (str_contains($clean, '$')) {
-                    $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
+                    $usage = '';
+                    if (!empty($el['quote']['items']) && is_array($el['quote']['items'])) {
+                        foreach ($el['quote']['items'] as $item) {
+                            if (!is_array($item)) {
+                                continue;
+                            }
+                            if (($item['type'] ?? '') === 'usage' && !empty($item['text'])) {
+                                $usage = trim((string)$item['text']);
+                                if ($usage !== '') {
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    $replacement = $usage !== '' ? $usage : $lemma;
+                    if ($replacement !== '') {
+                        $clean = preg_replace('/\\$+/u', $replacement, $clean) ?? $clean;
+                    } else {
+                        $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
+                    }
                 }
+                $clean = trim(preg_replace('/\\s+/u', ' ', $clean) ?? '');
                 if ($clean === '' || $clean === '$') {
                     continue;
                 }

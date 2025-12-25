@@ -3438,7 +3438,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(Array.isArray(info.examples) && info.examples.length){
         const examplesWrap = document.createElement('div');
         examplesWrap.className = 'ordbokene-examples';
-        info.examples.slice(0,2).forEach(ex => {
+        info.examples.slice(0,4).forEach(ex => {
           const exEl = document.createElement('div');
           exEl.className = 'ordbokene-example';
           exEl.textContent = ex;

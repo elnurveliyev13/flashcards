@@ -6,19 +6,19 @@
         "pos": "substantiv",
         "gender": "",
         "translation_lang": "en",
-        "definition": "\u00c5 lete etter noe; \u00e5 fors\u00f8ke \u00e5 finne noe man trenger eller \u00f8nsker.",
-        "translation": "to be looking for",
+        "definition": "to try to find or obtain something or someone",
+        "translation": "to be looking for something",
         "analysis": [
             {
                 "text": "jakt",
-                "translation": "enmastet, seilskute med og ofte"
+                "translation": "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
             }
         ],
         "collocations": [],
         "examples": [
             "Hva er du p\u00e5 jakt etter? | What are you looking for?",
-            "Jeg er p\u00e5 jakt etter n\u00f8klene mine. | I am looking for my keys.",
-            "Hun er p\u00e5 jakt etter en jobb i byen. | She is looking for a job in the city."
+            "Hun er p\u00e5 jakt etter en ny jobb. | She is looking for a new job.",
+            "Vi er p\u00e5 jakt etter en leilighet i sentrum. | We are looking for an apartment in the city center."
         ],
         "transcription": "'j\u0251kt",
         "forms": {
@@ -44,17 +44,27 @@
         "ordbokene": {
             "expression": "jakt",
             "meanings": [
-                "enmastet, seilskute med og ofte"
+                "det \u00e5 oppspore og felle dyr",
+                "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
             ],
-            "examples": [],
+            "examples": [
+                "og fiske",
+                "g\u00e5 p\u00e5",
+                "drive p\u00e5 rein",
+                "komme hjem etter endt",
+                "begynner 10. september",
+                "politiet tok opp p\u00e5 tyvene",
+                "v\u00e6re p\u00e5 etter hybel",
+                "p\u00e5 etter \u00e6re og ber\u00f8mmelse"
+            ],
             "forms": [],
             "dictmeta": {
                 "lang": "bm",
-                "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json"
+                "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json"
             },
             "source": "ordbokene",
-            "chosenMeaning": 0,
-            "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json",
+            "chosenMeaning": 1,
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
             "citation": "\"jakt\". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https:\/\/ordbokene.no (henta 25.12.2025)."
         },
         "audio": {
@@ -69,10 +79,10 @@
     "debug": {
         "ordbokene": {
             "expression": "jakt",
-            "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json",
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
             "chosen": {
-                "entry": 0,
-                "meaning": 0
+                "entry": 2,
+                "meaning": 1
             }
         }
     }
