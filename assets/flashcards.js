@@ -3499,8 +3499,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return;
       }
       if(payload){
+        const needsExpressionConfirmation = !!payload.expressionNeedsConfirmation;
         // Prefer Ordbokene-picked expression/meaning for analysis, translation, examples.
-        if(payload.ordbokene && payload.ordbokene.expression){
+        if(!needsExpressionConfirmation && payload.ordbokene && payload.ordbokene.expression){
           const chosenIdx = Number.isInteger(payload.ordbokene.chosenMeaning) ? payload.ordbokene.chosenMeaning : 0;
           const pickMeaning = (Array.isArray(payload.ordbokene.meanings) && payload.ordbokene.meanings[chosenIdx]) ? payload.ordbokene.meanings[chosenIdx] : '';
           const cleanMeaning = (pickMeaning || '').replace(/^["']|["']$/g,'').trim();
@@ -3520,7 +3521,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         } else {
           renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
         }
-        renderOrdbokeneBlock(payload.ordbokene || null);
+        renderOrdbokeneBlock(needsExpressionConfirmation ? null : (payload.ordbokene || null));
       } else {
         renderSentenceAnalysis([]);
         renderOrdbokeneBlock(null);
@@ -3728,6 +3729,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const sourceText = frontInput ? (frontInput.value || '').trim() : '';
         setFocusExpressionSuggestions(data.expressionSuggestions, sourceText);
         activateExpressionSuggestions(sourceText);
+        if(needsExpressionConfirmation){
+          setFocusStatus('choose', aiStrings.choose || 'Choose one');
+          if(focusStatusEl){
+            const hint = aiStrings.chooseExpressionHint || 'Choose an expression to see translation and examples.';
+            focusStatusEl.textContent = `${focusStatusEl.textContent} ${hint}`.trim();
+          }
+        }
       }
       // Try to detect multiword expressions from ordbokene in the original front text.
       const dictExpressionAi = (data.ordbokene && data.ordbokene.source === 'builtin')
@@ -3784,13 +3792,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusBaseInput.value = data.focusBaseform;
         }
       }
-      if(data.definition){
+      if(data.definition && !needsExpressionConfirmation){
         const expl = document.getElementById('uExplanation');
         if(expl && (!expl.value.trim() || data.ordbokene)){
           expl.value = data.definition;
         }
       }
-      setFocusTranslation(data.translation || '');
+      if(!needsExpressionConfirmation){
+        setFocusTranslation(data.translation || '');
+      }
       if(data.transcription){
         const trEl = document.getElementById('uTranscription');
         if(trEl && !trEl.value.trim()){
@@ -3828,7 +3838,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
       }
-      if(Array.isArray(data.examples) && data.examples.length){
+      if(!needsExpressionConfirmation && Array.isArray(data.examples) && data.examples.length){
         const parsedExamples = parseExamples(data.examples, data.exampleTranslations || null, userLang2);
         if(parsedExamples.length){
           examplesData = parsedExamples;
@@ -3843,7 +3853,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }
           }
         }
-      } else {
+      } else if(!needsExpressionConfirmation) {
         const frontTextForExample = frontInput ? (frontInput.value || '').trim() : '';
         const updated = setExampleOneFromFront(frontTextForExample);
         if(updated){
