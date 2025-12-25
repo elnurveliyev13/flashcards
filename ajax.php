@@ -1879,6 +1879,10 @@ switch ($action) {
             if ($wc === 'PREP') {
                 $wc = '';
             }
+            $spacyExprs = [];
+            if ($orbokeneenabled) {
+                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
+            }
             if ($wc === 'VERB') {
                 $skipordbokene = true;
                 $debugai['ordbokene'] = ['expression' => null];
@@ -1887,7 +1891,6 @@ switch ($action) {
             if ($orbokeneenabled && !$skipordbokene) {
                 $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
                 $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
-                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
                 $spacyMatches = [];
                 foreach ($spacyExprs as $expr) {
                     $spacyResolved = mod_flashcards_lookup_or_search_expression($expr, $lang);
@@ -1910,6 +1913,8 @@ switch ($action) {
                 if (count($spacyMatches) > 1) {
                     $data['expressionNeedsConfirmation'] = true;
                     $data['expressionSuggestions'] = array_values($spacyMatches);
+                    $debugai['ordbokene']['spacyExpressions'] = array_keys($spacyMatches);
+                    $debugai['ordbokene']['expressionSource'] = 'spacy_multi';
                 } else if (count($spacyMatches) === 1) {
                     $only = array_values($spacyMatches)[0];
                     $resolvedExpr = [
@@ -1921,9 +1926,13 @@ switch ($action) {
                         'source' => 'ordbokene',
                         'citation' => '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
                     ];
+                    $debugai['ordbokene']['expressionSource'] = 'spacy_single';
                 }
                 if (!$resolvedExpr && empty($data['expressionNeedsConfirmation'])) {
                     $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
+                    if ($resolvedExpr) {
+                        $debugai['ordbokene']['expressionSource'] = 'resolve_ordbokene';
+                    }
                 }
                 $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
                 if (!empty($selected['tag'])) {
@@ -2123,6 +2132,34 @@ switch ($action) {
                     (int)$selected['lemma_id'],
                     $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
                 );
+            }
+            // If Ordbokene was skipped due to VERB, still surface spaCy expression candidates for manual choice.
+            if ($orbokeneenabled && $skipordbokene && empty($data['expressionNeedsConfirmation']) && !empty($spacyExprs)) {
+                $spacyMatches = [];
+                foreach ($spacyExprs as $expr) {
+                    $spacyResolved = mod_flashcards_lookup_or_search_expression($expr, $lang);
+                    if (!empty($spacyResolved)) {
+                        $expression = mod_flashcards_normalize_infinitive($spacyResolved['baseform'] ?? $expr);
+                        if (!isset($spacyMatches[$expression])) {
+                            $meanings = $spacyResolved['meanings'] ?? [];
+                            $firstMeaning = $meanings[0] ?? '';
+                            $spacyMatches[$expression] = [
+                                'expression' => $expression,
+                                'translation' => $firstMeaning,
+                                'explanation' => $firstMeaning,
+                                'examples' => $spacyResolved['examples'] ?? [],
+                                'forms' => $spacyResolved['forms'] ?? [],
+                                'dictmeta' => $spacyResolved['dictmeta'] ?? [],
+                            ];
+                        }
+                    }
+                }
+                if (!empty($spacyMatches)) {
+                    $data['expressionNeedsConfirmation'] = true;
+                    $data['expressionSuggestions'] = array_values($spacyMatches);
+                    $debugai['ordbokene']['spacyExpressions'] = array_keys($spacyMatches);
+                    $debugai['ordbokene']['expressionSource'] = 'spacy_fallback';
+                }
             }
             // Regenerate front audio after final example selection to keep TTS in sync with UI.
             try {

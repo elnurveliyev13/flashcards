@@ -1,0 +1,56 @@
+{
+    "ok": true,
+    "data": {
+        "focusWord": "jakte",
+        "focusBaseform": "jakte",
+        "focusExpression": "jakt etter",
+        "pos": "verb",
+        "gender": "hunkjonn",
+        "translation_lang": "en",
+        "definition": "",
+        "translation": "Hunt refers to the activity of searching for or capturing animals.",
+        "analysis": [],
+        "correction": "Hva er du p\u00e5 jakt etter? \u2014 No errors found.",
+        "collocations": [],
+        "examples": [],
+        "transcription": "'j\u0251kt",
+        "audio": {
+            "front": {
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
+                "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
+                "voice": "s2xtA7B2CTXPPlJzch1v",
+                "provider": "elevenlabs"
+            },
+            "focus": {
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_polly_focus_liv_c9850f7857ec.mp3",
+                "name": "tts_polly_focus_liv_c9850f7857ec.mp3",
+                "voice": "Liv",
+                "provider": "polly"
+            }
+        },
+        "usage": {
+            "prompt_tokens": 1959,
+            "completion_tokens": 213,
+            "total_tokens": 2172,
+            "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+            }
+        },
+        "forms": [],
+        "parts": [
+            "jakte"
+        ]
+    },
+    "debug": {
+        "ordbokene": {
+            "expression": null
+        }
+    }
+}

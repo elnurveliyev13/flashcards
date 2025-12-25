@@ -607,6 +607,10 @@ class ordbank_helper {
                     $score -= 6;
                 }
             }
+            // Penalize imperatives when spaCy sees a noun in prepositional context.
+            if ($spacyPos === 'NOUN' && $isverb && $boynum === 11 && ($prev === 'på' || $next === 'etter' || $prev2 === 'på' || $next2 === 'etter')) {
+                $score -= 12;
+            }
             if ($candword !== '' && in_array($candword, $functionwords, true)) {
                 if ($isadv || $isprep || str_contains($tag, 'konj')) {
                     $score += 15;
