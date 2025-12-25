@@ -6,3 +6,5 @@
 .git/
 nul
 .claude/
+.devtools/ai_focus_helper&sesskey.json
+.devtools/HAR.json

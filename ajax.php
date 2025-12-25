@@ -2159,6 +2159,16 @@ switch ($action) {
                     $data['expressionSuggestions'] = array_values($spacyMatches);
                     $debugai['ordbokene']['spacyExpressions'] = array_keys($spacyMatches);
                     $debugai['ordbokene']['expressionSource'] = 'spacy_fallback';
+                } else {
+                    $exprs = array_values(array_unique(array_filter($spacyExprs)));
+                    if (!empty($exprs)) {
+                        $data['expressionNeedsConfirmation'] = true;
+                        $data['expressionSuggestions'] = array_map(function($expr){
+                            return ['expression' => $expr];
+                        }, $exprs);
+                        $debugai['ordbokene']['spacyExpressions'] = $exprs;
+                        $debugai['ordbokene']['expressionSource'] = 'spacy_unconfirmed';
+                    }
                 }
             }
             // Regenerate front audio after final example selection to keep TTS in sync with UI.
@@ -2742,6 +2752,7 @@ if (!empty($ordbokene_debug)) {
             throw new invalid_parameter_exception('Missing expression');
         }
         $lang = ($language === 'nn') ? 'nn' : ((in_array($language, ['nb', 'no'], true) ? 'bm' : 'begge'));
+        $openaiexpr = new \mod_flashcards\local\openai_client();
         $resolved = mod_flashcards_resolve_ordbokene_expression($fronttext, $expression, $expression, $lang);
         if (empty($resolved)) {
             $resolved = \mod_flashcards\local\ordbokene_client::lookup($expression, $lang);
@@ -2793,6 +2804,18 @@ if (!empty($ordbokene_debug)) {
             $analysis[] = ['text' => $baseExpression, 'translation' => $translation];
         }
         $examples = $metaExamples ?: ($resolved['examples'] ?? []);
+        if ($translation === '' && $definition === '' && empty($examples) && $openaiexpr->is_enabled()) {
+            $gen = $openaiexpr->generate_expression_content($baseExpression, '', [], $fronttext, $language, '');
+            if (!empty($gen['translation'])) {
+                $translation = $gen['translation'];
+            }
+            if (!empty($gen['definition'])) {
+                $definition = $gen['definition'];
+            }
+            if (!empty($gen['examples'])) {
+                $examples = $gen['examples'];
+            }
+        }
         $data = [
             'focusWord' => $expression,
             'focusBaseform' => $baseExpression,

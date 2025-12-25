@@ -557,6 +557,34 @@ class ordbank_helper {
         $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
         $spacyPos = isset($context['spacy_pos']) ? core_text::strtoupper((string)$context['spacy_pos']) : '';
 
+        if ($spacyPos !== '') {
+            $posMatches = array_filter($candidates, function($cand) use ($spacyPos) {
+                $tag = core_text::strtolower((string)($cand['tag'] ?? ''));
+                $ordklasse = core_text::strtolower((string)($cand['ordklasse'] ?? ''));
+                $isverb = str_contains($tag, 'verb') || str_contains($ordklasse, 'verb');
+                $isnoun = str_contains($tag, 'subst') || str_contains($ordklasse, 'subst');
+                $isadj  = str_contains($tag, 'adj') || str_contains($ordklasse, 'adj');
+                $isadv  = str_contains($tag, 'adv') || str_contains($ordklasse, 'adv');
+                $isprep = str_contains($tag, 'prep') || str_contains($ordklasse, 'prep');
+                $ispron = str_contains($tag, 'pron') || str_contains($ordklasse, 'pron');
+                $isdet = str_contains($tag, 'det') || str_contains($ordklasse, 'det');
+                $iskonj = str_contains($tag, 'konj') || str_contains($ordklasse, 'konj');
+                $candpos = '';
+                if ($isverb) { $candpos = 'VERB'; }
+                if ($isnoun) { $candpos = 'NOUN'; }
+                if ($isadj) { $candpos = 'ADJ'; }
+                if ($isadv) { $candpos = 'ADV'; }
+                if ($isprep) { $candpos = 'ADP'; }
+                if ($ispron) { $candpos = 'PRON'; }
+                if ($isdet) { $candpos = 'DET'; }
+                if ($iskonj) { $candpos = 'CONJ'; }
+                return $candpos !== '' && $candpos === $spacyPos;
+            });
+            if (!empty($posMatches)) {
+                $candidates = array_values($posMatches);
+            }
+        }
+
         $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','nar'];
         $articles = ['en','ei','et','ein','eitt'];
         $determiners = ['den','det','de','denne','dette','disse','min','mitt','mi','mine','din','ditt','di','dine','sin','sitt','si','sine','hans','hennes','var','vart','vare','deres'];

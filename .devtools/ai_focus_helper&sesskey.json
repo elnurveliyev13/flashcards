@@ -30,8 +30,8 @@
         },
         "usage": {
             "prompt_tokens": 1959,
-            "completion_tokens": 213,
-            "total_tokens": 2172,
+            "completion_tokens": 218,
+            "total_tokens": 2177,
             "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
