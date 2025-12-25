@@ -663,7 +663,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Font size',
         gestures_heading: 'Gesture Controls',
         gestures_enabled: 'Enable swipe gestures',
-        gesture_tap_reveal: 'Tap card to reveal next',
+        gesture_tap_reveal: 'Swipe down to reveal text',
         gesture_long_press: 'Long press for menu',
         gesture_double_tap: 'Double tap to replay audio',
         tab_quickinput: 'Create',
@@ -786,7 +786,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: '\u0420\u043e\u0437\u043c\u0456\u0440 \u0448\u0440\u0438\u0444\u0442\u0443',
         gestures_heading: '\u041a\u0435\u0440\u0443\u0432\u0430\u043d\u043d\u044f \u0436\u0435\u0441\u0442\u0430\u043c\u0438',
         gestures_enabled: '\u0423\u0432\u0456\u043c\u043a\u043d\u0443\u0442\u0438 \u0436\u0435\u0441\u0442\u0438 \u0437\u043c\u0430\u0445\u0443\u0432\u0430\u043d\u043d\u044f',
-        gesture_tap_reveal: '\u0422\u043e\u0440\u043a\u043d\u0456\u0442\u044c \u043a\u0430\u0440\u0442\u043a\u0443, \u0449\u043e\u0431 \u0432\u0456\u0434\u043a\u0440\u0438\u0442\u0438 \u043d\u0430\u0441\u0442\u0443\u043f\u043d\u0443',
+        gesture_tap_reveal: 'Проведіть вниз, щоб показати текст',
         gesture_long_press: '\u0414\u043e\u0432\u0433\u0435 \u043d\u0430\u0442\u0438\u0441\u043a\u0430\u043d\u043d\u044f \u0432\u0456\u0434\u043a\u0440\u0438\u0432\u0430\u0454 \u043c\u0435\u043d\u044e',
         gesture_double_tap: '\u041f\u043e\u0434\u0432\u0456\u0439\u043d\u0435 \u0442\u043e\u0440\u043a\u0430\u043d\u043d\u044f - \u043f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u0438 \u0430\u0443\u0434\u0456\u043e',
         tab_quickinput: '\u0421\u0442\u0432\u043e\u0440\u0438\u0442\u0438',
@@ -907,7 +907,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: '\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430',
         gestures_heading: 'Управление жестами',
         gestures_enabled: 'Включить жесты смахивания',
-        gesture_tap_reveal: 'Нажмите на карту, чтобы открыть следующую',
+        gesture_tap_reveal: 'Проведите вниз, чтобы показать текст',
         gesture_long_press: 'Долгое нажатие открывает меню',
         gesture_double_tap: 'Двойное нажатие - повтор аудио',
         tab_quickinput: '\u0421\u043e\u0437\u0434\u0430\u0442\u044c',
@@ -1028,9 +1028,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Taille du texte',
         gestures_heading: 'Commandes gestuelles',
         gestures_enabled: 'Activer les gestes de balayage',
-        gesture_tap_reveal: 'Touchez la carte pour afficher la suivante',
+        gesture_tap_reveal: 'Balayez vers le bas pour afficher le texte',
         gesture_long_press: 'Appui long pour le menu',
-        gesture_double_tap: "Double tap pour relire l'audio",
+        gesture_double_tap: "Double appui pour relire l'audio",
         tab_quickinput: 'Creer',
         tab_study: 'Pratique',
         tab_dashboard: 'Tableau',
@@ -1133,7 +1133,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Tamano de fuente',
         gestures_heading: 'Controles por gestos',
         gestures_enabled: 'Activar gestos de deslizamiento',
-        gesture_tap_reveal: 'Toca la tarjeta para mostrar la siguiente',
+        gesture_tap_reveal: 'Desliza hacia abajo para mostrar el texto',
         gesture_long_press: 'Mantén pulsado para abrir el menú',
         gesture_double_tap: 'Toca dos veces para repetir el audio',
         tab_quickinput: 'Crear',
@@ -1238,7 +1238,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Rozmiar czcionki',
         gestures_heading: 'Sterowanie gestami',
         gestures_enabled: 'Wlacz gesty przesuniecia',
-        gesture_tap_reveal: 'Stuknij karte, aby odslonic nastepna',
+        gesture_tap_reveal: 'Przesun w dol, aby pokazac tekst',
         gesture_long_press: 'Przytrzymaj, aby otworzyc menu',
         gesture_double_tap: 'Podwojne stukniecie odtwarza audio ponownie',
         tab_quickinput: 'Utworz',
@@ -1359,7 +1359,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Dimensione del testo',
         gestures_heading: 'Controlli gestuali',
         gestures_enabled: 'Abilita i gesti di scorrimento',
-        gesture_tap_reveal: 'Tocca la carta per mostrare la successiva',
+        gesture_tap_reveal: 'Scorri verso il basso per mostrare il testo',
         gesture_long_press: 'Pressione prolungata per il menu',
         gesture_double_tap: 'Doppio tocco per riascoltare l\'audio',
         tab_quickinput: 'Crea',
@@ -1464,7 +1464,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         font_scale_label: 'Schriftgro?e',
         gestures_heading: 'Gestensteuerung',
         gestures_enabled: 'Wischgesten aktivieren',
-        gesture_tap_reveal: 'Tippe auf die Karte, um die nachste anzuzeigen',
+        gesture_tap_reveal: 'Nach unten wischen, um den Text anzuzeigen',
         gesture_long_press: 'Langes Tippen offnet das Menu',
         gesture_double_tap: 'Doppelt tippen, um Audio erneut abzuspielen',
         tab_quickinput: 'Erstellen',
@@ -2125,6 +2125,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }, AUDIO_REGEN_DELAY_MS);
     };
 
+    const getTransLocalValue = () => {
+      const transEl = document.getElementById('uTransLocal');
+      return transEl ? (transEl.value || '').trim() : '';
+    };
+
     const countMeaningfulFrontWords = (text) => {
       if(!text){
         return 0;
@@ -2154,10 +2159,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         return false;
       }
       const current = examplesData[0] || null;
-      const currentTranslations = current && typeof current.translations === 'object'
-        ? Object.keys(current.translations).filter(Boolean)
-        : [];
-      if(current && current.no === trimmed && currentTranslations.length === 0){
+      const translationValue = userLang2 ? getTransLocalValue() : '';
+      const existingTranslation = userLang2 && current && current.translations
+        ? (current.translations[userLang2] ?? '')
+        : '';
+      if(current && current.no === trimmed && existingTranslation === translationValue){
         return false;
       }
       const next = { no: trimmed, translations: {} };
@@ -2165,6 +2171,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         examplesData[0] = next;
       } else {
         examplesData = [next];
+      }
+      if(userLang2){
+        setExampleTranslation(next, userLang2, translationValue);
       }
       scheduleFrontAudioRegeneration(trimmed);
       return true;
@@ -10951,10 +10960,10 @@ function renderComparisonResult(resultEl, comparison){
         menu.style.top = `${y}px`;
 
         const actions = [
-          { label: 'Edit Card', icon: '✏️', handler: () => { $("#btnEdit").click(); } },
-          { label: 'Delete Card', icon: '🗑️', handler: () => { $("#btnDel").click(); } },
-          { label: 'Card List', icon: '📋', handler: () => { $("#btnList").click(); } },
-          { label: 'Report', icon: '❓', handler: () => { openReportModal(); } }
+          { label: 'Edit Card', icon: '\u270F\uFE0F', handler: () => { $("#btnEdit").click(); } },
+          { label: 'Delete Card', icon: '\uD83D\uDDD1', handler: () => { $("#btnDel").click(); } },
+          { label: 'Card List', icon: '\uD83D\uDCCB', handler: () => { $("#btnList").click(); } },
+          { label: 'Report', icon: '\u2753', handler: () => { openReportModal(); } }
         ];
 
         actions.forEach(action => {
@@ -10970,14 +10979,21 @@ function renderComparisonResult(resultEl, comparison){
 
         document.body.appendChild(menu);
 
-        // Ensure menu stays within the viewport bounds (padding 12px)
+        // Ensure menu stays within the viewport bounds (padding 12px + extra bottom guard)
         const viewportPadding = 12;
-        const viewportRight = window.innerWidth - viewportPadding;
-        const viewportBottom = window.innerHeight - viewportPadding;
+        const extraBottomPadding = 24;
+        const viewport = window.visualViewport;
+        const viewportWidth = viewport ? viewport.width : window.innerWidth;
+        const viewportHeight = viewport ? viewport.height : window.innerHeight;
+        const viewportRight = viewportWidth - viewportPadding;
+        const viewportBottom = viewportHeight - (viewportPadding + extraBottomPadding);
         const rect = menu.getBoundingClientRect();
 
+        const maxTop = viewportBottom - rect.height;
+        const anchorY = (viewportBottom - y < rect.height + viewportPadding) ? maxTop : y;
+
         let adjustedLeft = Math.min(x, viewportRight - rect.width);
-        let adjustedTop = Math.min(y, viewportBottom - rect.height);
+        let adjustedTop = Math.min(anchorY, maxTop);
 
         adjustedLeft = Math.max(adjustedLeft, viewportPadding);
         adjustedTop = Math.max(adjustedTop, viewportPadding);
@@ -11886,7 +11902,7 @@ function renderComparisonResult(resultEl, comparison){
     }
 
     // Auto-clear cache on plugin version update
-    const CACHE_VERSION = "2025122505"; // Must match version.php
+    const CACHE_VERSION = "2025122506"; // Must match version.php
     const currentCacheVersion = localStorage.getItem("flashcards-cache-version");
     if (currentCacheVersion !== CACHE_VERSION) {
       debugLog(`[Flashcards] Cache version mismatch: ${currentCacheVersion} -> ${CACHE_VERSION}. Clearing cache...`);
