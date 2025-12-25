@@ -1930,6 +1930,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(direction === 'no-user'){
           if(translationInputLocal){
             translationInputLocal.value = translated;
+            syncExampleOneTranslationFromLocal();
           }
           // Request English translation separately if user language is not English
           if(translationInputEn && userLang2 !== 'en'){
@@ -2176,6 +2177,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setExampleTranslation(next, userLang2, translationValue);
       }
       scheduleFrontAudioRegeneration(trimmed);
+      return true;
+    };
+    const syncExampleOneTranslationFromLocal = () => {
+      if(!userLang2){
+        return false;
+      }
+      const frontText = (frontInput ? (frontInput.value || '') : '').trim();
+      if(!frontText || !shouldMirrorFrontExample(frontText)){
+        return false;
+      }
+      const current = examplesData[0];
+      if(!current || (current.no || '').trim() !== frontText){
+        return false;
+      }
+      const translationValue = getTransLocalValue();
+      const existing = current.translations ? (current.translations[userLang2] ?? '') : '';
+      if(translationValue === existing){
+        return false;
+      }
+      setExampleTranslation(current, userLang2, translationValue);
+      const lists = [$('#examplesList'), $('#examplesListQuick')].filter(Boolean);
+      lists.forEach(list => {
+        const row = list.querySelector('.example-card[data-index="0"]');
+        if(!row) return;
+        const input = row.querySelector('.example-input-trans');
+        if(input) input.value = translationValue;
+      });
       return true;
     };
 
@@ -2574,6 +2602,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if (capitalized !== currentValue) {
           translationInputLocal.value = capitalized;
         }
+        syncExampleOneTranslationFromLocal();
       });
       translationInputLocal.addEventListener('focus', ()=>{
         if(translationDirection !== 'user-no' && !translationInputLocal.value.trim()){

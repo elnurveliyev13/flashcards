@@ -1988,11 +1988,7 @@ switch ($action) {
             $spacyExprs = [];
             if ($orbokeneenabled) {
                 $spacyUsed = true;
-                if ($debugspacy) {
-                    $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword, $spacyDebug);
-                } else {
-                    $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
-                }
+                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword, $spacyDebug);
             }
             if ($wc === 'VERB') {
                 $skipordbokene = true;
@@ -2039,12 +2035,117 @@ switch ($action) {
                     ];
                     $debugai['ordbokene']['expressionSource'] = 'spacy_single';
                 }
-                if (!$resolvedExpr && empty($data['expressionNeedsConfirmation'])) {
+                $spacyAutoExpr = '';
+                if (!$resolvedExpr && empty($data['expressionNeedsConfirmation']) && empty($spacyMatches) && !empty($spacyExprs)) {
+                    $spacyTokens = is_array($spacyDebug['tokens'] ?? null) ? $spacyDebug['tokens'] : [];
+                    $verbLemmas = [];
+                    $adpLemmas = [];
+                    foreach ($spacyTokens as $t) {
+                        if (empty($t['is_alpha'])) {
+                            continue;
+                        }
+                        $lemma = core_text::strtolower((string)($t['lemma'] ?? $t['text'] ?? ''));
+                        $pos = mod_flashcards_spacy_pos_to_coarse((string)($t['pos'] ?? ''));
+                        if (in_array($pos, ['VERB', 'AUX'], true) && $lemma !== '') {
+                            $verbLemmas[$lemma] = true;
+                        } else if (in_array($pos, ['ADP', 'PART'], true) && $lemma !== '') {
+                            $adpLemmas[$lemma] = true;
+                        }
+                    }
+                    $ranked = [];
+                    foreach ($spacyExprs as $expr) {
+                        $expr = trim((string)$expr);
+                        if ($expr === '') {
+                            continue;
+                        }
+                        $parts = array_values(array_filter(preg_split('/\\s+/u', $expr)));
+                        $len = count($parts);
+                        if ($len < 2) {
+                            continue;
+                        }
+                        $adpCount = 0;
+                        foreach ($parts as $part) {
+                            $pl = core_text::strtolower($part);
+                            if (isset($adpLemmas[$pl])) {
+                                $adpCount++;
+                            }
+                        }
+                        $score = 0;
+                        if ($len >= 3) {
+                            $score += 2;
+                        }
+                        if ($len >= 4) {
+                            $score += 1;
+                        }
+                        $first = core_text::strtolower($parts[0] ?? '');
+                        $last = core_text::strtolower($parts[$len - 1] ?? '');
+                        if ($first !== '' && isset($verbLemmas[$first])) {
+                            $score += 2;
+                        }
+                        if ($adpCount >= 2) {
+                            $score += 2;
+                        } else if ($adpCount >= 1) {
+                            $score += 1;
+                        }
+                        if ($last !== '' && isset($adpLemmas[$last])) {
+                            $score += 1;
+                        }
+                        if ($clickedword !== '' && in_array(core_text::strtolower($clickedword), array_map('core_text::strtolower', $parts), true)) {
+                            $score += 1;
+                        }
+                        $ranked[] = ['expr' => $expr, 'score' => $score, 'len' => $len];
+                    }
+                    if (!empty($ranked)) {
+                        usort($ranked, function($a, $b){
+                            if ($a['score'] === $b['score']) {
+                                return $b['len'] <=> $a['len'];
+                            }
+                            return $b['score'] <=> $a['score'];
+                        });
+                        $top = $ranked[0];
+                        $second = $ranked[1] ?? null;
+                        $gap = $second ? ($top['score'] - $second['score']) : $top['score'];
+                        if ($top['score'] >= 4 && $gap >= 2) {
+                            $spacyAutoExpr = $top['expr'];
+                        }
+                    }
+                }
+                if ($spacyAutoExpr !== '') {
+                    $data['focusExpression'] = $spacyAutoExpr;
+                    $data['expressions'] = array_values(array_unique(array_merge($data['expressions'] ?? [], [$spacyAutoExpr])));
+                    $data['focusWord'] = $spacyAutoExpr;
+                    $data['focusBaseform'] = $spacyAutoExpr;
+                    $data['pos'] = 'phrase';
+                    $data['parts'] = [$spacyAutoExpr];
+                    $skipordbokene = true;
+                    $debugai['ordbokene']['expressionSource'] = 'spacy_auto';
+                } else if (empty($spacyMatches) && empty($resolvedExpr) && !empty($spacyExprs)) {
+                    $exprs = array_values(array_unique(array_filter($spacyExprs)));
+                    if (!empty($exprs)) {
+                        $data['expressionNeedsConfirmation'] = true;
+                        $data['expressionSuggestions'] = array_map(function($expr){
+                            return [
+                                'expression' => $expr,
+                                'translation' => '',
+                                'explanation' => '',
+                                'examples' => [],
+                                'forms' => [],
+                                'dictmeta' => [],
+                            ];
+                        }, $exprs);
+                        $debugai['ordbokene']['spacyExpressions'] = $exprs;
+                        $debugai['ordbokene']['expressionSource'] = 'spacy_unconfirmed';
+                    }
+                }
+                if (!$resolvedExpr && empty($data['expressionNeedsConfirmation']) && $spacyAutoExpr === '') {
                     $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
                     if ($resolvedExpr) {
                         $debugai['ordbokene']['expressionSource'] = 'resolve_ordbokene';
                     }
                 }
+                if ($skipordbokene) {
+                    $entries = [];
+                } else {
                 $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
                 if (!empty($selected['tag'])) {
                     $taglower = core_text::strtolower((string)$selected['tag']);
@@ -2128,11 +2229,11 @@ switch ($action) {
                     }
                     if ($chosen === null && !empty($entries)) {
                         $chosen = ['entry' => 0, 'meaning' => 0];
-                    }
-                    if ($chosen !== null) {
-                        $entry = $entries[$chosen['entry']];
-                        $meaning = $entry['meanings'][$chosen['meaning']] ?? ($entry['meanings'][0] ?? '');
-                        $expression = $entry['baseform'] ?? $lookupWord;
+                }
+                if ($chosen !== null) {
+                    $entry = $entries[$chosen['entry']];
+                    $meaning = $entry['meanings'][$chosen['meaning']] ?? ($entry['meanings'][0] ?? '');
+                    $expression = $entry['baseform'] ?? $lookupWord;
                         $data['ordbokene'] = [
                             'expression' => $expression,
                             'meanings' => $entry['meanings'] ?? [],
@@ -2170,6 +2271,7 @@ switch ($action) {
                     } else {
                         unset($data['ordbokene']);
                     }
+                }
                 }
             }
             if (!isset($data['ordbokene']) && !$skipordbokene) {
