@@ -1618,14 +1618,22 @@ switch ($action) {
 
             $helper = new \mod_flashcards\local\ai_helper();
             $openaiexpr = new \mod_flashcards\local\openai_client();
-            $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
-                'language' => $language,
-                'level' => $level,
-                'voice' => $voiceid ?: null,
-            ]);
+            $data = [
+                'focusWord' => $clickedword,
+                'focusBaseform' => $clickedword,
+                'pos' => '',
+                'gender' => '',
+                'translation_lang' => $language,
+                'definition' => '',
+                'translation' => '',
+                'analysis' => [],
+                'collocations' => [],
+                'examples' => [],
+            ];
+            $usedAi = false;
             $debugai = [];
             // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
-            $focuscheck = mod_flashcards_normalize_token((string)($data['focusBaseform'] ?? $data['focusWord'] ?? ''));
+            $focuscheck = mod_flashcards_normalize_token((string)($data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword));
             // Guardrail: do not accept AI-proposed focus words that are not present in the learner sentence.
             // This prevents rare but costly mismatches like "for" -> "fôr" when both exist as valid words.
             if ($fronttext !== '' && $clickedword !== '') {
@@ -1638,10 +1646,6 @@ switch ($action) {
                     }
                 }
             }
-            $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
-            if ($clickedIdx !== false && isset($spacyPosMap[$clickedIdx])) {
-                $ctx['spacy_pos'] = $spacyPosMap[$clickedIdx];
-            }
             // Try POS sequence decoding across the full sentence to pick the best candidate for the clicked token.
             $tokens = mod_flashcards_word_tokens($fronttext);
             $clickedIdx = array_search($clickedword, $tokens, true);
@@ -1653,9 +1657,19 @@ switch ($action) {
                     $spacyPosMap = mod_flashcards_spacy_pos_map($fronttext, $spacy);
                 }
             }
+            $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
+            if ($clickedIdx !== false && isset($spacyPosMap[$clickedIdx])) {
+                $ctx['spacy_pos'] = $spacyPosMap[$clickedIdx];
+            }
             $dpSelected = null;
             if ($clickedIdx !== false) {
                 $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx, $spacyPosMap);
+            }
+            if ($dpSelected && $clickedIdx !== false && isset($spacyPosMap[$clickedIdx])) {
+                $dpPos = mod_flashcards_pos_from_tag((string)($dpSelected['tag'] ?? ''), (string)($dpSelected['ordklasse'] ?? ''));
+                if ($dpPos !== $spacyPosMap[$clickedIdx]) {
+                    $dpSelected = null;
+                }
             }
             $ob = null;
             if ($dpSelected) {
@@ -1745,6 +1759,29 @@ switch ($action) {
                             'forms' => [],
                         ];
                     }
+                }
+            }
+            if ((!$ob || empty($ob['selected'])) && $openaiexpr->is_enabled()) {
+                $data = $helper->process_focus_request($userid, $fronttext, $clickedword, [
+                    'language' => $language,
+                    'level' => $level,
+                    'voice' => $voiceid ?: null,
+                ]);
+                $usedAi = true;
+                $focuscheck = mod_flashcards_normalize_token((string)($data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword));
+                if ($fronttext !== '' && $clickedword !== '') {
+                    $clickedlc = core_text::strtolower($clickedword);
+                    if ($focuscheck !== '' && $focuscheck !== $clickedlc) {
+                        $focusInText = mod_flashcards_token_in_text($focuscheck, $fronttext);
+                        $clickedInText = mod_flashcards_token_in_text($clickedlc, $fronttext);
+                        if (!$focusInText && $clickedInText) {
+                            $focuscheck = $clickedlc;
+                        }
+                    }
+                }
+                $ob = \mod_flashcards\local\ordbank_helper::analyze_token($focuscheck, $ctx);
+                if ((!$ob || empty($ob['selected'])) && !empty($clickedword)) {
+                    $ob = \mod_flashcards\local\ordbank_helper::analyze_token(core_text::strtolower($clickedword), $ctx);
                 }
             }
             // Override AI outputs with ordbank-confirmed data to avoid made-up words/IPA.
@@ -2096,6 +2133,33 @@ switch ($action) {
                     $debugai['ordbokene'] = ['expression' => $fallbackExpr['expression'], 'url' => $fallbackExpr['dictmeta']['url'] ?? ''];
                 } else {
                     $debugai['ordbokene'] = ['expression' => null];
+                }
+            }
+            if (!$usedAi && empty($data['expressionNeedsConfirmation'])) {
+                $hasTranslation = trim((string)($data['translation'] ?? '')) !== '';
+                $hasDefinition = trim((string)($data['definition'] ?? '')) !== '';
+                $hasExamples = !empty($data['examples']) && is_array($data['examples']);
+                if (!$hasTranslation && !$hasDefinition && !$hasExamples && $openaiexpr->is_enabled()) {
+                    $expr = (string)($data['focusExpression'] ?? $data['focusWord'] ?? $data['focusBaseform'] ?? $clickedword);
+                    $meaning = (string)($data['definition'] ?? '');
+                    $gen = $openaiexpr->generate_expression_content($expr, $meaning, [], $fronttext, $language, $level);
+                    if (!empty($gen['translation'])) {
+                        $data['translation'] = $gen['translation'];
+                    }
+                    if (!empty($gen['definition'])) {
+                        $data['definition'] = $gen['definition'];
+                    }
+                    if (!empty($gen['examples'])) {
+                        $data['examples'] = $gen['examples'];
+                    }
+                    if (!empty($gen['definition'])) {
+                        $data['analysis'] = [
+                            [
+                                'text' => $expr,
+                                'translation' => $gen['definition'],
+                            ],
+                        ];
+                    }
                 }
             }
             // Always prefer Ordbokene verb forms to mirror dictionary table.

@@ -3,20 +3,20 @@
     "data": {
         "token": "jakt",
         "selected": {
-            "lemma_id": 32537,
+            "lemma_id": 32534,
             "wordform": "jakt",
-            "tag": "verb imp <trans11\/etter> <trans11\/p\u00e5> normert",
-            "paradigme_id": "011",
-            "boy_nummer": 11,
+            "tag": "subst fem appell ent ub normert",
+            "paradigme_id": "900",
+            "boy_nummer": 1,
             "ipa": "'j\u0251kt",
             "xsampa": "\"jAkt",
             "nofabet": "J AH1 K T",
-            "baseform": "jakte",
-            "ordklasse": "verb",
-            "ordklasse_utdyping": "pret_suffiks pret_ET adj_be_fl_EDE",
-            "boy_group": "verb, normal",
-            "boy_text": "imp",
-            "ordbok_boy_text": "imperativ\r"
+            "baseform": "jakt",
+            "ordklasse": "subst fem appell",
+            "ordklasse_utdyping": "",
+            "boy_group": "symbol",
+            "boy_text": "symb",
+            "ordbok_boy_text": "symbol\r"
         },
         "candidates": [
             {
@@ -52,47 +52,53 @@
                 "ordbok_boy_text": "imperativ\r"
             }
         ],
-        "paradigm": [],
+        "paradigm": [
+            {
+                "boy_nummer": 1,
+                "label": "ent ub",
+                "ordbok_label": "entall_ubestemt\r",
+                "pattern": "\r"
+            },
+            {
+                "boy_nummer": 2,
+                "label": "ent be",
+                "ordbok_label": "entall_bestemt\r",
+                "pattern": "a\r"
+            },
+            {
+                "boy_nummer": 3,
+                "label": "fl ub",
+                "ordbok_label": "flertall_ubestemt\r",
+                "pattern": "er\r"
+            },
+            {
+                "boy_nummer": 4,
+                "label": "fl be",
+                "ordbok_label": "flertall_bestemt\r",
+                "pattern": "ene\r"
+            }
+        ],
         "parts": [
-            "jakte"
+            "jakt"
         ],
         "forms": {
-            "verb": {
-                "infinitiv": [
-                    "jakte",
-                    "jaktes"
+            "noun": {
+                "indef_sg": [
+                    "jakt"
                 ],
-                "presens": [
-                    "jakter",
-                    "jaktes"
-                ],
-                "preteritum": [
+                "def_sg": [
                     "jakta",
-                    "jaktet"
+                    "jakten"
                 ],
-                "perfektum_partisipp": [
-                    "jakta",
-                    "jaktede",
-                    "jaktende",
-                    "jaktet",
-                    "jaktete"
+                "indef_pl": [
+                    "jakter"
                 ],
-                "imperativ": [
-                    "jaktes"
-                ],
-                "presens_perfektum": [
-                    "har jakta",
-                    "har jaktede",
-                    "har jaktende",
-                    "har jaktet",
-                    "har jaktete"
-                ],
-                "presens_partisipp": [
-                    "jaktende"
+                "def_pl": [
+                    "jaktene"
                 ]
             }
         },
-        "gender": "",
+        "gender": "ei",
         "ambiguous": true,
         "ordbokene": {
             "expression": "jakt",

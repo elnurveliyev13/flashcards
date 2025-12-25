@@ -30,8 +30,8 @@
         },
         "usage": {
             "prompt_tokens": 1959,
-            "completion_tokens": 218,
-            "total_tokens": 2177,
+            "completion_tokens": 216,
+            "total_tokens": 2175,
             "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
@@ -46,11 +46,25 @@
         "forms": [],
         "parts": [
             "jakte"
+        ],
+        "expressionNeedsConfirmation": true,
+        "expressionSuggestions": [
+            {
+                "expression": "p\u00e5 jakt etter"
+            },
+            {
+                "expression": "v\u00e6re p\u00e5 jakt etter"
+            }
         ]
     },
     "debug": {
         "ordbokene": {
-            "expression": null
+            "expression": null,
+            "spacyExpressions": [
+                "p\u00e5 jakt etter",
+                "v\u00e6re p\u00e5 jakt etter"
+            ],
+            "expressionSource": "spacy_unconfirmed"
         }
     }
 }
