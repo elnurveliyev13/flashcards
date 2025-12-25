@@ -8672,11 +8672,42 @@ function renderComparisonResult(resultEl, comparison){
       const container = root.querySelector('#slotContainer');
       if(!container) return;
       const rect = container.getBoundingClientRect();
+      const btnRecordStudy = $("#btnRecordStudy");
+      const timerEl = $("#recTimerStudy");
+      let overlayTop = null;
+      if(btnRecordStudy && !btnRecordStudy.classList.contains('hidden')){
+        const btnRect = btnRecordStudy.getBoundingClientRect();
+        if(btnRect.height > 0 && Number.isFinite(btnRect.top)){
+          overlayTop = btnRect.top;
+        }
+      }
+      if(timerEl && !timerEl.classList.contains('hidden')){
+        const timerRect = timerEl.getBoundingClientRect();
+        if(timerRect.height > 0 && Number.isFinite(timerRect.top)){
+          overlayTop = (overlayTop === null) ? timerRect.top : Math.min(overlayTop, timerRect.top);
+        }
+      }
+      if(overlayTop !== null){
+        const desiredGap = 16;
+        const limit = overlayTop - desiredGap;
+        const overshoot = rect.bottom - limit;
+        if(overshoot > 6){
+          if('scrollBy' in window){
+            try{
+              window.scrollBy({top: overshoot, behavior: 'smooth'});
+            }catch(_e){
+              window.scrollBy(0, overshoot);
+            }
+          }else{
+            window.scrollBy(0, overshoot);
+          }
+        }
+        return;
+      }
       const metaHeight = (studyMetaRecorder && !studyMetaRecorder.classList.contains('hidden'))
         ? studyMetaRecorder.getBoundingClientRect().height : 0;
       const bottomHeight = (studyBottomActions && !studyBottomActions.classList.contains('hidden'))
         ? studyBottomActions.getBoundingClientRect().height : 0;
-      const timerEl = $("#recTimerStudy");
       let recTimerGap = 0;
       if(timerEl && !timerEl.classList.contains('hidden')){
         const timerStyle = window.getComputedStyle(timerEl);
