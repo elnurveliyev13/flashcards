@@ -3723,6 +3723,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(typeof data.correction === 'string' && data.correction.trim()){
         correctionMessage = data.correction.trim();
       }
+      const needsExpressionConfirmation = !!data.expressionNeedsConfirmation;
+      if(Array.isArray(data.expressionSuggestions) && data.expressionSuggestions.length){
+        const sourceText = frontInput ? (frontInput.value || '').trim() : '';
+        setFocusExpressionSuggestions(data.expressionSuggestions, sourceText);
+        activateExpressionSuggestions(sourceText);
+      }
       // Try to detect multiword expressions from ordbokene in the original front text.
       const dictExpressionAi = (data.ordbokene && data.ordbokene.source === 'builtin')
         ? ''
@@ -3744,7 +3750,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           .filter(e => expressionMatches(e))
           .sort((a,b) => b.length - a.length)[0] || '';
       }
-      const expressionResolvedAi = (expressionMatches(dictExpressionAi) ? dictExpressionAi : matchedExpression || '').trim();
+      const expressionResolvedAi = needsExpressionConfirmation
+        ? ''
+        : (expressionMatches(dictExpressionAi) ? dictExpressionAi : matchedExpression || '').trim();
       if((data.focusWord || expressionResolvedAi) && fokusInput){
         const posVal = resolvePosFromTag(data.pos || '');
         let focusVal = (expressionResolvedAi || data.focusWord || '').trim();
@@ -3835,6 +3843,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             }
           }
         }
+      } else {
+        const frontTextForExample = frontInput ? (frontInput.value || '').trim() : '';
+        const updated = setExampleOneFromFront(frontTextForExample);
+        if(updated){
+          renderExamples();
+          const examplesEl = document.getElementById('uExamples');
+          if(examplesEl){
+            examplesEl.value = examplesData.map(e => e.no).join('\n');
+          }
+        }
       }
       if(data.audio && data.audio.front && data.audio.front.url){
         setFrontAudioUrl(data.audio.front.url);
@@ -3920,7 +3938,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const correctionMsg = applyAiPayload(data);
         // If AI didn't resolve the full expression but Ordbank/Ordbøkene prefill did, keep the expression.
         try{
-          if(prefillData && prefillData.ordbokene && prefillData.ordbokene.expression && fokusInput){
+          if(!data.expressionNeedsConfirmation && prefillData && prefillData.ordbokene && prefillData.ordbokene.expression && fokusInput){
             const current = (fokusInput.value || '').trim();
             const expr = String(prefillData.ordbokene.expression || '').trim();
             if(expr && expr.includes(' ') && (!current.includes(' ') || current.length < expr.length)){

@@ -255,6 +255,312 @@ function mod_flashcards_normalize_token(string $token): string {
 }
 
 /**
+ * Decide front-audio text based on UI rules (prefer uFront if long enough).
+ *
+ * @param string $fronttext
+ * @param array $examples
+ * @return string
+ */
+function mod_flashcards_choose_front_audio_text(string $fronttext, array $examples): string {
+    $fronttext = trim($fronttext);
+    if ($fronttext === '') {
+        return '';
+    }
+    $articles = ['en','ei','et'];
+    $markers = ['a','å','aa'];
+    $count = 0;
+    foreach (preg_split('/\s+/u', $fronttext) as $part) {
+        $clean = trim($part, " \t\n\r\0\x0B,.;:!?<>\"'()[]{}");
+        if ($clean === '') {
+            continue;
+        }
+        $lower = core_text::strtolower($clean);
+        if (in_array($lower, $articles, true) || in_array($lower, $markers, true)) {
+            continue;
+        }
+        $count++;
+    }
+    if ($count >= 3) {
+        return $fronttext;
+    }
+    if (!empty($examples)) {
+        $first = $examples[0];
+        if (is_string($first)) {
+            $parts = explode('|', $first, 2);
+            $candidate = trim($parts[0] ?? '');
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        } else if (is_array($first)) {
+            $candidate = trim((string)($first['text'] ?? $first['no'] ?? ''));
+            if ($candidate !== '') {
+                return $candidate;
+            }
+        }
+    }
+    return $fronttext;
+}
+
+/**
+ * Build expression candidates from spaCy tokens around clicked word.
+ *
+ * @param string $fronttext
+ * @param string $clickedword
+ * @return array<int,string>
+ */
+function mod_flashcards_spacy_expression_candidates(string $fronttext, string $clickedword): array {
+    $cands = [];
+    if ($fronttext === '' || $clickedword === '') {
+        return $cands;
+    }
+    $spacy = mod_flashcards_spacy_analyze($fronttext);
+    $tokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+    if (empty($tokens)) {
+        return $cands;
+    }
+    $clicked = mod_flashcards_normalize_token($clickedword);
+    $lemmaSet = [];
+    foreach ($tokens as $t) {
+        if (!empty($t['is_alpha'])) {
+            $lemma = core_text::strtolower((string)($t['lemma'] ?? $t['text'] ?? ''));
+            if ($lemma !== '') {
+                $lemmaSet[$lemma] = true;
+            }
+        }
+    }
+    $prefixVerbs = ['være','ha','bli','få','holde','gå','komme'];
+    $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    $count = count($tokens);
+    for ($i = 0; $i < $count; $i++) {
+        $tok = $tokens[$i];
+        if (empty($tok['is_alpha'])) {
+            continue;
+        }
+        $tokNorm = mod_flashcards_normalize_token((string)($tok['text'] ?? ''));
+        if ($tokNorm !== $clicked) {
+            continue;
+        }
+        $pos = mod_flashcards_spacy_pos_to_coarse((string)($tok['pos'] ?? ''));
+        $prev = $tokens[$i - 1] ?? null;
+        $next = $tokens[$i + 1] ?? null;
+        $prev2 = $tokens[$i - 2] ?? null;
+        $next2 = $tokens[$i + 2] ?? null;
+        $curLemma = core_text::strtolower((string)($tok['lemma'] ?? $tok['text'] ?? ''));
+        $prevPos = $prev ? mod_flashcards_spacy_pos_to_coarse((string)($prev['pos'] ?? '')) : '';
+        $nextPos = $next ? mod_flashcards_spacy_pos_to_coarse((string)($next['pos'] ?? '')) : '';
+        $prevLemma = $prev ? core_text::strtolower((string)($prev['lemma'] ?? $prev['text'] ?? '')) : '';
+        $nextLemma = $next ? core_text::strtolower((string)($next['lemma'] ?? $next['text'] ?? '')) : '';
+        $prev2Pos = $prev2 ? mod_flashcards_spacy_pos_to_coarse((string)($prev2['pos'] ?? '')) : '';
+        $prev2Lemma = $prev2 ? core_text::strtolower((string)($prev2['lemma'] ?? $prev2['text'] ?? '')) : '';
+        $next2Pos = $next2 ? mod_flashcards_spacy_pos_to_coarse((string)($next2['pos'] ?? '')) : '';
+        $next2Lemma = $next2 ? core_text::strtolower((string)($next2['lemma'] ?? $next2['text'] ?? '')) : '';
+
+        if ($pos === 'NOUN') {
+            if ($prev && $next && $prevPos === 'ADP' && $nextPos === 'ADP') {
+                $phrase = trim($prevLemma . ' ' . $curLemma . ' ' . $nextLemma);
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
+                }
+                if ($prev2 && in_array($prev2Lemma, $prefixVerbs, true) && in_array($prev2Pos, ['VERB','AUX'], true)) {
+                    $pref = trim($prev2Lemma . ' ' . $phrase);
+                    if ($pref !== '') {
+                        $cands[] = $pref;
+                    }
+                } else if (!empty($lemmaSet['være'])) {
+                    $cands[] = 'være ' . $phrase;
+                }
+            } else if ($prev && $next && in_array($prevPos, ['VERB','AUX'], true) && $nextPos === 'ADP') {
+                $phrase = trim($prevLemma . ' ' . $curLemma . ' ' . $nextLemma);
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
+                }
+            }
+        } else if ($pos === 'VERB') {
+            if ($next && $nextPos === 'ADP') {
+                $phrase = trim($curLemma . ' ' . $nextLemma);
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
+                }
+            }
+            if ($next && $next2 && $nextPos === 'PRON' && $next2Pos === 'ADP') {
+                $pron = in_array($nextLemma, $reflexives, true) ? 'seg' : $nextLemma;
+                $phrase = trim($curLemma . ' ' . $pron . ' ' . $next2Lemma);
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
+                }
+            }
+        } else if ($pos === 'ADJ') {
+            if ($next && $nextPos === 'ADP') {
+                $phrase = trim($curLemma . ' ' . $nextLemma);
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
+                }
+                if ($prev && in_array($prevLemma, $prefixVerbs, true) && in_array($prevPos, ['VERB','AUX'], true)) {
+                    $pref = trim($prevLemma . ' ' . $phrase);
+                    if ($pref !== '') {
+                        $cands[] = $pref;
+                    }
+                }
+            }
+        }
+    }
+    return array_values(array_unique(array_filter($cands)));
+}
+
+/**
+ * Word tokens with offsets (plain text).
+ *
+ * @param string $text
+ * @return array<int,array{text:string,start:int,end:int}>
+ */
+function mod_flashcards_word_tokens_with_offsets(string $text): array {
+    $out = [];
+    if ($text === '') {
+        return $out;
+    }
+    if (preg_match_all('/\p{L}+/u', $text, $matches, PREG_OFFSET_CAPTURE)) {
+        foreach ($matches[0] as $match) {
+            $token = (string)($match[0] ?? '');
+            $start = (int)($match[1] ?? 0);
+            if ($token === '') {
+                continue;
+            }
+            $out[] = [
+                'text' => $token,
+                'start' => $start,
+                'end' => $start + strlen($token),
+            ];
+        }
+    }
+    return $out;
+}
+
+/**
+ * Analyze text with spaCy (cached); returns empty array on failure.
+ *
+ * @param string $text
+ * @return array
+ */
+function mod_flashcards_spacy_analyze(string $text): array {
+    try {
+        $client = new \mod_flashcards\local\spacy_client();
+        if (!$client->is_enabled()) {
+            return [];
+        }
+        return $client->analyze_text($text);
+    } catch (\Throwable $e) {
+        debugging('[flashcards] spaCy analyze failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
+        return [];
+    }
+}
+
+/**
+ * Map spaCy POS to our coarse POS tags.
+ *
+ * @param string $pos
+ * @return string
+ */
+function mod_flashcards_spacy_pos_to_coarse(string $pos): string {
+    $pos = core_text::strtoupper(trim($pos));
+    if ($pos === 'AUX') {
+        return 'VERB';
+    }
+    if ($pos === 'CCONJ' || $pos === 'SCONJ') {
+        return 'CONJ';
+    }
+    return $pos;
+}
+
+/**
+ * Build spaCy POS map aligned to word tokens.
+ *
+ * @param string $text
+ * @param array $spacy
+ * @return array<int,string>
+ */
+function mod_flashcards_spacy_pos_map(string $text, array $spacy): array {
+    $map = [];
+    $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+    if (empty($spacytokens)) {
+        return $map;
+    }
+    $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
+    if (empty($wordtokens)) {
+        return $map;
+    }
+    $j = 0;
+    $sn = count($spacytokens);
+    foreach ($wordtokens as $i => $w) {
+        $wText = core_text::strtolower((string)($w['text'] ?? ''));
+        $wNorm = mod_flashcards_normalize_token($wText);
+        if ($wNorm === '') {
+            continue;
+        }
+        for (; $j < $sn; $j++) {
+            $s = $spacytokens[$j];
+            if (empty($s['is_alpha'])) {
+                continue;
+            }
+            $sText = core_text::strtolower((string)($s['text'] ?? ''));
+            $sNorm = mod_flashcards_normalize_token($sText);
+            if ($sNorm !== '' && $sNorm === $wNorm) {
+                $map[$i] = mod_flashcards_spacy_pos_to_coarse((string)($s['pos'] ?? ''));
+                $j++;
+                break;
+            }
+        }
+    }
+    return $map;
+}
+
+/**
+ * Find token index matching word + context.
+ *
+ * @param array<int,string> $tokens
+ * @return int|null
+ */
+function mod_flashcards_find_token_index(array $tokens, string $word, string $prev, string $next, string $prev2, string $next2): ?int {
+    $word = mod_flashcards_normalize_token($word);
+    if ($word === '') {
+        return null;
+    }
+    $candidates = [];
+    foreach ($tokens as $i => $tok) {
+        if (mod_flashcards_normalize_token($tok) === $word) {
+            $candidates[] = $i;
+        }
+    }
+    if (empty($candidates)) {
+        return null;
+    }
+    if (count($candidates) === 1) {
+        return $candidates[0];
+    }
+    $prev = mod_flashcards_normalize_token($prev);
+    $next = mod_flashcards_normalize_token($next);
+    $prev2 = mod_flashcards_normalize_token($prev2);
+    $next2 = mod_flashcards_normalize_token($next2);
+    $best = $candidates[0];
+    $bestScore = -INF;
+    foreach ($candidates as $i) {
+        $score = 0;
+        $tPrev = $tokens[$i - 1] ?? '';
+        $tNext = $tokens[$i + 1] ?? '';
+        $tPrev2 = $tokens[$i - 2] ?? '';
+        $tNext2 = $tokens[$i + 2] ?? '';
+        if ($prev !== '' && mod_flashcards_normalize_token($tPrev) === $prev) { $score += 2; }
+        if ($next !== '' && mod_flashcards_normalize_token($tNext) === $next) { $score += 2; }
+        if ($prev2 !== '' && mod_flashcards_normalize_token($tPrev2) === $prev2) { $score += 1; }
+        if ($next2 !== '' && mod_flashcards_normalize_token($tNext2) === $next2) { $score += 1; }
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $best = $i;
+        }
+    }
+    return $best;
+}
+
+/**
  * Map an ordbank tag to coarse POS.
  */
 function mod_flashcards_pos_from_tag(string $tag, string $ordklasse = ''): string {
@@ -288,7 +594,7 @@ function mod_flashcards_pos_from_tag(string $tag, string $ordklasse = ''): strin
  * @param int $clickedIdx index of clicked token in $tokens
  * @return array<string,mixed>|null
  */
-function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
+function mod_flashcards_decode_pos(array $tokens, int $clickedIdx, array $spacyPosMap = []): ?array {
     global $DB;
     if ($clickedIdx < 0 || $clickedIdx >= count($tokens)) {
         return null;
@@ -325,7 +631,7 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         if ($cur === 'X') $score -= 2;
         return $score;
     };
-    $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok, ?string $prev2Tok, ?string $next2Tok) use ($pronouns,$articles,$determin,$aux): int {
+    $emission = function(array $cand, ?string $prevTok, ?string $nextTok, ?string $curTok, ?string $prev2Tok, ?string $next2Tok, ?string $spacyPos) use ($pronouns,$articles,$determin,$aux): int {
         $pos = mod_flashcards_pos_from_tag($cand['tag'] ?? '', $cand['ordklasse'] ?? '');
         $tok = core_text::strtolower((string)($cand['wordform'] ?? ''));
         $argcodes = \mod_flashcards\local\ordbank_helper::extract_argcodes_from_tag((string)($cand['tag'] ?? ''));
@@ -347,6 +653,13 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
             }
         }
         if (in_array($pos, ['VERB','NOUN','ADJ','ADV'], true)) $score += 1;
+        if ($spacyPos) {
+            if ($spacyPos === $pos) {
+                $score += 6;
+            } else if (in_array($pos, ['VERB','NOUN','ADJ','ADV','ADP'], true)) {
+                $score -= 4;
+            }
+        }
         $articleNear = (in_array($prevTok, $articles, true) || in_array($prevTok, $determin, true) ||
                         in_array($prev2Tok, $articles, true) || in_array($prev2Tok, $determin, true));
         if ($articleNear && $pos === 'NOUN') { $score += 10; }
@@ -421,7 +734,8 @@ function mod_flashcards_decode_pos(array $tokens, int $clickedIdx): ?array {
         $next2Tok = $tokens[$i+2] ?? null;
         $curTok = $tokens[$i] ?? null;
         foreach ($candlist[$i] as $k => $cand) {
-            $emit = $emission($cand, $prevTok, $nextTok, $curTok, $prev2Tok, $next2Tok);
+            $spacyPos = $spacyPosMap[$i] ?? null;
+            $emit = $emission($cand, $prevTok, $nextTok, $curTok, $prev2Tok, $next2Tok, $spacyPos);
             if ($i === 0) {
                 $dp[$i][$k] = $emit;
                 $back[$i][$k] = -1;
@@ -1325,13 +1639,24 @@ switch ($action) {
                 }
             }
             $ctx = mod_flashcards_context_from_sentence($fronttext, $clickedword);
+            if ($clickedIdx !== false && isset($spacyPosMap[$clickedIdx])) {
+                $ctx['spacy_pos'] = $spacyPosMap[$clickedIdx];
+            }
             // Try POS sequence decoding across the full sentence to pick the best candidate for the clicked token.
-        $tokens = mod_flashcards_word_tokens($fronttext);
-        $clickedIdx = array_search($clickedword, $tokens, true);
-        $dpSelected = null;
-        if ($clickedIdx !== false) {
-            $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx);
-        }
+            $tokens = mod_flashcards_word_tokens($fronttext);
+            $clickedIdx = array_search($clickedword, $tokens, true);
+            $spacyPosMap = [];
+            if ($clickedword !== '') {
+                $cands = \mod_flashcards\local\ordbank_helper::find_candidates($clickedword);
+                if (count($cands) > 1) {
+                    $spacy = mod_flashcards_spacy_analyze($fronttext);
+                    $spacyPosMap = mod_flashcards_spacy_pos_map($fronttext, $spacy);
+                }
+            }
+            $dpSelected = null;
+            if ($clickedIdx !== false) {
+                $dpSelected = mod_flashcards_decode_pos($tokens, (int)$clickedIdx, $spacyPosMap);
+            }
             $ob = null;
             if ($dpSelected) {
                 // Build a minimal ob from the decoded candidate.
@@ -1562,7 +1887,44 @@ switch ($action) {
             if ($orbokeneenabled && !$skipordbokene) {
                 $lang = ($language === 'nn') ? 'nn' : (($language === 'nb' || $language === 'no') ? 'bm' : 'begge');
                 $lookupWord = $data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword;
-                $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
+                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
+                $spacyMatches = [];
+                foreach ($spacyExprs as $expr) {
+                    $spacyResolved = mod_flashcards_lookup_or_search_expression($expr, $lang);
+                    if (!empty($spacyResolved)) {
+                        $expression = mod_flashcards_normalize_infinitive($spacyResolved['baseform'] ?? $expr);
+                        if (!isset($spacyMatches[$expression])) {
+                            $meanings = $spacyResolved['meanings'] ?? [];
+                            $firstMeaning = $meanings[0] ?? '';
+                            $spacyMatches[$expression] = [
+                                'expression' => $expression,
+                                'translation' => $firstMeaning,
+                                'explanation' => $firstMeaning,
+                                'examples' => $spacyResolved['examples'] ?? [],
+                                'forms' => $spacyResolved['forms'] ?? [],
+                                'dictmeta' => $spacyResolved['dictmeta'] ?? [],
+                            ];
+                        }
+                    }
+                }
+                if (count($spacyMatches) > 1) {
+                    $data['expressionNeedsConfirmation'] = true;
+                    $data['expressionSuggestions'] = array_values($spacyMatches);
+                } else if (count($spacyMatches) === 1) {
+                    $only = array_values($spacyMatches)[0];
+                    $resolvedExpr = [
+                        'expression' => $only['expression'],
+                        'meanings' => $only['translation'] ? [$only['translation']] : [],
+                        'examples' => $only['examples'] ?? [],
+                        'forms' => $only['forms'] ?? [],
+                        'dictmeta' => $only['dictmeta'] ?? [],
+                        'source' => 'ordbokene',
+                        'citation' => '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+                    ];
+                }
+                if (!$resolvedExpr && empty($data['expressionNeedsConfirmation'])) {
+                    $resolvedExpr = mod_flashcards_resolve_ordbokene_expression($fronttext, $clickedword, $lookupWord, $lang);
+                }
                 $wc = mod_flashcards_ordbokene_wc_from_pos($data['pos'] ?? '');
                 if (!empty($selected['tag'])) {
                     $taglower = core_text::strtolower((string)$selected['tag']);
@@ -1761,6 +2123,28 @@ switch ($action) {
                     (int)$selected['lemma_id'],
                     $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
                 );
+            }
+            // Regenerate front audio after final example selection to keep TTS in sync with UI.
+            try {
+                $tts = new \mod_flashcards\local\tts_service();
+                if ($tts->is_enabled()) {
+                    $frontAudioText = mod_flashcards_choose_front_audio_text($fronttext, $data['examples'] ?? []);
+                    if ($frontAudioText !== '') {
+                        $frontAudio = $tts->synthesize($userid, $frontAudioText, [
+                            'voice' => $voiceid ?: null,
+                            'label' => 'front',
+                        ]);
+                        if (!isset($data['audio']) || !is_array($data['audio'])) {
+                            $data['audio'] = [];
+                        }
+                        $data['audio']['front'] = $frontAudio;
+                    }
+                }
+            } catch (\Throwable $e) {
+                if (!isset($data['errors']) || !is_array($data['errors'])) {
+                    $data['errors'] = [];
+                }
+                $data['errors']['tts_front'] = $e->getMessage();
             }
             // Normalize compound parts to clean array for UI, and if only one chunk, try to re-split via leddanalyse.
             if (!empty($data['parts']) && is_array($data['parts'])) {
@@ -2168,6 +2552,23 @@ switch ($action) {
                 $debug['fullform_sample'] = array_values($sample);
             } catch (\Throwable $dbgex) {
                 $debug['fullform_count_error'] = $dbgex->getMessage();
+            }
+            $spacypos = '';
+            $fullformcount = (int)($debug['fullform_count'] ?? 0);
+            if ($fronttext !== '' && $fullformcount > 1) {
+                $spacy = mod_flashcards_spacy_analyze($fronttext);
+                $spacyPosMap = mod_flashcards_spacy_pos_map($fronttext, $spacy);
+                if (!empty($spacyPosMap)) {
+                    $tokens = mod_flashcards_word_tokens($fronttext);
+                    $idx = mod_flashcards_find_token_index($tokens, $word, $prev, $next, $prev2, $next2);
+                    if ($idx !== null && isset($spacyPosMap[$idx])) {
+                        $spacypos = $spacyPosMap[$idx];
+                        $context['spacy_pos'] = $spacypos;
+                    }
+                }
+            }
+            if ($spacypos !== '') {
+                $debug['spacy_pos'] = $spacypos;
             }
             $data = \mod_flashcards\local\ordbank_helper::analyze_token($word, $context);
             // Ensure baseform is present if we have lemma_id but baseform is empty.

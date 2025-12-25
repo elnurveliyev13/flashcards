@@ -16,6 +16,29 @@ use mod_flashcards\local\ordbokene_client;
 function mod_flashcards_build_expression_candidates(string $fronttext, string $base): array {
     $cands = [];
 
+    $spacyLemmas = [];
+    try {
+        $spacy = new \mod_flashcards\local\spacy_client();
+        if ($spacy->is_enabled()) {
+            $resp = $spacy->analyze_text($fronttext);
+            if (!empty($resp['tokens']) && is_array($resp['tokens'])) {
+                foreach ($resp['tokens'] as $tok) {
+                    if (empty($tok['is_alpha'])) {
+                        continue;
+                    }
+                    $lemma = core_text::strtolower((string)($tok['lemma'] ?? $tok['text'] ?? ''));
+                    $lemma = trim($lemma);
+                    if ($lemma !== '') {
+                        $spacyLemmas[] = $lemma;
+                    }
+                }
+            }
+        }
+    } catch (\Throwable $e) {
+        // Ignore spaCy failures and fall back to Ordbank-only logic.
+        $spacyLemmas = [];
+    }
+
     // Lemma for base (prefer verb lemma if any).
     $baseanalysis = ordbank_helper::analyze_token($base, []);
     $baselemma = core_text::strtolower(trim($baseanalysis['selected']['baseform'] ?? $base));
@@ -57,9 +80,12 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         }
         $lemmas[] = $lem;
     }
+    if (!empty($spacyLemmas)) {
+        $lemmas = $spacyLemmas;
+    }
 
     // Prepositions actually present in text; do not force defaults to avoid phantom particles like "om".
-    $preplist = ['over','om','for','med','til','av','på','pa','i'];
+    $preplist = ['over','om','for','med','til','av','på','pa','i','etter'];
     $prepsText = array_values(array_unique(array_intersect($preplist, $rawtokens)));
 
     // Base candidates (must start with baselemma).
@@ -89,6 +115,35 @@ function mod_flashcards_build_expression_candidates(string $fronttext, string $b
         return $out;
     };
     $cands = array_merge($cands, $build_ngrams($rawtokens, $baselemma), $build_ngrams($lemmas, $baselemma));
+
+    // If base lemma appears after a preposition, allow phrase starting at that preposition.
+    $tokensets = [$rawtokens, $lemmas];
+    foreach ($tokensets as $tokens) {
+        $len = count($tokens);
+        for ($i = 0; $i < $len; $i++) {
+            if ($tokens[$i] !== $baselemma) {
+                continue;
+            }
+            $prevIdx = $i - 1;
+            if ($prevIdx < 0) {
+                continue;
+            }
+            $prevTok = $tokens[$prevIdx];
+            if (!in_array($prevTok, $preplist, true)) {
+                continue;
+            }
+            $maxEnd = min($len, $i + 4);
+            for ($end = $i + 1; $end <= $maxEnd; $end++) {
+                $span = trim(implode(' ', array_slice($tokens, $prevIdx, $end - $prevIdx)));
+                if ($span !== '') {
+                    $cands[] = $span;
+                    if (in_array('være', $tokens, true)) {
+                        $cands[] = trim('være ' . $span);
+                    }
+                }
+            }
+        }
+    }
 
     // Reflexive patterns: baselemma + ' seg ' + prep (if seg-like + prep exist in text).
     $hasSeg = count(array_intersect($reflexives, $rawtokens)) > 0;

@@ -555,6 +555,7 @@ class ordbank_helper {
         $prev2 = isset($context['prev2']) ? core_text::strtolower((string)$context['prev2']) : null;
         $next = isset($context['next']) ? core_text::strtolower((string)$context['next']) : null;
         $next2 = isset($context['next2']) ? core_text::strtolower((string)$context['next2']) : null;
+        $spacyPos = isset($context['spacy_pos']) ? core_text::strtoupper((string)$context['spacy_pos']) : '';
 
         $pronouns = ['jeg','du','han','hun','vi','dere','de','eg','ho','me','dei','det','den','dette','disse','hva','hvem','hvor','nar'];
         $articles = ['en','ei','et','ein','eitt'];
@@ -593,6 +594,19 @@ class ordbank_helper {
             if ($isverb) { $score += 3; }
             if ($isadj)  { $score += 2; }
             if ($isadv)  { $score += 1; }
+            if ($spacyPos !== '') {
+                $candpos = '';
+                if ($isverb) { $candpos = 'VERB'; }
+                if ($isnoun) { $candpos = 'NOUN'; }
+                if ($isadj) { $candpos = 'ADJ'; }
+                if ($isadv) { $candpos = 'ADV'; }
+                if ($isprep) { $candpos = 'ADP'; }
+                if ($candpos !== '' && $candpos === $spacyPos) {
+                    $score += 8;
+                } else if ($candpos !== '') {
+                    $score -= 6;
+                }
+            }
             if ($candword !== '' && in_array($candword, $functionwords, true)) {
                 if ($isadv || $isprep || str_contains($tag, 'konj')) {
                     $score += 15;
