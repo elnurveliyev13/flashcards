@@ -204,6 +204,8 @@ function mod_flashcards_notify_report(object $report, ?stdClass $course, ?stdCla
         $message->userfrom = $userfrom ?: \core_user::get_support_user();
         $message->userto = $admin;
         $message->notification = 1;
+        $message->contexturl = $url;
+        $message->contexturlname = get_string('report_open_card', 'mod_flashcards');
         $message->subject = get_string('report_notification_subject', 'mod_flashcards', (object)['card' => $cardlabel]);
         $message->fullmessage = get_string('report_notification_body', 'mod_flashcards', (object)[
             'user' => $userfrom ? fullname($userfrom) : '',

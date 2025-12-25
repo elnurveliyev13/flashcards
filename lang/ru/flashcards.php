@@ -472,6 +472,22 @@ $string['settings_orbokene_enable_desc'] = 'Если включено, соот�
 
 // Fill field dialog
 $string['fill_field'] = 'Пожалуйста, заполните: {$a}';
+$string['report_issue'] = 'Сообщить о проблеме';
+$string['report_placeholder'] = 'Опишите, что не так с этой карточкой...';
+$string['report_submit'] = 'Отправить';
+$string['report_sent'] = 'Сообщение отправлено администраторам';
+$string['report_sending'] = 'Отправка...';
+$string['report_error'] = 'Не удалось отправить сообщение. Попробуйте снова.';
+$string['report_no_card'] = 'Сначала выберите карточку';
+$string['report_for'] = 'Карточка';
+$string['report_card'] = 'Карточка';
+$string['report_admin_list'] = 'Свежие обращения';
+$string['report_empty'] = 'Пока нет обращений';
+$string['report_open_card'] = 'Открыть карточку';
+$string['report_comment_label'] = 'Комментарий';
+$string['report_notification_subject'] = 'Flashcards: сообщение о проблеме в "{$a->card}"';
+$string['report_notification_body'] = 'Пользователь {$a->user} сообщил о проблеме в "{$a->card}". Комментарий: {$a->message}';
+$string['report_notification_body_html'] = '<p>Пользователь <strong>{$a->user}</strong> сообщил о проблеме в "<strong>{$a->card}</strong>".</p><p>Комментарий: {$a->message}</p><p><a href="{$a->url}">Открыть карточку</a></p>';
 
 // Errors
 $string['ai_http_error'] = 'Сервис AI недоступен. Пожалуйста, попробуйте позже.';

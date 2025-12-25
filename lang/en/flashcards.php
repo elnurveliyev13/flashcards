@@ -295,6 +295,7 @@ $string['report_card'] = 'Card';
 $string['report_admin_list'] = 'Recent reports';
 $string['report_empty'] = 'No reports yet';
 $string['report_open_card'] = 'Open card';
+$string['report_comment_label'] = 'Comment';
 $string['report_notification_subject'] = 'Flashcards: report for "{$a->card}"';
 $string['report_notification_body'] = 'User {$a->user} reported an issue for "{$a->card}". Message: {$a->message}';
 $string['report_notification_body_html'] = '<p>User <strong>{$a->user}</strong> reported an issue for "<strong>{$a->card}</strong>".</p><p>Message: {$a->message}</p><p><a href="{$a->url}">Open card</a></p>';

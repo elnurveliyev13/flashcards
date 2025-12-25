@@ -10708,7 +10708,9 @@ function renderComparisonResult(resultEl, comparison){
         const reporter = rep.user || '';
         const when = formatReportDate(rep.timecreated);
         const msg = (rep.message || '').trim();
-        meta.textContent = [reporter, when, msg].filter(Boolean).join(' · ');
+        const commentLabel = getModString('report_comment_label') || 'Комментарий';
+        const commentText = msg ? `${commentLabel}: ${msg}` : '';
+        meta.textContent = [reporter, when, commentText].filter(Boolean).join(' · ');
         main.appendChild(title);
         main.appendChild(meta);
 
