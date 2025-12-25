@@ -1,70 +1,79 @@
 {
     "ok": true,
     "data": {
-        "focusWord": "jakte",
-        "focusBaseform": "jakte",
-        "focusExpression": "jakt etter",
-        "pos": "verb",
-        "gender": "hunkjonn",
+        "focusWord": "jakt",
+        "focusBaseform": "jakt",
+        "pos": "substantiv",
+        "gender": "",
         "translation_lang": "en",
-        "definition": "",
-        "translation": "Hunt refers to the activity of searching for or capturing animals.",
-        "analysis": [],
-        "correction": "Hva er du p\u00e5 jakt etter? \u2014 No errors found.",
+        "definition": "\u00c5 lete etter noe; \u00e5 fors\u00f8ke \u00e5 finne noe man trenger eller \u00f8nsker.",
+        "translation": "to be looking for",
+        "analysis": [
+            {
+                "text": "jakt",
+                "translation": "enmastet, seilskute med og ofte"
+            }
+        ],
         "collocations": [],
-        "examples": [],
+        "examples": [
+            "Hva er du p\u00e5 jakt etter? | What are you looking for?",
+            "Jeg er p\u00e5 jakt etter n\u00f8klene mine. | I am looking for my keys.",
+            "Hun er p\u00e5 jakt etter en jobb i byen. | She is looking for a job in the city."
+        ],
         "transcription": "'j\u0251kt",
+        "forms": {
+            "noun": {
+                "indef_sg": [
+                    "jakt"
+                ],
+                "def_sg": [
+                    "jakta",
+                    "jakten"
+                ],
+                "indef_pl": [
+                    "jakter"
+                ],
+                "def_pl": [
+                    "jaktene"
+                ]
+            }
+        },
+        "parts": [
+            "jakt"
+        ],
+        "ordbokene": {
+            "expression": "jakt",
+            "meanings": [
+                "enmastet, seilskute med og ofte"
+            ],
+            "examples": [],
+            "forms": [],
+            "dictmeta": {
+                "lang": "bm",
+                "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json"
+            },
+            "source": "ordbokene",
+            "chosenMeaning": 0,
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json",
+            "citation": "\"jakt\". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https:\/\/ordbokene.no (henta 25.12.2025)."
+        },
         "audio": {
             "front": {
                 "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
                 "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
                 "voice": "s2xtA7B2CTXPPlJzch1v",
                 "provider": "elevenlabs"
-            },
-            "focus": {
-                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_polly_focus_liv_c9850f7857ec.mp3",
-                "name": "tts_polly_focus_liv_c9850f7857ec.mp3",
-                "voice": "Liv",
-                "provider": "polly"
             }
-        },
-        "usage": {
-            "prompt_tokens": 1959,
-            "completion_tokens": 216,
-            "total_tokens": 2175,
-            "prompt_tokens_details": {
-                "cached_tokens": 0,
-                "audio_tokens": 0
-            },
-            "completion_tokens_details": {
-                "reasoning_tokens": 0,
-                "audio_tokens": 0,
-                "accepted_prediction_tokens": 0,
-                "rejected_prediction_tokens": 0
-            }
-        },
-        "forms": [],
-        "parts": [
-            "jakte"
-        ],
-        "expressionNeedsConfirmation": true,
-        "expressionSuggestions": [
-            {
-                "expression": "p\u00e5 jakt etter"
-            },
-            {
-                "expression": "v\u00e6re p\u00e5 jakt etter"
-            }
-        ]
+        }
     },
     "debug": {
         "ordbokene": {
-            "expression": null,
-            "spacyExpressions": [
-                "p\u00e5 jakt etter",
-                "v\u00e6re p\u00e5 jakt etter"
-            ],
-            "expressionSource": "spacy_unconfirmed"
+            "expression": "jakt",
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json",
+            "chosen": {
+                "entry": 0,
+                "meaning": 0
+            }
         }
     }
 }

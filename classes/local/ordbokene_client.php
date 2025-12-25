@@ -27,6 +27,8 @@ class ordbokene_client {
     protected const SEARCH = 'https://ord.uib.no/api/articles';
     /** @var string base URL for article fetch */
     protected const ARTICLE = 'https://ord.uib.no/%s/article/%d.json';
+    /** @var int max articles to inspect for exact lemma match */
+    protected const MATCH_LIMIT = 6;
 
     /**
      * Build a search URL with optional part-of-speech filter (wc).
@@ -40,6 +42,16 @@ class ordbokene_client {
             $url .= '&wc=' . rawurlencode($wc);
         }
         return $url;
+    }
+
+    protected static function normalize_lemma_key(string $text): string {
+        $text = trim($text);
+        if ($text === '') {
+            return '';
+        }
+        $text = core_text::strtolower($text);
+        $text = preg_replace('/\\s+/u', ' ', $text) ?? $text;
+        return $text;
     }
 
     /**
@@ -118,25 +130,36 @@ class ordbokene_client {
             if (!is_array($search) || empty($search['articles'])) {
                 return [];
             }
-            $articleid = null;
-            $articlelang = null;
-            if (!empty($search['articles']['bm'][0])) {
-                $articleid = (int)$search['articles']['bm'][0];
-                $articlelang = 'bm';
-            } else if (!empty($search['articles']['nn'][0])) {
-                $articleid = (int)$search['articles']['nn'][0];
-                $articlelang = 'nn';
+            $target = self::normalize_lemma_key($word);
+            $fallback = null;
+            $dictOrder = ['bm', 'nn'];
+            $checked = 0;
+            foreach ($dictOrder as $dict) {
+                if (empty($search['articles'][$dict]) || !is_array($search['articles'][$dict])) {
+                    continue;
+                }
+                foreach ($search['articles'][$dict] as $id) {
+                    if ($checked >= self::MATCH_LIMIT) {
+                        break 2;
+                    }
+                    $checked++;
+                    $articleurl = sprintf(self::ARTICLE, $dict, (int)$id);
+                    $resp2 = $curl->get($articleurl);
+                    $article = json_decode($resp2, true);
+                    if (!is_array($article)) {
+                        continue;
+                    }
+                    $lemma = self::normalize_lemma_key((string)($article['lemmas'][0]['lemma'] ?? ''));
+                    $norm = self::normalize_article($article, $dict, $articleurl);
+                    if ($fallback === null && !empty($norm)) {
+                        $fallback = $norm;
+                    }
+                    if ($lemma !== '' && $target !== '' && $lemma === $target && !empty($norm)) {
+                        return $norm;
+                    }
+                }
             }
-            if (!$articleid || !$articlelang) {
-                return [];
-            }
-            $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
-            $resp2 = $curl->get($articleurl);
-            $article = json_decode($resp2, true);
-            if (!is_array($article)) {
-                return [];
-            }
-            return self::normalize_article($article, $articlelang, $articleurl);
+            return $fallback ?? [];
         } catch (\Throwable $e) {
             return [];
         }
@@ -227,13 +250,17 @@ class ordbokene_client {
         if (!empty($article['lemmas'][0]['lemma'])) {
             $out['baseform'] = $article['lemmas'][0]['lemma'];
         }
+        if (!empty($article['word_class'])) {
+            $out['pos'] = (string)$article['word_class'];
+        }
         // Forms from paradigm_info.
         $out['forms'] = self::extract_forms_from_paradigm($article['lemmas'][0]['paradigm_info'] ?? []);
         // Expressions from sub-articles in definitions.
         $out['expressions'] = self::extract_expressions($article['body']['definitions'] ?? []);
-        // Meanings/examples: take first definition explanation and examples if any.
-        $out['meanings'] = self::extract_meanings($article['body']['definitions'] ?? []);
-        $out['examples'] = self::extract_examples($article['body']['definitions'] ?? []);
+        // Meanings/examples: collect from nested definition elements.
+        $defelements = self::collect_definition_elements($article['body']['definitions'] ?? []);
+        $out['meanings'] = self::extract_meanings($defelements);
+        $out['examples'] = self::extract_examples($defelements);
 
         return array_filter($out, fn($v) => !empty($v));
     }
@@ -312,14 +339,43 @@ class ordbokene_client {
         return $forms;
     }
 
+    protected static function collect_definition_elements(array $definitions): array {
+        $out = [];
+        $stack = $definitions;
+        while (!empty($stack)) {
+            $def = array_shift($stack);
+            if (!is_array($def)) {
+                continue;
+            }
+            $elements = $def['elements'] ?? [];
+            if (!is_array($elements)) {
+                continue;
+            }
+            foreach ($elements as $el) {
+                if (!is_array($el)) {
+                    continue;
+                }
+                $out[] = $el;
+                if (!empty($el['elements']) && is_array($el['elements'])) {
+                    $stack[] = ['elements' => $el['elements']];
+                }
+            }
+        }
+        return $out;
+    }
+
     protected static function extract_expressions(array $definitions): array {
         $expr = [];
-        foreach ($definitions as $def) {
-            foreach ($def['elements'] ?? [] as $el) {
-                if (($el['type_'] ?? '') === 'sub_article' && !empty($el['lemmas'])) {
-                    foreach ($el['lemmas'] as $l) {
-                        if (is_string($l) && $l !== '') {
-                            $expr[] = $l;
+        $elements = self::collect_definition_elements($definitions);
+        foreach ($elements as $el) {
+            if (($el['type_'] ?? '') === 'sub_article' && !empty($el['lemmas'])) {
+                foreach ($el['lemmas'] as $l) {
+                    if (is_string($l) && $l !== '') {
+                        $expr[] = $l;
+                    } else if (is_array($l) && !empty($l['lemma'])) {
+                        $lemma = trim((string)$l['lemma']);
+                        if ($lemma !== '') {
+                            $expr[] = $lemma;
                         }
                     }
                 }
@@ -328,50 +384,46 @@ class ordbokene_client {
         return array_values(array_unique(array_filter($expr)));
     }
 
-    protected static function extract_meanings(array $definitions): array {
+    protected static function extract_meanings(array $elements): array {
         $out = [];
-        foreach ($definitions as $def) {
-            foreach ($def['elements'] ?? [] as $el) {
-                if (($el['type_'] ?? '') === 'definition' || ($el['type_'] ?? '') === 'explanation') {
-                    $content = $el['content'] ?? '';
-                    if (is_string($content) && trim($content) !== '') {
-                        $clean = trim($content);
-                        // Some articles contain placeholder content like "$" - ignore/strip it.
-                        if (str_contains($clean, '$')) {
-                            $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
-                        }
-                        if ($clean === '' || $clean === '$') {
-                            continue;
-                        }
-                        // Drop degenerate leftovers like "og" after placeholder stripping.
-                        if (mb_strlen($clean) < 3) {
-                            continue;
-                        }
-                        $out[] = $clean;
-                    }
-                }
-            }
-        }
-        return array_values(array_unique(array_filter($out)));
-    }
-
-    protected static function extract_examples(array $definitions): array {
-        $out = [];
-        foreach ($definitions as $def) {
-            foreach ($def['elements'] ?? [] as $el) {
-                if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
-                    $clean = trim((string)$el['quote']['content']);
+        foreach ($elements as $el) {
+            if (($el['type_'] ?? '') === 'definition' || ($el['type_'] ?? '') === 'explanation') {
+                $content = $el['content'] ?? '';
+                if (is_string($content) && trim($content) !== '') {
+                    $clean = trim($content);
+                    // Some articles contain placeholder content like "$" - ignore/strip it.
                     if (str_contains($clean, '$')) {
                         $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
                     }
                     if ($clean === '' || $clean === '$') {
                         continue;
                     }
+                    // Drop degenerate leftovers like "og" after placeholder stripping.
                     if (mb_strlen($clean) < 3) {
                         continue;
                     }
                     $out[] = $clean;
                 }
+            }
+        }
+        return array_values(array_unique(array_filter($out)));
+    }
+
+    protected static function extract_examples(array $elements): array {
+        $out = [];
+        foreach ($elements as $el) {
+            if (($el['type_'] ?? '') === 'example' && !empty($el['quote']['content'])) {
+                $clean = trim((string)$el['quote']['content']);
+                if (str_contains($clean, '$')) {
+                    $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
+                }
+                if ($clean === '' || $clean === '$') {
+                    continue;
+                }
+                if (mb_strlen($clean) < 3) {
+                    continue;
+                }
+                $out[] = $clean;
             }
         }
         return array_values(array_unique(array_filter($out)));

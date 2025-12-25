@@ -306,30 +306,45 @@ function mod_flashcards_choose_front_audio_text(string $fronttext, array $exampl
  *
  * @param string $fronttext
  * @param string $clickedword
+ * @param array|null $spacydebug Optional: set to the raw spaCy response for debugging.
  * @return array<int,string>
  */
-function mod_flashcards_spacy_expression_candidates(string $fronttext, string $clickedword): array {
+function mod_flashcards_spacy_expression_candidates(string $fronttext, string $clickedword, ?array &$spacydebug = null): array {
     $cands = [];
     if ($fronttext === '' || $clickedword === '') {
         return $cands;
     }
     $spacy = mod_flashcards_spacy_analyze($fronttext);
+    if (func_num_args() >= 3) {
+        $spacydebug = $spacy;
+    }
     $tokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
     if (empty($tokens)) {
         return $cands;
     }
     $clicked = mod_flashcards_normalize_token($clickedword);
-    $lemmaSet = [];
-    foreach ($tokens as $t) {
-        if (!empty($t['is_alpha'])) {
-            $lemma = core_text::strtolower((string)($t['lemma'] ?? $t['text'] ?? ''));
-            if ($lemma !== '') {
-                $lemmaSet[$lemma] = true;
-            }
-        }
-    }
-    $prefixVerbs = ['være','ha','bli','få','holde','gå','komme'];
     $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    $patternList = [
+        'ADP NOUN',
+        'ADP PRON',
+        'ADP ADJ',
+        'NOUN ADP',
+        'ADJ ADP',
+        'ADV ADP',
+        'VERB ADP',
+        'AUX ADP',
+        'VERB PRON ADP',
+        'AUX PRON ADP',
+        'ADP NOUN ADP',
+        'ADP PRON ADP',
+        'ADP ADJ ADP',
+        '(VERB|AUX) ADP NOUN',
+        '(VERB|AUX) ADP PRON',
+        '(VERB|AUX) ADP ADJ',
+        '(VERB|AUX) ADP NOUN ADP',
+        '(VERB|AUX) ADP PRON ADP',
+        '(VERB|AUX) ADP ADJ ADP',
+    ];
     $count = count($tokens);
     for ($i = 0; $i < $count; $i++) {
         $tok = $tokens[$i];
@@ -361,13 +376,11 @@ function mod_flashcards_spacy_expression_candidates(string $fronttext, string $c
                 if ($phrase !== '') {
                     $cands[] = $phrase;
                 }
-                if ($prev2 && in_array($prev2Lemma, $prefixVerbs, true) && in_array($prev2Pos, ['VERB','AUX'], true)) {
+                if ($prev2 && in_array($prev2Pos, ['VERB','AUX'], true)) {
                     $pref = trim($prev2Lemma . ' ' . $phrase);
                     if ($pref !== '') {
                         $cands[] = $pref;
                     }
-                } else if (!empty($lemmaSet['være'])) {
-                    $cands[] = 'være ' . $phrase;
                 }
             } else if ($prev && $next && in_array($prevPos, ['VERB','AUX'], true) && $nextPos === 'ADP') {
                 $phrase = trim($prevLemma . ' ' . $curLemma . ' ' . $nextLemma);
@@ -395,11 +408,60 @@ function mod_flashcards_spacy_expression_candidates(string $fronttext, string $c
                 if ($phrase !== '') {
                     $cands[] = $phrase;
                 }
-                if ($prev && in_array($prevLemma, $prefixVerbs, true) && in_array($prevPos, ['VERB','AUX'], true)) {
+                if ($prev && in_array($prevPos, ['VERB','AUX'], true)) {
                     $pref = trim($prevLemma . ' ' . $phrase);
                     if ($pref !== '') {
                         $cands[] = $pref;
                     }
+                }
+            }
+        }
+
+        $winStart = max(0, $i - 3);
+        $winEnd = min($count - 1, $i + 3);
+        for ($s = $winStart; $s <= $i; $s++) {
+            for ($e = $i; $e <= $winEnd; $e++) {
+                $len = $e - $s + 1;
+                if ($len < 2 || $len > 4) {
+                    continue;
+                }
+                $span = array_slice($tokens, $s, $len);
+                $spanPos = [];
+                $spanLemma = [];
+                $allAlpha = true;
+                foreach ($span as $t) {
+                    if (empty($t['is_alpha'])) {
+                        $allAlpha = false;
+                        break;
+                    }
+                    $p = mod_flashcards_spacy_pos_to_coarse((string)($t['pos'] ?? ''));
+                    if ($p === 'PART') {
+                        $p = 'ADP';
+                    }
+                    $spanPos[] = $p;
+                    $lemma = core_text::strtolower((string)($t['lemma'] ?? $t['text'] ?? ''));
+                    if ($p === 'PRON' && in_array($lemma, $reflexives, true)) {
+                        $lemma = 'seg';
+                    }
+                    $spanLemma[] = $lemma;
+                }
+                if (!$allAlpha) {
+                    continue;
+                }
+                $posStr = implode(' ', $spanPos);
+                $matched = false;
+                foreach ($patternList as $pattern) {
+                    if (preg_match('~^' . $pattern . '$~', $posStr)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    continue;
+                }
+                $phrase = trim(implode(' ', $spanLemma));
+                if ($phrase !== '') {
+                    $cands[] = $phrase;
                 }
             }
         }
@@ -1602,6 +1664,7 @@ switch ($action) {
         }
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
         $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
+        $debugspacy = !empty($payload['debug']) || !empty($payload['debugSpacy']) || !empty($payload['debug_spacy']);
 
         try {
             // Check if using reasoning model for focus task (may take longer)
@@ -1632,6 +1695,8 @@ switch ($action) {
             ];
             $usedAi = false;
             $debugai = [];
+            $spacyDebug = null;
+            $spacyUsed = false;
             // Validate against ordbank: focus word/baseform must exist as a wordform and resolve data from ordbank.
             $focuscheck = mod_flashcards_normalize_token((string)($data['focusBaseform'] ?? $data['focusWord'] ?? $clickedword));
             // Guardrail: do not accept AI-proposed focus words that are not present in the learner sentence.
@@ -1654,6 +1719,10 @@ switch ($action) {
                 $cands = \mod_flashcards\local\ordbank_helper::find_candidates($clickedword);
                 if (count($cands) > 1) {
                     $spacy = mod_flashcards_spacy_analyze($fronttext);
+                    $spacyUsed = true;
+                    if ($debugspacy && $spacyDebug === null) {
+                        $spacyDebug = $spacy;
+                    }
                     $spacyPosMap = mod_flashcards_spacy_pos_map($fronttext, $spacy);
                 }
             }
@@ -1918,7 +1987,12 @@ switch ($action) {
             }
             $spacyExprs = [];
             if ($orbokeneenabled) {
-                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
+                $spacyUsed = true;
+                if ($debugspacy) {
+                    $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword, $spacyDebug);
+                } else {
+                    $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword);
+                }
             }
             if ($wc === 'VERB') {
                 $skipordbokene = true;
@@ -2274,6 +2348,28 @@ switch ($action) {
             }
             // Note: usage from operation is already in $data, don't overwrite with snapshot
             $resp = ['ok' => true, 'data' => $data];
+            if ($debugspacy) {
+                $spacyTokens = [];
+                if (is_array($spacyDebug) && !empty($spacyDebug['tokens']) && is_array($spacyDebug['tokens'])) {
+                    foreach ($spacyDebug['tokens'] as $t) {
+                        $spacyTokens[] = [
+                            'text' => $t['text'] ?? '',
+                            'lemma' => $t['lemma'] ?? '',
+                            'pos' => $t['pos'] ?? '',
+                            'tag' => $t['tag'] ?? '',
+                            'morph' => $t['morph'] ?? [],
+                            'start' => $t['start'] ?? null,
+                            'end' => $t['end'] ?? null,
+                        ];
+                    }
+                }
+                $debugai['spacy'] = [
+                    'used' => $spacyUsed,
+                    'model' => $spacyDebug['model'] ?? '',
+                    'text' => $spacyDebug['text'] ?? $fronttext,
+                    'tokens' => $spacyTokens,
+                ];
+            }
             if (!empty($debugai)) {
                 $resp['debug'] = $debugai;
             }
