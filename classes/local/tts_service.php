@@ -59,7 +59,13 @@ class tts_service {
     /** @var int */
     protected $elevenlimit;
     /** @var int */
+    protected $elevenlimitglobal;
+    /** @var int */
     protected $pollylimit;
+    /** @var int */
+    protected $pollylimitglobal;
+    /** @var array<string,int> */
+    protected $globalusagecache = [];
 
     public function __construct() {
         $config = get_config('mod_flashcards');
@@ -74,6 +80,7 @@ class tts_service {
         $this->defaultvoice = trim($config->elevenlabs_default_voice ?? '') ?: null;
         $this->elevenenabled = !empty($this->elevenapikey);
         $this->elevenlimit = (int)($config->elevenlabs_tts_monthly_limit ?? 0);
+        $this->elevenlimitglobal = (int)($config->elevenlabs_tts_monthly_limit_global ?? 0);
 
         $this->pollyaccess = trim($config->amazonpolly_access_key ?? '') ?: getenv('FLASHCARDS_POLLY_KEY') ?: null;
         $this->pollysecret = trim($config->amazonpolly_secret_key ?? '') ?: getenv('FLASHCARDS_POLLY_SECRET') ?: null;
@@ -83,6 +90,7 @@ class tts_service {
         $this->pollyoverrides = $this->parse_voice_overrides($rawoverrides);
         $this->pollyenabled = !empty($this->pollyaccess) && !empty($this->pollysecret);
         $this->pollylimit = (int)($config->amazonpolly_tts_monthly_limit ?? 0);
+        $this->pollylimitglobal = (int)($config->amazonpolly_tts_monthly_limit_global ?? 0);
 
         $this->enabled = $this->elevenenabled || $this->pollyenabled;
     }
@@ -465,14 +473,50 @@ class tts_service {
         return 0;
     }
 
+    protected function get_global_limit_for_provider(string $provider): int {
+        if ($provider === self::PROVIDER_ELEVENLABS) {
+            return $this->elevenlimitglobal;
+        }
+        if ($provider === self::PROVIDER_POLLY) {
+            return $this->pollylimitglobal;
+        }
+        return 0;
+    }
+
+    protected function get_global_usage(string $provider): int {
+        global $DB;
+        if (isset($this->globalusagecache[$provider])) {
+            return $this->globalusagecache[$provider];
+        }
+        $sql = 'SELECT COALESCE(SUM(characters), 0) AS used
+                  FROM {flashcards_tts_usage}
+                 WHERE provider = :provider AND period_start = :period';
+        $params = [
+            'provider' => $provider,
+            'period' => $this->current_period_start(),
+        ];
+        $used = (int)($DB->get_field_sql($sql, $params) ?? 0);
+        $this->globalusagecache[$provider] = $used;
+        return $used;
+    }
+
     protected function would_exceed_limit(int $userid, string $provider, int $tokens): bool {
         $limit = $this->get_limit_for_provider($provider);
-        if ($limit <= 0) {
-            return false;
+        if ($limit > 0 && $userid > 0) {
+            $usage = $this->get_usage($userid, $provider);
+            $used = $usage ? (int)$usage->characters : 0;
+            if (($used + $tokens) > $limit) {
+                return true;
+            }
         }
-        $usage = $this->get_usage($userid, $provider);
-        $used = $usage ? (int)$usage->characters : 0;
-        return ($used + $tokens) > $limit;
+        $globallimit = $this->get_global_limit_for_provider($provider);
+        if ($globallimit > 0) {
+            $globalused = $this->get_global_usage($provider);
+            if (($globalused + $tokens) > $globallimit) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected function choose_provider_with_limits(int $userid, string $text, ?string $preferred, int $tokens): string {

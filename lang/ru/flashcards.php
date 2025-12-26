@@ -385,6 +385,8 @@ $string['settings_elevenlabs_focus_speed'] = 'Скорость для фокус
 $string['settings_elevenlabs_focus_speed_desc'] = 'Меньшие значения делают речь медленнее для focus/коротких запросов.';
 $string['settings_elevenlabs_tts_limit'] = 'Месячный лимит ElevenLabs (символов на пользователя)';
 $string['settings_elevenlabs_tts_limit_desc'] = '0 = без ограничений. После достижения лимита запросы переключаются на Polly, если она настроена.';
+$string['settings_elevenlabs_tts_limit_global'] = 'Месячный лимит ElevenLabs (все пользователи)';
+$string['settings_elevenlabs_tts_limit_global_desc'] = 'Глобальный лимит символов в месяц для всех пользователей. 0 = без ограничений. После достижения лимита запросы переключаются на Polly, если она настроена.';
 $string['settings_polly_section'] = 'Amazon Polly';
 $string['settings_polly_section_desc'] = 'Используется для сверхкоротких фраз (два слова или меньше) для снижения задержки.';
 $string['settings_polly_key'] = 'ID ключа доступа AWS';
@@ -399,6 +401,8 @@ $string['settings_polly_voice_map'] = 'Переопределения голос
 $string['settings_polly_voice_map_desc'] = 'Необязательное сопоставление между ID голосов ElevenLabs и названиями голосов Polly. Используйте формат elevenVoiceId=PollyVoice на строку.';
 $string['settings_polly_tts_limit'] = 'Месячный лимит Polly (символов на пользователя)';
 $string['settings_polly_tts_limit_desc'] = '0 = без ограничений. Запросы сверх лимита будут отклонены.';
+$string['settings_polly_tts_limit_global'] = 'Месячный лимит Polly (все пользователи)';
+$string['settings_polly_tts_limit_global_desc'] = 'Глобальный лимит символов в месяц для всех пользователей. 0 = без ограничений. Запросы сверх лимита будут отклонены.';
 
 $string['settings_whisper_section'] = 'Распознавание речи Whisper';
 $string['settings_whisper_section_desc'] = 'Настройте OpenAI Whisper, чтобы автоматически превращать записи учащихся в текст лицевой стороны.';

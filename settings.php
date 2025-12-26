@@ -276,6 +276,14 @@ if ($hassiteconfig) {
         PARAM_INT
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_tts_monthly_limit_global',
+        get_string('settings_elevenlabs_tts_limit_global', 'mod_flashcards'),
+        get_string('settings_elevenlabs_tts_limit_global_desc', 'mod_flashcards'),
+        0,
+        PARAM_INT
+    ));
+
     // Amazon Polly
     $settings->add(new admin_setting_heading(
         'mod_flashcards/polly_heading',
@@ -322,6 +330,14 @@ if ($hassiteconfig) {
         'mod_flashcards/amazonpolly_tts_monthly_limit',
         get_string('settings_polly_tts_limit', 'mod_flashcards'),
         get_string('settings_polly_tts_limit_desc', 'mod_flashcards'),
+        0,
+        PARAM_INT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/amazonpolly_tts_monthly_limit_global',
+        get_string('settings_polly_tts_limit_global', 'mod_flashcards'),
+        get_string('settings_polly_tts_limit_global_desc', 'mod_flashcards'),
         0,
         PARAM_INT
     ));

@@ -455,6 +455,8 @@ $string['settings_elevenlabs_focus_speed'] = 'Focus speed';
 $string['settings_elevenlabs_focus_speed_desc'] = 'Lower values speak slower for focus/short prompts.';
 $string['settings_elevenlabs_tts_limit'] = 'Monthly ElevenLabs quota (characters per user)';
 $string['settings_elevenlabs_tts_limit_desc'] = '0 disables the limit. After the cap is reached, requests fall back to Polly when available.';
+$string['settings_elevenlabs_tts_limit_global'] = 'Monthly ElevenLabs quota (all users)';
+$string['settings_elevenlabs_tts_limit_global_desc'] = 'Global monthly character limit across all users. 0 disables the limit. After the cap is reached, requests fall back to Polly when available.';
 $string['settings_polly_section'] = 'Amazon Polly';
 $string['settings_polly_section_desc'] = 'Used for ultra-short phrases (two words or fewer) to keep latency low.';
 $string['settings_polly_key'] = 'AWS access key ID';
@@ -469,6 +471,8 @@ $string['settings_polly_voice_map'] = 'Polly voice overrides';
 $string['settings_polly_voice_map_desc'] = 'Optional mapping between ElevenLabs voice IDs and Polly voice names. Use the format elevenVoiceId=PollyVoice per line.';
 $string['settings_polly_tts_limit'] = 'Monthly Polly quota (characters per user)';
 $string['settings_polly_tts_limit_desc'] = '0 disables the limit. Requests beyond the cap are rejected.';
+$string['settings_polly_tts_limit_global'] = 'Monthly Polly quota (all users)';
+$string['settings_polly_tts_limit_global_desc'] = 'Global monthly character limit across all users. 0 disables the limit. Requests beyond the cap are rejected.';
 
 $string['settings_orbokene_section'] = 'Orbøkene dictionary';
 $string['settings_orbokene_section_desc'] = 'When enabled the AI helper will try to enrich detected expressions with data from the flashcards_orbokene table.';
