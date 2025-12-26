@@ -3745,101 +3745,80 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else if(forms.noun){
         const noun = forms.noun || {};
         const gendered = (noun.by_gender && typeof noun.by_gender === 'object') ? noun.by_gender : null;
-        const genderOrder = ['hankjonn', 'hunkjonn', 'intetkjonn', 'ukjent'];
+        const genderOrder = ['hankjonn', 'hunkjonn', 'intetkjonn'];
         const genderLabels = {
-          hankjonn: 'Hankjønn',
-          hunkjonn: 'Hunkjønn',
-          intetkjonn: 'Intetkjønn',
-          ukjent: 'Ukjent kjønn'
+          hankjonn: 'hankjønn',
+          hunkjonn: 'hunkjønn',
+          intetkjonn: 'intetkjønn'
         };
-        const genderArticles = {
-          hankjonn: 'en',
-          hunkjonn: 'ei',
-          intetkjonn: 'et'
-        };
-        const createTable = () => {
-          const table = document.createElement('table');
-          table.className = 'forms-table forms-noun-table';
-          const thead = document.createElement('thead');
-          const headerTop = document.createElement('tr');
-          const hGender = document.createElement('th');
-          hGender.textContent = 'Kjønn';
-          hGender.rowSpan = 2;
-          hGender.className = 'forms-noun-head forms-noun-gender';
-          headerTop.appendChild(hGender);
-          const hSing = document.createElement('th');
-          hSing.colSpan = 2;
-          hSing.textContent = 'Entall';
-          hSing.className = 'forms-noun-head';
-          headerTop.appendChild(hSing);
-          const hPlur = document.createElement('th');
-          hPlur.colSpan = 2;
-          hPlur.textContent = 'Flertall';
-          hPlur.className = 'forms-noun-head';
-          headerTop.appendChild(hPlur);
-          const headerSub = document.createElement('tr');
-          ['Ubestemt form', 'Bestemt form', 'Ubestemt form', 'Bestemt form'].forEach((label) => {
-            const th = document.createElement('th');
-            th.textContent = label;
-            th.className = 'forms-noun-subhead';
-            headerSub.appendChild(th);
-          });
-          thead.appendChild(headerTop);
-          thead.appendChild(headerSub);
-          table.appendChild(thead);
-          const tbody = document.createElement('tbody');
-          const addNounRow = (label, bucket, articleHint) => {
-            if(!bucket){
-              return;
-            }
-            const indefSg = formatIndefinite(bucket.indef_sg || [], articleHint);
-            const defSg = uniqVals(bucket.def_sg || []);
-            const indefPl = uniqVals(bucket.indef_pl || []);
-            const defPl = uniqVals(bucket.def_pl || []);
-            const hasAny = indefSg.length || defSg.length || indefPl.length || defPl.length;
-            if(!hasAny){
-              return;
-            }
-            const tr = document.createElement('tr');
-            const th = document.createElement('th');
-            th.scope = 'row';
-            th.textContent = label;
-            tr.appendChild(th);
-            [indefSg, defSg, indefPl, defPl].forEach(values => {
-              const td = document.createElement('td');
-              if(values.length){
-                const wrap = document.createElement('div');
-                wrap.className = 'form-value-wrap';
-                wrap.appendChild(makePills(values));
-                td.appendChild(wrap);
-              }
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-          };
+        const genderArticles = { hankjonn: 'en', hunkjonn: 'ei', intetkjonn: 'et' };
+        const columns = (() => {
           if(gendered){
-            genderOrder.forEach((gender) => {
-              const bucket = gendered[gender];
-              if(!bucket){
-                return;
-              }
-              addNounRow(genderLabels[gender] || gender, bucket, genderArticles[gender] || '');
-            });
-          } else {
-            const parsed = parseIndefiniteNoun(noun.indef_sg || []);
-            const articleHint = parsed.article || mapGenderToArticle((meta && meta.selected?.gender) || (meta && meta.gender) || '');
-            addNounRow('Substantiv', noun, articleHint);
+            return genderOrder.filter(k => gendered[k]).map(k => ({id:k,label:genderLabels[k]}));
           }
-          if(!tbody.childElementCount){
-            return null;
+          return [{id:'substantiv',label:' '}];
+        })();
+        const getBucket = (genderId) => {
+          if(gendered){
+            return gendered[genderId] || {};
           }
-          table.appendChild(tbody);
-          return table;
+          return noun;
         };
-        const table = createTable();
-        if(table){
-          container.appendChild(table);
-        }
+        const getArticle = (genderId) => genderArticles[genderId] || '';
+        const table = document.createElement('table');
+        table.className = 'forms-table forms-noun-table';
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const corner = document.createElement('th');
+        corner.textContent = '';
+        headerRow.appendChild(corner);
+        columns.forEach(col => {
+          const th = document.createElement('th');
+          th.textContent = col.label;
+          th.className = 'forms-noun-head';
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        const addSectionHeader = (label) => {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.colSpan = columns.length + 1;
+          th.textContent = label;
+          th.className = 'forms-noun-section';
+          tr.appendChild(th);
+          tbody.appendChild(tr);
+        };
+        const addRow = (label, picker) => {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.scope = 'row';
+          th.textContent = label;
+          tr.appendChild(th);
+          columns.forEach(col => {
+            const bucket = getBucket(col.id);
+            const values = picker(bucket, col.id);
+            const td = document.createElement('td');
+            const vals = uniqVals(values);
+            if(vals.length){
+              const wrap = document.createElement('div');
+              wrap.className = 'form-value-wrap';
+              wrap.appendChild(makePills(vals));
+              td.appendChild(wrap);
+            }
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        };
+        addSectionHeader('Entall');
+        addRow('Ubestemt form', (bucket, gid) => formatIndefinite(bucket.indef_sg || [], getArticle(gid)));
+        addRow('Bestemt form', bucket => bucket.def_sg || []);
+        addSectionHeader('Flertall');
+        addRow('Ubestemt form', bucket => bucket.indef_pl || []);
+        addRow('Bestemt form', bucket => bucket.def_pl || []);
+        table.appendChild(tbody);
+        container.appendChild(table);
       } else if(posVal && Array.isArray(forms)){
         const grid = document.createElement('div');
         grid.className = 'forms-chip-grid';

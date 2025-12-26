@@ -5419,10 +5419,18 @@ input.example-input-trans {
     max-width:100%;
   }
 
+  .forms-noun-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 12px;
+    overflow: hidden;
+    border:1px solid var(--border);
+  }
   .forms-noun-table thead th {
     text-align:center;
     background:var(--surface-1);
     border-bottom:1px solid var(--border);
+    white-space:nowrap;
   }
   .forms-noun-table thead th.forms-noun-gender {
     text-align:left;
@@ -5432,23 +5440,6 @@ input.example-input-trans {
     font-weight:600;
     color:var(--text-subtle);
   }
-  .forms-noun-table th {
-    width:auto;
-  }
-
-  .forms-noun-table {
-    table-layout: fixed;
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    border:1px solid var(--border);
-  }
-  .forms-noun-head {
-    font-size:0.9rem;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    color:var(--text-subtle);
-  }
   .forms-noun-table th,
   .forms-noun-table td {
     padding:10px 12px;
@@ -5456,15 +5447,18 @@ input.example-input-trans {
     vertical-align:top;
     font-size:0.95em;
     text-align:left;
-    white-space:normal;
-    word-break:break-word;
-  }
-  .forms-noun-table tbody th {
-    width:22%;
-    font-weight:600;
+    white-space:nowrap;
   }
   .forms-noun-table td {
-    min-width:0;
+    min-width:110px;
+  }
+  .forms-noun-section {
+    background:var(--surface-1);
+    color:var(--text);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-weight:700;
+    font-size:0.9rem;
   }
 
 /* Fokus autocomplete */
