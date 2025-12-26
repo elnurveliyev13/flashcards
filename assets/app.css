@@ -5322,6 +5322,8 @@ input.example-input-trans {
   flex-direction:column;
   gap:10px;
   min-height:24px;
+  overflow-x:auto;
+  padding-bottom:6px;
 }
 .forms-table {
   width:100%;
@@ -5360,17 +5362,27 @@ input.example-input-trans {
 .forms-noun-table thead th.forms-noun-gender {
   text-align:left;
 }
-.forms-noun-table thead th.forms-noun-subhead {
-  font-size:0.85em;
-  font-weight:600;
-  color:var(--text-subtle);
-}
-.forms-noun-table tbody th {
-  width:22%;
-}
-.forms-noun-table th {
-  width:auto;
-}
+  .forms-noun-table thead th.forms-noun-subhead {
+    font-size:0.85em;
+    font-weight:600;
+    color:var(--text-subtle);
+  }
+  .forms-noun-table tbody th {
+    width:22%;
+  }
+  .forms-noun-table th {
+    width:auto;
+  }
+
+  .forms-noun-table {
+    table-layout: fixed;
+  }
+  .forms-noun-table td {
+    width:25%;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 .form-value-wrap {
   display:flex;
   flex-wrap:wrap;
@@ -5423,13 +5435,18 @@ input.example-input-trans {
   font-size:0.95em;
   box-shadow:0 4px 14px rgba(0,0,0,0.15);
 }
-.forms-preview .form-chip strong {
-  display:block;
-  margin-bottom:4px;
-  font-size:0.9em;
-  letter-spacing:0.02em;
-  color:var(--text);
-}
+  .forms-preview .form-chip strong {
+    display:block;
+    margin-bottom:4px;
+    font-size:0.9em;
+    letter-spacing:0.02em;
+    color:var(--text);
+  }
+
+  .forms-preview table {
+    min-width:100%;
+    max-width:100%;
+  }
 
 /* Fokus autocomplete */
 .fokus-input-wrap {
