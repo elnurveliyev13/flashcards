@@ -5354,35 +5354,6 @@ input.example-input-trans {
 .forms-table tr:last-child td {
   border-bottom:none;
 }
-.forms-noun-table thead th {
-  text-align:center;
-  background:var(--surface-1);
-  border-bottom:1px solid var(--border);
-}
-.forms-noun-table thead th.forms-noun-gender {
-  text-align:left;
-}
-  .forms-noun-table thead th.forms-noun-subhead {
-    font-size:0.85em;
-    font-weight:600;
-    color:var(--text-subtle);
-  }
-  .forms-noun-table tbody th {
-    width:22%;
-  }
-  .forms-noun-table th {
-    width:auto;
-  }
-
-  .forms-noun-table {
-    table-layout: fixed;
-  }
-  .forms-noun-table td {
-    width:25%;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
 .form-value-wrap {
   display:flex;
   flex-wrap:wrap;
@@ -5448,70 +5419,52 @@ input.example-input-trans {
     max-width:100%;
   }
 
-  .forms-noun-stack {
-    display:flex;
-    flex-direction:column;
-    gap:12px;
+  .forms-noun-table thead th {
+    text-align:center;
+    background:var(--surface-1);
+    border-bottom:1px solid var(--border);
   }
-  .forms-noun-stack__block {
+  .forms-noun-table thead th.forms-noun-gender {
+    text-align:left;
+  }
+  .forms-noun-table thead th.forms-noun-subhead {
+    font-size:0.85em;
+    font-weight:600;
+    color:var(--text-subtle);
+  }
+  .forms-noun-table th {
+    width:auto;
+  }
+
+  .forms-noun-table {
+    table-layout: fixed;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
     border:1px solid var(--border);
-    border-radius:12px;
-    padding:12px;
-    background:var(--surface-2);
-    display:flex;
-    flex-direction:column;
-    gap:10px;
   }
-  .forms-noun-stack__block-title {
-    font-weight:600;
-    font-size:1rem;
-    color:var(--text);
-  }
-  .forms-noun-stack__parts {
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .forms-noun-stack__part {
-    border:1px solid rgba(255,255,255,0.1);
-    border-radius:10px;
-    padding:10px;
-    background:var(--surface-3);
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .forms-noun-stack__part-heading {
-    font-size:0.75rem;
-    font-weight:600;
+  .forms-noun-head {
+    font-size:0.9rem;
     letter-spacing:0.08em;
     text-transform:uppercase;
     color:var(--text-subtle);
   }
-  .forms-noun-stack__part-body {
-    display:flex;
-    flex-direction:column;
-    gap:6px;
+  .forms-noun-table th,
+  .forms-noun-table td {
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    vertical-align:top;
+    font-size:0.95em;
+    text-align:left;
+    white-space:normal;
+    word-break:break-word;
   }
-  .forms-noun-stack__row {
-    display:flex;
-    gap:10px;
-    align-items:flex-start;
-    flex-wrap:wrap;
-  }
-  .forms-noun-stack__row-label {
-    min-width:110px;
-    font-size:0.8rem;
+  .forms-noun-table tbody th {
+    width:22%;
     font-weight:600;
-    color:var(--text-subtle);
-    text-transform:uppercase;
-    letter-spacing:0.05em;
   }
-  .forms-noun-stack__row-values {
-    flex:1;
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
+  .forms-noun-table td {
+    min-width:0;
   }
 
 /* Fokus autocomplete */
