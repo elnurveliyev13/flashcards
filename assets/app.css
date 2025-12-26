@@ -5437,11 +5437,18 @@ input.example-input-trans {
   .forms-noun-table thead th.forms-noun-gender {
     text-align:left;
   }
-  .forms-noun-table thead th.forms-noun-subhead {
-    font-size:0.85em;
-    font-weight:600;
-    color:var(--text-subtle);
-  }
+.forms-noun-table thead th.forms-noun-subhead {
+  font-size:0.85em;
+  font-weight:600;
+  color:var(--text-subtle);
+}
+.forms-noun-head {
+  font-size:0.9rem;
+  font-weight:700;
+  letter-spacing:0.02em;
+  text-transform:none;
+  color:var(--text);
+}
 .forms-noun-table th,
 .forms-noun-table td {
   padding:10px 12px;
@@ -5458,15 +5465,16 @@ input.example-input-trans {
 .forms-noun-section {
   background:var(--surface-1);
   color:var(--text);
-  text-transform:uppercase;
-  letter-spacing:0.04em;
+  text-transform:none;
+  letter-spacing:0.02em;
   font-weight:700;
   font-size:0.78rem;
 }
 .forms-noun-table tbody th {
-  font-size:0.82rem;
+  font-size:0.8rem;
   font-weight:600;
-  letter-spacing:0.02em;
+  letter-spacing:0.01em;
+  text-transform:none;
 }
 
 /* Fokus autocomplete */

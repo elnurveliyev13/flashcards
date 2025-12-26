@@ -3758,13 +3758,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
           return [{id:'substantiv',label:' '}];
         })();
+        const hasMascFem = !!(gendered && gendered.hankjonn && gendered.hunkjonn);
         const getBucket = (genderId) => {
           if(gendered){
             return gendered[genderId] || {};
           }
           return noun;
         };
-        const getArticle = (genderId) => genderArticles[genderId] || '';
+        const getArticle = (genderId) => {
+          if(genderId === 'hunkjonn' && hasMascFem){
+            return 'ei/en';
+          }
+          return genderArticles[genderId] || '';
+        };
         const table = document.createElement('table');
         table.className = 'forms-table forms-noun-table';
         const thead = document.createElement('thead');
@@ -3796,27 +3802,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           th.scope = 'row';
           th.textContent = label;
           tr.appendChild(th);
-          columns.forEach(col => {
-            const bucket = getBucket(col.id);
-            const values = picker(bucket, col.id);
+          const colValues = columns.map(col => ({
+            col,
+            values: uniqVals(picker(getBucket(col.id), col.id))
+          }));
+          const nonEmpty = colValues.filter(v => v.values.length);
+          const allEqual = nonEmpty.length > 0
+            && nonEmpty.length === colValues.length
+            && colValues.every(v => JSON.stringify(v.values) === JSON.stringify(colValues[0].values));
+          if(allEqual){
             const td = document.createElement('td');
-            const vals = uniqVals(values);
-            if(vals.length){
-              const wrap = document.createElement('div');
-              wrap.className = 'form-value-wrap';
-              wrap.appendChild(makePills(vals));
-              td.appendChild(wrap);
-            }
+            td.colSpan = columns.length;
+            const wrap = document.createElement('div');
+            wrap.className = 'form-value-wrap';
+            wrap.appendChild(makePills(colValues[0].values));
+            td.appendChild(wrap);
             tr.appendChild(td);
-          });
+          } else {
+            colValues.forEach(({values}) => {
+              const td = document.createElement('td');
+              if(values.length){
+                const wrap = document.createElement('div');
+                wrap.className = 'form-value-wrap';
+                wrap.appendChild(makePills(values));
+                td.appendChild(wrap);
+              }
+              tr.appendChild(td);
+            });
+          }
           tbody.appendChild(tr);
         };
-        addSectionHeader('Entall');
-        addRow('Ubestemt form', (bucket, gid) => formatIndefinite(bucket.indef_sg || [], getArticle(gid)));
-        addRow('Bestemt form', bucket => bucket.def_sg || []);
-        addSectionHeader('Flertall');
-        addRow('Ubestemt form', bucket => bucket.indef_pl || []);
-        addRow('Bestemt form', bucket => bucket.def_pl || []);
+        addSectionHeader('entall');
+        addRow('ubestemt', (bucket, gid) => formatIndefinite(bucket.indef_sg || [], getArticle(gid)));
+        addRow('bestemt', bucket => bucket.def_sg || []);
+        addSectionHeader('flertall');
+        addRow('ubestemt', bucket => (bucket.indef_pl && bucket.indef_pl.length ? bucket.indef_pl : (noun.indef_pl || [])));
+        addRow('bestemt', bucket => (bucket.def_pl && bucket.def_pl.length ? bucket.def_pl : (noun.def_pl || [])));
         table.appendChild(tbody);
         container.appendChild(table);
       } else if(posVal && Array.isArray(forms)){
