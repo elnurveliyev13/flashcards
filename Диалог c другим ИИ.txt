@@ -1,91 +1,98 @@
-Дальше логичный шаг: подключить это из Moodle (PHP) и сделать кеширование результата.
+Ниже — набор источников (и что именно из них можно “превратить в правила”).
 
-Ниже даю готовый минимальный набор.
+1) Partikkelverb (глагол + частица/предлог: gi opp, ta med, legge fram…)
 
-1) PHP-функция (для Moodle), которая отправляет текст в spaCy API
+Для “формальных правил” (синтаксис и диагностика):
 
-Создай где-то в своём коде (плагин/локальный скрипт) функцию:
+Universal Dependencies: описание связи compound:prt для норвежского (как отличать частицу от обычного предлога; тесты с местоимением и пассивом). 
+universaldependencies.org
 
-function spacy_analyze_text(string $text): array {
-    $url = 'https://abcnorsk.no/spacy/analyze';
+Документация UD treebank Norwegian + что внутри и как скачать (готовая разметка для обучения/извлечения шаблонов). 
+Nasjonalbiblioteket
++1
 
-    $payload = json_encode(['text' => $text], JSON_UNESCAPED_UNICODE);
+Статья про UD для норвежского (объясняет введение compound:prt, примеры, мотивация). 
+aclanthology.org
 
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_HTTPHEADER => [
-            'Content-Type: application/json',
-            'Accept: application/json',
-        ],
-        CURLOPT_POSTFIELDS => $payload,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_CONNECTTIMEOUT => 10,
-    ]);
+Более “учебно-грамматическое” описание:
 
-    $response = curl_exec($ch);
+Riksmålsforbundet (грамматика/словообразование, раздел про partikkelverb). 
+riksmalsforbundet.no
 
-    if ($response === false) {
-        $err = curl_error($ch);
-        curl_close($ch);
-        throw new \RuntimeException('spaCy request failed: ' . $err);
-    }
+2) Управление предлогами (adjektiv + prep, verb + prep, substantiv + prep)
 
-    $http = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
+Это как раз то, что чаще всего нужно “вшивать” в программу как лексическое управление (например, interessert i, redd for, stolt av, behov for, ansvar for).
 
-    if ($http < 200 || $http >= 300) {
-        throw new \RuntimeException("spaCy HTTP $http: " . $response);
-    }
+Практический “списочный” источник (почти сразу годится как база правил):
 
-    $data = json_decode($response, true);
-    if (!is_array($data)) {
-        throw new \RuntimeException('Invalid JSON from spaCy: ' . $response);
-    }
+PDF “94 uttrykk med preposisjoner” — список adjektiv/substantiv/verb + предлог, с примерами. 
+grammatikk.com
 
-    return $data; // ['tokens' => [...], 'sents' => [...]]
-}
+Нормативно-описательный источник (про то, что предлог часто часть фиксированной конструкции, и про типовые ошибки смешивания выражений):
 
-2) Кеширование (очень желательно)
+Språkrådet: Preposisjonsbruk (прямо говорит, что предлог часто часть “mer eller mindre fast vending”). 
+Språkrådet
 
-Чтобы не гонять spaCy каждый раз, делай кеш по хэшу текста.
+3) Multiword expressions (устойчивые многословные единицы) как формальная система
 
-Простейшая идея:
+Если ты хочешь именно “правила/классификацию” (какие MWEs бывают, насколько они фиксированы, как их хранить в лексиконе и как парсить), то это один из самых полезных источников:
 
-$hash = hash('sha256', $text);
-// если в БД уже есть запись по $hash → взять JSON из БД
-// иначе → вызвать spacy_analyze_text($text) и сохранить результат
+Глава “Multiword expressions in an LFG grammar for Norwegian” (NorGram): как MWEs представлены в вычислительной грамматике норвежского, типы выражений и степень гибкости. 
+langsci-press.org
 
+NorGramBank / INESS (описание парсбанка, построенного на NorGram; полезно как инфраструктура/идеология представления конструкций). 
+Nasjonalbiblioteket
++1
 
-Если хочешь, я дам схему таблицы Moodle (через db/install.xml) или вариант через Moodle Cache API.
+Статья Meurer про NorGram и вывод зависимостей из LFG-структур (если нужно понимать, как из “богатого” анализа получать структурные шаблоны). 
+bells.uib.no
 
-3) Важный момент: “hjem” как ADP
+4) “Грамматикализованные фиксированные выражения” (типа i det hele tatt, i stedet for, på grunn av…) в UD-терминах
 
-В твоём ответе spaCy пометил hjem как ADP — это нормально в рамках их модели, потому что в норвежском такие слова могут вести себя “предложно/наречно” в конструкциях направления. Для твоего продукта это не критично: главное — лемма и индексы.
-Если тебе нужно “красивее” для ученика, ты можешь на UI показывать “часть речи (упрощённо)” по своей таблице маппинга (например ADP → “adverb/preposition (direction)” или просто “adverb” для некоторых слов).
+Если ты хочешь извлекать такие штуки автоматически, важна UD-идея “фиксированных” выражений:
 
-4) Следующий шаг: как ты хочешь отображать подсказки
+UD relation fixed и общие принципы для multiword function words. 
+universaldependencies.org
++1
 
-У тебя уже есть Ordbank (без переводов). Обычно делают так:
+5) Готовые датасеты под “устойчивые выражения/идиомы”
 
-spaCy даёт lemma + pos + morph
+Это уже не “правила”, а список, но часто именно он нужен, чтобы:
 
-ты ищешь в своём словаре:
+распознавать идиомы,
 
-совпадение по lemma
+проверять “completion”,
 
-если есть несколько — фильтруешь по pos/морфологии/управлению
+не пытаться выводить идиому из грамматики.
 
-показываешь карточку слова
+Språkbanken (NB): датасет Norwegian idioms (3537 идиом/фраз, CC0, есть zip+pdf). 
+Nasjonalbiblioteket
 
-Чтобы я дал точный “план склейки”, мне нужно 1 ответ:
+6) Ресурсы для извлечения коллокаций из корпусов
 
-Твой текст в Moodle хранится как:
+Если твоя программа будет не только “по правилам”, но и по статистике/частоте (что очень практично для устойчивых сочетаний):
 
-A) чистый текст, или
-B) HTML (с тегами, таблицами, форматированием)?
+NB DH-lab: приложение Kollokasjoner (и другие инструменты по корпусам). 
+Nasjonalbiblioteket
 
-Это критично, потому что при HTML нельзя просто брать индексы start/end “как есть” — сначала надо получить plain text, а потом привязать обратно к отображению.
+Store norske leksikon: что такое коллокации (терминологическая база). 
+Store norske leksikon
 
-Если скажешь A или B — я дам следующий шаг без лишней теории: как подсветить слова и сделать клик по слову с карточкой.
+Как это обычно превращают в “правила” в программе (коротко, по делу)
+
+Partikkelverb: извлекать пары (VERB lemma, particle) из UD по связи compound:prt и хранить как фразовые глаголы. 
+universaldependencies.org
+
+Adj/Verb/Subst + предлог: строить лексикон управления из:
+
+готовых списков (типа pdf со 94 выражениями) 
+grammatikk.com
+
+и/или автоматически из размеченных корпусов (UD: предлог как case у зависимого; дальше считаешь частоты “голова → какой предлог чаще”). 
+Nasjonalbiblioteket
+
+Фиксированные служебные выражения: использовать UD fixed как модель и/или шаблоны. 
+universaldependencies.org
++1
+
+Идиомы: отдельно словарь/датасет (Språkbanken Norwegian idioms).

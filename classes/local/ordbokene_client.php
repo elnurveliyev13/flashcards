@@ -421,7 +421,8 @@ class ordbokene_client {
                             if (!is_array($item)) {
                                 continue;
                             }
-                            if (($item['type'] ?? '') === 'usage' && !empty($item['text'])) {
+                            $itemtype = (string)($item['type_'] ?? $item['type'] ?? '');
+                            if ($itemtype === 'usage' && !empty($item['text'])) {
                                 $usage = trim((string)$item['text']);
                                 if ($usage !== '') {
                                     break;

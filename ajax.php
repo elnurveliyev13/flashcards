@@ -576,6 +576,159 @@ function mod_flashcards_spacy_pos_map(string $text, array $spacy): array {
 }
 
 /**
+ * Build spaCy lemma map aligned to word tokens.
+ *
+ * @param string $text
+ * @param array $spacy
+ * @return array<int,string>
+ */
+function mod_flashcards_spacy_lemma_map(string $text, array $spacy): array {
+    $map = [];
+    $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+    if (empty($spacytokens)) {
+        return $map;
+    }
+    $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
+    if (empty($wordtokens)) {
+        return $map;
+    }
+    $j = 0;
+    $sn = count($spacytokens);
+    $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    foreach ($wordtokens as $i => $w) {
+        $wText = core_text::strtolower((string)($w['text'] ?? ''));
+        $wNorm = mod_flashcards_normalize_token($wText);
+        if ($wNorm === '') {
+            continue;
+        }
+        for (; $j < $sn; $j++) {
+            $s = $spacytokens[$j];
+            if (empty($s['is_alpha'])) {
+                continue;
+            }
+            $sText = core_text::strtolower((string)($s['text'] ?? ''));
+            $sNorm = mod_flashcards_normalize_token($sText);
+            if ($sNorm !== '' && $sNorm === $wNorm) {
+                $lemma = core_text::strtolower((string)($s['lemma'] ?? $s['text'] ?? ''));
+                if ($lemma !== '' && in_array($lemma, $reflexives, true)) {
+                    $lemma = 'seg';
+                }
+                $map[$i] = $lemma;
+                $j++;
+                break;
+            }
+        }
+    }
+    return $map;
+}
+
+/**
+ * Build expression candidates from spaCy tokens for a full sentence.
+ *
+ * @param array<int,array<string,mixed>> $tokens spaCy tokens
+ * @return array<int,array{expression:string,len:int,score:int,source:string}>
+ */
+function mod_flashcards_spacy_expression_candidates_all(array $tokens): array {
+    $out = [];
+    if (empty($tokens)) {
+        return $out;
+    }
+    $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    $patternList = [
+        'ADP NOUN',
+        'ADP PRON',
+        'ADP ADJ',
+        'NOUN ADP',
+        'ADJ ADP',
+        'ADV ADP',
+        'VERB ADP',
+        'AUX ADP',
+        'VERB PRON ADP',
+        'AUX PRON ADP',
+        'ADP NOUN ADP',
+        'ADP PRON ADP',
+        'ADP ADJ ADP',
+        '(VERB|AUX) ADP NOUN',
+        '(VERB|AUX) ADP PRON',
+        '(VERB|AUX) ADP ADJ',
+        '(VERB|AUX) ADP NOUN ADP',
+        '(VERB|AUX) ADP PRON ADP',
+        '(VERB|AUX) ADP ADJ ADP',
+    ];
+    $count = count($tokens);
+    $maxLen = 5;
+    for ($start = 0; $start < $count; $start++) {
+        for ($end = $start + 1; $end < $count && $end < $start + $maxLen; $end++) {
+            $spanPos = [];
+            $spanLemma = [];
+            $allAlpha = true;
+            $adpCount = 0;
+            for ($j = $start; $j <= $end; $j++) {
+                $t = $tokens[$j];
+                if (empty($t['is_alpha'])) {
+                    $allAlpha = false;
+                    break;
+                }
+                $p = mod_flashcards_spacy_pos_to_coarse((string)($t['pos'] ?? ''));
+                $spanPos[] = $p;
+                if ($p === 'ADP') {
+                    $adpCount++;
+                }
+                $lemma = core_text::strtolower((string)($t['lemma'] ?? $t['text'] ?? ''));
+                if ($p === 'PRON' && in_array($lemma, $reflexives, true)) {
+                    $lemma = 'seg';
+                }
+                $spanLemma[] = $lemma;
+            }
+            if (!$allAlpha) {
+                continue;
+            }
+            if ($adpCount < 1) {
+                continue;
+            }
+            $posStr = implode(' ', $spanPos);
+            $matched = false;
+            foreach ($patternList as $pattern) {
+                if (preg_match('~^' . $pattern . '$~', $posStr)) {
+                    $matched = true;
+                    break;
+                }
+            }
+            if (!$matched) {
+                continue;
+            }
+            $expr = trim(implode(' ', $spanLemma));
+            if ($expr === '') {
+                continue;
+            }
+            $len = count($spanLemma);
+            $score = 0;
+            if ($len >= 3) {
+                $score += 2;
+            }
+            if ($len >= 4) {
+                $score += 1;
+            }
+            $first = $spanPos[0] ?? '';
+            $last = $spanPos[$len - 1] ?? '';
+            if (in_array($first, ['VERB','AUX'], true)) {
+                $score += 2;
+            }
+            if ($adpCount >= 2) {
+                $score += 2;
+            } else if ($adpCount >= 1) {
+                $score += 1;
+            }
+            if ($last === 'ADP') {
+                $score += 1;
+            }
+            $out[] = ['expression' => $expr, 'len' => $len, 'score' => $score, 'source' => 'spacy'];
+        }
+    }
+    return $out;
+}
+
+/**
  * Find token index matching word + context.
  *
  * @param array<int,string> $tokens
@@ -921,7 +1074,7 @@ if ($globalmode) {
         if (!$createallowed) {
             throw new moodle_exception('access_create_blocked', 'mod_flashcards');
         }
-    } else if ($action === 'fetch' || $action === 'get_due_cards' || $action === 'get_deck_cards' || $action === 'list_decks' || $action === 'ordbank_focus_helper') {
+    } else if ($action === 'fetch' || $action === 'get_due_cards' || $action === 'get_deck_cards' || $action === 'list_decks' || $action === 'ordbank_focus_helper' || $action === 'sentence_elements') {
         if (!$access['can_view']) {
             throw new moodle_exception('access_denied', 'mod_flashcards');
         }
@@ -1589,6 +1742,108 @@ switch ($action) {
         $result = $helper->check_norwegian_text($text, $language, $userid);
 
         echo json_encode($result);
+        break;
+
+    case 'sentence_elements':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $text = trim($payload['text'] ?? '');
+        if ($text === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $debug = !empty($payload['debug']);
+        $spacy = mod_flashcards_spacy_analyze($text);
+        $posMap = mod_flashcards_spacy_pos_map($text, $spacy);
+        $lemmaMap = mod_flashcards_spacy_lemma_map($text, $spacy);
+        $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
+        $words = [];
+        foreach ($wordtokens as $i => $w) {
+            $words[] = [
+                'index' => $i,
+                'text' => (string)($w['text'] ?? ''),
+                'start' => (int)($w['start'] ?? 0),
+                'end' => (int)($w['end'] ?? 0),
+                'pos' => $posMap[$i] ?? '',
+                'lemma' => $lemmaMap[$i] ?? '',
+            ];
+        }
+        $lang = 'begge';
+        $cands = mod_flashcards_spacy_expression_candidates_all(is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : []);
+        if (!empty($cands)) {
+            usort($cands, function($a, $b) {
+                if (($a['score'] ?? 0) === ($b['score'] ?? 0)) {
+                    return ($b['len'] ?? 0) <=> ($a['len'] ?? 0);
+                }
+                return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
+            });
+        }
+        $cands = array_slice($cands, 0, 20);
+        $resolved = [];
+        $seenCand = [];
+        $seenResolved = [];
+        foreach ($cands as $cand) {
+            $expr = trim((string)($cand['expression'] ?? ''));
+            if ($expr === '') {
+                continue;
+            }
+            $key = core_text::strtolower($expr);
+            if (isset($seenCand[$key])) {
+                continue;
+            }
+            $seenCand[$key] = true;
+            $variants = mod_flashcards_expand_expression_variants($expr);
+            array_unshift($variants, $expr);
+            $variants = array_values(array_unique(array_filter($variants)));
+            $match = null;
+            foreach ($variants as $variant) {
+                $match = mod_flashcards_lookup_or_search_expression($variant, $lang);
+                if (!empty($match)) {
+                    break;
+                }
+            }
+            if (empty($match)) {
+                continue;
+            }
+            $expression = (string)($match['expression'] ?? $expr);
+            $mkey = core_text::strtolower($expression);
+            if (isset($seenResolved[$mkey])) {
+                continue;
+            }
+            $seenResolved[$mkey] = true;
+            $meaning = '';
+            if (!empty($match['meanings']) && is_array($match['meanings'])) {
+                $meaning = trim((string)($match['meanings'][0] ?? ''));
+            }
+            $resolved[] = [
+                'expression' => $expression,
+                'translation' => '',
+                'explanation' => $meaning,
+                'examples' => $match['examples'] ?? [],
+                'dictmeta' => $match['dictmeta'] ?? [],
+                'source' => $match['source'] ?? 'ordbokene',
+            ];
+            if (count($resolved) >= 12) {
+                break;
+            }
+        }
+        $data = [
+            'text' => $text,
+            'words' => $words,
+            'expressions' => $resolved,
+        ];
+        if ($debug) {
+            $data['debug'] = [
+                'spacy' => [
+                    'model' => $spacy['model'] ?? '',
+                    'text' => $spacy['text'] ?? '',
+                    'token_count' => is_array($spacy['tokens'] ?? null) ? count($spacy['tokens']) : 0,
+                ],
+            ];
+        }
+        echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
     case 'ai_answer_question':

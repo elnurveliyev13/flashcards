@@ -2486,8 +2486,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionSourceText: '',
       activeExpressionIndex: null,
       expressionReady: false,
-      expressionRequestText: ''
+      expressionRequestText: '',
+      wordMetaByIndex: {},
+      wordMetaSourceText: ''
     };
+    let sentenceElementsTimer = null;
+    let sentenceElementsAbortController = null;
+    let sentenceElementsSeq = 0;
     let focusChipMenuEl = null;
     let focusChipMenuOutsideHandler = null;
     frontTranslationSlot = document.getElementById('slot_front_translation');
@@ -2801,6 +2806,73 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.expressionSourceText = '';
         focusHelperState.activeExpressionIndex = null;
       }
+      if(!normalized && focusHelperState.wordMetaSourceText){
+        focusHelperState.wordMetaByIndex = {};
+        focusHelperState.wordMetaSourceText = '';
+      }
+    }
+
+    async function fetchSentenceElements(text){
+      const normalized = (text || '').trim();
+      if(!normalized){
+        focusHelperState.wordMetaByIndex = {};
+        focusHelperState.wordMetaSourceText = '';
+        setFocusExpressionSuggestions([], '');
+        return;
+      }
+      if(sentenceElementsAbortController){
+        try{ sentenceElementsAbortController.abort(); }catch(_e){}
+      }
+      const controller = new AbortController();
+      sentenceElementsAbortController = controller;
+      const seq = ++sentenceElementsSeq;
+      try{
+        const resp = await api('sentence_elements', {}, 'POST', {text: normalized}, {signal: controller.signal});
+        if(controller.signal.aborted || seq !== sentenceElementsSeq){
+          return;
+        }
+        const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
+        const wordMeta = {};
+        const words = Array.isArray(data?.words) ? data.words : [];
+        words.forEach(w=>{
+          const idx = Number.isInteger(w?.index) ? w.index : null;
+          if(idx === null){
+            return;
+          }
+          const pos = (w?.pos || '').toString().trim();
+          const lemma = (w?.lemma || '').toString().trim();
+          wordMeta[idx] = {pos, lemma};
+        });
+        focusHelperState.wordMetaByIndex = wordMeta;
+        focusHelperState.wordMetaSourceText = normalized;
+
+        const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
+        focusHelperState.expressionRequestText = normalized;
+        setFocusExpressionSuggestions(expressions, normalized);
+      }catch(err){
+        if(controller.signal.aborted){
+          return;
+        }
+        console.warn('[Flashcards] sentence_elements failed', err);
+      }finally{
+        if(sentenceElementsAbortController === controller){
+          sentenceElementsAbortController = null;
+        }
+      }
+    }
+
+    function scheduleSentenceElements(){
+      if(!frontInput){
+        return;
+      }
+      const text = frontInput.value || '';
+      if(sentenceElementsTimer){
+        clearTimeout(sentenceElementsTimer);
+      }
+      sentenceElementsTimer = setTimeout(()=>{
+        sentenceElementsTimer = null;
+        fetchSentenceElements(text);
+      }, 350);
     }
 
     function setExpressionSourceText(text){
@@ -3358,6 +3430,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusWordList.appendChild(span);
         return;
       }
+      // Show multi-word expressions first (when available), then words in the sentence.
+      renderExpressionRows();
       tokens.forEach((token)=>{
         if(token.isWord){
           const btn=document.createElement('button');
@@ -3365,6 +3439,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           btn.className='focus-chip';
           btn.textContent = token.text;
           btn.dataset.index = String(token.index);
+          const meta = focusHelperState.wordMetaByIndex && focusHelperState.wordMetaByIndex[token.index];
+          if(meta && (meta.pos || meta.lemma)){
+            const titleParts = [];
+            if(meta.pos) titleParts.push(meta.pos);
+            if(meta.lemma) titleParts.push(meta.lemma);
+            btn.title = titleParts.join(' · ');
+          }
           attachFocusChipMenuHandlers(btn, token.text, {
             onCreate: ()=>createCardFromToken(token)
           });
@@ -3391,7 +3472,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusWordList.appendChild(span);
         }
       });
-      renderExpressionRows();
       updateChipActiveState();
     }
 
@@ -3433,7 +3513,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       };
       ordbokeneBlock.innerHTML = '';
-      if(!info || !info.expression){
+      if(!info){
+        restoreFormsSlot();
+        ordbokeneBlock.textContent = aiStrings.ordbokeneEmpty || '';
+        return;
+      }
+      const exprText = (info.expression || info.baseform || info.word || info.lookup || '').trim();
+      if(!exprText && !Array.isArray(info.meanings) && !Array.isArray(info.examples)){
         restoreFormsSlot();
         ordbokeneBlock.textContent = aiStrings.ordbokeneEmpty || '';
         return;
@@ -3441,17 +3527,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const chosenIdx = Number.isInteger(info.chosenMeaning) ? info.chosenMeaning : null;
       const head = document.createElement('div');
       head.className = 'ordbokene-head';
-      const expressionUrl = info.expression ? `https://ordbokene.no/nob/bm,nn/${encodeURIComponent((info.expression || '').trim())}` : '';
+      const expressionUrl = exprText ? `https://ordbokene.no/nob/bm,nn/${encodeURIComponent(exprText)}` : '';
       if(expressionUrl){
         const link = document.createElement('a');
         link.className = 'ordbokene-expression-link';
         link.href = expressionUrl;
         link.rel = 'noreferrer noopener';
         link.target = '_blank';
-        link.textContent = info.expression;
+        link.textContent = exprText;
         head.appendChild(link);
       } else {
-        head.textContent = info.expression;
+        head.textContent = exprText;
       }
       ordbokeneBlock.appendChild(head);
 
@@ -3977,10 +4063,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusBaseInput.value = data.focusBaseform;
         }
       }
-      if(data.definition && !needsExpressionConfirmation){
+      if(!needsExpressionConfirmation){
         const expl = document.getElementById('uExplanation');
-        if(expl && (!expl.value.trim() || data.ordbokene)){
-          expl.value = data.definition;
+        const meaningFallback = Array.isArray(data.ordbokene?.meanings) ? data.ordbokene.meanings[0] : '';
+        const explValue = (data.definition || meaningFallback || data.translation || '').trim();
+        if(expl && explValue && (!expl.value.trim() || data.ordbokene)){
+          expl.value = explValue;
         }
       }
       if(!needsExpressionConfirmation){
@@ -4434,12 +4522,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusHelperState.abortController = null;
         }
         renderFocusChips();
+        scheduleSentenceElements();
         if(aiEnabled){
           setFocusStatus('', '');
         }
       });
     }
     renderFocusChips();
+    scheduleSentenceElements();
     if(!aiEnabled){
       setFocusStatus('disabled', aiStrings.disabled);
     }
