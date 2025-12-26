@@ -153,6 +153,10 @@ class ai_helper {
                         'voice' => $voice,
                         'label' => 'focus',
                     ]);
+                    $result['audioFocusText'] = $focusAudioText;
+                    if (!empty($audio['focus']['provider_decision'])) {
+                        $result['audioProviderDecision'] = $audio['focus']['provider_decision'];
+                    }
                 }
             } catch (Throwable $e) {
                 $message = $e->getMessage();

@@ -2447,6 +2447,10 @@ switch ($action) {
                                 'voice' => $voiceid ?: null,
                                 'label' => 'focus',
                             ]);
+                            $data['audioFocusText'] = $focusAudioText;
+                            if (!empty($data['audio']['focus']['provider_decision'])) {
+                                $data['audioProviderDecision'] = $data['audio']['focus']['provider_decision'];
+                            }
                         }
                     }
                 }

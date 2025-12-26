@@ -131,6 +131,12 @@ class tts_service {
         $preferred = $options['provider'] ?? null;
         $resolved = $this->resolve_provider($text, $preferred);
         $provider = $this->choose_provider_with_limits($userid, $text, $preferred, $tokens);
+        $decision = [
+            'preferred' => $preferred ? strtolower(trim((string)$preferred)) : null,
+            'resolved' => $resolved,
+            'selected' => $provider,
+            'reason' => ($provider === $resolved) ? 'resolved' : 'quota',
+        ];
         $fallbackmeta = null;
         if ($provider !== $resolved) {
             $fallbackmeta = [
@@ -145,6 +151,7 @@ class tts_service {
                 throw new coding_exception('Missing Amazon Polly voice');
             }
             $out = $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+            $out['provider_decision'] = $decision;
             if (is_array($fallbackmeta)) {
                 $out['fallback'] = $fallbackmeta;
             }
@@ -156,6 +163,7 @@ class tts_service {
         }
         try {
             $out = $this->synthesize_with_elevenlabs($userid, $text, $label, $voice, $languagecode);
+            $out['provider_decision'] = $decision;
             if (is_array($fallbackmeta)) {
                 $out['fallback'] = $fallbackmeta;
             }
@@ -167,6 +175,12 @@ class tts_service {
                 if ($pollyvoice !== '') {
                     debugging('[flashcards] ElevenLabs TTS failed, falling back to Polly: ' . $ex->getMessage(), DEBUG_DEVELOPER);
                     $out = $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+                    $out['provider_decision'] = [
+                        'preferred' => $decision['preferred'],
+                        'resolved' => $decision['resolved'],
+                        'selected' => self::PROVIDER_POLLY,
+                        'reason' => 'provider_error',
+                    ];
                     $out['fallback'] = [
                         'from' => self::PROVIDER_ELEVENLABS,
                         'to' => self::PROVIDER_POLLY,
