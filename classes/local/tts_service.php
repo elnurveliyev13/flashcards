@@ -31,8 +31,6 @@ class tts_service {
     protected $elevenfocusmodel;
     /** @var string|null */
     protected $elevenfocuslanguagecode;
-    /** @var string */
-    protected $shortprovider;
     /** @var float */
     protected $focusstability;
     /** @var float */
@@ -78,7 +76,6 @@ class tts_service {
         $this->elevenlanguagecode = trim($config->elevenlabs_language_code ?? '') ?: self::ELEVEN_LANGUAGE_DEFAULT;
         $this->elevenfocusmodel = trim($config->elevenlabs_focus_model ?? '') ?: self::ELEVEN_MODEL_FOCUS;
         $this->elevenfocuslanguagecode = trim($config->elevenlabs_focus_language_code ?? '') ?: null;
-        $this->shortprovider = strtolower(trim((string)($config->tts_short_provider ?? ''))) ?: self::PROVIDER_ELEVENLABS;
         $this->focusstability = (float)($config->elevenlabs_focus_stability ?? 0.95);
         $this->focussimilarityboost = (float)($config->elevenlabs_focus_similarity_boost ?? 0.75);
         $this->focusspeed = (float)($config->elevenlabs_focus_speed ?? 0.85);
@@ -129,6 +126,9 @@ class tts_service {
             $label = 'front';
         }
         $languagecode = trim((string)($options['language_code'] ?? '')) ?: $this->elevenlanguagecode;
+        if (strtolower($label) === 'focus') {
+            $text = $this->normalize_focus_text($text);
+        }
         if ($label === 'focus' && !empty($this->elevenfocuslanguagecode)) {
             $languagecode = $this->elevenfocuslanguagecode;
         }
@@ -363,7 +363,7 @@ class tts_service {
         if ($label === 'focus') {
             return $this->elevenfocusmodel;
         }
-        if ($this->count_words($text) <= 2) {
+        if ($this->count_words($text) <= 3) {
             return $this->elevenfocusmodel;
         }
         return $this->elevenmodel;
@@ -404,9 +404,20 @@ class tts_service {
         ];
     }
 
+    protected function normalize_focus_text(string $text): string {
+        $trimmed = trim($text);
+        if ($trimmed === '') {
+            return $trimmed;
+        }
+        if (preg_match('/[.!?]$/', $trimmed)) {
+            return $trimmed;
+        }
+        return $trimmed . '.';
+    }
+
     protected function get_eleven_previous_text_for_request(string $label, string $text): string {
         $label = strtolower(trim($label));
-        if ($label === 'focus' && $this->count_words($text) <= 2) {
+        if ($label === 'focus' && $this->count_words($text) <= 3) {
             return $this->focusprevioustext;
         }
         return '';
@@ -422,23 +433,7 @@ class tts_service {
         }
 
         $wordcount = $this->count_words($text);
-        if ($wordcount <= 2) {
-            if ($this->shortprovider === self::PROVIDER_POLLY && $this->pollyenabled) {
-                return self::PROVIDER_POLLY;
-            }
-            if ($this->shortprovider === self::PROVIDER_ELEVENLABS && $this->elevenenabled) {
-                return self::PROVIDER_ELEVENLABS;
-            }
-            // Legacy: short prompts prefer Polly when available.
-            if ($this->shortprovider === 'auto') {
-                if ($this->pollyenabled) {
-                    return self::PROVIDER_POLLY;
-                }
-                if ($this->elevenenabled) {
-                    return self::PROVIDER_ELEVENLABS;
-                }
-            }
-            // Fallback to any configured provider.
+        if ($wordcount <= 3) {
             if ($this->elevenenabled) {
                 return self::PROVIDER_ELEVENLABS;
             }

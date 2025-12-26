@@ -2439,6 +2439,9 @@ switch ($action) {
                 if ($tts->is_enabled()) {
                     $focusAudioText = trim((string)($data['focusExpression'] ?? $data['focusWord'] ?? $data['focusBaseform'] ?? $clickedword));
                     if ($focusAudioText !== '') {
+                        if (!preg_match('/[.!?]$/', $focusAudioText)) {
+                            $focusAudioText .= '.';
+                        }
                         if (!isset($data['audio']) || !is_array($data['audio'])) {
                             $data['audio'] = [];
                         }

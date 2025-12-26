@@ -240,18 +240,6 @@ if ($hassiteconfig) {
         PARAM_ALPHANUMEXT
     ));
 
-    $settings->add(new admin_setting_configselect(
-        'mod_flashcards/tts_short_provider',
-        get_string('settings_tts_short_provider', 'mod_flashcards'),
-        get_string('settings_tts_short_provider_desc', 'mod_flashcards'),
-        'elevenlabs',
-        [
-            'auto' => get_string('settings_tts_short_provider_auto', 'mod_flashcards'),
-            'elevenlabs' => get_string('settings_tts_short_provider_elevenlabs', 'mod_flashcards'),
-            'polly' => get_string('settings_tts_short_provider_polly', 'mod_flashcards'),
-        ]
-    ));
-
     $settings->add(new admin_setting_configtext(
         'mod_flashcards/elevenlabs_focus_stability',
         get_string('settings_elevenlabs_focus_stability', 'mod_flashcards'),
@@ -280,7 +268,7 @@ if ($hassiteconfig) {
         'mod_flashcards/elevenlabs_focus_previous_text',
         get_string('settings_elevenlabs_focus_previous_text', 'mod_flashcards'),
         get_string('settings_elevenlabs_focus_previous_text_desc', 'mod_flashcards'),
-        'La oss øve på uttale. Ordet er:'
+        'Hva betyr:'
     ));
 
     $settings->add(new admin_setting_configtext(

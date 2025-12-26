@@ -149,6 +149,9 @@ class ai_helper {
                     $focusAudioText = trim((string)($result['focusWord'] ?? $focusword));
                 }
                 if ($focusAudioText !== '') {
+                    if (!preg_match('/[.!?]$/', $focusAudioText)) {
+                        $focusAudioText .= '.';
+                    }
                     $audio['focus'] = $this->tts->synthesize($userid, $focusAudioText, [
                         'voice' => $voice,
                         'label' => 'focus',
