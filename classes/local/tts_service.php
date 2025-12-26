@@ -18,10 +18,25 @@ class tts_service {
     private const PROVIDER_ELEVENLABS = 'elevenlabs';
     private const PROVIDER_POLLY = 'polly';
 
+    private const ELEVEN_MODEL_FOCUS = 'eleven_v3';
+    private const ELEVEN_LANGUAGE_DEFAULT = 'no';
+
     /** @var string|null */
     protected $elevenapikey;
     /** @var string */
     protected $elevenmodel;
+    /** @var string */
+    protected $elevenlanguagecode;
+    /** @var string */
+    protected $elevenfocusmodel;
+    /** @var string|null */
+    protected $elevenfocuslanguagecode;
+    /** @var string */
+    protected $shortprovider;
+    /** @var float */
+    protected $focusstability;
+    /** @var float */
+    protected $focusspeed;
     /** @var string|null */
     protected $defaultvoice;
     /** @var bool */
@@ -50,6 +65,12 @@ class tts_service {
         $config = get_config('mod_flashcards');
         $this->elevenapikey = trim($config->elevenlabs_apikey ?? '') ?: getenv('FLASHCARDS_ELEVENLABS_KEY') ?: null;
         $this->elevenmodel = trim($config->elevenlabs_model ?? '') ?: 'eleven_monolingual_v2';
+        $this->elevenlanguagecode = trim($config->elevenlabs_language_code ?? '') ?: self::ELEVEN_LANGUAGE_DEFAULT;
+        $this->elevenfocusmodel = trim($config->elevenlabs_focus_model ?? '') ?: self::ELEVEN_MODEL_FOCUS;
+        $this->elevenfocuslanguagecode = trim($config->elevenlabs_focus_language_code ?? '') ?: null;
+        $this->shortprovider = strtolower(trim((string)($config->tts_short_provider ?? ''))) ?: self::PROVIDER_ELEVENLABS;
+        $this->focusstability = (float)($config->elevenlabs_focus_stability ?? 0.95);
+        $this->focusspeed = (float)($config->elevenlabs_focus_speed ?? 0.85);
         $this->defaultvoice = trim($config->elevenlabs_default_voice ?? '') ?: null;
         $this->elevenenabled = !empty($this->elevenapikey);
         $this->elevenlimit = (int)($config->elevenlabs_tts_monthly_limit ?? 0);
@@ -93,6 +114,10 @@ class tts_service {
         if ($label === '') {
             $label = 'front';
         }
+        $languagecode = trim((string)($options['language_code'] ?? '')) ?: $this->elevenlanguagecode;
+        if ($label === 'focus' && !empty($this->elevenfocuslanguagecode)) {
+            $languagecode = $this->elevenfocuslanguagecode;
+        }
 
         $tokens = $this->estimate_tts_tokens($text);
         $provider = $this->choose_provider_with_limits($userid, $text, $options['provider'] ?? null, $tokens);
@@ -108,7 +133,7 @@ class tts_service {
             throw new coding_exception('Missing ElevenLabs voice id');
         }
         try {
-            return $this->synthesize_with_elevenlabs($userid, $text, $label, $voice);
+            return $this->synthesize_with_elevenlabs($userid, $text, $label, $voice, $languagecode);
         } catch (\moodle_exception $ex) {
             // Fallback to Polly on provider errors if available and under limit.
             if ($this->pollyenabled && !$this->would_exceed_limit($userid, self::PROVIDER_POLLY, $tokens)) {
@@ -121,12 +146,18 @@ class tts_service {
         }
     }
 
-    protected function synthesize_with_elevenlabs(int $userid, string $text, string $label, string $voice): array {
+    protected function synthesize_with_elevenlabs(int $userid, string $text, string $label, string $voice, string $languagecode): array {
         if (!$this->elevenenabled) {
             throw new coding_exception('ElevenLabs not configured');
         }
 
-        $filename = $this->build_filename($label, $voice, $text, self::PROVIDER_ELEVENLABS);
+        $model = $this->get_eleven_model_for_request($label, $text);
+        $voicesettings = $this->get_eleven_voice_settings_for_label($label);
+        $filename = $this->build_filename($label, $voice, $text, self::PROVIDER_ELEVENLABS, [
+            'model' => $model,
+            'language_code' => $languagecode,
+            'voice_settings' => $voicesettings,
+        ]);
         $context = context_user::instance($userid);
         $fs = get_file_storage();
         if ($existing = $fs->get_file($context->id, 'mod_flashcards', 'media', $userid, '/', $filename)) {
@@ -135,14 +166,8 @@ class tts_service {
 
         $payload = json_encode([
             'text' => $text,
-            'model_id' => $this->elevenmodel,
-            'voice_settings' => [
-                'stability' => 0.8,
-                'similarity_boost' => 0.4,
-                'style' => 0,
-                'speed' => 0.9,
-                'use_speaker_boost' => false,
-            ],
+            'model_id' => $model,
+            'voice_settings' => $voicesettings,
             'pronunciation_dictionary_locators' => [],
             'seed' => 0,
             'previous_text' => '',
@@ -152,7 +177,7 @@ class tts_service {
             'apply_text_normalization' => 'off',
             'apply_language_text_normalization' => false,
             'use_pvc_as_ivc' => false,
-            'language_code' => 'no',
+            'language_code' => $languagecode,
         ], JSON_UNESCAPED_UNICODE);
 
         $curl = new \curl();
@@ -265,15 +290,52 @@ class tts_service {
         return hash_hmac('sha256', 'aws4_request', $kservice, true);
     }
 
-    protected function build_filename(string $label, string $voice, string $text, string $provider): string {
+    protected function build_filename(string $label, string $voice, string $text, string $provider, array $meta = []): string {
         $providerSlug = preg_replace('/[^a-z0-9]+/i', '-', strtolower($provider));
         $providerSlug = trim($providerSlug, '-') ?: 'tts';
         $labelSlug = preg_replace('/[^a-z0-9]+/i', '-', strtolower($label));
         $labelSlug = trim($labelSlug, '-') ?: 'front';
         $voiceSlug = preg_replace('/[^a-z0-9]+/i', '-', strtolower($voice));
         $voiceSlug = trim($voiceSlug, '-') ?: 'voice';
-        $hash = substr(sha1($provider . '|' . $voice . '|' . $label . '|' . $text), 0, 12);
+        $metapart = $meta ? json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : '';
+        $hash = substr(sha1($provider . '|' . $voice . '|' . $label . '|' . $metapart . '|' . $text), 0, 12);
         return "tts_{$providerSlug}_{$labelSlug}_{$voiceSlug}_{$hash}.mp3";
+    }
+
+    protected function get_eleven_model_for_request(string $label, string $text): string {
+        $label = strtolower(trim($label));
+        if ($label === 'focus') {
+            return $this->elevenfocusmodel;
+        }
+        if ($this->count_words($text) <= 2) {
+            return $this->elevenfocusmodel;
+        }
+        return $this->elevenmodel;
+    }
+
+    /**
+     * Eleven v3 (alpha) is sensitive to text structure; keep focus delivery stable and slightly slower.
+     *
+     * @return array{stability:float,similarity_boost:float,style:float,speed:float,use_speaker_boost:bool}
+     */
+    protected function get_eleven_voice_settings_for_label(string $label): array {
+        $label = strtolower(trim($label));
+        if ($label === 'focus') {
+            return [
+                'stability' => max(0.0, min(1.0, $this->focusstability)),
+                'similarity_boost' => 0.4,
+                'style' => 0,
+                'speed' => max(0.0, min(2.0, $this->focusspeed)),
+                'use_speaker_boost' => false,
+            ];
+        }
+        return [
+            'stability' => 0.8,
+            'similarity_boost' => 0.4,
+            'style' => 0,
+            'speed' => 0.9,
+            'use_speaker_boost' => false,
+        ];
     }
 
     protected function format_file_response(context_user $context, int $userid, string $filename, ?string $voice, string $provider): array {
@@ -296,8 +358,29 @@ class tts_service {
         }
 
         $wordcount = $this->count_words($text);
-        if ($wordcount <= 2 && $this->pollyenabled) {
-            return self::PROVIDER_POLLY;
+        if ($wordcount <= 2) {
+            if ($this->shortprovider === self::PROVIDER_POLLY && $this->pollyenabled) {
+                return self::PROVIDER_POLLY;
+            }
+            if ($this->shortprovider === self::PROVIDER_ELEVENLABS && $this->elevenenabled) {
+                return self::PROVIDER_ELEVENLABS;
+            }
+            // Legacy: short prompts prefer Polly when available.
+            if ($this->shortprovider === 'auto') {
+                if ($this->pollyenabled) {
+                    return self::PROVIDER_POLLY;
+                }
+                if ($this->elevenenabled) {
+                    return self::PROVIDER_ELEVENLABS;
+                }
+            }
+            // Fallback to any configured provider.
+            if ($this->elevenenabled) {
+                return self::PROVIDER_ELEVENLABS;
+            }
+            if ($this->pollyenabled) {
+                return self::PROVIDER_POLLY;
+            }
         }
         if ($this->elevenenabled) {
             return self::PROVIDER_ELEVENLABS;

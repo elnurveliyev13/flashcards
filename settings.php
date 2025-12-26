@@ -217,6 +217,58 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_language_code',
+        get_string('settings_elevenlabs_language_code', 'mod_flashcards'),
+        get_string('settings_elevenlabs_language_code_desc', 'mod_flashcards'),
+        'no',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_model',
+        get_string('settings_elevenlabs_focus_model', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_model_desc', 'mod_flashcards'),
+        'eleven_v3',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_language_code',
+        get_string('settings_elevenlabs_focus_language_code', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_language_code_desc', 'mod_flashcards'),
+        '',
+        PARAM_ALPHANUMEXT
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/tts_short_provider',
+        get_string('settings_tts_short_provider', 'mod_flashcards'),
+        get_string('settings_tts_short_provider_desc', 'mod_flashcards'),
+        'elevenlabs',
+        [
+            'auto' => get_string('settings_tts_short_provider_auto', 'mod_flashcards'),
+            'elevenlabs' => get_string('settings_tts_short_provider_elevenlabs', 'mod_flashcards'),
+            'polly' => get_string('settings_tts_short_provider_polly', 'mod_flashcards'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_stability',
+        get_string('settings_elevenlabs_focus_stability', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_stability_desc', 'mod_flashcards'),
+        '0.95',
+        PARAM_FLOAT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_speed',
+        get_string('settings_elevenlabs_focus_speed', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_speed_desc', 'mod_flashcards'),
+        '0.85',
+        PARAM_FLOAT
+    ));
+
+    $settings->add(new admin_setting_configtext(
         'mod_flashcards/elevenlabs_tts_monthly_limit',
         get_string('settings_elevenlabs_tts_limit', 'mod_flashcards'),
         get_string('settings_elevenlabs_tts_limit_desc', 'mod_flashcards'),
