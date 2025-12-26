@@ -36,7 +36,11 @@ class tts_service {
     /** @var float */
     protected $focusstability;
     /** @var float */
+    protected $focussimilarityboost;
+    /** @var float */
     protected $focusspeed;
+    /** @var string */
+    protected $focusprevioustext;
     /** @var string|null */
     protected $defaultvoice;
     /** @var bool */
@@ -76,7 +80,9 @@ class tts_service {
         $this->elevenfocuslanguagecode = trim($config->elevenlabs_focus_language_code ?? '') ?: null;
         $this->shortprovider = strtolower(trim((string)($config->tts_short_provider ?? ''))) ?: self::PROVIDER_ELEVENLABS;
         $this->focusstability = (float)($config->elevenlabs_focus_stability ?? 0.95);
+        $this->focussimilarityboost = (float)($config->elevenlabs_focus_similarity_boost ?? 0.75);
         $this->focusspeed = (float)($config->elevenlabs_focus_speed ?? 0.85);
+        $this->focusprevioustext = trim((string)($config->elevenlabs_focus_previous_text ?? ''));
         $this->defaultvoice = trim($config->elevenlabs_default_voice ?? '') ?: null;
         $this->elevenenabled = !empty($this->elevenapikey);
         $this->elevenlimit = (int)($config->elevenlabs_tts_monthly_limit ?? 0);
@@ -201,10 +207,12 @@ class tts_service {
 
         $model = $this->get_eleven_model_for_request($label, $text);
         $voicesettings = $this->get_eleven_voice_settings_for_label($label);
+        $previoustext = $this->get_eleven_previous_text_for_request($label, $text);
         $filename = $this->build_filename($label, $voice, $text, self::PROVIDER_ELEVENLABS, [
             'model' => $model,
             'language_code' => $languagecode,
             'voice_settings' => $voicesettings,
+            'previous_text' => $previoustext,
         ]);
         $context = context_user::instance($userid);
         $fs = get_file_storage();
@@ -218,7 +226,7 @@ class tts_service {
             'voice_settings' => $voicesettings,
             'pronunciation_dictionary_locators' => [],
             'seed' => 0,
-            'previous_text' => '',
+            'previous_text' => $previoustext,
             'next_text' => '',
             'previous_request_ids' => [],
             'next_request_ids' => [],
@@ -371,7 +379,7 @@ class tts_service {
         if ($label === 'focus') {
             return [
                 'stability' => max(0.0, min(1.0, $this->focusstability)),
-                'similarity_boost' => 0.4,
+                'similarity_boost' => max(0.0, min(1.0, $this->focussimilarityboost)),
                 'style' => 0,
                 'speed' => max(0.0, min(2.0, $this->focusspeed)),
                 'use_speaker_boost' => false,
@@ -394,6 +402,14 @@ class tts_service {
             'voice' => $voice,
             'provider' => $provider,
         ];
+    }
+
+    protected function get_eleven_previous_text_for_request(string $label, string $text): string {
+        $label = strtolower(trim($label));
+        if ($label === 'focus' && $this->count_words($text) <= 2) {
+            return $this->focusprevioustext;
+        }
+        return '';
     }
 
     protected function resolve_provider(string $text, ?string $preferred): string {

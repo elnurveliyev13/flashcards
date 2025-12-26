@@ -6,8 +6,8 @@
         "pos": "phrase",
         "gender": "",
         "translation_lang": "en",
-        "definition": "to try to find or obtain something or someone",
-        "translation": "looking for",
+        "definition": "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen",
+        "translation": "to be looking for something or someone",
         "analysis": [
             {
                 "text": "jakt",
@@ -17,8 +17,8 @@
         "collocations": [],
         "examples": [
             "Hva er du p\u00e5 jakt etter? | What are you looking for?",
-            "Jeg er p\u00e5 jakt etter en bil som er billig og trygg. | I'm looking for a car that is cheap and safe.",
-            "Hun var p\u00e5 jakt etter en leilighet i sentrum. | She was looking for an apartment in the city center."
+            "Hun er p\u00e5 jakt etter en ny jobb. | She is looking for a new job.",
+            "Vi gikk p\u00e5 jakt etter den forsvunne katten. | We went looking for the lost cat."
         ],
         "transcription": "'j\u0251kt",
         "forms": {
@@ -35,7 +35,37 @@
                 ],
                 "def_pl": [
                     "jaktene"
-                ]
+                ],
+                "by_gender": {
+                    "hankjonn": {
+                        "indef_sg": [
+                            "jakt"
+                        ],
+                        "def_sg": [
+                            "jakten"
+                        ],
+                        "indef_pl": [
+                            "jakter"
+                        ],
+                        "def_pl": [
+                            "jaktene"
+                        ]
+                    },
+                    "hunkjonn": {
+                        "indef_sg": [
+                            "jakt"
+                        ],
+                        "def_sg": [
+                            "jakta"
+                        ],
+                        "indef_pl": [
+                            "jakter"
+                        ],
+                        "def_pl": [
+                            "jaktene"
+                        ]
+                    }
+                }
             }
         },
         "parts": [
@@ -76,14 +106,39 @@
                 "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_c4d89ae061f5.mp3",
                 "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_c4d89ae061f5.mp3",
                 "voice": "s2xtA7B2CTXPPlJzch1v",
-                "provider": "elevenlabs"
+                "provider": "elevenlabs",
+                "provider_decision": {
+                    "preferred": null,
+                    "resolved": "elevenlabs",
+                    "selected": "elevenlabs",
+                    "reason": "resolved"
+                }
             },
             "focus": {
                 "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_polly_focus_liv_650688a16b61.mp3",
                 "name": "tts_polly_focus_liv_650688a16b61.mp3",
                 "voice": "Liv",
-                "provider": "polly"
+                "provider": "polly",
+                "provider_decision": {
+                    "preferred": null,
+                    "resolved": "elevenlabs",
+                    "selected": "polly",
+                    "reason": "provider_error"
+                },
+                "fallback": {
+                    "from": "elevenlabs",
+                    "to": "polly",
+                    "reason": "provider_error",
+                    "details": "Text-to-speech is temporarily unavailable."
+                }
             }
+        },
+        "audioFocusText": "p\u00e5 jakt etter",
+        "audioProviderDecision": {
+            "preferred": null,
+            "resolved": "elevenlabs",
+            "selected": "polly",
+            "reason": "provider_error"
         }
     },
     "debug": {

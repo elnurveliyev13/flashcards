@@ -3796,11 +3796,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           tr.appendChild(th);
           tbody.appendChild(tr);
         };
-        const addRow = (label, picker) => {
+        const addRow = (label, picker, shortLabel) => {
           const tr = document.createElement('tr');
           const th = document.createElement('th');
           th.scope = 'row';
-          th.textContent = label;
+          const full = document.createElement('span');
+          full.className = 'forms-label-full';
+          full.textContent = label;
+          const short = document.createElement('span');
+          short.className = 'forms-label-short';
+          short.textContent = shortLabel || label;
+          th.appendChild(full);
+          th.appendChild(short);
           tr.appendChild(th);
           const colValues = columns.map(col => ({
             col,
@@ -3833,11 +3840,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           tbody.appendChild(tr);
         };
         addSectionHeader('entall');
-        addRow('ubestemt', (bucket, gid) => formatIndefinite(bucket.indef_sg || [], getArticle(gid)));
-        addRow('bestemt', bucket => bucket.def_sg || []);
+        addRow('ubestemt', (bucket, gid) => formatIndefinite(bucket.indef_sg || [], getArticle(gid)), 'ubest.');
+        addRow('bestemt', bucket => bucket.def_sg || [], 'best.');
         addSectionHeader('flertall');
-        addRow('ubestemt', bucket => (bucket.indef_pl && bucket.indef_pl.length ? bucket.indef_pl : (noun.indef_pl || [])));
-        addRow('bestemt', bucket => (bucket.def_pl && bucket.def_pl.length ? bucket.def_pl : (noun.def_pl || [])));
+        addRow('ubestemt', bucket => (bucket.indef_pl && bucket.indef_pl.length ? bucket.indef_pl : (noun.indef_pl || [])), 'ubest.');
+        addRow('bestemt', bucket => (bucket.def_pl && bucket.def_pl.length ? bucket.def_pl : (noun.def_pl || [])), 'best.');
         table.appendChild(tbody);
         container.appendChild(table);
       } else if(posVal && Array.isArray(forms)){

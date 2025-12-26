@@ -95,7 +95,37 @@
                 ],
                 "def_pl": [
                     "jaktene"
-                ]
+                ],
+                "by_gender": {
+                    "hankjonn": {
+                        "indef_sg": [
+                            "jakt"
+                        ],
+                        "def_sg": [
+                            "jakten"
+                        ],
+                        "indef_pl": [
+                            "jakter"
+                        ],
+                        "def_pl": [
+                            "jaktene"
+                        ]
+                    },
+                    "hunkjonn": {
+                        "indef_sg": [
+                            "jakt"
+                        ],
+                        "def_sg": [
+                            "jakta"
+                        ],
+                        "indef_pl": [
+                            "jakter"
+                        ],
+                        "def_pl": [
+                            "jaktene"
+                        ]
+                    }
+                }
             }
         },
         "gender": "ei",

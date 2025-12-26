@@ -381,8 +381,12 @@ $string['settings_tts_short_provider_elevenlabs'] = 'ElevenLabs (рекомен�
 $string['settings_tts_short_provider_polly'] = 'Amazon Polly';
 $string['settings_elevenlabs_focus_stability'] = 'Стабильность для фокуса';
 $string['settings_elevenlabs_focus_stability_desc'] = 'Более высокие значения уменьшают вариативность для focus/коротких запросов (0.0–1.0).';
+$string['settings_elevenlabs_focus_similarity_boost'] = 'Similarity boost для фокуса';
+$string['settings_elevenlabs_focus_similarity_boost_desc'] = 'Более высокие значения лучше сохраняют голос для focus/коротких запросов (0.0–1.0).';
 $string['settings_elevenlabs_focus_speed'] = 'Скорость для фокуса';
 $string['settings_elevenlabs_focus_speed_desc'] = 'Меньшие значения делают речь медленнее для focus/коротких запросов.';
+$string['settings_elevenlabs_focus_previous_text'] = 'Контекст для focus (previous_text)';
+$string['settings_elevenlabs_focus_previous_text_desc'] = 'Неозвучиваемый контекст для focus/коротких запросов. Оставьте пустым, чтобы отключить.';
 $string['settings_elevenlabs_tts_limit'] = 'Месячный лимит ElevenLabs (символов на пользователя)';
 $string['settings_elevenlabs_tts_limit_desc'] = '0 = без ограничений. После достижения лимита запросы переключаются на Polly, если она настроена.';
 $string['settings_elevenlabs_tts_limit_global'] = 'Месячный лимит ElevenLabs (все пользователи)';

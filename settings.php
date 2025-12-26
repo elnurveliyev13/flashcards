@@ -261,11 +261,26 @@ if ($hassiteconfig) {
     ));
 
     $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_similarity_boost',
+        get_string('settings_elevenlabs_focus_similarity_boost', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_similarity_boost_desc', 'mod_flashcards'),
+        '0.75',
+        PARAM_FLOAT
+    ));
+
+    $settings->add(new admin_setting_configtext(
         'mod_flashcards/elevenlabs_focus_speed',
         get_string('settings_elevenlabs_focus_speed', 'mod_flashcards'),
         get_string('settings_elevenlabs_focus_speed_desc', 'mod_flashcards'),
         '0.85',
         PARAM_FLOAT
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/elevenlabs_focus_previous_text',
+        get_string('settings_elevenlabs_focus_previous_text', 'mod_flashcards'),
+        get_string('settings_elevenlabs_focus_previous_text_desc', 'mod_flashcards'),
+        'La oss øve på uttale. Ordet er:'
     ));
 
     $settings->add(new admin_setting_configtext(
