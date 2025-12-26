@@ -3585,7 +3585,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
-    function renderFormsPreview(forms, posVal){
+    function renderFormsPreview(forms, posVal, meta){
       const container = document.getElementById('formsPreview');
       if(!container){
         return;
@@ -3694,6 +3694,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         chip.appendChild(body);
         target.appendChild(chip);
       };
+      const formatIndefinite = (values, articleHint) => {
+        const vals = uniqVals(values);
+        if(!vals.length){
+          return [];
+        }
+        return vals.map((value) => {
+          const parsed = parseIndefiniteNoun(value);
+          const article = parsed.article || articleHint || '';
+          const lemma = parsed.lemma || value;
+          if(article){
+            return `(${article}) ${lemma}`.trim();
+          }
+          return (lemma || value || '').toString().trim();
+        }).filter(Boolean);
+      };
       if(forms.verb){
         const tbody = document.createElement('tbody');
         addTableRow(tbody, 'Infinitiv', forms.verb.infinitiv || []);
@@ -3728,14 +3743,106 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         table.appendChild(tbody);
         container.appendChild(table);
       } else if(forms.noun){
-        const grid = document.createElement('div');
-        grid.className = 'forms-chip-grid';
-        addChip(grid, 'Indef. sg', forms.noun.indef_sg || []);
-        addChip(grid, 'Def. sg', forms.noun.def_sg || []);
-        addChip(grid, 'Indef. pl', forms.noun.indef_pl || []);
-        addChip(grid, 'Def. pl', forms.noun.def_pl || []);
-        if(grid.childElementCount){
-          container.appendChild(grid);
+        const noun = forms.noun || {};
+        const gendered = (noun.by_gender && typeof noun.by_gender === 'object') ? noun.by_gender : null;
+        const genderOrder = ['hankjonn', 'hunkjonn', 'intetkjonn', 'ukjent'];
+        const genderLabels = {
+          hankjonn: 'Hankjønn',
+          hunkjonn: 'Hunkjønn',
+          intetkjonn: 'Intetkjønn',
+          ukjent: 'Ukjent kjønn'
+        };
+        const genderArticles = {
+          hankjonn: 'en',
+          hunkjonn: 'ei',
+          intetkjonn: 'et'
+        };
+        const buildValueCell = (tr, values) => {
+          const td = document.createElement('td');
+          if(values.length){
+            const wrap = document.createElement('div');
+            wrap.className = 'form-value-wrap';
+            wrap.appendChild(makePills(values));
+            td.appendChild(wrap);
+          }
+          tr.appendChild(td);
+        };
+        const addNounRow = (tbody, label, bucket, articleHint) => {
+          if(!bucket){
+            return;
+          }
+          const indefSg = formatIndefinite(bucket.indef_sg || [], articleHint);
+          const defSg = uniqVals(bucket.def_sg || []);
+          const indefPl = uniqVals(bucket.indef_pl || []);
+          const defPl = uniqVals(bucket.def_pl || []);
+          const hasAny = indefSg.length || defSg.length || indefPl.length || defPl.length;
+          if(!hasAny){
+            return;
+          }
+          const tr = document.createElement('tr');
+          const th = document.createElement('th');
+          th.scope = 'row';
+          th.textContent = label;
+          tr.appendChild(th);
+          buildValueCell(tr, indefSg);
+          buildValueCell(tr, defSg);
+          buildValueCell(tr, indefPl);
+          buildValueCell(tr, defPl);
+          tbody.appendChild(tr);
+        };
+        const table = document.createElement('table');
+        table.className = 'forms-table forms-noun-table';
+        const thead = document.createElement('thead');
+        const headerTop = document.createElement('tr');
+        const hGender = document.createElement('th');
+        hGender.textContent = 'Kjønn';
+        hGender.rowSpan = 2;
+        hGender.className = 'forms-noun-head forms-noun-gender';
+        headerTop.appendChild(hGender);
+        const hSing = document.createElement('th');
+        hSing.colSpan = 2;
+        hSing.textContent = 'Entall';
+        hSing.className = 'forms-noun-head';
+        headerTop.appendChild(hSing);
+        const hPlur = document.createElement('th');
+        hPlur.colSpan = 2;
+        hPlur.textContent = 'Flertall';
+        hPlur.className = 'forms-noun-head';
+        headerTop.appendChild(hPlur);
+        const headerSub = document.createElement('tr');
+        ['Ubestemt form', 'Bestemt form', 'Ubestemt form', 'Bestemt form'].forEach((label) => {
+          const th = document.createElement('th');
+          th.textContent = label;
+          th.className = 'forms-noun-subhead';
+          headerSub.appendChild(th);
+        });
+        thead.appendChild(headerTop);
+        thead.appendChild(headerSub);
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        if(gendered){
+          genderOrder.forEach((gender) => {
+            const bucket = gendered[gender];
+            if(!bucket){
+              return;
+            }
+            const article = genderArticles[gender] || '';
+            addNounRow(tbody, genderLabels[gender] || gender, bucket, article);
+          });
+        } else {
+          const parsedArticle = (() => {
+            const parsed = parseIndefiniteNoun(noun.indef_sg || []);
+            if(parsed.article){
+              return parsed.article;
+            }
+            const genderSource = meta && (meta.selected && meta.selected.gender ? meta.selected.gender : meta.gender);
+            return mapGenderToArticle(genderSource || '');
+          })();
+          addNounRow(tbody, 'Substantiv', noun, parsedArticle);
+        }
+        if(tbody.children.length){
+          table.appendChild(tbody);
+          container.appendChild(table);
         }
       } else if(posVal && Array.isArray(forms)){
         const grid = document.createElement('div');
@@ -3914,7 +4021,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
       }
       renderCompoundParts(data.parts || [], data.focusWord || data.focusBaseform || '');
-      renderFormsPreview(data.forms || {}, posVal);
+      renderFormsPreview(data.forms || {}, posVal, data);
       if(data.errors && (data.errors.tts_front || data.errors.tts_focus)){
         const msgs = [];
         if(data.errors.tts_front) msgs.push(`Front: ${data.errors.tts_front}`);
@@ -4144,7 +4251,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
         renderCompoundParts(data.parts || [], focusWordResolved);
-        renderFormsPreview(data.forms || {}, posVal);
+        renderFormsPreview(data.forms || {}, posVal, data);
         if(!silent){
           applyFocusMeta(data, {silent:false});
           setFocusStatus('success', aiStrings.success || '');
@@ -4232,7 +4339,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
         renderCompoundParts(data.parts || [], focusWordResolved);
-        renderFormsPreview(data.forms || {}, posVal);
+        renderFormsPreview(data.forms || {}, posVal, data);
         if(posVal === 'verb'){
           const vf = (data.forms && data.forms.verb) || {};
           const joinForms = val => Array.isArray(val) ? val.join('\n') : (val || '');

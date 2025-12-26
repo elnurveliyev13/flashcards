@@ -5352,6 +5352,25 @@ input.example-input-trans {
 .forms-table tr:last-child td {
   border-bottom:none;
 }
+.forms-noun-table thead th {
+  text-align:center;
+  background:var(--surface-1);
+  border-bottom:1px solid var(--border);
+}
+.forms-noun-table thead th.forms-noun-gender {
+  text-align:left;
+}
+.forms-noun-table thead th.forms-noun-subhead {
+  font-size:0.85em;
+  font-weight:600;
+  color:var(--text-subtle);
+}
+.forms-noun-table tbody th {
+  width:22%;
+}
+.forms-noun-table th {
+  width:auto;
+}
 .form-value-wrap {
   display:flex;
   flex-wrap:wrap;

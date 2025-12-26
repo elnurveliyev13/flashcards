@@ -128,26 +128,52 @@ class tts_service {
         }
 
         $tokens = $this->estimate_tts_tokens($text);
-        $provider = $this->choose_provider_with_limits($userid, $text, $options['provider'] ?? null, $tokens);
+        $preferred = $options['provider'] ?? null;
+        $resolved = $this->resolve_provider($text, $preferred);
+        $provider = $this->choose_provider_with_limits($userid, $text, $preferred, $tokens);
+        $fallbackmeta = null;
+        if ($provider !== $resolved) {
+            $fallbackmeta = [
+                'from' => $resolved,
+                'to' => $provider,
+                'reason' => 'quota',
+            ];
+        }
         if ($provider === self::PROVIDER_POLLY) {
             $pollyvoice = $this->resolve_polly_voice($voice);
             if ($pollyvoice === '') {
                 throw new coding_exception('Missing Amazon Polly voice');
             }
-            return $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+            $out = $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+            if (is_array($fallbackmeta)) {
+                $out['fallback'] = $fallbackmeta;
+            }
+            return $out;
         }
 
         if ($voice === '') {
             throw new coding_exception('Missing ElevenLabs voice id');
         }
         try {
-            return $this->synthesize_with_elevenlabs($userid, $text, $label, $voice, $languagecode);
+            $out = $this->synthesize_with_elevenlabs($userid, $text, $label, $voice, $languagecode);
+            if (is_array($fallbackmeta)) {
+                $out['fallback'] = $fallbackmeta;
+            }
+            return $out;
         } catch (\moodle_exception $ex) {
             // Fallback to Polly on provider errors if available and under limit.
             if ($this->pollyenabled && !$this->would_exceed_limit($userid, self::PROVIDER_POLLY, $tokens)) {
                 $pollyvoice = $this->resolve_polly_voice($voice);
                 if ($pollyvoice !== '') {
-                    return $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+                    debugging('[flashcards] ElevenLabs TTS failed, falling back to Polly: ' . $ex->getMessage(), DEBUG_DEVELOPER);
+                    $out = $this->synthesize_with_polly($userid, $text, $label, $pollyvoice);
+                    $out['fallback'] = [
+                        'from' => self::PROVIDER_ELEVENLABS,
+                        'to' => self::PROVIDER_POLLY,
+                        'reason' => 'provider_error',
+                        'details' => $ex->getMessage(),
+                    ];
+                    return $out;
                 }
             }
             throw $ex;

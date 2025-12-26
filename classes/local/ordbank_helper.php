@@ -834,19 +834,61 @@ class ordbank_helper {
                 'indef_pl' => [],
                 'def_pl' => [],
             ];
+            $nounByGender = [
+                'hankjonn' => [
+                    'indef_sg' => [],
+                    'def_sg' => [],
+                    'indef_pl' => [],
+                    'def_pl' => [],
+                ],
+                'hunkjonn' => [
+                    'indef_sg' => [],
+                    'def_sg' => [],
+                    'indef_pl' => [],
+                    'def_pl' => [],
+                ],
+                'intetkjonn' => [
+                    'indef_sg' => [],
+                    'def_sg' => [],
+                    'indef_pl' => [],
+                    'def_pl' => [],
+                ],
+            ];
             foreach ($records as $rec) {
                 $t = core_text::strtolower((string)$rec->tag);
                 if (!$rec->oppslag) {
                     continue;
                 }
+                $genders = [];
+                if (str_contains($t, 'mask')) {
+                    $genders[] = 'hankjonn';
+                }
+                if (str_contains($t, 'fem')) {
+                    $genders[] = 'hunkjonn';
+                }
+                if (str_contains($t, 'noy') || str_contains($t, 'nøy') || str_contains($t, 'neut')) {
+                    $genders[] = 'intetkjonn';
+                }
                 if (str_contains($t, 'ent ub')) {
                     $noun['indef_sg'][] = $rec->oppslag;
+                    foreach ($genders as $gender) {
+                        $nounByGender[$gender]['indef_sg'][] = $rec->oppslag;
+                    }
                 } elseif (str_contains($t, 'ent be')) {
                     $noun['def_sg'][] = $rec->oppslag;
+                    foreach ($genders as $gender) {
+                        $nounByGender[$gender]['def_sg'][] = $rec->oppslag;
+                    }
                 } elseif (str_contains($t, 'fl ub')) {
                     $noun['indef_pl'][] = $rec->oppslag;
+                    foreach ($genders as $gender) {
+                        $nounByGender[$gender]['indef_pl'][] = $rec->oppslag;
+                    }
                 } elseif (str_contains($t, 'fl be')) {
                     $noun['def_pl'][] = $rec->oppslag;
+                    foreach ($genders as $gender) {
+                        $nounByGender[$gender]['def_pl'][] = $rec->oppslag;
+                    }
                 }
             }
             $noun = array_map(function($arr){
@@ -854,6 +896,18 @@ class ordbank_helper {
                 return $arr;
             }, $noun);
             $noun = array_filter($noun, fn($v) => !empty($v));
+            foreach ($nounByGender as $gender => $bucket) {
+                $bucket = array_map(function($arr){
+                    $arr = array_values(array_unique(array_filter($arr)));
+                    return $arr;
+                }, $bucket);
+                $bucket = array_filter($bucket, fn($v) => !empty($v));
+                $nounByGender[$gender] = $bucket;
+            }
+            $nounByGender = array_filter($nounByGender, fn($v) => !empty($v));
+            if (!empty($nounByGender)) {
+                $noun['by_gender'] = $nounByGender;
+            }
             if (!empty($noun)) {
                 $out['noun'] = $noun;
             }

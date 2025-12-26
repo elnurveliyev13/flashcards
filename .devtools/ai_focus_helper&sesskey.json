@@ -6,19 +6,19 @@
         "pos": "phrase",
         "gender": "",
         "translation_lang": "en",
-        "definition": "used to ask what someone is trying to find or search for",
+        "definition": "to try to find or obtain something or someone",
         "translation": "looking for",
         "analysis": [
             {
-                "text": "p\u00e5 jakt etter",
-                "translation": "used to ask what someone is trying to find or search for"
+                "text": "jakt",
+                "translation": "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
             }
         ],
         "collocations": [],
         "examples": [
             "Hva er du p\u00e5 jakt etter? | What are you looking for?",
-            "Jeg er p\u00e5 jakt etter en ny jobb. | I am looking for a new job.",
-            "Hun er p\u00e5 jakt etter en gave til bursdagen. | She is looking for a gift for the birthday."
+            "Jeg er p\u00e5 jakt etter en bil som er billig og trygg. | I'm looking for a car that is cheap and safe.",
+            "Hun var p\u00e5 jakt etter en leilighet i sentrum. | She was looking for an apartment in the city center."
         ],
         "transcription": "'j\u0251kt",
         "forms": {
@@ -45,35 +45,55 @@
         "expressions": [
             "p\u00e5 jakt etter"
         ],
-        "expressionNeedsConfirmation": true,
-        "expressionSuggestions": [
-            {
-                "expression": "p\u00e5 jakt etter"
+        "ordbokene": {
+            "expression": "jakt",
+            "meanings": [
+                "det \u00e5 oppspore og felle dyr",
+                "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
+            ],
+            "examples": [
+                "jakt og fiske",
+                "g\u00e5 p\u00e5 jakt",
+                "drive jakt p\u00e5 rein",
+                "komme hjem etter endt jakt",
+                "jakt begynner 10. september",
+                "politiet tok opp jakt p\u00e5 tyvene",
+                "v\u00e6re p\u00e5 jakt etter hybel",
+                "p\u00e5 jakt etter \u00e6re og ber\u00f8mmelse"
+            ],
+            "forms": [],
+            "dictmeta": {
+                "lang": "bm",
+                "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json"
             },
-            {
-                "expression": "p\u00e5 jakt"
-            },
-            {
-                "expression": "jakt etter"
-            }
-        ],
+            "source": "ordbokene",
+            "chosenMeaning": 1,
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
+            "citation": "\"jakt\". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https:\/\/ordbokene.no (henta 26.12.2025)."
+        },
         "audio": {
             "front": {
-                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
-                "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_86ffc82c5c48.mp3",
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_c4d89ae061f5.mp3",
+                "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_c4d89ae061f5.mp3",
                 "voice": "s2xtA7B2CTXPPlJzch1v",
                 "provider": "elevenlabs"
+            },
+            "focus": {
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_polly_focus_liv_650688a16b61.mp3",
+                "name": "tts_polly_focus_liv_650688a16b61.mp3",
+                "voice": "Liv",
+                "provider": "polly"
             }
         }
     },
     "debug": {
         "ordbokene": {
-            "expressionSource": "spacy_unconfirmed",
-            "spacyExpressions": [
-                "p\u00e5 jakt etter",
-                "p\u00e5 jakt",
-                "jakt etter"
-            ]
+            "expression": "jakt",
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
+            "chosen": {
+                "entry": 1,
+                "meaning": 1
+            }
         }
     }
 }
