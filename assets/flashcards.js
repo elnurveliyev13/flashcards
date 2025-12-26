@@ -3422,8 +3422,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function renderOrdbokeneBlock(info){
       if(!ordbokeneBlock) return;
+      const formsSlot = document.getElementById('slot_forms_preview');
+      const formsPreview = document.getElementById('formsPreview');
+      const restoreFormsSlot = () => {
+        if(formsSlot && formsPreview && !formsSlot.contains(formsPreview)){
+          formsSlot.appendChild(formsPreview);
+        }
+        if(formsSlot){
+          formsSlot.classList.remove('hidden');
+        }
+      };
       ordbokeneBlock.innerHTML = '';
       if(!info || !info.expression){
+        restoreFormsSlot();
         ordbokeneBlock.textContent = aiStrings.ordbokeneEmpty || '';
         return;
       }
@@ -3483,6 +3494,30 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         citation.appendChild(document.createTextNode(citationText));
       }
       ordbokeneBlock.appendChild(citation);
+
+      if(formsPreview && formsSlot && formsPreview.innerHTML.trim()){
+        formsSlot.classList.add('hidden');
+        const inflectionWrap = document.createElement('div');
+        inflectionWrap.className = 'ordbokene-inflection';
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'ordbokene-toggle';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.textContent = 'Vis bøyning';
+        const inflectionBody = document.createElement('div');
+        inflectionBody.className = 'ordbokene-inflection-body hidden';
+        inflectionBody.appendChild(formsPreview);
+        toggleBtn.addEventListener('click', () => {
+          const isHidden = inflectionBody.classList.toggle('hidden');
+          toggleBtn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+          toggleBtn.textContent = isHidden ? 'Vis bøyning' : 'Skjul bøyning';
+        });
+        inflectionWrap.appendChild(toggleBtn);
+        inflectionWrap.appendChild(inflectionBody);
+        ordbokeneBlock.appendChild(inflectionWrap);
+      } else {
+        restoreFormsSlot();
+      }
     }
 
     function tokenizeWordsForExpression(text){
@@ -3557,17 +3592,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
-    function renderCompoundParts(parts, fallbackText){
+    function renderCompoundParts(parts, fallbackText, showSlot = true){
       const container = document.getElementById('compoundParts');
+      const slot = document.getElementById('slot_compound_parts');
       if(!container){
+        if(slot){
+          slot.classList.add('hidden');
+        }
         return;
       }
       container.innerHTML = '';
       const cleanParts = Array.isArray(parts) ? parts.filter(p => typeof p === 'string' && p.trim() !== '') : [];
       const items = cleanParts.length ? cleanParts : (fallbackText ? [fallbackText] : []);
-      if(!items.length){
+      const shouldShowSlot = showSlot && items.length > 0;
+      if(!shouldShowSlot){
         container.textContent = '';
+        if(slot){
+          slot.classList.add('hidden');
+        }
         return;
+      }
+      if(slot){
+        slot.classList.remove('hidden');
       }
       items.forEach((part, idx) => {
         const chip = document.createElement('span');
@@ -4023,7 +4069,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           genderField.value = data.gender;
         }
       }
-      renderCompoundParts(data.parts || [], data.focusWord || data.focusBaseform || '');
+      renderCompoundParts(
+        data.parts || [],
+        data.focusWord || data.focusBaseform || '',
+        Boolean(data.partsFromLeddanalyse)
+      );
       renderFormsPreview(data.forms || {}, posVal, data);
       if(data.errors && (data.errors.tts_front || data.errors.tts_focus)){
         const msgs = [];
@@ -4253,7 +4303,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             trEl.value = data.selected.ipa;
           }
         }
-        renderCompoundParts(data.parts || [], focusWordResolved);
+        renderCompoundParts(
+          data.parts || [],
+          focusWordResolved,
+          Boolean(data.partsFromLeddanalyse)
+        );
         renderFormsPreview(data.forms || {}, posVal, data);
         if(!silent){
           applyFocusMeta(data, {silent:false});
@@ -4341,7 +4395,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             trEl.value = data.selected.ipa;
           }
         }
-        renderCompoundParts(data.parts || [], focusWordResolved);
+        renderCompoundParts(
+          data.parts || [],
+          focusWordResolved,
+          Boolean(data.partsFromLeddanalyse)
+        );
         renderFormsPreview(data.forms || {}, posVal, data);
         if(posVal === 'verb'){
           const vf = (data.forms && data.forms.verb) || {};

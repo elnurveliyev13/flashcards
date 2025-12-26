@@ -2367,11 +2367,25 @@ switch ($action) {
                 $data['gender'] = $selected['gender'];
             }
             // Ensure compound parts are present: split by lemma/baseform if missing.
-            if ((empty($data['parts']) || $data['parts'] === []) && !empty($selected['lemma_id'])) {
-                $data['parts'] = \mod_flashcards\local\ordbank_helper::split_compound(
+            $hasLeddanalyseParts = false;
+            $leddanalyseParts = [];
+            if (!empty($selected['lemma_id'])) {
+                $partsFromLeddanalyse = false;
+                $leddanalyseParts = \mod_flashcards\local\ordbank_helper::split_compound(
                     (int)$selected['lemma_id'],
-                    $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
+                    $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword),
+                    $partsFromLeddanalyse
                 );
+                if (
+                    !empty($partsFromLeddanalyse)
+                    && is_array($leddanalyseParts)
+                    && count($leddanalyseParts) > 1
+                ) {
+                    $hasLeddanalyseParts = true;
+                }
+            }
+            if ((empty($data['parts']) || $data['parts'] === []) && !empty($leddanalyseParts)) {
+                $data['parts'] = $leddanalyseParts;
             }
             // If Ordbokene was skipped due to VERB, still surface spaCy expression candidates for manual choice.
             if ($orbokeneenabled && $skipordbokene && empty($data['expressionNeedsConfirmation']) && !$exprAutoSelected && !empty($spacyExprs)) {
@@ -2469,15 +2483,21 @@ switch ($action) {
                     return is_string($v) && trim($v) !== '';
                 }));
                 if (count($data['parts']) === 1 && !empty($selected['lemma_id'])) {
+                    $repartsFromLeddanalyse = false;
                     $reparts = \mod_flashcards\local\ordbank_helper::split_compound(
                         (int)$selected['lemma_id'],
-                        $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword)
+                        $selected['baseform'] ?? ($selected['wordform'] ?? $clickedword),
+                        $repartsFromLeddanalyse
                     );
                     if (!empty($reparts) && is_array($reparts) && count($reparts) > 1) {
                         $data['parts'] = array_values($reparts);
+                        if (!empty($repartsFromLeddanalyse)) {
+                            $hasLeddanalyseParts = true;
+                        }
                     }
                 }
             }
+            $data['partsFromLeddanalyse'] = $hasLeddanalyseParts;
             // Note: usage from operation is already in $data, don't overwrite with snapshot
             $resp = ['ok' => true, 'data' => $data];
             if ($debugspacy) {

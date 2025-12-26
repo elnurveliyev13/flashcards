@@ -495,12 +495,16 @@ class ordbank_helper {
      *
      * @param int|null $lemmaid
      * @param string $oppslag
+     * @param bool|null $fromLeddanalyse Optional reference set to true when leddanalyse returned 2+ parts.
      * @return array<int,string>
      */
-    public static function split_compound(?int $lemmaid, string $oppslag): array {
+    public static function split_compound(?int $lemmaid, string $oppslag, ?bool &$fromLeddanalyse = null): array {
         global $DB;
 
         $oppslag = trim($oppslag);
+        if ($fromLeddanalyse !== null) {
+            $fromLeddanalyse = false;
+        }
         $conditions = [];
         $params = [];
         if ($lemmaid) {
@@ -521,11 +525,20 @@ class ordbank_helper {
         if (!$rec) {
             // Heuristic fallback: split simple compounds with hyphen or s-fuge before last segment.
             if (str_contains($oppslag, '-')) {
+                if ($fromLeddanalyse !== null) {
+                    $fromLeddanalyse = false;
+                }
                 return array_values(array_filter(array_map('trim', explode('-', $oppslag))));
             }
             // Try naive split before final noun-like tail if "s" fuge present.
             if (preg_match('~^(.+?)(s)(bolig|hus|mann|menn|vei|gate|plass|verk|arbeid|tid|sted|by|rom|bok|bok|rett)~iu', $oppslag, $m)) {
+                if ($fromLeddanalyse !== null) {
+                    $fromLeddanalyse = false;
+                }
                 return array_values(array_filter([$m[1], $m[2], $m[3]]));
+            }
+            if ($fromLeddanalyse !== null) {
+                $fromLeddanalyse = false;
             }
             return [$oppslag];
         }
@@ -535,6 +548,10 @@ class ordbank_helper {
             $rec->fuge ?? '',
             $rec->etterledd ?? '',
         ], fn(string $v) => $v !== '');
+
+        if ($fromLeddanalyse !== null) {
+            $fromLeddanalyse = count($parts) > 1;
+        }
 
         return $parts ? array_values($parts) : [$oppslag];
     }
