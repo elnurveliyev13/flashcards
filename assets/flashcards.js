@@ -2818,9 +2818,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!focusSpacyEl){
         return;
       }
-      const hasTokens = spacyInfo && Array.isArray(spacyInfo.tokens) && spacyInfo.tokens.length > 0;
-      if(hasTokens){
-        const tokenCount = spacyInfo.tokens.length;
+      const tokenCount =
+        (spacyInfo && Number.isInteger(spacyInfo.token_count) ? spacyInfo.token_count : null) ??
+        (spacyInfo && Array.isArray(spacyInfo.tokens) ? spacyInfo.tokens.length : 0);
+      if(tokenCount > 0){
         const template = aiStrings.spacyActive || 'spaCy parsed {$a} tokens';
         const baseText = template.replace('{$a}', String(tokenCount));
         const modelLabelTemplate = aiStrings.spacyModel || 'Model: {$a}';

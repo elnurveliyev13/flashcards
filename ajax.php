@@ -2385,11 +2385,26 @@ switch ($action) {
             }
         }
         if ($debug) {
+            $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+            $debugtokens = [];
+            foreach (array_slice($spacytokens, 0, 60) as $t) {
+                if (!is_array($t)) {
+                    continue;
+                }
+                $debugtokens[] = [
+                    'text' => (string)($t['text'] ?? ''),
+                    'pos' => (string)($t['pos'] ?? ''),
+                    'lemma' => (string)($t['lemma'] ?? ''),
+                    'dep' => (string)($t['dep'] ?? ''),
+                    'is_alpha' => !empty($t['is_alpha']),
+                ];
+            }
             $data['debug'] = [
                 'spacy' => [
                     'model' => $spacy['model'] ?? '',
                     'text' => $spacy['text'] ?? '',
                     'token_count' => is_array($spacy['tokens'] ?? null) ? count($spacy['tokens']) : 0,
+                    'tokens' => $debugtokens,
                 ],
             ];
         }
