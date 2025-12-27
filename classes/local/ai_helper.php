@@ -287,8 +287,8 @@ Return JSON in this exact schema:
       "type": "phrase|word",
       "text": "exact element text",
       "index": 0,
-      "translation": "short translation of the element",
-      "note": "very short grammar note (optional)"
+      "translation": "short translation of the element (meaning only, no POS labels)",
+      "note": "very short grammar note (optional, 3-6 words)"
     }
   ]
 }
@@ -296,8 +296,9 @@ Return JSON in this exact schema:
 Rules:
 - Keep the SAME order as provided.
 - For words, keep the same "index" value.
-- "translation" must be short and literal.
-- "note" should be 3-6 words, optional.
+- "translation" must be short and literal (meaning only).
+- Do NOT include part-of-speech labels or grammar terms in "translation".
+- Use "note" only if needed, and keep it very short.
 - If unsure about a translation, use an empty string.
 USERPROMPT;
 
