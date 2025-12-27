@@ -2079,6 +2079,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     let frontAudioRegenerationController = null;
     let pendingFrontAudioText = '';
 
+    let suppressFrontAudioRegeneration = false;
     const regenerateFrontAudioFromText = async (text) => {
       const trimmed = (text || '').trim();
       if(!trimmed || !aiConfig.ttsEnabled){
@@ -2112,6 +2113,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
 
     const scheduleFrontAudioRegeneration = (text) => {
+      if(suppressFrontAudioRegeneration){
+        return;
+      }
       const trimmed = (text || '').trim();
       pendingFrontAudioText = trimmed;
       if(!trimmed || !aiConfig.ttsEnabled){
@@ -2489,7 +2493,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionRequestText: '',
       wordMetaByIndex: {},
       wordMetaSourceText: '',
-      sentenceAnalysis: []
+      sentenceAnalysis: [],
+      pendingSentenceAnalysis: null
     };
     let sentenceElementsTimer = null;
     let sentenceElementsAbortController = null;
@@ -4751,19 +4756,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     if(frontInput){
       frontInput.addEventListener('input', ()=>{
         focusHelperState.activeIndex = null;
+        focusHelperState.pendingSentenceAnalysis = null;
+        focusHelperState.wordMetaByIndex = {};
+        focusHelperState.wordMetaSourceText = '';
+        focusHelperState.sentenceAnalysis = [];
+        setFocusExpressionSuggestions([], '');
+        renderSentenceAnalysis([]);
         if(focusHelperState.abortController){
           focusHelperState.abortController.abort();
           focusHelperState.abortController = null;
         }
         renderFocusChips();
-        scheduleSentenceElements();
         if(aiEnabled){
           setFocusStatus('', '');
         }
       });
     }
     renderFocusChips();
-    scheduleSentenceElements();
     if(!aiEnabled){
       setFocusStatus('disabled', aiStrings.disabled);
     }
@@ -13369,6 +13378,7 @@ Regeln:
       focusHelperState.expressionReady = false;
       focusHelperState.activeExpressionIndex = null;
       focusHelperState.expressionRequestText = '';
+      focusHelperState.pendingSentenceAnalysis = null;
 
       // Use interface language for explanations, NOT learning language
       const language = currentInterfaceLang || 'en';
@@ -13413,16 +13423,20 @@ Regeln:
           }
         }
 
+        const analysisText = (result && result.correctedText) ? result.correctedText : text;
         if (result.hasErrors) {
+          focusHelperState.pendingSentenceAnalysis = {
+            text: analysisText,
+            options: {enrich: true, language}
+          };
           showErrorCheckResult(result);
         } else {
+          focusHelperState.pendingSentenceAnalysis = null;
           showSuccessMessage();
           // Auto-continue with tokenization
           renderFocusChips();
+          await fetchSentenceElements(analysisText, {enrich: true, language});
         }
-
-        const analysisText = (result && result.correctedText) ? result.correctedText : text;
-        await fetchSentenceElements(analysisText, {enrich: true, language});
 
         setFocusStatus('', '');
       } catch (error) {
@@ -13471,11 +13485,13 @@ Regeln:
       return highlighted;
     }
 
-    function applyTextToFront(text, { closeErrorBlock = true } = {}) {
+    function applyTextToFront(text, { closeErrorBlock = true, triggerTranslation = true, triggerSentenceElements = true, triggerFrontAudio = true } = {}) {
       if (text === null || text === undefined) {
         return;
       }
       const normalizedText = String(text);
+      const pendingAnalysis = focusHelperState.pendingSentenceAnalysis;
+      const pendingOptions = (pendingAnalysis && pendingAnalysis.options) ? pendingAnalysis.options : null;
       if (focusHelperState.expressionSuggestions.length){
         activateExpressionSuggestions(normalizedText);
       }
@@ -13484,9 +13500,12 @@ Regeln:
         frontInput.value = normalizedText;
         const inputEvent = new Event('input', { bubbles: true });
         frontInput.dispatchEvent(inputEvent);
+        const previousSuppress = suppressFrontAudioRegeneration;
+        suppressFrontAudioRegeneration = !triggerFrontAudio;
         if(setExampleOneFromFront(normalizedText)){
           renderExamples();
         }
+        suppressFrontAudioRegeneration = previousSuppress;
       }
 
       if (window.onFrontChange) {
@@ -13494,7 +13513,17 @@ Regeln:
       }
 
       renderFocusChips();
-      triggerTranslation('no-user', {text: normalizedText});
+      if(triggerSentenceElements){
+        if(pendingOptions && pendingAnalysis && pendingAnalysis.text && pendingAnalysis.text.trim() === normalizedText.trim()){
+          fetchSentenceElements(normalizedText, pendingOptions);
+        } else {
+          fetchSentenceElements(normalizedText);
+        }
+      }
+      focusHelperState.pendingSentenceAnalysis = null;
+      if(triggerTranslation){
+        triggerTranslation('no-user', {text: normalizedText});
+      }
 
       if (closeErrorBlock) {
         closeErrorCheckBlock();
@@ -13618,7 +13647,11 @@ Regeln:
         applyLatestCorrectionBtn.addEventListener('click', function() {
           const latest = (block.dataset.latestCorrection || result.correctedText || '').trim();
           if (latest) {
-            applyTextToFront(latest);
+            applyTextToFront(latest, {
+              triggerTranslation: false,
+              triggerFrontAudio: false,
+              triggerSentenceElements: true
+            });
             setLatestCorrection(latest);
           }
         });
@@ -13631,6 +13664,11 @@ Regeln:
             const currentText = ($('#uFront') ? $('#uFront').value : '') || '';
             activateExpressionSuggestions(currentText);
           }
+          const currentText = ($('#uFront') ? $('#uFront').value : '') || '';
+          if(currentText.trim()){
+            fetchSentenceElements(currentText, {enrich: true, language: currentInterfaceLang || 'en'});
+          }
+          focusHelperState.pendingSentenceAnalysis = null;
           closeErrorCheckBlock();
           renderFocusChips();
         });
