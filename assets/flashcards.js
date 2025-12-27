@@ -3099,13 +3099,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         seen.add(key);
         const translation = (item.translation || item.meaning || item.translationText || '').toString().trim();
-        const explanation = (item.explanation || item.note || item.confidence || item.confidenceComment || '').toString().trim();
+        const explanation = (item.explanation || item.note || item.confidenceComment || '').toString().trim();
+        const confidence = (item.confidence || '').toString().trim().toLowerCase();
         const examples = normalizeExpressionExamples(item.examples || item.example || item.exampleText);
         prepared.push({
           expression: exprText,
           translation,
           explanation,
-          examples
+          examples,
+          confidence
         });
       });
       if(!prepared.length){
@@ -3704,8 +3706,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             const exprIdx = Array.isArray(focusHelperState.expressionSuggestions)
               ? focusHelperState.expressionSuggestions.findIndex(e => String(e?.expression || '').toLowerCase() === exprKey)
               : -1;
-            focusHelperState.activeExpressionIndex = exprIdx >= 0 ? exprIdx : null;
+            const suggestion = (exprIdx >= 0 && focusHelperState.expressionSuggestions)
+              ? focusHelperState.expressionSuggestions[exprIdx]
+              : null;
+            if(suggestion){
+              void handleExpressionSelection(suggestion, exprIdx);
+              return;
+            }
+            focusHelperState.activeExpressionIndex = null;
             updateChipActiveState();
+            if(fokusInput){
+              fokusInput.value = entry.meta.expression;
+              try{
+                fokusInput.dispatchEvent(new Event('input', {bubbles:true}));
+              }catch(_){}
+            }
             loadExpressionFocus(entry.meta.expression, entry.meta);
           });
         }

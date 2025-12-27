@@ -753,8 +753,11 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 }
                 $lemmaParts = [];
                 $surfaceParts = [];
+                $lemmaFiltered = [];
+                $surfaceFiltered = [];
                 $adpCount = 0;
                 $hasVerb = false;
+                $reflexives = ['seg','meg','deg','oss','dere','dem'];
                 for ($j = $start; $j <= $end; $j++) {
                     $lemmaParts[] = $lemmaForExpr[$j] ?? $surfaceLower[$j] ?? '';
                     $surfaceParts[] = $surfaceLower[$j] ?? '';
@@ -764,9 +767,18 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     if (in_array('VERB', $posSets[$j] ?? [], true)) {
                         $hasVerb = true;
                     }
+                    $posSet = $posSets[$j] ?? [];
+                    $lemmaTok = $lemmaForExpr[$j] ?? $surfaceLower[$j] ?? '';
+                    $isReflexive = $lemmaTok !== '' && in_array($lemmaTok, $reflexives, true);
+                    $dropToken = (in_array('DET', $posSet, true) || (in_array('PRON', $posSet, true) && !$isReflexive));
+                    if (!$dropToken) {
+                        $lemmaFiltered[] = $lemmaTok;
+                        $surfaceFiltered[] = $surfaceLower[$j] ?? '';
+                    }
                 }
-                $expr = trim(implode(' ', array_filter($lemmaParts)));
-                $surface = trim(implode(' ', array_filter($surfaceParts)));
+                $useFiltered = count(array_filter($lemmaFiltered)) >= 2;
+                $expr = trim(implode(' ', array_filter($useFiltered ? $lemmaFiltered : $lemmaParts)));
+                $surface = trim(implode(' ', array_filter($useFiltered ? $surfaceFiltered : $surfaceParts)));
                 if ($expr === '' || $surface === '') {
                     continue;
                 }
@@ -785,7 +797,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 } else if ($adpCount >= 1) {
                     $score += 1;
                 }
-                $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => $len, 'score' => $score, 'source' => 'pattern'];
+                $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => $len, 'score' => $score, 'source' => 'pattern', 'start' => $start, 'end' => $end];
                 break;
             }
         }
@@ -826,11 +838,135 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($expr === '' || $surface === '') {
                 continue;
             }
-            $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => ($end - $i + 1), 'score' => 4, 'source' => 'argstr'];
+            $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => ($end - $i + 1), 'score' => 4, 'source' => 'argstr', 'start' => $i, 'end' => $end];
         }
     }
 
     return $out;
+}
+
+/**
+ * True if $needle tokens appear contiguously inside $hay.
+ *
+ * @param array<int,string> $hay
+ * @param array<int,string> $needle
+ * @return bool
+ */
+function mod_flashcards_tokens_contain_phrase(array $hay, array $needle): bool {
+    $n = count($needle);
+    $h = count($hay);
+    if ($n === 0 || $h === 0 || $n > $h) {
+        return false;
+    }
+    for ($i = 0; $i <= $h - $n; $i++) {
+        $slice = array_slice($hay, $i, $n);
+        if ($slice === $needle) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Lemmatize tokens using ordbank (best-effort).
+ *
+ * @param array<int,string> $tokens
+ * @return array<int,string>
+ */
+function mod_flashcards_tokens_to_lemma(array $tokens): array {
+    static $cache = [];
+    $out = [];
+    foreach ($tokens as $tok) {
+        $tok = core_text::strtolower($tok);
+        if ($tok === '') {
+            $out[] = $tok;
+            continue;
+        }
+        if (isset($cache[$tok])) {
+            $out[] = $cache[$tok];
+            continue;
+        }
+        $lemma = $tok;
+        try {
+            $cands = \mod_flashcards\local\ordbank_helper::find_candidates($tok);
+            if (!empty($cands)) {
+                foreach ($cands as $cand) {
+                    if (!empty($cand['baseform'])) {
+                        $lemma = core_text::strtolower((string)$cand['baseform']);
+                        break;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        $cache[$tok] = $lemma;
+        $out[] = $lemma;
+    }
+    return $out;
+}
+
+/**
+ * Try to confirm an expression by checking Ordbokene examples for its head lemma.
+ *
+ * @param string $lemma
+ * @param string $surfaceExpr
+ * @param string $lemmaExpr
+ * @param string $lang
+ * @return array|null
+ */
+function mod_flashcards_orbokene_example_match(string $lemma, string $surfaceExpr, string $lemmaExpr, string $lang): ?array {
+    $lemma = trim(core_text::strtolower($lemma));
+    if ($lemma === '') {
+        return null;
+    }
+    $examples = [];
+    if (\mod_flashcards\local\orbokene_repository::is_enabled()) {
+        $cached = \mod_flashcards\local\orbokene_repository::find($lemma);
+        if (!empty($cached['examples']) && is_array($cached['examples'])) {
+            $examples = $cached['examples'];
+        }
+    }
+    if (empty($examples)) {
+        $entry = \mod_flashcards\local\ordbokene_client::lookup($lemma, $lang);
+        if (!empty($entry['examples']) && is_array($entry['examples'])) {
+            $examples = $entry['examples'];
+        }
+    }
+    if (empty($examples)) {
+        return null;
+    }
+    $surfaceTokens = mod_flashcards_word_tokens($surfaceExpr);
+    $lemmaTokens = mod_flashcards_word_tokens($lemmaExpr);
+    foreach ($examples as $example) {
+        $ex = trim((string)$example);
+        if ($ex === '') {
+            continue;
+        }
+        $exTokens = mod_flashcards_word_tokens($ex);
+        if (!empty($surfaceTokens) && mod_flashcards_tokens_contain_phrase($exTokens, $surfaceTokens)) {
+            return [
+                'expression' => $surfaceExpr,
+                'meanings' => [],
+                'examples' => [$ex],
+                'dictmeta' => ['source' => 'examples'],
+                'source' => 'examples',
+            ];
+        }
+        if (!empty($lemmaTokens)) {
+            $exLemmaTokens = mod_flashcards_tokens_to_lemma($exTokens);
+            if (mod_flashcards_tokens_contain_phrase($exLemmaTokens, $lemmaTokens)) {
+                return [
+                    'expression' => $surfaceExpr,
+                    'meanings' => [],
+                    'examples' => [$ex],
+                    'dictmeta' => ['source' => 'examples'],
+                    'source' => 'examples',
+                ];
+            }
+        }
+    }
+    return null;
 }
 
 /**
@@ -1983,6 +2119,36 @@ switch ($action) {
             if ($expr === '' && $surfaceExpr === '') {
                 continue;
             }
+            $headLemma = '';
+            $startIdx = isset($cand['start']) ? (int)$cand['start'] : null;
+            $endIdx = isset($cand['end']) ? (int)$cand['end'] : null;
+            if ($startIdx !== null && $endIdx !== null && $startIdx <= $endIdx) {
+                for ($i = $startIdx; $i <= $endIdx; $i++) {
+                    $pos = $posMap[$i] ?? '';
+                    $posCandidates = $posCandidatesMap[$i] ?? [];
+                    $posList = $pos !== '' ? array_merge([$pos], $posCandidates) : $posCandidates;
+                    $posList = array_values(array_unique(array_filter($posList)));
+                    if (array_intersect($posList, ['NOUN','ADJ'])) {
+                        $headLemma = (string)($exprLemmaMap[$i] ?? '');
+                        break;
+                    }
+                }
+                if ($headLemma === '') {
+                    for ($i = $startIdx; $i <= $endIdx; $i++) {
+                        $pos = $posMap[$i] ?? '';
+                        $posCandidates = $posCandidatesMap[$i] ?? [];
+                        $posList = $pos !== '' ? array_merge([$pos], $posCandidates) : $posCandidates;
+                        $posList = array_values(array_unique(array_filter($posList)));
+                        if (in_array('VERB', $posList, true)) {
+                            $headLemma = (string)($exprLemmaMap[$i] ?? '');
+                            break;
+                        }
+                    }
+                }
+                if ($headLemma === '') {
+                    $headLemma = (string)($exprLemmaMap[$startIdx] ?? '');
+                }
+            }
             $key = core_text::strtolower($expr !== '' ? $expr : $surfaceExpr);
             if (isset($seenCand[$key])) {
                 continue;
@@ -2024,6 +2190,19 @@ switch ($action) {
                 $match = mod_flashcards_lookup_or_search_expression($variant, $lang);
                 if (!empty($match)) {
                     break;
+                }
+            }
+            if (empty($match)) {
+                if ($headLemma !== '') {
+                    $exampleMatch = mod_flashcards_orbokene_example_match(
+                        $headLemma,
+                        $surfaceExpr !== '' ? $surfaceExpr : $expr,
+                        $expr !== '' ? $expr : $surfaceExpr,
+                        $lang
+                    );
+                    if (!empty($exampleMatch)) {
+                        $match = $exampleMatch;
+                    }
                 }
             }
             if (empty($match)) {
@@ -2075,6 +2254,58 @@ switch ($action) {
             ];
             if (count($resolved) >= 12) {
                 break;
+            }
+        }
+        if ($enrich && !empty($resolved)) {
+            $lowCandidates = array_values(array_filter($resolved, function($item){
+                return isset($item['confidence']) && $item['confidence'] === 'low';
+            }));
+            $lowCandidates = array_slice($lowCandidates, 0, 8);
+            if (!empty($lowCandidates)) {
+                try {
+                    $helper = new \mod_flashcards\local\ai_helper();
+                    $llm = $helper->confirm_expression_candidates($text, $lowCandidates, $language, $userid);
+                    $confirmed = is_array($llm['confirmed'] ?? null) ? $llm['confirmed'] : [];
+                    if (!empty($confirmed)) {
+                        $resolvedMap = [];
+                        foreach ($resolved as $idx => $item) {
+                            $key = core_text::strtolower((string)($item['expression'] ?? ''));
+                            if ($key !== '') {
+                                $resolvedMap[$key] = $idx;
+                            }
+                        }
+                        foreach ($confirmed as $item) {
+                            $expr = trim((string)($item['expression'] ?? ''));
+                            if ($expr === '') {
+                                continue;
+                            }
+                            $key = core_text::strtolower($expr);
+                            if (!isset($resolvedMap[$key])) {
+                                continue;
+                            }
+                            $idx = $resolvedMap[$key];
+                            $currentConfidence = $resolved[$idx]['confidence'] ?? 'low';
+                            if ($currentConfidence !== 'high') {
+                                $resolved[$idx]['confidence'] = 'medium';
+                                $resolved[$idx]['source'] = 'llm';
+                            }
+                            $translation = trim((string)($item['translation'] ?? ''));
+                            $note = trim((string)($item['note'] ?? ''));
+                            $explanation = $translation;
+                            if ($note !== '') {
+                                $explanation = $translation !== '' ? ($translation . ' — ' . $note) : $note;
+                            }
+                            if ($translation !== '' && empty($resolved[$idx]['translation'])) {
+                                $resolved[$idx]['translation'] = $translation;
+                            }
+                            if ($explanation !== '' && empty($resolved[$idx]['explanation'])) {
+                                $resolved[$idx]['explanation'] = $explanation;
+                            }
+                        }
+                    }
+                } catch (\Throwable $ex) {
+                    // Ignore LLM fallback errors, keep deterministic results.
+                }
             }
         }
         $data = [

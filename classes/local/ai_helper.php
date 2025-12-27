@@ -351,6 +351,118 @@ USERPROMPT;
         return $result;
     }
 
+    /**
+     * Confirm candidate expressions using LLM (only when Ordbokene could not confirm).
+     *
+     * @param string $text
+     * @param array $candidates
+     * @param string $language
+     * @param int $userid
+     * @return array{confirmed:array<int,array<string,string>>,usage?:array}
+     */
+    public function confirm_expression_candidates(string $text, array $candidates, string $language, int $userid): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+        $languagemap = [
+            'uk' => 'Ukrainian',
+            'ru' => 'Russian',
+            'en' => 'English',
+            'no' => 'Norwegian',
+        ];
+        $langname = $languagemap[$language] ?? 'English';
+        $text = trim($text);
+        if ($text === '' || empty($candidates)) {
+            return ['confirmed' => []];
+        }
+        $list = [];
+        foreach ($candidates as $cand) {
+            $expr = trim((string)($cand['expression'] ?? ''));
+            if ($expr !== '') {
+                $list[] = $expr;
+            }
+        }
+        $list = array_values(array_unique($list));
+        if (empty($list)) {
+            return ['confirmed' => []];
+        }
+        $systemprompt = <<<"SYSTEMPROMPT"
+You are an expert Norwegian (Bokmål) linguist.
+Return ONLY valid JSON, no extra text.
+All translations and notes must be in $langname.
+SYSTEMPROMPT;
+
+        $candidateJson = json_encode($list, JSON_UNESCAPED_UNICODE);
+        $userprompt = <<<"USERPROMPT"
+Sentence:
+"$text"
+
+Candidate expressions (exact strings):
+$candidateJson
+
+Task:
+Select ONLY the expressions that are actually used in this sentence (as multi-word expressions or fixed collocations).
+Return JSON in this exact schema:
+{
+  "confirmed": [
+    {
+      "expression": "exact candidate string",
+      "translation": "short translation",
+      "note": "very short meaning note (optional)"
+    }
+  ]
+}
+
+Rules:
+- Use ONLY expressions from the candidate list.
+- Do NOT invent new expressions.
+- If none apply, return an empty confirmed array.
+USERPROMPT;
+
+        $client = $this->openai;
+        $reflection = new \ReflectionClass($client);
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'expression');
+
+        $payload = [
+            'model' => $model,
+            'temperature' => 0.2,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt],
+                ['role' => 'user', 'content' => $userprompt],
+            ],
+        ];
+
+        $modelkey = core_text::strtolower(trim((string)$model));
+        if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
+            unset($payload['temperature']);
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'expression');
+        }
+
+        $method = $reflection->getMethod('request');
+        $method->setAccessible(true);
+        $recordMethod = $reflection->getMethod('record_usage');
+        $recordMethod->setAccessible(true);
+
+        $response = $method->invoke($client, $payload);
+        $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+        $content = trim($response->choices[0]->message->content ?? '');
+        $parsed = $this->parse_json_response($content);
+        if ($parsed === null) {
+            return ['confirmed' => []];
+        }
+        $confirmed = is_array($parsed['confirmed'] ?? null) ? $parsed['confirmed'] : [];
+        $result = ['confirmed' => $confirmed];
+        if (!empty($response->usage)) {
+            $result['usage'] = (array)$response->usage;
+        }
+        return $result;
+    }
+
     public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
