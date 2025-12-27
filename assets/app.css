@@ -4886,6 +4886,9 @@ body.cropper-open #editActionsBar{
   margin-top:0.5rem;
   align-items:baseline;
 }
+.focus-word-list.hidden {
+  display:none;
+}
 .focus-helper-empty {
   color:var(--text-subtle);
   font-size:0.85rem;
@@ -5025,12 +5028,44 @@ body.cropper-open #editActionsBar{
   color:var(--text);
   font-size:0.9rem;
 }
+.analysis-item--expression {
+  border-color:rgba(59,130,246,0.45);
+  background:rgba(59,130,246,0.12);
+}
+.analysis-item--clickable {
+  cursor:pointer;
+}
+.analysis-item--clickable:hover {
+  border-color:var(--primary);
+  color:#fff;
+}
 .analysis-text {
   font-weight:600;
 }
 .analysis-translation {
   font-size:0.85rem;
   color:var(--text-subtle);
+}
+.analysis-confidence {
+  font-size:0.72rem;
+  text-transform:uppercase;
+  letter-spacing:0.04em;
+  padding:0.1rem 0.4rem;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.16);
+  color:var(--text-subtle);
+}
+.analysis-item[data-confidence="high"] .analysis-confidence {
+  color:#16a34a;
+  border-color:rgba(34,197,94,0.45);
+}
+.analysis-item[data-confidence="medium"] .analysis-confidence {
+  color:#f59e0b;
+  border-color:rgba(245,158,11,0.45);
+}
+.analysis-item[data-confidence="low"] .analysis-confidence {
+  color:#94a3b8;
+  border-color:rgba(148,163,184,0.45);
 }
 .ordbokene-block {
   border:1px solid rgba(255,255,255,0.08);

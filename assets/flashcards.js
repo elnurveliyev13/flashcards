@@ -2864,52 +2864,77 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function buildSentenceAnalysis(words, expressions){
       const list = [];
-      const exprs = Array.isArray(expressions) ? expressions : [];
-      exprs.forEach(expr => {
-        if(!expr || !expr.expression) return;
-        const text = expr.expression;
-        const translation = (expr.explanation || '').toString().trim();
-        list.push({text, translation});
-      });
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
         list.push({
           text: w.text,
-          translation: formatTokenAnalysis(w)
+          translation: formatTokenAnalysis(w),
+          kind: 'word',
+          index: Number.isInteger(w.index) ? w.index : null
         });
+      });
+      const exprs = Array.isArray(expressions) ? expressions : [];
+      exprs.forEach(expr => {
+        if(!expr || !expr.expression) return;
+        const text = expr.expression;
+        const translation = (expr.explanation || '').toString().trim();
+        list.push({text, translation, kind:'expression', confidence: expr.confidence || '', meta: expr});
       });
       return list;
     }
 
-    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText, words){
+    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText, words, expressions){
       const list = [];
       const sentenceTranslation = (enrichment?.sentenceTranslation || '').toString().trim();
       if(sentenceTranslation){
-        list.push({text: sentenceText, translation: sentenceTranslation});
+        list.push({text: sentenceText, translation: sentenceTranslation, kind:'sentence'});
       }
       const items = Array.isArray(enrichment?.elements) ? enrichment.elements : [];
-      const byIndex = {};
+      const enrichWordsByIndex = {};
+      const enrichExprByKey = {};
+      items.forEach(item=>{
+        if(!item || !item.text) return;
+        if(item.type === 'word' && Number.isInteger(item.index)){
+          enrichWordsByIndex[item.index] = item;
+          return;
+        }
+        const key = item.text.toString().trim().toLowerCase();
+        if(key){
+          enrichExprByKey[key] = item;
+        }
+      });
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w=>{
-        const idx = Number.isInteger(w?.index) ? w.index : null;
-        if(idx === null) return;
-        byIndex[idx] = w;
+        if(!w || !w.text) return;
+        const idx = Number.isInteger(w.index) ? w.index : null;
+        const enriched = idx !== null ? enrichWordsByIndex[idx] : null;
+        const translation = (enriched?.translation || '').toString().trim();
+        const grammar = formatTokenAnalysis(w);
+        const combined = translation ? (grammar ? `${translation} — ${grammar}` : translation) : grammar;
+        list.push({
+          text: w.text,
+          translation: combined,
+          kind:'word',
+          index: idx
+        });
       });
-      items.forEach(item => {
-        if(!item || !item.text) return;
-        const translation = (item.translation || '').toString().trim();
-        if(item.type === 'word'){
-          const idx = Number.isInteger(item.index) ? item.index : null;
-          const meta = idx !== null ? (byIndex[idx] || null) : null;
-          const grammar = meta ? formatTokenAnalysis(meta) : '';
-          const combined = translation ? (grammar ? `${translation} — ${grammar}` : translation) : grammar;
-          list.push({text: item.text, translation: combined});
-        } else {
-          const note = (item.note || '').toString().trim();
-          const combined = translation ? (note ? `${translation} — ${note}` : translation) : note;
-          list.push({text: item.text, translation: combined});
-        }
+      const exprs = Array.isArray(expressions) ? expressions : [];
+      exprs.forEach(expr=>{
+        if(!expr || !expr.expression) return;
+        const key = expr.expression.toString().trim().toLowerCase();
+        const enriched = key ? enrichExprByKey[key] : null;
+        const translation = (enriched?.translation || '').toString().trim();
+        const note = (enriched?.note || '').toString().trim();
+        const fallback = (expr.explanation || '').toString().trim();
+        const combined = translation ? (note ? `${translation} — ${note}` : translation) : (fallback || note);
+        list.push({
+          text: expr.expression,
+          translation: combined,
+          kind:'expression',
+          confidence: expr.confidence || '',
+          meta: expr
+        });
       });
       return list;
     }
@@ -2970,14 +2995,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusHelperState.wordMetaSourceText = normalized;
 
       const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
+      const confidenceRank = {high: 3, medium: 2, low: 1};
+      const sortedExpressions = expressions.slice().sort((a, b)=>{
+        return (confidenceRank[(b?.confidence || '').toLowerCase()] || 0) -
+          (confidenceRank[(a?.confidence || '').toLowerCase()] || 0);
+      });
       focusHelperState.expressionRequestText = normalized;
-      setFocusExpressionSuggestions(expressions, normalized);
+      setFocusExpressionSuggestions(sortedExpressions, normalized);
 
       const enrichment = data?.enrichment || null;
       if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
-        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words);
+        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words, sortedExpressions);
       } else {
-        focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, expressions);
+        focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, sortedExpressions);
       }
       renderSentenceAnalysis(focusHelperState.sentenceAnalysis);
     }catch(err){
@@ -3612,11 +3642,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const list = Array.isArray(items) ? items.filter(it => it && (it.text || it.token)) : [];
       if(!list.length){
         focusAnalysisList.textContent = aiStrings.analysisEmpty || '';
+        if(focusWordList){
+          focusWordList.classList.remove('hidden');
+        }
         return;
+      }
+      const hasWords = list.some(entry => entry.kind === 'word');
+      if(focusWordList){
+        focusWordList.classList.toggle('hidden', hasWords);
       }
       list.forEach(entry => {
         const chip = document.createElement('div');
         chip.className = 'analysis-item';
+        if(entry.kind === 'expression' || entry.kind === 'sentence'){
+          chip.classList.add('analysis-item--expression');
+        }
+        if(entry.kind === 'word' || entry.kind === 'expression'){
+          chip.classList.add('analysis-item--clickable');
+        }
+        if(entry.confidence){
+          chip.dataset.confidence = entry.confidence;
+        }
         const textEl = document.createElement('span');
         textEl.className = 'analysis-text';
         textEl.textContent = entry.text || entry.token || '';
@@ -3626,6 +3672,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.className = 'analysis-translation';
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
+        }
+        if(entry.kind === 'expression' && entry.confidence){
+          const conf = document.createElement('span');
+          conf.className = 'analysis-confidence';
+          conf.textContent = entry.confidence;
+          chip.appendChild(conf);
+        }
+        if(entry.kind === 'word' && Number.isInteger(entry.index)){
+          chip.addEventListener('click', ()=>{
+            const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
+            const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
+            if(!token){
+              return;
+            }
+            focusHelperState.activeExpressionIndex = null;
+            focusHelperState.activeIndex = token.index;
+            updateChipActiveState();
+            if(aiEnabled){
+              triggerFocusHelper(token, token.index, fullTokens);
+            } else {
+              triggerOrdbankHelper(token, token.index, fullTokens);
+            }
+            scheduleFocusSuggest();
+          });
+        }
+        if(entry.kind === 'expression' && entry.meta && entry.meta.expression){
+          chip.addEventListener('click', ()=>{
+            focusHelperState.activeIndex = null;
+            const exprKey = String(entry.meta.expression || '').toLowerCase();
+            const exprIdx = Array.isArray(focusHelperState.expressionSuggestions)
+              ? focusHelperState.expressionSuggestions.findIndex(e => String(e?.expression || '').toLowerCase() === exprKey)
+              : -1;
+            focusHelperState.activeExpressionIndex = exprIdx >= 0 ? exprIdx : null;
+            updateChipActiveState();
+            loadExpressionFocus(entry.meta.expression, entry.meta);
+          });
         }
         focusAnalysisList.appendChild(chip);
       });

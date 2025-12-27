@@ -690,6 +690,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         [['VERB'], ['ADP'], ['NOUN','PRON','ADJ']],
         [['VERB'], ['NOUN','ADJ'], ['ADP']],
         [['VERB'], ['NOUN','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
+        [['VERB'], ['PRON','DET'], ['NOUN','ADJ'], ['ADP']],
+        [['VERB'], ['PRON','DET'], ['NOUN','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
         [['VERB'], ['PRON','NOUN','ADJ'], ['ADP']],
         [['VERB'], ['PRON'], ['ADP']],
         [['VERB'], ['PRON'], ['ADP'], ['NOUN','PRON','ADJ']],
@@ -2025,7 +2027,21 @@ switch ($action) {
                 }
             }
             if (empty($match)) {
-                continue;
+                // Fallback: allow ordbank-based noun+prep collocation patterns.
+                $fallbackExpr = $expr !== '' ? $expr : $surfaceExpr;
+                if ($fallbackExpr === '') {
+                    continue;
+                }
+                if (count(mod_flashcards_word_tokens($fallbackExpr)) < 2) {
+                    continue;
+                }
+                $match = [
+                    'expression' => $fallbackExpr,
+                    'meanings' => [],
+                    'examples' => [],
+                    'dictmeta' => [],
+                    'source' => 'pattern',
+                ];
             }
             $expression = (string)($match['expression'] ?? ($expr !== '' ? $expr : $surfaceExpr));
             $exprTokens = mod_flashcards_word_tokens($expression);
@@ -2041,13 +2057,21 @@ switch ($action) {
             if (!empty($match['meanings']) && is_array($match['meanings'])) {
                 $meaning = trim((string)($match['meanings'][0] ?? ''));
             }
+            $confidence = 'low';
+            $source = $match['source'] ?? 'pattern';
+            if ($source === 'cache' || $source === 'ordbokene') {
+                $confidence = 'high';
+            } else if (($cand['source'] ?? '') === 'argstr' || ($cand['source'] ?? '') === 'pattern') {
+                $confidence = 'medium';
+            }
             $resolved[] = [
                 'expression' => $expression,
                 'translation' => '',
                 'explanation' => $meaning,
                 'examples' => $match['examples'] ?? [],
                 'dictmeta' => $match['dictmeta'] ?? [],
-                'source' => $match['source'] ?? 'ordbokene',
+                'source' => $source,
+                'confidence' => $confidence,
             ];
             if (count($resolved) >= 12) {
                 break;
