@@ -353,6 +353,12 @@
               </div>
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
+              <div class="focus-helper-analysis">
+                <div class="analysis-header">
+                  <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
+                </div>
+                <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
+              </div>
             </div>
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
@@ -360,12 +366,6 @@
                 <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
                 <div id="fokusSuggest" class="fokus-suggest front-suggest" data-front-suggest></div>
               </div>
-            </div>
-            <div class="slot" id="slot_focus_analysis">
-              <div class="analysis-header">
-                <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
-              </div>
-              <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
             </div>
             <div class="slot" id="slot_ordbokene">
               <span class="tag" data-i18n="ordbokene_block_label">{{#str}} ordbokene_block_label, mod_flashcards {{/str}}</span>

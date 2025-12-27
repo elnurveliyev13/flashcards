@@ -2882,19 +2882,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return list;
     }
 
-    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText){
+    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText, words){
       const list = [];
       const sentenceTranslation = (enrichment?.sentenceTranslation || '').toString().trim();
       if(sentenceTranslation){
         list.push({text: sentenceText, translation: sentenceTranslation});
       }
       const items = Array.isArray(enrichment?.elements) ? enrichment.elements : [];
+      const byIndex = {};
+      const wordItems = Array.isArray(words) ? words : [];
+      wordItems.forEach(w=>{
+        const idx = Number.isInteger(w?.index) ? w.index : null;
+        if(idx === null) return;
+        byIndex[idx] = w;
+      });
       items.forEach(item => {
         if(!item || !item.text) return;
         const translation = (item.translation || '').toString().trim();
-        const note = (item.note || '').toString().trim();
-        const combined = translation ? (note ? `${translation} — ${note}` : translation) : note;
-        list.push({text: item.text, translation: combined});
+        if(item.type === 'word'){
+          const idx = Number.isInteger(item.index) ? item.index : null;
+          const meta = idx !== null ? (byIndex[idx] || null) : null;
+          const grammar = meta ? formatTokenAnalysis(meta) : '';
+          const combined = translation ? (grammar ? `${translation} — ${grammar}` : translation) : grammar;
+          list.push({text: item.text, translation: combined});
+        } else {
+          const note = (item.note || '').toString().trim();
+          const combined = translation ? (note ? `${translation} — ${note}` : translation) : note;
+          list.push({text: item.text, translation: combined});
+        }
       });
       return list;
     }
@@ -2960,7 +2975,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
       const enrichment = data?.enrichment || null;
       if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
-        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized);
+        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words);
       } else {
         focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, expressions);
       }

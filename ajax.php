@@ -329,6 +329,8 @@ function mod_flashcards_spacy_expression_candidates(string $fronttext, string $c
         'ADP PRON',
         'ADP ADJ',
         'NOUN ADP',
+        'VERB NOUN ADP',
+        'AUX NOUN ADP',
         'ADJ ADP',
         'ADV ADP',
         'VERB ADP',
@@ -1852,6 +1854,10 @@ switch ($action) {
         $resolved = [];
         $seenCand = [];
         $seenResolved = [];
+        $lowerWords = [];
+        foreach ($words as $w) {
+            $lowerWords[] = core_text::strtolower((string)($w['text'] ?? ''));
+        }
         foreach ($cands as $cand) {
             $expr = trim((string)($cand['expression'] ?? ''));
             if ($expr === '') {
@@ -1897,6 +1903,41 @@ switch ($action) {
                 'dictmeta' => $match['dictmeta'] ?? [],
                 'source' => $match['source'] ?? 'ordbokene',
             ];
+            if (count($resolved) >= 12) {
+                break;
+            }
+        }
+        // Built-in patterns for common light-verb expressions (fallback when Ordbokene misses).
+        $extraExprs = [];
+        $n = count($lowerWords);
+        for ($i = 0; $i + 2 < $n; $i++) {
+            $lemma1 = $lemmaMap[$i] ?? $lowerWords[$i];
+            $lemma2 = $lemmaMap[$i + 1] ?? $lowerWords[$i + 1];
+            $prep = $lowerWords[$i + 2];
+            if ($lemma1 === 'ha' && $lemma2 === 'lyst' && in_array($prep, ['på','til'], true)) {
+                $extraExprs[] = 'ha lyst ' . $prep;
+            }
+        }
+        $extraExprs = array_values(array_unique(array_filter($extraExprs)));
+        foreach ($extraExprs as $expr) {
+            $key = core_text::strtolower($expr);
+            if (isset($seenResolved[$key])) {
+                continue;
+            }
+            $meaning = '';
+            $match = mod_flashcards_lookup_or_search_expression($expr, $lang);
+            if (!empty($match['meanings']) && is_array($match['meanings'])) {
+                $meaning = trim((string)($match['meanings'][0] ?? ''));
+            }
+            $resolved[] = [
+                'expression' => $expr,
+                'translation' => '',
+                'explanation' => $meaning,
+                'examples' => $match['examples'] ?? [],
+                'dictmeta' => $match['dictmeta'] ?? [],
+                'source' => $match['source'] ?? 'pattern',
+            ];
+            $seenResolved[$key] = true;
             if (count($resolved) >= 12) {
                 break;
             }
