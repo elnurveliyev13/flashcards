@@ -1,0 +1,26 @@
+{
+    "hasErrors": true,
+    "errors": [
+        {
+            "original": "Hva har du lyst p\u00e5?",
+            "corrected": "Hva har du lyst p\u00e5?",
+            "issue": "no changes needed",
+            "category": "other",
+            "certainty": "low"
+        }
+    ],
+    "correctedText": "Hva har du lyst p\u00e5?",
+    "alternativeText": "Hva vil du ha?",
+    "explanation": "The original sentence is understandable but the natural, common way to ask the question is 'Hva vil du ha?' while preserving meaning. The main sentence itself is arguably acceptable but could be improved to a more typical collocation; however, since only corrections were requested, the primary correction is trivial and no changes were necessary. Therefore, an alternative natural form is provided as option.",
+    "model": "gpt-5-nano-2025-08-07",
+    "reasoning_effort": "minimal",
+    "debugTiming": {
+        "api_stage1": 2.867677927017212,
+        "overall": 2.8852829933166504
+    },
+    "usage": {
+        "prompt_tokens": 1406,
+        "completion_tokens": 179,
+        "total_tokens": 1585
+    }
+}

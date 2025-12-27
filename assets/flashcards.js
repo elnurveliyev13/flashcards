@@ -13397,6 +13397,22 @@ Regeln:
 
         const result = await response.json();
 
+        if (result && Array.isArray(result.errors)) {
+          const filtered = result.errors.filter(err => {
+            const original = (err && err.original) ? String(err.original).trim() : '';
+            const corrected = (err && err.corrected) ? String(err.corrected).trim() : '';
+            return original !== corrected;
+          });
+          result.errors = filtered;
+          if (!filtered.length) {
+            result.hasErrors = false;
+            result.correctedText = result.correctedText || text;
+            if (result.alternativeText) {
+              result.alternativeText = result.correctedText;
+            }
+          }
+        }
+
         if (result.hasErrors) {
           showErrorCheckResult(result);
         } else {

@@ -667,6 +667,23 @@ function mod_flashcards_spacy_dep_map(string $text, array $spacy): array {
 }
 
 /**
+ * Detect particle-like tokens that often belong to fixed verb/preposition expressions.
+ */
+function mod_flashcards_is_particle_like(string $token): bool {
+    $token = mod_flashcards_normalize_token($token);
+    if ($token === '') {
+        return false;
+    }
+    $particles = [
+        'om', 'opp', 'ut', 'inn', 'innom', 'ned', 'over', 'til', 'fra',
+        'for', 'med', 'av', 'på', 'paa', 'pa', 'igjen', 'bort', 'fram', 'frem',
+        'hjem', 'hjemme', 'hjemmefra', 'etter', 'under', 'uten', 'hos',
+        'mot', 'mellom', 'rundt',
+    ];
+    return in_array($token, $particles, true);
+}
+
+/**
  * Build multiword expression candidates from word tokens using spaCy+Ordbank signals.
  *
  * @param array<int,array<string,mixed>> $words
@@ -683,23 +700,9 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
     if ($count < 2) {
         return $out;
     }
-    $patterns = [
-        [['ADP'], ['NOUN','PRON','ADJ']],
-        [['ADP'], ['NOUN','PRON','ADJ'], ['ADP']],
-        [['NOUN','ADJ'], ['ADP']],
-        [['VERB'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['VERB'], ['NOUN','ADJ'], ['ADP']],
-        [['VERB'], ['NOUN','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['VERB'], ['PRON','DET'], ['NOUN','ADJ'], ['ADP']],
-        [['VERB'], ['PRON','DET'], ['NOUN','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['VERB'], ['PRON','NOUN','ADJ'], ['ADP']],
-        [['VERB'], ['PRON'], ['ADP']],
-        [['VERB'], ['PRON'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['ADP'], ['NOUN','PRON','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['VERB'], ['PRON','NOUN','ADJ'], ['ADP'], ['NOUN','PRON','ADJ']],
-        [['VERB'], ['ADP'], ['PRON','NOUN','ADJ'], ['ADP']],
-    ];
-    $maxLen = 5;
+    $maxLen = 7;
+    $corePos = ['VERB','NOUN','ADJ','ADP','PART'];
+    $reflexives = ['seg','meg','deg','oss','dere','dem'];
 
     $posSets = [];
     $lemmaForExpr = [];
@@ -723,82 +726,105 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $lemmaForExpr[$i] = core_text::strtolower($lemma);
     }
 
-    $matchPattern = function(array $pattern, int $start) use ($posSets): bool {
-        foreach ($pattern as $offset => $allowed) {
-            $idx = $start + $offset;
-            $tokSet = $posSets[$idx] ?? [];
-            $ok = false;
-            foreach ($allowed as $p) {
-                if (in_array($p, $tokSet, true)) {
-                    $ok = true;
-                    break;
+    $buildCandidate = function(int $start, int $end, string $source, int $scoreBase) use ($posSets, $posMap, $lemmaForExpr, $surfaceLower, $corePos, $reflexives): ?array {
+        $lemmaParts = [];
+        $surfaceParts = [];
+        $coreLen = 0;
+        $adpCount = 0;
+        $hasVerb = false;
+        $hasAdjNoun = false;
+
+        for ($j = $start; $j <= $end; $j++) {
+            $posSet = $posSets[$j] ?? [];
+            $lemmaTok = $lemmaForExpr[$j] ?? $surfaceLower[$j] ?? '';
+            $surfaceTok = $surfaceLower[$j] ?? '';
+            if ($lemmaTok === '' || $surfaceTok === '') {
+                continue;
+            }
+            $isReflexive = in_array($lemmaTok, $reflexives, true);
+            $isParticle = in_array('PART', $posSet, true) ||
+                (in_array('ADV', $posSet, true) && mod_flashcards_is_particle_like($lemmaTok));
+            $isCore = $isReflexive || $isParticle || !empty(array_intersect($posSet, $corePos));
+            if (!$isCore) {
+                continue;
+            }
+            $coreLen++;
+            $lemmaParts[] = $lemmaTok;
+            $surfaceParts[] = $surfaceTok;
+
+            $corePosVal = '';
+            $primary = $posMap[$j] ?? '';
+            if ($primary !== '' && in_array($primary, $corePos, true)) {
+                $corePosVal = $primary;
+            } elseif ($isParticle) {
+                $corePosVal = 'PART';
+            } else {
+                foreach ($corePos as $pos) {
+                    if (in_array($pos, $posSet, true)) {
+                        $corePosVal = $pos;
+                        break;
+                    }
                 }
             }
-            if (!$ok) {
-                return false;
+            if ($corePosVal === '') {
+                $corePosVal = $isReflexive ? 'PRON' : 'X';
+            }
+            if ($corePosVal === 'ADP' || $corePosVal === 'PART') {
+                $adpCount++;
+            }
+            if ($corePosVal === 'VERB') {
+                $hasVerb = true;
+            }
+            if ($corePosVal === 'NOUN' || $corePosVal === 'ADJ') {
+                $hasAdjNoun = true;
             }
         }
-        return true;
+
+        if ($coreLen < 2) {
+            return null;
+        }
+        if ($adpCount < 1) {
+            return null;
+        }
+        if (!$hasVerb && !$hasAdjNoun) {
+            return null;
+        }
+        $expr = trim(implode(' ', array_filter($lemmaParts)));
+        $surface = trim(implode(' ', array_filter($surfaceParts)));
+        if ($expr === '' || $surface === '') {
+            return null;
+        }
+        $score = $scoreBase;
+        if ($coreLen >= 3) {
+            $score += 2;
+        }
+        if ($coreLen >= 4) {
+            $score += 1;
+        }
+        if ($hasVerb) {
+            $score += 2;
+        }
+        if ($adpCount >= 2) {
+            $score += 2;
+        } else if ($adpCount >= 1) {
+            $score += 1;
+        }
+        return [
+            'lemma' => $expr,
+            'surface' => $surface,
+            'len' => $coreLen,
+            'score' => $score,
+            'source' => $source,
+            'start' => $start,
+            'end' => $end,
+        ];
     };
 
     for ($start = 0; $start < $count; $start++) {
         for ($end = $start + 1; $end < $count && $end < $start + $maxLen; $end++) {
-            $len = $end - $start + 1;
-            foreach ($patterns as $pattern) {
-                if (count($pattern) !== $len) {
-                    continue;
-                }
-                if (!$matchPattern($pattern, $start)) {
-                    continue;
-                }
-                $lemmaParts = [];
-                $surfaceParts = [];
-                $lemmaFiltered = [];
-                $surfaceFiltered = [];
-                $adpCount = 0;
-                $hasVerb = false;
-                $reflexives = ['seg','meg','deg','oss','dere','dem'];
-                for ($j = $start; $j <= $end; $j++) {
-                    $lemmaParts[] = $lemmaForExpr[$j] ?? $surfaceLower[$j] ?? '';
-                    $surfaceParts[] = $surfaceLower[$j] ?? '';
-                    if (in_array('ADP', $posSets[$j] ?? [], true)) {
-                        $adpCount++;
-                    }
-                    if (in_array('VERB', $posSets[$j] ?? [], true)) {
-                        $hasVerb = true;
-                    }
-                    $posSet = $posSets[$j] ?? [];
-                    $lemmaTok = $lemmaForExpr[$j] ?? $surfaceLower[$j] ?? '';
-                    $isReflexive = $lemmaTok !== '' && in_array($lemmaTok, $reflexives, true);
-                    $dropToken = (in_array('DET', $posSet, true) || (in_array('PRON', $posSet, true) && !$isReflexive));
-                    if (!$dropToken) {
-                        $lemmaFiltered[] = $lemmaTok;
-                        $surfaceFiltered[] = $surfaceLower[$j] ?? '';
-                    }
-                }
-                $useFiltered = count(array_filter($lemmaFiltered)) >= 2;
-                $expr = trim(implode(' ', array_filter($useFiltered ? $lemmaFiltered : $lemmaParts)));
-                $surface = trim(implode(' ', array_filter($useFiltered ? $surfaceFiltered : $surfaceParts)));
-                if ($expr === '' || $surface === '') {
-                    continue;
-                }
-                $score = 0;
-                if ($len >= 3) {
-                    $score += 2;
-                }
-                if ($len >= 4) {
-                    $score += 1;
-                }
-                if ($hasVerb) {
-                    $score += 2;
-                }
-                if ($adpCount >= 2) {
-                    $score += 2;
-                } else if ($adpCount >= 1) {
-                    $score += 1;
-                }
-                $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => $len, 'score' => $score, 'source' => 'pattern', 'start' => $start, 'end' => $end];
-                break;
+            $candidate = $buildCandidate($start, $end, 'pattern', 0);
+            if ($candidate !== null) {
+                $out[] = $candidate;
             }
         }
     }
@@ -827,18 +853,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     $end = $nextIdx;
                 }
             }
-            $lemmaParts = [];
-            $surfaceParts = [];
-            for ($k = $i; $k <= $end; $k++) {
-                $lemmaParts[] = $lemmaForExpr[$k] ?? $surfaceLower[$k] ?? '';
-                $surfaceParts[] = $surfaceLower[$k] ?? '';
+            $candidate = $buildCandidate($i, $end, 'argstr', 2);
+            if ($candidate !== null) {
+                $out[] = $candidate;
             }
-            $expr = trim(implode(' ', array_filter($lemmaParts)));
-            $surface = trim(implode(' ', array_filter($surfaceParts)));
-            if ($expr === '' || $surface === '') {
-                continue;
-            }
-            $out[] = ['lemma' => $expr, 'surface' => $surface, 'len' => ($end - $i + 1), 'score' => 4, 'source' => 'argstr', 'start' => $i, 'end' => $end];
         }
     }
 
@@ -865,6 +883,42 @@ function mod_flashcards_tokens_contain_phrase(array $hay, array $needle): bool {
         }
     }
     return false;
+}
+
+/**
+ * True if $needle tokens appear in order inside $hay with small gaps.
+ *
+ * @param array<int,string> $hay
+ * @param array<int,string> $needle
+ * @param int $maxGap
+ * @return bool
+ */
+function mod_flashcards_tokens_contain_phrase_fuzzy(array $hay, array $needle, int $maxGap = 2): bool {
+    $n = count($needle);
+    $h = count($hay);
+    if ($n === 0 || $h === 0 || $n > $h) {
+        return false;
+    }
+    $pos = -1;
+    $prevIdx = null;
+    foreach ($needle as $tok) {
+        $found = false;
+        for ($i = $pos + 1; $i < $h; $i++) {
+            if ($hay[$i] === $tok) {
+                if ($prevIdx !== null && ($i - $prevIdx - 1) > $maxGap) {
+                    return false;
+                }
+                $pos = $i;
+                $prevIdx = $i;
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -944,7 +998,7 @@ function mod_flashcards_orbokene_example_match(string $lemma, string $surfaceExp
             continue;
         }
         $exTokens = mod_flashcards_word_tokens($ex);
-        if (!empty($surfaceTokens) && mod_flashcards_tokens_contain_phrase($exTokens, $surfaceTokens)) {
+        if (!empty($surfaceTokens) && mod_flashcards_tokens_contain_phrase_fuzzy($exTokens, $surfaceTokens)) {
             return [
                 'expression' => $surfaceExpr,
                 'meanings' => [],
@@ -955,7 +1009,7 @@ function mod_flashcards_orbokene_example_match(string $lemma, string $surfaceExp
         }
         if (!empty($lemmaTokens)) {
             $exLemmaTokens = mod_flashcards_tokens_to_lemma($exTokens);
-            if (mod_flashcards_tokens_contain_phrase($exLemmaTokens, $lemmaTokens)) {
+            if (mod_flashcards_tokens_contain_phrase_fuzzy($exLemmaTokens, $lemmaTokens)) {
                 return [
                     'expression' => $surfaceExpr,
                     'meanings' => [],
@@ -2240,7 +2294,7 @@ switch ($action) {
             $source = $match['source'] ?? 'pattern';
             if ($source === 'cache' || $source === 'ordbokene') {
                 $confidence = 'high';
-            } else if (($cand['source'] ?? '') === 'argstr' || ($cand['source'] ?? '') === 'pattern') {
+            } else if ($source === 'examples') {
                 $confidence = 'medium';
             }
             $resolved[] = [
@@ -2307,6 +2361,11 @@ switch ($action) {
                     // Ignore LLM fallback errors, keep deterministic results.
                 }
             }
+        }
+        if (!empty($resolved)) {
+            $resolved = array_values(array_filter($resolved, function($item) {
+                return isset($item['confidence']) && $item['confidence'] !== 'low';
+            }));
         }
         $data = [
             'text' => $text,

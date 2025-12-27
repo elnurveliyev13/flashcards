@@ -980,6 +980,22 @@ USERPROMPT;
                 // Merge responses by consensus
                 $result1 = $this->merge_responses_by_consensus($responses, $requests, $text);
 
+                if (!empty($result1['errors']) && is_array($result1['errors'])) {
+                    $result1['errors'] = array_values(array_filter($result1['errors'], function($err) {
+                        if (!isset($err['original'], $err['corrected'])) {
+                            return true;
+                        }
+                        return trim((string)$err['original']) !== trim((string)$err['corrected']);
+                    }));
+                }
+                if (empty($result1['errors'])) {
+                    $result1['hasErrors'] = false;
+                    $result1['correctedText'] = $text;
+                    if (isset($result1['alternativeText'])) {
+                        $result1['alternativeText'] = $text;
+                    }
+                }
+
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
                 $debugtiming['overall'] = microtime(true) - $overallstart;
@@ -1277,6 +1293,22 @@ USERPROMPT2;
                 return ['hasErrors' => false, 'errors' => [], 'correctedText' => $text, 'explanation' => ''];
             }
 
+            if (!empty($result1['errors']) && is_array($result1['errors'])) {
+                $result1['errors'] = array_values(array_filter($result1['errors'], function($err) {
+                    if (!isset($err['original'], $err['corrected'])) {
+                        return true;
+                    }
+                    return trim((string)$err['original']) !== trim((string)$err['corrected']);
+                }));
+            }
+            if (empty($result1['errors'])) {
+                $result1['hasErrors'] = false;
+                $result1['correctedText'] = $text;
+                if (isset($result1['alternativeText'])) {
+                    $result1['alternativeText'] = $text;
+                }
+            }
+
             if (!empty($modelused)) {
                 $result1['model'] = $modelused;
             }
@@ -1462,6 +1494,24 @@ USERPROMPT2;
                 if (!empty($result2['suggestion'])) {
                     $finalResult['suggestion'] = $result2['suggestion'];
                 }
+            }
+
+            if (!empty($finalResult['errors']) && is_array($finalResult['errors'])) {
+                $finalResult['errors'] = array_values(array_filter($finalResult['errors'], function($err) {
+                    if (!isset($err['original'], $err['corrected'])) {
+                        return true;
+                    }
+                    return trim((string)$err['original']) !== trim((string)$err['corrected']);
+                }));
+            }
+            if (empty($finalResult['errors'])) {
+                $finalResult['hasErrors'] = false;
+                $finalResult['correctedText'] = $text;
+                if (isset($finalResult['alternativeText'])) {
+                    $finalResult['alternativeText'] = $text;
+                }
+            } else {
+                $finalResult['hasErrors'] = true;
             }
 
             $debugtiming['overall'] = microtime(true) - $overallstart;

@@ -7,6 +7,8 @@
 nul
 .claude/
 .devtools/ai_focus_helper&sesskey.json
-.devtools/HAR.json
 .devtools/ordbank_focus_helper&sesskey.json
-
+.devtools/sentence_elements.json
+.devtools/HAR.json
+.devtools/expression_focus_helper.json
+.devtools/ai_answer_question.json

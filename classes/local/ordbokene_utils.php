@@ -237,6 +237,24 @@ function mod_flashcards_expand_expression_variants(string $expression): array {
         return [];
     }
     $variants = [$expression];
+    $leadVerbs = ['være', 'ha', 'bli', 'få', 'holde', 'gå', 'komme'];
+    foreach ($leadVerbs as $verb) {
+        $pattern = '~^' . preg_quote($verb, '~') . '\s+~iu';
+        if (preg_match($pattern, $expression)) {
+            $trimmed = trim(preg_replace($pattern, '', $expression));
+            if ($trimmed !== '') {
+                $variants[] = $trimmed;
+            }
+            foreach ($leadVerbs as $alt) {
+                if ($alt === $verb) {
+                    continue;
+                }
+                $variants[] = trim($alt . ' ' . $trimmed);
+            }
+            break;
+        }
+    }
+
     $trimTokens = ['å', 'på', 'med', 'til', 'over', 'for', 'om', 'av', 'i', 'seg'];
     foreach ($trimTokens as $token) {
         $pattern = '~\b' . preg_quote($token, '~') . '$~iu';
