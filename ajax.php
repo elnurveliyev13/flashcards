@@ -623,6 +623,48 @@ function mod_flashcards_spacy_lemma_map(string $text, array $spacy): array {
 }
 
 /**
+ * Build spaCy dependency map aligned to word tokens.
+ *
+ * @param string $text
+ * @param array $spacy
+ * @return array<int,string>
+ */
+function mod_flashcards_spacy_dep_map(string $text, array $spacy): array {
+    $map = [];
+    $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+    if (empty($spacytokens)) {
+        return $map;
+    }
+    $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
+    if (empty($wordtokens)) {
+        return $map;
+    }
+    $j = 0;
+    $sn = count($spacytokens);
+    foreach ($wordtokens as $i => $w) {
+        $wText = core_text::strtolower((string)($w['text'] ?? ''));
+        $wNorm = mod_flashcards_normalize_token($wText);
+        if ($wNorm === '') {
+            continue;
+        }
+        for (; $j < $sn; $j++) {
+            $s = $spacytokens[$j];
+            if (empty($s['is_alpha'])) {
+                continue;
+            }
+            $sText = core_text::strtolower((string)($s['text'] ?? ''));
+            $sNorm = mod_flashcards_normalize_token($sText);
+            if ($sNorm !== '' && $sNorm === $wNorm) {
+                $map[$i] = (string)($s['dep'] ?? '');
+                $j++;
+                break;
+            }
+        }
+    }
+    return $map;
+}
+
+/**
  * Build expression candidates from spaCy tokens for a full sentence.
  *
  * @param array<int,array<string,mixed>> $tokens spaCy tokens
@@ -1755,9 +1797,12 @@ switch ($action) {
             throw new invalid_parameter_exception('Missing text');
         }
         $debug = !empty($payload['debug']);
+        $enrich = !empty($payload['enrich']) || !empty($payload['useLlm']) || !empty($payload['llm']);
+        $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
         $spacy = mod_flashcards_spacy_analyze($text);
         $posMap = mod_flashcards_spacy_pos_map($text, $spacy);
         $lemmaMap = mod_flashcards_spacy_lemma_map($text, $spacy);
+        $depMap = mod_flashcards_spacy_dep_map($text, $spacy);
         $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
         $words = [];
         foreach ($wordtokens as $i => $w) {
@@ -1768,8 +1813,31 @@ switch ($action) {
                 'end' => (int)($w['end'] ?? 0),
                 'pos' => $posMap[$i] ?? '',
                 'lemma' => $lemmaMap[$i] ?? '',
+                'dep' => $depMap[$i] ?? '',
             ];
         }
+        $sentenceTokens = mod_flashcards_word_tokens($text);
+        $inOrder = function(array $needle, array $hay): bool {
+            if (empty($needle) || empty($hay)) {
+                return false;
+            }
+            $pos = 0;
+            $n = count($hay);
+            foreach ($needle as $tok) {
+                $found = false;
+                for (; $pos < $n; $pos++) {
+                    if ($hay[$pos] === $tok) {
+                        $found = true;
+                        $pos++;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    return false;
+                }
+            }
+            return true;
+        };
         $lang = 'begge';
         $cands = mod_flashcards_spacy_expression_candidates_all(is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : []);
         if (!empty($cands)) {
@@ -1808,6 +1876,10 @@ switch ($action) {
                 continue;
             }
             $expression = (string)($match['expression'] ?? $expr);
+            $exprTokens = mod_flashcards_word_tokens($expression);
+            if (count($exprTokens) < 2 || !$inOrder($exprTokens, $sentenceTokens)) {
+                continue;
+            }
             $mkey = core_text::strtolower($expression);
             if (isset($seenResolved[$mkey])) {
                 continue;
@@ -1834,6 +1906,18 @@ switch ($action) {
             'words' => $words,
             'expressions' => $resolved,
         ];
+        if ($enrich) {
+            try {
+                $helper = new \mod_flashcards\local\ai_helper();
+                $data['enrichment'] = $helper->enrich_sentence_elements($text, $words, $resolved, $language, $userid);
+            } catch (\Throwable $ex) {
+                $data['enrichment'] = [
+                    'sentenceTranslation' => '',
+                    'elements' => [],
+                    'error' => $ex->getMessage(),
+                ];
+            }
+        }
         if ($debug) {
             $data['debug'] = [
                 'spacy' => [

@@ -202,6 +202,154 @@ class ai_helper {
         return $result;
     }
 
+    /**
+     * Enrich sentence elements with translations/notes via LLM.
+     *
+     * @param string $text Sentence (Norwegian)
+     * @param array $words Word elements with pos/dep/lemma
+     * @param array $expressions Multi-word expressions
+     * @param string $language Interface language for output
+     * @param int $userid User ID for usage tracking
+     * @return array{sentenceTranslation:string,elements:array<int,array<string,mixed>>,usage?:array}
+     */
+    public function enrich_sentence_elements(string $text, array $words, array $expressions, string $language, int $userid): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+        $languagemap = [
+            'uk' => 'Ukrainian',
+            'ru' => 'Russian',
+            'en' => 'English',
+            'no' => 'Norwegian',
+        ];
+        $langname = $languagemap[$language] ?? 'English';
+        $text = trim($text);
+        if ($text === '') {
+            return ['sentenceTranslation' => '', 'elements' => []];
+        }
+
+        $elements = [];
+        $seen = [];
+        $exprs = array_slice(array_values($expressions), 0, 20);
+        foreach ($exprs as $expr) {
+            $label = trim((string)($expr['expression'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $key = core_text::strtolower($label);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $elements[] = [
+                'type' => 'phrase',
+                'text' => $label,
+                'hint' => trim((string)($expr['explanation'] ?? '')),
+            ];
+        }
+        $wlist = array_slice(array_values($words), 0, 80);
+        foreach ($wlist as $w) {
+            $label = trim((string)($w['text'] ?? ''));
+            if ($label === '') {
+                continue;
+            }
+            $elements[] = [
+                'type' => 'word',
+                'index' => (int)($w['index'] ?? 0),
+                'text' => $label,
+                'pos' => trim((string)($w['pos'] ?? '')),
+                'dep' => trim((string)($w['dep'] ?? '')),
+                'lemma' => trim((string)($w['lemma'] ?? '')),
+            ];
+        }
+
+        $systemprompt = <<<"SYSTEMPROMPT"
+You are an expert Norwegian (Bokmål) tutor.
+Return ONLY valid JSON, no extra text.
+All translations and notes must be in $langname.
+SYSTEMPROMPT;
+
+        $elementJson = json_encode($elements, JSON_UNESCAPED_UNICODE);
+        $userprompt = <<<"USERPROMPT"
+Analyze the Norwegian sentence and provide translations.
+
+Sentence:
+"$text"
+
+Elements (do NOT add/remove/reorder):
+$elementJson
+
+Return JSON in this exact schema:
+{
+  "sentenceTranslation": "translation of the whole sentence",
+  "elements": [
+    {
+      "type": "phrase|word",
+      "text": "exact element text",
+      "index": 0,
+      "translation": "short translation of the element",
+      "note": "very short grammar note (optional)"
+    }
+  ]
+}
+
+Rules:
+- Keep the SAME order as provided.
+- For words, keep the same "index" value.
+- "translation" must be short and literal.
+- "note" should be 3-6 words, optional.
+- If unsure about a translation, use an empty string.
+USERPROMPT;
+
+        $client = $this->openai;
+        $reflection = new \ReflectionClass($client);
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'translation');
+
+        $payload = [
+            'model' => $model,
+            'temperature' => 0.1,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt],
+                ['role' => 'user', 'content' => $userprompt],
+            ],
+        ];
+
+        $modelkey = core_text::strtolower(trim((string)$model));
+        if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
+            unset($payload['temperature']);
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'translation');
+        }
+
+        $method = $reflection->getMethod('request');
+        $method->setAccessible(true);
+        $recordMethod = $reflection->getMethod('record_usage');
+        $recordMethod->setAccessible(true);
+
+        $response = $method->invoke($client, $payload);
+        $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+        $content = trim($response->choices[0]->message->content ?? '');
+        $parsed = $this->parse_json_response($content);
+        if ($parsed === null) {
+            return ['sentenceTranslation' => '', 'elements' => []];
+        }
+
+        $result = [
+            'sentenceTranslation' => trim((string)($parsed['sentenceTranslation'] ?? '')),
+            'elements' => is_array($parsed['elements'] ?? null) ? $parsed['elements'] : [],
+        ];
+
+        if (!empty($response->usage)) {
+            $result['usage'] = (array)$response->usage;
+        }
+
+        return $result;
+    }
+
     public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');

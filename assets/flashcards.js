@@ -2488,7 +2488,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionReady: false,
       expressionRequestText: '',
       wordMetaByIndex: {},
-      wordMetaSourceText: ''
+      wordMetaSourceText: '',
+      sentenceAnalysis: []
     };
     let sentenceElementsTimer = null;
     let sentenceElementsAbortController = null;
@@ -2799,6 +2800,105 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusStatusEl.textContent = text || '';
     }
 
+    const ANALYSIS_LABELS = {
+      en: {
+        pos: {
+          NOUN: 'Noun',
+          PROPN: 'Proper noun',
+          VERB: 'Verb',
+          AUX: 'Aux verb',
+          ADJ: 'Adjective',
+          ADV: 'Adverb',
+          PRON: 'Pronoun',
+          DET: 'Determiner',
+          ADP: 'Preposition',
+          CONJ: 'Conjunction',
+          CCONJ: 'Coordinating conj.',
+          SCONJ: 'Subordinating conj.',
+          PART: 'Particle',
+          NUM: 'Numeral',
+          INTJ: 'Interjection',
+          X: 'Other'
+        },
+        dep: {
+          nsubj: 'Subject',
+          csubj: 'Clausal subject',
+          obj: 'Object',
+          iobj: 'Indirect object',
+          obl: 'Oblique',
+          advmod: 'Adverbial modifier',
+          amod: 'Adjective modifier',
+          nmod: 'Noun modifier',
+          det: 'Determiner',
+          appos: 'Apposition',
+          aux: 'Auxiliary',
+          cop: 'Copula',
+          compound: 'Compound',
+          mark: 'Marker',
+          case: 'Case',
+          xcomp: 'Open clausal complement',
+          ccomp: 'Clausal complement',
+          acl: 'Clause modifier',
+          root: 'Root'
+        }
+      }
+    };
+
+    function resolveAnalysisLabel(type, key){
+      const lang = (currentInterfaceLang || 'en').toLowerCase();
+      const pack = ANALYSIS_LABELS[lang] || ANALYSIS_LABELS.en;
+      const map = pack && pack[type] ? pack[type] : {};
+      if(!key) return '';
+      return map[key] || map[key.toUpperCase?.()] || key;
+    }
+
+    function formatTokenAnalysis(item){
+      const parts = [];
+      const pos = resolveAnalysisLabel('pos', item.pos || '');
+      const dep = resolveAnalysisLabel('dep', item.dep || '');
+      if(pos) parts.push(pos);
+      if(dep) parts.push(dep);
+      if(item.lemma) parts.push(`lemma: ${item.lemma}`);
+      return parts.join(', ');
+    }
+
+    function buildSentenceAnalysis(words, expressions){
+      const list = [];
+      const exprs = Array.isArray(expressions) ? expressions : [];
+      exprs.forEach(expr => {
+        if(!expr || !expr.expression) return;
+        const text = expr.expression;
+        const translation = (expr.explanation || '').toString().trim();
+        list.push({text, translation});
+      });
+      const wordItems = Array.isArray(words) ? words : [];
+      wordItems.forEach(w => {
+        if(!w || !w.text) return;
+        list.push({
+          text: w.text,
+          translation: formatTokenAnalysis(w)
+        });
+      });
+      return list;
+    }
+
+    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText){
+      const list = [];
+      const sentenceTranslation = (enrichment?.sentenceTranslation || '').toString().trim();
+      if(sentenceTranslation){
+        list.push({text: sentenceText, translation: sentenceTranslation});
+      }
+      const items = Array.isArray(enrichment?.elements) ? enrichment.elements : [];
+      items.forEach(item => {
+        if(!item || !item.text) return;
+        const translation = (item.translation || '').toString().trim();
+        const note = (item.note || '').toString().trim();
+        const combined = translation ? (note ? `${translation} — ${note}` : translation) : note;
+        list.push({text: item.text, translation: combined});
+      });
+      return list;
+    }
+
     function syncExpressionSuggestions(text){
       const normalized = (text || '').trim();
       if(!normalized && focusHelperState.expressionSuggestions.length){
@@ -2812,12 +2912,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
-    async function fetchSentenceElements(text){
+    async function fetchSentenceElements(text, options = {}){
       const normalized = (text || '').trim();
       if(!normalized){
         focusHelperState.wordMetaByIndex = {};
         focusHelperState.wordMetaSourceText = '';
         setFocusExpressionSuggestions([], '');
+        focusHelperState.sentenceAnalysis = [];
+        renderSentenceAnalysis([]);
         return;
       }
       if(sentenceElementsAbortController){
@@ -2827,29 +2929,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       sentenceElementsAbortController = controller;
       const seq = ++sentenceElementsSeq;
       try{
-        const resp = await api('sentence_elements', {}, 'POST', {text: normalized}, {signal: controller.signal});
+        const payload = {text: normalized};
+        if(options && options.enrich){
+          payload.enrich = true;
+          payload.language = options.language || currentInterfaceLang || 'en';
+        }
+        const resp = await api('sentence_elements', {}, 'POST', payload, {signal: controller.signal});
         if(controller.signal.aborted || seq !== sentenceElementsSeq){
           return;
         }
-        const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
-        const wordMeta = {};
-        const words = Array.isArray(data?.words) ? data.words : [];
-        words.forEach(w=>{
-          const idx = Number.isInteger(w?.index) ? w.index : null;
-          if(idx === null){
-            return;
-          }
-          const pos = (w?.pos || '').toString().trim();
-          const lemma = (w?.lemma || '').toString().trim();
-          wordMeta[idx] = {pos, lemma};
-        });
-        focusHelperState.wordMetaByIndex = wordMeta;
-        focusHelperState.wordMetaSourceText = normalized;
+      const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
+      const wordMeta = {};
+      const words = Array.isArray(data?.words) ? data.words : [];
+      words.forEach(w=>{
+        const idx = Number.isInteger(w?.index) ? w.index : null;
+        if(idx === null){
+          return;
+        }
+        const pos = (w?.pos || '').toString().trim();
+        const lemma = (w?.lemma || '').toString().trim();
+        const dep = (w?.dep || '').toString().trim();
+        wordMeta[idx] = {pos, lemma, dep};
+      });
+      focusHelperState.wordMetaByIndex = wordMeta;
+      focusHelperState.wordMetaSourceText = normalized;
 
-        const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
-        focusHelperState.expressionRequestText = normalized;
-        setFocusExpressionSuggestions(expressions, normalized);
-      }catch(err){
+      const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
+      focusHelperState.expressionRequestText = normalized;
+      setFocusExpressionSuggestions(expressions, normalized);
+
+      const enrichment = data?.enrichment || null;
+      if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
+        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized);
+      } else {
+        focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, expressions);
+      }
+      renderSentenceAnalysis(focusHelperState.sentenceAnalysis);
+    }catch(err){
         if(controller.signal.aborted){
           return;
         }
@@ -3667,13 +3783,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           } else {
             payload.examples = [];
           }
-          renderSentenceAnalysis(analysis);
+          if(!focusHelperState.sentenceAnalysis || !focusHelperState.sentenceAnalysis.length){
+            renderSentenceAnalysis(analysis);
+          }
         } else {
-          renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
+          if(!focusHelperState.sentenceAnalysis || !focusHelperState.sentenceAnalysis.length){
+            renderSentenceAnalysis(payload.analysis || payload.sentenceAnalysis || []);
+          }
         }
         renderOrdbokeneBlock(needsExpressionConfirmation ? null : (payload.ordbokene || null));
       } else {
-        renderSentenceAnalysis([]);
+        if(!focusHelperState.sentenceAnalysis || !focusHelperState.sentenceAnalysis.length){
+          renderSentenceAnalysis([]);
+        }
         renderOrdbokeneBlock(null);
       }
     }
@@ -13170,6 +13292,9 @@ Regeln:
           // Auto-continue with tokenization
           renderFocusChips();
         }
+
+        const analysisText = (result && result.correctedText) ? result.correctedText : text;
+        await fetchSentenceElements(analysisText, {enrich: true, language});
 
         setFocusStatus('', '');
       } catch (error) {
