@@ -547,6 +547,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       analysisEmpty: dataset.analysisEmpty || 'Select a word to see the grammar breakdown.',
       ordbokeneEmpty: dataset.ordbokeneEmpty || 'Dictionary info will appear here after lookup.',
       ordbokeneCitation: dataset.ordbokeneCitation || '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+      spacyActive: dataset.spacyActive || 'spaCy parsed {$a} tokens',
+      spacyInactive: dataset.spacyInactive || 'spaCy analysis unavailable',
+      spacyModel: dataset.spacyModel || 'Model: {$a}',
       focusAudio: dataset.focusAudioLabel || 'Focus audio',
       frontAudio: dataset.frontAudioLabel || 'Audio',
       voicePlaceholder: dataset.voicePlaceholder || 'Default voice',
@@ -2480,6 +2483,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusStatusEl = document.getElementById('focusHelperStatus');
+    const focusSpacyEl = document.getElementById('focusHelperSpacy');
     const focusAnalysisList = document.getElementById('focusAnalysisList');
     const ordbokeneBlock = document.getElementById('ordbokeneBlock');
     const focusHelperState = {
@@ -2496,6 +2500,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       sentenceAnalysis: [],
       pendingSentenceAnalysis: null
     };
+    if(focusSpacyEl){
+      focusSpacyEl.textContent = '';
+      focusSpacyEl.dataset.state = '';
+      focusSpacyEl.classList.add('hidden');
+    }
     let sentenceElementsTimer = null;
     let sentenceElementsAbortController = null;
     let sentenceElementsSeq = 0;
@@ -2804,6 +2813,27 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       focusStatusEl.dataset.state = state || '';
       focusStatusEl.textContent = text || '';
     }
+    
+    function setSpaCyStatus(spacyInfo){
+      if(!focusSpacyEl){
+        return;
+      }
+      const hasTokens = spacyInfo && Array.isArray(spacyInfo.tokens) && spacyInfo.tokens.length > 0;
+      if(hasTokens){
+        const tokenCount = spacyInfo.tokens.length;
+        const template = aiStrings.spacyActive || 'spaCy parsed {$a} tokens';
+        const baseText = template.replace('{$a}', String(tokenCount));
+        const modelLabelTemplate = aiStrings.spacyModel || 'Model: {$a}';
+        const modelText = (spacyInfo.model || '').toString().trim();
+        const suffix = modelText ? ` · ${modelLabelTemplate.replace('{$a}', modelText)}` : '';
+        focusSpacyEl.textContent = `${baseText}${suffix}`.trim();
+        focusSpacyEl.dataset.state = 'active';
+      } else {
+        focusSpacyEl.textContent = aiStrings.spacyInactive || 'spaCy analysis unavailable';
+        focusSpacyEl.dataset.state = 'inactive';
+      }
+      focusSpacyEl.classList.remove('hidden');
+    }
 
     const ANALYSIS_LABELS = {
       en: {
@@ -2975,6 +3005,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const seq = ++sentenceElementsSeq;
       try{
         const payload = {text: normalized};
+        payload.debug = true;
         if(options && options.enrich){
           payload.enrich = true;
           payload.language = options.language || currentInterfaceLang || 'en';
@@ -2983,39 +3014,40 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(controller.signal.aborted || seq !== sentenceElementsSeq){
           return;
         }
-      const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
-      const wordMeta = {};
-      const words = Array.isArray(data?.words) ? data.words : [];
-      words.forEach(w=>{
-        const idx = Number.isInteger(w?.index) ? w.index : null;
-        if(idx === null){
-          return;
+        const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
+        setSpaCyStatus(data?.debug?.spacy || null);
+        const wordMeta = {};
+        const words = Array.isArray(data?.words) ? data.words : [];
+        words.forEach(w=>{
+          const idx = Number.isInteger(w?.index) ? w.index : null;
+          if(idx === null){
+            return;
+          }
+          const pos = (w?.pos || '').toString().trim();
+          const lemma = (w?.lemma || '').toString().trim();
+          const dep = (w?.dep || '').toString().trim();
+          wordMeta[idx] = {pos, lemma, dep};
+        });
+        focusHelperState.wordMetaByIndex = wordMeta;
+        focusHelperState.wordMetaSourceText = normalized;
+
+        const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
+        const confidenceRank = {high: 3, medium: 2, low: 1};
+        const sortedExpressions = expressions.slice().sort((a, b)=>{
+          return (confidenceRank[(b?.confidence || '').toLowerCase()] || 0) -
+            (confidenceRank[(a?.confidence || '').toLowerCase()] || 0);
+        });
+        focusHelperState.expressionRequestText = normalized;
+        setFocusExpressionSuggestions(sortedExpressions, normalized);
+
+        const enrichment = data?.enrichment || null;
+        if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
+          focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words, sortedExpressions);
+        } else {
+          focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, sortedExpressions);
         }
-        const pos = (w?.pos || '').toString().trim();
-        const lemma = (w?.lemma || '').toString().trim();
-        const dep = (w?.dep || '').toString().trim();
-        wordMeta[idx] = {pos, lemma, dep};
-      });
-      focusHelperState.wordMetaByIndex = wordMeta;
-      focusHelperState.wordMetaSourceText = normalized;
-
-      const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
-      const confidenceRank = {high: 3, medium: 2, low: 1};
-      const sortedExpressions = expressions.slice().sort((a, b)=>{
-        return (confidenceRank[(b?.confidence || '').toLowerCase()] || 0) -
-          (confidenceRank[(a?.confidence || '').toLowerCase()] || 0);
-      });
-      focusHelperState.expressionRequestText = normalized;
-      setFocusExpressionSuggestions(sortedExpressions, normalized);
-
-      const enrichment = data?.enrichment || null;
-      if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
-        focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words, sortedExpressions);
-      } else {
-        focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, sortedExpressions);
-      }
-      renderSentenceAnalysis(focusHelperState.sentenceAnalysis);
-    }catch(err){
+        renderSentenceAnalysis(focusHelperState.sentenceAnalysis);
+      }catch(err){
         if(controller.signal.aborted){
           return;
         }

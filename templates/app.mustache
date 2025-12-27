@@ -46,7 +46,10 @@
      data-ocr-disabled="{{#str}} ocr_status_disabled, mod_flashcards {{/str}}"
      data-ocr-retry="{{#str}} ocr_status_retry, mod_flashcards {{/str}}"
      data-ocr-undo="{{#str}} ocr_status_undo, mod_flashcards {{/str}}"
-     data-ordbokene-citation="{{#str}} ordbokene_citation, mod_flashcards {{/str}}">
+     data-ordbokene-citation="{{#str}} ordbokene_citation, mod_flashcards {{/str}}"
+     data-spacy-active="{{#str}} spacy_active_status, mod_flashcards {{/str}}"
+     data-spacy-inactive="{{#str}} spacy_inactive_status, mod_flashcards {{/str}}"
+     data-spacy-model="{{#str}} spacy_model_label, mod_flashcards {{/str}}">
   <div class="wrap">
     <div id="srStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     <!-- Access Status Banner -->
@@ -353,6 +356,7 @@
               </div>
               <div id="focusWordList" class="focus-word-list"></div>
               <div id="focusHelperStatus" class="focus-helper-status small"></div>
+              <div id="focusHelperSpacy" class="focus-helper-spacy-status small"></div>
               <div class="focus-helper-analysis">
                 <div class="analysis-header">
                   <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
