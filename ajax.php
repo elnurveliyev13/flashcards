@@ -2309,6 +2309,23 @@ switch ($action) {
             if ($expr === '' && $surfaceExpr === '') {
                 continue;
             }
+            $candStart = isset($cand['start']) ? (int)$cand['start'] : null;
+            $candEnd = isset($cand['end']) ? (int)$cand['end'] : null;
+            if ($candStart !== null && $candEnd !== null && !empty($resolved)) {
+                foreach ($resolved as $prev) {
+                    if (!isset($prev['start'], $prev['end'], $prev['len'])) {
+                        continue;
+                    }
+                    $prevSource = (string)($prev['source'] ?? '');
+                    if (!in_array($prevSource, ['ordbokene','cache','examples'], true)) {
+                        continue;
+                    }
+                    $overlaps = $candStart <= $prev['end'] && $prev['start'] <= $candEnd;
+                    if ($overlaps && ($prev['len'] ?? 0) >= ($cand['len'] ?? 0)) {
+                        continue 2;
+                    }
+                }
+            }
             $headLemma = '';
             $startIdx = isset($cand['start']) ? (int)$cand['start'] : null;
             $endIdx = isset($cand['end']) ? (int)$cand['end'] : null;

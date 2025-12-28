@@ -55,6 +55,50 @@ class ordbokene_client {
     }
 
     /**
+     * Fetch multiple URLs in parallel (best-effort).
+     *
+     * @param array<int,string> $urls
+     * @param int $timeout
+     * @return array<int,array{body:string,http:int}>
+     */
+    protected static function fetch_urls_parallel(array $urls, int $timeout = 10): array {
+        $urls = array_values(array_filter($urls, 'is_string'));
+        if (empty($urls) || !function_exists('curl_multi_init')) {
+            return [];
+        }
+        $mh = curl_multi_init();
+        $handles = [];
+        foreach ($urls as $idx => $url) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$idx] = $ch;
+        }
+        $active = null;
+        do {
+            $status = curl_multi_exec($mh, $active);
+            if ($active) {
+                curl_multi_select($mh);
+            }
+        } while ($active && $status == CURLM_OK);
+        $responses = [];
+        foreach ($handles as $idx => $ch) {
+            $body = curl_multi_getcontent($ch);
+            $info = curl_getinfo($ch);
+            $responses[$idx] = [
+                'body' => is_string($body) ? $body : '',
+                'http' => (int)($info['http_code'] ?? 0),
+            ];
+            curl_multi_remove_handle($mh, $ch);
+            curl_close($ch);
+        }
+        curl_multi_close($mh);
+        return $responses;
+    }
+
+    /**
      * Lookup any expressions/lemma for a given span (multiword).
      * Returns ['expressions'=>[], 'baseform'=>string, 'dictmeta'=>[]]
      */
@@ -71,6 +115,45 @@ class ordbokene_client {
         // Fallback: ord_2 API style with q= to match mid-phrase expressions (observed on ordbokene.no).
         $searches[] = self::build_search_url('q', $span, $lang, 'e', $wc);
 
+        $parallel = self::fetch_urls_parallel($searches, 10);
+        if (!empty($parallel)) {
+            foreach ($searches as $idx => $searchurl) {
+                $entry = $parallel[$idx] ?? null;
+                $http = is_array($entry) ? (int)($entry['http'] ?? 0) : 0;
+                $resp = is_array($entry) ? (string)($entry['body'] ?? '') : '';
+                if ($http < 200 || $http >= 300 || $resp === '') {
+                    continue;
+                }
+                $search = json_decode($resp, true);
+                if (!is_array($search) || empty($search['articles'])) {
+                    continue;
+                }
+                $articleid = null;
+                $articlelang = null;
+                if (!empty($search['articles']['bm'][0])) {
+                    $articleid = (int)$search['articles']['bm'][0];
+                    $articlelang = 'bm';
+                } else if (!empty($search['articles']['nn'][0])) {
+                    $articleid = (int)$search['articles']['nn'][0];
+                    $articlelang = 'nn';
+                }
+                if (!$articleid || !$articlelang) {
+                    continue;
+                }
+                $articleurl = sprintf(self::ARTICLE, $articlelang, $articleid);
+                $curl = new \curl();
+                $resp2 = $curl->get($articleurl);
+                $article = json_decode($resp2, true);
+                if (!is_array($article)) {
+                    continue;
+                }
+                $norm = self::normalize_article($article, $articlelang, $articleurl);
+                if (!empty($norm)) {
+                    return $norm;
+                }
+            }
+            return [];
+        }
         foreach ($searches as $searchurl) {
             try {
                 $resp = $curl->get($searchurl);
