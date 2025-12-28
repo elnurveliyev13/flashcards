@@ -485,6 +485,23 @@ $string['settings_vapid_subject_desc'] = 'Контактный email для push
 
 // Push notification task
 $string['task_send_push_notifications'] = 'Отправка push-уведомлений о карточках к повторению';
+$string['exprtrans_title'] = 'Переводы выражений';
+$string['exprtrans_lang'] = 'Язык';
+$string['exprtrans_query'] = 'Поиск';
+$string['exprtrans_perpage'] = 'Строк на страницу';
+$string['exprtrans_expression'] = 'Выражение';
+$string['exprtrans_translation'] = 'Перевод';
+$string['exprtrans_note'] = 'Определение/заметка';
+$string['exprtrans_examples'] = 'Примеры (NO)';
+$string['exprtrans_examples_trans'] = 'Переводы примеров';
+$string['exprtrans_examples_count'] = 'Примеры';
+$string['exprtrans_examples_trans_count'] = 'Переведенные примеры';
+$string['exprtrans_source'] = 'Источник';
+$string['exprtrans_confidence'] = 'Уверенность';
+$string['exprtrans_updated'] = 'Обновлено';
+$string['exprtrans_actions'] = 'Действия';
+$string['exprtrans_edit'] = 'Редактировать перевод выражения';
+$string['exprtrans_empty'] = 'Переводы выражений не найдены.';
 
 $string['settings_orbokene_section'] = 'Словарь Orbøkene';
 $string['settings_orbokene_section_desc'] = 'Если включено, AI помощник попытается обогатить выявленные выражения данными из таблицы flashcards_orbokene.';

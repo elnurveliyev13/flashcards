@@ -586,6 +586,13 @@ if ($hassiteconfig) {
         ));
 
     $ADMIN->add('modsettings', new admin_externalpage(
+            'mod_flashcards_exprtrans',
+            get_string('exprtrans_title', 'mod_flashcards'),
+            new moodle_url('/mod/flashcards/admin/expr_translations.php'),
+            'moodle/site:config'
+        ));
+
+    $ADMIN->add('modsettings', new admin_externalpage(
             'mod_flashcards_mediareport',
             get_string('mediareport_title', 'mod_flashcards'),
             new moodle_url('/mod/flashcards/admin/media_report.php'),

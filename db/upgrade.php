@@ -1056,5 +1056,34 @@ function xmldb_flashcards_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2025122504, 'flashcards');
     }
 
+    if ($oldversion < 2025122600) {
+        mtrace('Flashcards: Adding per-language expression translations table...');
+
+        $table = new xmldb_table('flashcards_expr_translations');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('expression', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('normalized', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('lang', XMLDB_TYPE_CHAR, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('translation', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('note', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('examplesjson', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('examplestransjson', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('source', XMLDB_TYPE_CHAR, '20', null, null, null, null);
+        $table->add_field('confidence', XMLDB_TYPE_CHAR, '10', null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_index('expr_lang_uix', XMLDB_INDEX_UNIQUE, ['normalized', 'lang']);
+        $table->add_index('lang_idx', XMLDB_INDEX_NOTUNIQUE, ['lang']);
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+            mtrace('  - Created flashcards_expr_translations table');
+        }
+
+        upgrade_mod_savepoint(true, 2025122600, 'flashcards');
+    }
+
     return true;
 }

@@ -589,3 +589,20 @@ $string['settings_vapid_subject_desc'] = 'Contact email for push service (e.g., 
 
 // Push notification task
 $string['task_send_push_notifications'] = 'Send push notifications for due cards';
+$string['exprtrans_title'] = 'Expression translations';
+$string['exprtrans_lang'] = 'Language';
+$string['exprtrans_query'] = 'Search';
+$string['exprtrans_perpage'] = 'Rows per page';
+$string['exprtrans_expression'] = 'Expression';
+$string['exprtrans_translation'] = 'Translation';
+$string['exprtrans_note'] = 'Definition/Note';
+$string['exprtrans_examples'] = 'Examples (NO)';
+$string['exprtrans_examples_trans'] = 'Example translations';
+$string['exprtrans_examples_count'] = 'Examples';
+$string['exprtrans_examples_trans_count'] = 'Translated examples';
+$string['exprtrans_source'] = 'Source';
+$string['exprtrans_confidence'] = 'Confidence';
+$string['exprtrans_updated'] = 'Updated';
+$string['exprtrans_actions'] = 'Actions';
+$string['exprtrans_edit'] = 'Edit expression translation';
+$string['exprtrans_empty'] = 'No expression translations found.';

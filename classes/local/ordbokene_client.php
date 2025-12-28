@@ -66,6 +66,20 @@ class ordbokene_client {
         if (empty($urls) || !function_exists('curl_multi_init')) {
             return [];
         }
+        global $CFG;
+        $proxyhost = trim((string)($CFG->proxyhost ?? ''));
+        $proxyport = (int)($CFG->proxyport ?? 0);
+        $proxyuser = trim((string)($CFG->proxyuser ?? ''));
+        $proxypass = (string)($CFG->proxypassword ?? '');
+        $proxytype = strtolower(trim((string)($CFG->proxytype ?? '')));
+        $noproxy = trim((string)($CFG->proxybypass ?? ($CFG->noproxy ?? '')));
+        $proxytypeMap = [
+            'http' => CURLPROXY_HTTP,
+            'https' => defined('CURLPROXY_HTTPS') ? CURLPROXY_HTTPS : CURLPROXY_HTTP,
+            'socks5' => CURLPROXY_SOCKS5,
+            'socks4' => CURLPROXY_SOCKS4,
+            'socks4a' => defined('CURLPROXY_SOCKS4A') ? CURLPROXY_SOCKS4A : CURLPROXY_SOCKS4,
+        ];
         $mh = curl_multi_init();
         $handles = [];
         foreach ($urls as $idx => $url) {
@@ -73,6 +87,25 @@ class ordbokene_client {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            if ($proxyhost !== '') {
+                curl_setopt($ch, CURLOPT_PROXY, $proxyhost);
+                if ($proxyport > 0) {
+                    curl_setopt($ch, CURLOPT_PROXYPORT, $proxyport);
+                }
+                if ($proxyuser !== '') {
+                    $auth = $proxyuser;
+                    if ($proxypass !== '') {
+                        $auth .= ':' . $proxypass;
+                    }
+                    curl_setopt($ch, CURLOPT_PROXYUSERPWD, $auth);
+                }
+                if (isset($proxytypeMap[$proxytype])) {
+                    curl_setopt($ch, CURLOPT_PROXYTYPE, $proxytypeMap[$proxytype]);
+                }
+                if ($noproxy !== '') {
+                    curl_setopt($ch, CURLOPT_NOPROXY, $noproxy);
+                }
+            }
             curl_multi_add_handle($mh, $ch);
             $handles[$idx] = $ch;
         }

@@ -2573,6 +2573,61 @@ switch ($action) {
                 ];
             }
         }
+        if (!empty($resolved)) {
+            $phraseMap = [];
+            if (!empty($data['enrichment']['elements']) && is_array($data['enrichment']['elements'])) {
+                foreach ($data['enrichment']['elements'] as $element) {
+                    if (!is_array($element) || ($element['type'] ?? '') !== 'phrase') {
+                        continue;
+                    }
+                    $label = trim((string)($element['text'] ?? ''));
+                    if ($label === '') {
+                        continue;
+                    }
+                    $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($label);
+                    if ($key === '') {
+                        continue;
+                    }
+                    $phraseMap[$key] = [
+                        'translation' => trim((string)($element['translation'] ?? '')),
+                        'note' => trim((string)($element['note'] ?? '')),
+                    ];
+                }
+            }
+            foreach ($resolved as $item) {
+                $expr = trim((string)($item['expression'] ?? ''));
+                if ($expr === '') {
+                    continue;
+                }
+                $confidence = trim((string)($item['confidence'] ?? ''));
+                if (!in_array($confidence, ['medium','high'], true)) {
+                    continue;
+                }
+                $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($expr);
+                $fromMap = $key !== '' && isset($phraseMap[$key]) ? $phraseMap[$key] : [];
+                $translation = trim((string)($fromMap['translation'] ?? ''));
+                if ($translation === '') {
+                    $translation = trim((string)($item['translation'] ?? ''));
+                }
+                $note = trim((string)($fromMap['note'] ?? ''));
+                if ($note === '') {
+                    $note = trim((string)($item['explanation'] ?? ''));
+                }
+                $examples = !empty($item['examples']) && is_array($item['examples']) ? $item['examples'] : [];
+                try {
+                    \mod_flashcards\local\expression_translation_repository::upsert($expr, $language, [
+                        'translation' => $translation,
+                        'note' => $note,
+                        'examples' => $examples,
+                        'examples_trans' => [],
+                        'source' => trim((string)($item['source'] ?? '')),
+                        'confidence' => $confidence,
+                    ]);
+                } catch (\Throwable $ex) {
+                    // Ignore caching errors to avoid breaking sentence_elements.
+                }
+            }
+        }
         if ($debug) {
             $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
             $debugtokens = [];
@@ -3512,6 +3567,32 @@ switch ($action) {
                 }
             }
             $data['partsFromLeddanalyse'] = $hasLeddanalyseParts;
+            $exprForCache = trim((string)($data['focusExpression'] ?? $data['focusWord'] ?? ''));
+            if ($exprForCache !== '') {
+                $hasTranslation = trim((string)($data['translation'] ?? '')) !== '';
+                $hasDefinition = trim((string)($data['definition'] ?? '')) !== '';
+                $hasExamples = !empty($data['examples']) && is_array($data['examples']);
+                if ($hasTranslation || $hasDefinition || $hasExamples) {
+                    $split = \mod_flashcards\local\expression_translation_repository::split_examples_with_translations(
+                        $hasExamples ? $data['examples'] : []
+                    );
+                    $examplesNo = $split['examples'] ?? [];
+                    $examplesTrans = $split['translations'] ?? [];
+                    $confidence = !empty($data['ordbokene']['source']) ? 'high' : 'medium';
+                    try {
+                        \mod_flashcards\local\expression_translation_repository::upsert($exprForCache, $language, [
+                            'translation' => trim((string)($data['translation'] ?? '')),
+                            'note' => trim((string)($data['definition'] ?? '')),
+                            'examples' => $examplesNo,
+                            'examples_trans' => $examplesTrans,
+                            'source' => trim((string)($data['ordbokene']['source'] ?? 'ai')),
+                            'confidence' => $confidence,
+                        ]);
+                    } catch (\Throwable $ex) {
+                        // Ignore caching errors to avoid breaking ai_focus_helper.
+                    }
+                }
+            }
             // Note: usage from operation is already in $data, don't overwrite with snapshot
             $resp = ['ok' => true, 'data' => $data];
             if ($debugspacy) {
