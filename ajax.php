@@ -886,6 +886,49 @@ function mod_flashcards_tokens_contain_phrase(array $hay, array $needle): bool {
 }
 
 /**
+ * Find a phrase span in $hay using in-order matching with small gaps.
+ *
+ * @param array<int,string> $hay
+ * @param array<int,string> $needle
+ * @param int $maxGap
+ * @return array{start:int,end:int,indices:array<int,int>}|null
+ */
+function mod_flashcards_find_phrase_match(array $hay, array $needle, int $maxGap = 2): ?array {
+    $n = count($needle);
+    $h = count($hay);
+    if ($n === 0 || $h === 0 || $n > $h) {
+        return null;
+    }
+    $pos = -1;
+    $prevIdx = null;
+    $indices = [];
+    foreach ($needle as $tok) {
+        $found = false;
+        for ($i = $pos + 1; $i < $h; $i++) {
+            if ($hay[$i] === $tok) {
+                if ($prevIdx !== null && ($i - $prevIdx - 1) > $maxGap) {
+                    return null;
+                }
+                $pos = $i;
+                $prevIdx = $i;
+                $indices[] = $i;
+                $found = true;
+                break;
+            }
+        }
+        if (!$found) {
+            return null;
+        }
+    }
+    $start = $indices[0] ?? null;
+    $end = $indices[count($indices) - 1] ?? null;
+    if ($start === null || $end === null) {
+        return null;
+    }
+    return ['start' => $start, 'end' => $end, 'indices' => $indices];
+}
+
+/**
  * True if $needle tokens appear in order inside $hay with small gaps.
  *
  * @param array<int,string> $hay
@@ -919,6 +962,89 @@ function mod_flashcards_tokens_contain_phrase_fuzzy(array $hay, array $needle, i
         }
     }
     return true;
+}
+
+/**
+ * Filter overlapping expressions to keep context-appropriate phrases.
+ *
+ * @param array<int,array<string,mixed>> $expressions
+ * @param array<int,string> $posMap
+ * @return array<int,array<string,mixed>>
+ */
+function mod_flashcards_filter_expression_overlaps(array $expressions, array $posMap): array {
+    $keep = [];
+    $suppress = [];
+    $count = count($expressions);
+    if ($count < 2) {
+        return $expressions;
+    }
+    $overlaps = function(array $a, array $b): bool {
+        $aStart = $a['start'] ?? null;
+        $aEnd = $a['end'] ?? null;
+        $bStart = $b['start'] ?? null;
+        $bEnd = $b['end'] ?? null;
+        if (!is_int($aStart) || !is_int($aEnd) || !is_int($bStart) || !is_int($bEnd)) {
+            return false;
+        }
+        return $aStart <= $bEnd && $bStart <= $aEnd;
+    };
+    $isShortVerbPrep = function(array $item) use ($posMap): bool {
+        $indices = $item['indices'] ?? [];
+        if (($item['len'] ?? 0) !== 2 || count($indices) !== 2) {
+            return false;
+        }
+        $first = $indices[0] ?? null;
+        $second = $indices[1] ?? null;
+        if (!is_int($first) || !is_int($second)) {
+            return false;
+        }
+        $pos1 = $posMap[$first] ?? '';
+        $pos2 = $posMap[$second] ?? '';
+        return in_array($pos1, ['VERB','AUX'], true) && $pos2 === 'ADP';
+    };
+    for ($i = 0; $i < $count; $i++) {
+        $cur = $expressions[$i];
+        if ($isShortVerbPrep($cur)) {
+            $adpIndex = $cur['indices'][1] ?? null;
+            if (!is_int($adpIndex)) {
+                continue;
+            }
+            for ($j = 0; $j < $count; $j++) {
+                if ($i === $j) {
+                    continue;
+                }
+                $other = $expressions[$j];
+                if (($other['len'] ?? 0) < 3) {
+                    continue;
+                }
+                if (!$overlaps($cur, $other)) {
+                    continue;
+                }
+                $otherIndices = $other['indices'] ?? [];
+                if (!in_array($adpIndex, $otherIndices, true)) {
+                    continue;
+                }
+                $hasNounAfter = false;
+                foreach ($otherIndices as $idx) {
+                    if ($idx > $adpIndex && in_array(($posMap[$idx] ?? ''), ['NOUN','ADJ'], true)) {
+                        $hasNounAfter = true;
+                        break;
+                    }
+                }
+                if ($hasNounAfter) {
+                    $suppress[$i] = true;
+                    break;
+                }
+            }
+        }
+    }
+    foreach ($expressions as $idx => $expr) {
+        if (!empty($suppress[$idx])) {
+            continue;
+        }
+        $keep[] = $expr;
+    }
+    return $keep;
 }
 
 /**
@@ -2220,9 +2346,14 @@ switch ($action) {
             $match = null;
             $lemmaTokens = $expr !== '' ? mod_flashcards_word_tokens($expr) : [];
             $surfaceTokens = $surfaceExpr !== '' ? mod_flashcards_word_tokens($surfaceExpr) : [];
-            $lemmaOk = !empty($lemmaTokens) && $inOrder($lemmaTokens, $sentenceLemmaTokens);
-            $surfaceOk = !empty($surfaceTokens) && $inOrder($surfaceTokens, $sentenceSurfaceTokens);
-            if (!$lemmaOk && !$surfaceOk) {
+            $phraseMatch = null;
+            if (!empty($lemmaTokens)) {
+                $phraseMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $lemmaTokens, 2);
+            }
+            if ($phraseMatch === null && !empty($surfaceTokens)) {
+                $phraseMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $surfaceTokens, 2);
+            }
+            if ($phraseMatch === null) {
                 continue;
             }
             foreach ($variants as $variant) {
@@ -2278,7 +2409,14 @@ switch ($action) {
             }
             $expression = (string)($match['expression'] ?? ($expr !== '' ? $expr : $surfaceExpr));
             $exprTokens = mod_flashcards_word_tokens($expression);
-            if (count($exprTokens) < 2 || (!$inOrder($exprTokens, $sentenceLemmaTokens) && !$inOrder($exprTokens, $sentenceSurfaceTokens))) {
+            if (count($exprTokens) < 2) {
+                continue;
+            }
+            $exprMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $exprTokens, 2);
+            if ($exprMatch === null) {
+                $exprMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $exprTokens, 2);
+            }
+            if ($exprMatch === null) {
                 continue;
             }
             $mkey = core_text::strtolower($expression);
@@ -2305,10 +2443,17 @@ switch ($action) {
                 'dictmeta' => $match['dictmeta'] ?? [],
                 'source' => $source,
                 'confidence' => $confidence,
+                'start' => $exprMatch['start'],
+                'end' => $exprMatch['end'],
+                'indices' => $exprMatch['indices'],
+                'len' => count($exprTokens),
             ];
             if (count($resolved) >= 12) {
                 break;
             }
+        }
+        if (!empty($resolved)) {
+            $resolved = mod_flashcards_filter_expression_overlaps($resolved, $posMap);
         }
         if ($enrich && !empty($resolved)) {
             $lowCandidates = array_values(array_filter($resolved, function($item){
@@ -2366,6 +2511,12 @@ switch ($action) {
             $resolved = array_values(array_filter($resolved, function($item) {
                 return isset($item['confidence']) && $item['confidence'] !== 'low';
             }));
+        }
+        if (!empty($resolved)) {
+            $resolved = array_values(array_map(function($item) {
+                unset($item['start'], $item['end'], $item['indices'], $item['len']);
+                return $item;
+            }, $resolved));
         }
         $data = [
             'text' => $text,

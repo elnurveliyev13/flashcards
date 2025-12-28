@@ -2891,9 +2891,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function formatTokenAnalysis(item){
       const parts = [];
       const pos = resolveAnalysisLabel('pos', item.pos || '');
-      const dep = resolveAnalysisLabel('dep', item.dep || '');
       if(pos) parts.push(pos);
-      if(dep) parts.push(dep);
+      const depKey = (item.dep || '').toString().toLowerCase();
+      const roleDeps = new Set(['nsubj','csubj','obj','iobj']);
+      if(roleDeps.has(depKey)){
+        const dep = resolveAnalysisLabel('dep', depKey);
+        if(dep) parts.push(`role: ${dep}`);
+      }
       if(item.lemma) parts.push(`lemma: ${item.lemma}`);
       return parts.join(', ');
     }
