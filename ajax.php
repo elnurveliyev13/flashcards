@@ -2178,7 +2178,12 @@ switch ($action) {
         $debug = !empty($payload['debug']);
         $enrich = !empty($payload['enrich']) || !empty($payload['useLlm']) || !empty($payload['llm']);
         $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
+        $overallstart = microtime(true);
+        $timing = [];
+        $dataDebugLlm = null;
+        $t0 = microtime(true);
         $spacy = mod_flashcards_spacy_analyze($text);
+        $timing['spacy'] = microtime(true) - $t0;
         $posMap = mod_flashcards_spacy_pos_map($text, $spacy);
         $lemmaMap = mod_flashcards_spacy_lemma_map($text, $spacy);
         $depMap = mod_flashcards_spacy_dep_map($text, $spacy);
@@ -2199,6 +2204,7 @@ switch ($action) {
         $verbPrepsMap = [];
         $verbAnyPrepMap = [];
         $exprLemmaMap = $lemmaMap;
+        $t0 = microtime(true);
         foreach ($words as $i => $w) {
             $token = mod_flashcards_normalize_token((string)($w['text'] ?? ''));
             if ($token === '') {
@@ -2250,6 +2256,7 @@ switch ($action) {
                 $verbPrepsMap[$i] = array_values(array_unique($verbPrepsMap[$i]));
             }
         }
+        $timing['ordbank'] = microtime(true) - $t0;
         $sentenceSurfaceTokens = [];
         $sentenceLemmaTokens = [];
         foreach ($words as $i => $w) {
@@ -2280,7 +2287,9 @@ switch ($action) {
             return true;
         };
         $lang = 'begge';
+        $t0 = microtime(true);
         $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap);
+        $timing['expr_candidates'] = microtime(true) - $t0;
         if (!empty($cands)) {
             usort($cands, function($a, $b) {
                 if (($a['score'] ?? 0) === ($b['score'] ?? 0)) {
@@ -2293,6 +2302,7 @@ switch ($action) {
         $resolved = [];
         $seenCand = [];
         $seenResolved = [];
+        $t0 = microtime(true);
         foreach ($cands as $cand) {
             $expr = trim((string)($cand['lemma'] ?? ''));
             $surfaceExpr = trim((string)($cand['surface'] ?? ''));
@@ -2452,6 +2462,7 @@ switch ($action) {
                 break;
             }
         }
+        $timing['expr_resolve'] = microtime(true) - $t0;
         if (!empty($resolved)) {
             $resolved = mod_flashcards_filter_expression_overlaps($resolved, $posMap);
         }
@@ -2463,7 +2474,9 @@ switch ($action) {
             if (!empty($lowCandidates)) {
                 try {
                     $helper = new \mod_flashcards\local\ai_helper();
+                    $t0 = microtime(true);
                     $llm = $helper->confirm_expression_candidates($text, $lowCandidates, $language, $userid);
+                    $timing['llm_confirm'] = microtime(true) - $t0;
                     $confirmed = is_array($llm['confirmed'] ?? null) ? $llm['confirmed'] : [];
                     if (!empty($confirmed)) {
                         $resolvedMap = [];
@@ -2502,6 +2515,12 @@ switch ($action) {
                             }
                         }
                     }
+                    if ($debug && !empty($llm)) {
+                        $dataDebugLlm = [
+                            'confirm_model' => $llm['model'] ?? '',
+                            'confirm_reasoning_effort' => $llm['reasoning_effort'] ?? '',
+                        ];
+                    }
                 } catch (\Throwable $ex) {
                     // Ignore LLM fallback errors, keep deterministic results.
                 }
@@ -2526,7 +2545,9 @@ switch ($action) {
         if ($enrich) {
             try {
                 $helper = new \mod_flashcards\local\ai_helper();
+                $t0 = microtime(true);
                 $data['enrichment'] = $helper->enrich_sentence_elements($text, $words, $resolved, $language, $userid);
+                $timing['llm_enrich'] = microtime(true) - $t0;
             } catch (\Throwable $ex) {
                 $data['enrichment'] = [
                     'sentenceTranslation' => '',
@@ -2550,6 +2571,7 @@ switch ($action) {
                     'is_alpha' => !empty($t['is_alpha']),
                 ];
             }
+            $timing['overall'] = microtime(true) - $overallstart;
             $data['debug'] = [
                 'spacy' => [
                     'model' => $spacy['model'] ?? '',
@@ -2557,7 +2579,11 @@ switch ($action) {
                     'token_count' => is_array($spacy['tokens'] ?? null) ? count($spacy['tokens']) : 0,
                     'tokens' => $debugtokens,
                 ],
+                'timing' => $timing,
             ];
+            if (!empty($dataDebugLlm)) {
+                $data['debug']['llm'] = $dataDebugLlm;
+            }
         }
         echo json_encode(['ok' => true, 'data' => $data]);
         break;

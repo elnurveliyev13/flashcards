@@ -343,6 +343,13 @@ USERPROMPT;
             'sentenceTranslation' => trim((string)($parsed['sentenceTranslation'] ?? '')),
             'elements' => is_array($parsed['elements'] ?? null) ? $parsed['elements'] : [],
         ];
+        $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
+        if ($modelused !== '') {
+            $result['model'] = $modelused;
+        }
+        if (!empty($payload['reasoning_effort'])) {
+            $result['reasoning_effort'] = $payload['reasoning_effort'];
+        }
 
         if (!empty($response->usage)) {
             $result['usage'] = (array)$response->usage;
@@ -457,6 +464,13 @@ USERPROMPT;
         }
         $confirmed = is_array($parsed['confirmed'] ?? null) ? $parsed['confirmed'] : [];
         $result = ['confirmed' => $confirmed];
+        $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
+        if ($modelused !== '') {
+            $result['model'] = $modelused;
+        }
+        if (!empty($payload['reasoning_effort'])) {
+            $result['reasoning_effort'] = $payload['reasoning_effort'];
+        }
         if (!empty($response->usage)) {
             $result['usage'] = (array)$response->usage;
         }
