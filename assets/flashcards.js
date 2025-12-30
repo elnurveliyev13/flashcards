@@ -3695,12 +3695,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(focusWordList){
         focusWordList.classList.toggle('hidden', hasWords);
       }
-      list.forEach(entry => {
-        const chip = document.createElement('div');
-        chip.className = 'analysis-item';
-        if(entry.kind === 'expression' || entry.kind === 'sentence'){
-          chip.classList.add('analysis-item--expression');
-        }
+        list.forEach(entry => {
+          const chip = document.createElement('div');
+          chip.className = 'analysis-item';
+          if(entry.kind === 'expression' || entry.kind === 'sentence'){
+            chip.classList.add('analysis-item--expression');
+          }
         if(entry.kind === 'word' || entry.kind === 'expression'){
           chip.classList.add('analysis-item--clickable');
         }
@@ -3717,17 +3717,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
         }
-        if(entry.kind === 'expression' && entry.confidence){
-          const conf = document.createElement('span');
-          conf.className = 'analysis-confidence';
-          conf.textContent = entry.confidence;
-          chip.appendChild(conf);
-        }
-        if(entry.kind === 'word' && Number.isInteger(entry.index)){
-          chip.addEventListener('click', ()=>{
-            const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
-            const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
-            if(!token){
+          if(entry.kind === 'expression' && entry.confidence){
+            const conf = document.createElement('span');
+            conf.className = 'analysis-confidence';
+            conf.textContent = entry.confidence;
+            chip.appendChild(conf);
+          }
+          if(entry.kind === 'word'){
+            attachFocusChipMenuHandlers(chip, entry.text, {
+              onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})
+            });
+          }
+          if(entry.kind === 'word' && Number.isInteger(entry.index)){
+            chip.addEventListener('click', ()=>{
+              const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
+              const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
+              if(!token){
               return;
             }
             focusHelperState.activeExpressionIndex = null;
