@@ -3696,17 +3696,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusWordList.classList.toggle('hidden', hasWords);
       }
         list.forEach(entry => {
+          const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
           const chip = document.createElement('div');
           chip.className = 'analysis-item';
-          if(entry.kind === 'expression' || entry.kind === 'sentence'){
+          if(kind === 'expression' || kind === 'sentence'){
             chip.classList.add('analysis-item--expression');
           }
-        if(entry.kind === 'word' || entry.kind === 'expression'){
-          chip.classList.add('analysis-item--clickable');
-        }
-        if(entry.confidence){
-          chip.dataset.confidence = entry.confidence;
-        }
+          if(kind === 'word' || kind === 'expression'){
+            chip.classList.add('analysis-item--clickable');
+          }
+          if(entry.confidence){
+            chip.dataset.confidence = entry.confidence;
+          }
         const textEl = document.createElement('span');
         textEl.className = 'analysis-text';
         textEl.textContent = entry.text || entry.token || '';
@@ -3717,23 +3718,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
         }
-          if(entry.kind === 'expression' && entry.confidence){
+          if(kind === 'expression' && entry.confidence){
             const conf = document.createElement('span');
             conf.className = 'analysis-confidence';
             conf.textContent = entry.confidence;
             chip.appendChild(conf);
           }
-          if(entry.kind === 'word'){
+          if(kind === 'word'){
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})
             });
           }
-          if(entry.kind === 'word' && Number.isInteger(entry.index)){
+          if(kind === 'word' && Number.isInteger(entry.index)){
             chip.addEventListener('click', ()=>{
               const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
               const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
               if(!token){
-              return;
+                return;
             }
             focusHelperState.activeExpressionIndex = null;
             focusHelperState.activeIndex = token.index;
@@ -3746,10 +3747,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             scheduleFocusSuggest();
           });
         }
-        if(entry.kind === 'expression' && entry.meta && entry.meta.expression){
-          chip.addEventListener('click', ()=>{
-            focusHelperState.activeIndex = null;
-            const exprKey = String(entry.meta.expression || '').toLowerCase();
+          if(kind === 'expression' && entry.meta && entry.meta.expression){
+            chip.addEventListener('click', ()=>{
+              focusHelperState.activeIndex = null;
+              const exprKey = String(entry.meta.expression || '').toLowerCase();
             const exprIdx = Array.isArray(focusHelperState.expressionSuggestions)
               ? focusHelperState.expressionSuggestions.findIndex(e => String(e?.expression || '').toLowerCase() === exprKey)
               : -1;

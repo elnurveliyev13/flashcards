@@ -988,6 +988,20 @@ function mod_flashcards_filter_expression_overlaps(array $expressions, array $po
         }
         return $aStart <= $bEnd && $bStart <= $aEnd;
     };
+    $contains = function(array $a, array $b): bool {
+        $aStart = $a['start'] ?? null;
+        $aEnd = $a['end'] ?? null;
+        $bStart = $b['start'] ?? null;
+        $bEnd = $b['end'] ?? null;
+        if (!is_int($aStart) || !is_int($aEnd) || !is_int($bStart) || !is_int($bEnd)) {
+            return false;
+        }
+        return $aStart <= $bStart && $aEnd >= $bEnd;
+    };
+    $isConfirmed = function(array $item): bool {
+        $confidence = $item['confidence'] ?? '';
+        return in_array($confidence, ['high','medium'], true);
+    };
     $isShortVerbPrep = function(array $item) use ($posMap): bool {
         $indices = $item['indices'] ?? [];
         if (($item['len'] ?? 0) !== 2 || count($indices) !== 2) {
@@ -1036,6 +1050,25 @@ function mod_flashcards_filter_expression_overlaps(array $expressions, array $po
                     break;
                 }
             }
+        }
+    }
+    for ($i = 0; $i < $count; $i++) {
+        $cur = $expressions[$i];
+        if (!$isConfirmed($cur)) {
+            continue;
+        }
+        for ($j = 0; $j < $count; $j++) {
+            if ($i === $j) {
+                continue;
+            }
+            $other = $expressions[$j];
+            if (!$contains($cur, $other)) {
+                continue;
+            }
+            if (($cur['len'] ?? 0) <= ($other['len'] ?? 0)) {
+                continue;
+            }
+            $suppress[$j] = true;
         }
     }
     foreach ($expressions as $idx => $expr) {
@@ -2547,6 +2580,9 @@ switch ($action) {
             $resolved = array_values(array_filter($resolved, function($item) {
                 return isset($item['confidence']) && $item['confidence'] !== 'low';
             }));
+        }
+        if (!empty($resolved)) {
+            $resolved = mod_flashcards_filter_expression_overlaps($resolved, $posMap);
         }
         if (!empty($resolved)) {
             $resolved = array_values(array_map(function($item) {
