@@ -510,7 +510,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const ocrStrings = {
       idle: 'Status',
       processing: dataset.ocrProcessing || 'Scanning photo...',
-      ready: dataset.ocrReady || 'Text recognized – adjust selection',
       success: dataset.ocrSuccess || 'Text inserted',
       error: dataset.ocrError || 'Could not read the text',
       disabled: dataset.ocrDisabled || 'Image OCR unavailable',
@@ -529,15 +528,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const cropCancelBtn = $("#ocrCropCancel");
     const cropUndoBtn = $("#ocrCropUndo");
     const cropToolbar = $("#ocrCropToolbar");
-    const ocrTextModal = $("#ocrTextModal");
-    const ocrTextSurface = $("#ocrTextSurface");
-    const ocrTextPlain = $("#ocrTextPlain");
-    const ocrTextHighlight = $("#ocrTextHighlight");
-    const ocrHandleStart = $("#ocrHandleStart");
-    const ocrHandleEnd = $("#ocrHandleEnd");
-    const ocrTextApplyBtn = $("#ocrTextApply");
-    const ocrTextCancelBtn = $("#ocrTextCancel");
-    const ocrTextResetBtn = $("#ocrTextReset");
     const aiStrings = {
       disabled: dataset.aiDisabled || 'AI focus helper is disabled',
       detecting: dataset.aiDetecting || 'Detecting expression',
@@ -5439,11 +5429,6 @@ let lastStudyAudioRate=1;
     let ocrAbortController=null;
     let ocrLastFile=null;
     let ocrUndoValue=null;
-    let ocrPendingText=null;
-    let ocrSelectionText='';
-    let ocrSelectionStart=0;
-    let ocrSelectionEnd=0;
-    let ocrHandleDrag=null;
     let pendingImageFile=null;
     let cropImage=null;
     let cropImageUrl=null;
@@ -5746,9 +5731,7 @@ let lastStudyAudioRate=1;
     }
     function setOcrStatus(state, customText){
       const message = customText || ocrStrings[state] || ocrStrings.idle;
-      const isSuccess = state === 'success' || state === 'ready';
-      const mediaState = isSuccess ? 'success' : state;
-      setMediaStatus(mediaState, message);
+      setMediaStatus(state, message);
       const isError = state === 'error';
       setOcrRetryVisible(isError);
       if(state === 'idle' || state === 'disabled'){
@@ -5761,7 +5744,7 @@ let lastStudyAudioRate=1;
       ocrStatusEl.classList.remove('error','success');
       if(isError){
         ocrStatusEl.classList.add('error');
-      } else if(isSuccess){
+      } else if(state === 'success'){
         ocrStatusEl.classList.add('success');
       }
       if(state === 'disabled'){
@@ -6284,182 +6267,6 @@ let lastStudyAudioRate=1;
       closeCropper();
       triggerOcrRecognition(croppedFile);
     }
-    function getOcrTextNode(){
-      if(!ocrTextPlain){
-        return null;
-      }
-      const node = ocrTextPlain.firstChild;
-      return node && node.nodeType === Node.TEXT_NODE ? node : null;
-    }
-    function resetOcrSelection(){
-      const node = getOcrTextNode();
-      const len = node?.length || 0;
-      ocrSelectionStart = 0;
-      ocrSelectionEnd = Math.max(1, len);
-    }
-    function closeOcrTextModal(){
-      stopOcrHandleDrag();
-      if(ocrTextModal){
-        ocrTextModal.classList.add('hidden');
-        ocrTextModal.style.display = 'none';
-      }
-      document.body.classList.remove('cropper-open');
-      ocrPendingText = null;
-      ocrSelectionText = '';
-      ocrHandleDrag = null;
-      resetOcrSelection();
-      if(ocrTextPlain){
-        ocrTextPlain.textContent = '';
-      }
-      if(ocrTextHighlight){
-        ocrTextHighlight.innerHTML = '';
-      }
-    }
-    function positionOcrHandle(el, index, isEnd){
-      const node = getOcrTextNode();
-      if(!el || !node || !ocrTextSurface){
-        return;
-      }
-      const hostRect = ocrTextSurface.getBoundingClientRect();
-      const safeIndex = clamp(index, 0, node.length);
-      const range = document.createRange();
-      range.setStart(node, safeIndex);
-      range.setEnd(node, safeIndex);
-      let rect = range.getBoundingClientRect();
-      if((!rect || (!rect.width && !rect.height)) && node.length){
-        const alt = document.createRange();
-        const anchor = isEnd ? Math.max(0, safeIndex - 1) : safeIndex;
-        alt.setStart(node, anchor);
-        alt.setEnd(node, Math.min(node.length, anchor + 1));
-        rect = alt.getBoundingClientRect();
-      }
-      const left = (rect?.left || hostRect.left) - hostRect.left + ocrTextSurface.scrollLeft + (isEnd && rect ? rect.width : 0);
-      const top = (rect?.top || hostRect.top) - hostRect.top + ocrTextSurface.scrollTop + (rect?.height || 0);
-      el.style.left = `${left}px`;
-      el.style.top = `${top}px`;
-    }
-    function renderOcrSelection(){
-      const node = getOcrTextNode();
-      if(!ocrTextSurface || !ocrTextHighlight || !node){
-        return;
-      }
-      const len = node.length || 0;
-      ocrSelectionStart = clamp(ocrSelectionStart, 0, Math.max(0, len - 1));
-      ocrSelectionEnd = clamp(ocrSelectionEnd, Math.max(ocrSelectionStart + 1, 1), len);
-      ocrTextHighlight.innerHTML = '';
-      const hostRect = ocrTextSurface.getBoundingClientRect();
-      try{
-        const range = document.createRange();
-        range.setStart(node, ocrSelectionStart);
-        range.setEnd(node, ocrSelectionEnd);
-        const rects = Array.from(range.getClientRects());
-        rects.forEach(r=>{
-          const chunk=document.createElement('div');
-          chunk.className='ocr-highlight-chunk';
-          chunk.style.left = `${r.left - hostRect.left + ocrTextSurface.scrollLeft}px`;
-          chunk.style.top = `${r.top - hostRect.top + ocrTextSurface.scrollTop}px`;
-          chunk.style.width = `${r.width}px`;
-          chunk.style.height = `${r.height}px`;
-          ocrTextHighlight.appendChild(chunk);
-        });
-      }catch(_e){}
-      positionOcrHandle(ocrHandleStart, ocrSelectionStart, false);
-      positionOcrHandle(ocrHandleEnd, ocrSelectionEnd, true);
-    }
-    function ocrIndexFromPoint(clientX, clientY){
-      const node = getOcrTextNode();
-      if(!node){
-        return null;
-      }
-      const caret = (document.caretPositionFromPoint && document.caretPositionFromPoint(clientX, clientY)) ||
-        (document.caretRangeFromPoint && document.caretRangeFromPoint(clientX, clientY));
-      if(!caret){
-        return null;
-      }
-      const container = caret.offsetNode || caret.startContainer;
-      const offsetRaw = typeof caret.offset === 'number' ? caret.offset : caret.startOffset;
-      if(container === node){
-        return clamp(offsetRaw, 0, node.length);
-      }
-      if(container && container.firstChild === node){
-        return clamp(offsetRaw, 0, node.length);
-      }
-      return null;
-    }
-    function handleOcrHandleMove(e){
-      if(!ocrHandleDrag){
-        return;
-      }
-      const idx = ocrIndexFromPoint(e.clientX, e.clientY);
-      if(idx === null){
-        return;
-      }
-      const node = getOcrTextNode();
-      const len = node?.length || 0;
-      if(ocrHandleDrag === 'start'){
-        ocrSelectionStart = clamp(idx, 0, Math.max(0, ocrSelectionEnd - 1));
-      } else {
-        ocrSelectionEnd = clamp(idx, Math.min(len, ocrSelectionStart + 1), len);
-        if(ocrSelectionEnd <= ocrSelectionStart){
-          ocrSelectionEnd = Math.min(len, ocrSelectionStart + 1);
-        }
-      }
-      renderOcrSelection();
-      e.preventDefault();
-    }
-    function stopOcrHandleDrag(){
-      ocrHandleDrag = null;
-      window.removeEventListener('pointermove', handleOcrHandleMove, {passive:false});
-      window.removeEventListener('pointerup', stopOcrHandleDrag);
-      window.removeEventListener('pointercancel', stopOcrHandleDrag);
-    }
-    function startOcrHandleDrag(which, e){
-      ocrHandleDrag = which;
-      window.addEventListener('pointermove', handleOcrHandleMove, {passive:false});
-      window.addEventListener('pointerup', stopOcrHandleDrag);
-      window.addEventListener('pointercancel', stopOcrHandleDrag);
-      e.preventDefault();
-    }
-    function openOcrTextSelection(text){
-      ocrPendingText = text || '';
-      ocrSelectionText = (text || '').trim();
-      if(!ocrSelectionText){
-        applyOcrResult(ocrPendingText);
-        setOcrStatus('success');
-        return false;
-      }
-      if(ocrTextPlain){
-        ocrTextPlain.textContent = ocrSelectionText;
-      }
-      resetOcrSelection();
-      if(ocrTextModal){
-        ocrTextModal.classList.remove('hidden');
-        ocrTextModal.style.display = 'flex';
-      }
-      document.body.classList.add('cropper-open');
-      renderOcrSelection();
-      window.requestAnimationFrame(renderOcrSelection);
-      return true;
-    }
-    function applySelectedOcrText(){
-      if(!ocrSelectionText){
-        setOcrStatus('error', ocrStrings.error);
-        return;
-      }
-      const selected = ocrSelectionText.slice(ocrSelectionStart, ocrSelectionEnd).trim();
-      if(!selected){
-        setOcrStatus('error', ocrStrings.error);
-        return;
-      }
-      applyOcrResult(selected);
-      setOcrStatus('success');
-      closeOcrTextModal();
-      window.setTimeout(()=>{
-        if(!ocrAbortController){
-          setOcrStatus('idle');
-        }
-      }, 3500);
-    }
     setSttStatus(sttEnabled ? 'idle' : 'disabled');
     setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
     if(cropStage && !cropStage.dataset.bound){
@@ -6493,40 +6300,6 @@ let lastStudyAudioRate=1;
     }
     const closeCrop = ()=>{ closeCropper(); };
     if(cropCancelBtn) cropCancelBtn.addEventListener('click', closeCrop);
-    if(ocrHandleStart){
-      ocrHandleStart.addEventListener('pointerdown', e=>startOcrHandleDrag('start', e));
-    }
-    if(ocrHandleEnd){
-      ocrHandleEnd.addEventListener('pointerdown', e=>startOcrHandleDrag('end', e));
-    }
-    if(ocrTextSurface){
-      ocrTextSurface.addEventListener('scroll', ()=>renderOcrSelection(), {passive:true});
-    }
-    if(ocrTextApplyBtn){
-      ocrTextApplyBtn.addEventListener('click', e=>{
-        e.preventDefault();
-        applySelectedOcrText();
-      });
-    }
-    if(ocrTextCancelBtn){
-      ocrTextCancelBtn.addEventListener('click', e=>{
-        e.preventDefault();
-        closeOcrTextModal();
-        setOcrStatus(ocrEnabled ? 'idle' : 'disabled');
-      });
-    }
-    if(ocrTextResetBtn){
-      ocrTextResetBtn.addEventListener('click', e=>{
-        e.preventDefault();
-        resetOcrSelection();
-        renderOcrSelection();
-      });
-    }
-    window.addEventListener('resize', ()=>{
-      if(ocrTextModal && !ocrTextModal.classList.contains('hidden')){
-        renderOcrSelection();
-      }
-    });
     updateUndoState();
     if(sttUndoBtn){
       sttUndoBtn.addEventListener('click', e=>{
@@ -6921,11 +6694,14 @@ let lastStudyAudioRate=1;
         if(!text){
           throw new Error('Empty OCR result');
         }
+        applyOcrResult(text);
+        setOcrStatus('success');
         ocrLastFile = file;
-        const opened = openOcrTextSelection(text);
-        if(opened){
-          setOcrStatus('ready');
-        }
+        window.setTimeout(()=>{
+          if(!ocrAbortController){
+            setOcrStatus('idle');
+          }
+        }, 3500);
       }catch(err){
         if(err && err.name === 'AbortError'){
           setOcrStatus('idle');

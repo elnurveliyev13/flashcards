@@ -40,7 +40,6 @@
      data-stt-undo="{{#str}} whisper_status_undo, mod_flashcards {{/str}}"
      data-ocr-idle="{{#str}} ocr_status_idle, mod_flashcards {{/str}}"
      data-ocr-processing="{{#str}} ocr_status_processing, mod_flashcards {{/str}}"
-     data-ocr-ready="{{#str}} ocr_status_ready, mod_flashcards {{/str}}"
      data-ocr-success="{{#str}} ocr_status_success, mod_flashcards {{/str}}"
      data-ocr-error="{{#str}} ocr_status_error, mod_flashcards {{/str}}"
      data-ocr-disabled="{{#str}} ocr_status_disabled, mod_flashcards {{/str}}"
@@ -810,26 +809,6 @@
         <button id="ocrCropUndo" class="ghost icon-only" aria-label="{{#str}} undo, mod_flashcards {{/str}}"><span aria-hidden="true">&#8634;</span></button>
         <button id="ocrCropCancel" class="ghost icon-only" aria-label="{{#str}} cancel, mod_flashcards {{/str}}"><span aria-hidden="true">&times;</span></button>
         <button id="ocrCropApply" class="ok icon-only" aria-label="{{#str}} use_for_ocr, mod_flashcards {{/str}}"><span aria-hidden="true">&#10003;</span></button>
-      </div>
-    </div>
-  </div>
-  <div id="ocrTextModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ocrTextTitle">
-    <div class="box ocr-text-box">
-      <div class="ocr-text-head">
-        <div class="ocr-text-title" id="ocrTextTitle">{{#str}} ocr_text_select_title, mod_flashcards {{/str}}</div>
-        <div class="ocr-text-hint">{{#str}} ocr_text_select_hint, mod_flashcards {{/str}}</div>
-      </div>
-      <div class="ocr-text-preview" id="ocrTextSurface">
-        <div id="ocrTextHighlight" class="ocr-text-highlight" aria-hidden="true"></div>
-        <div id="ocrTextPlain" class="ocr-text-plain"></div>
-        <div id="ocrHandleStart" class="ocr-text-handle" aria-hidden="true"></div>
-        <div id="ocrHandleEnd" class="ocr-text-handle" aria-hidden="true"></div>
-      </div>
-      <div class="ocr-text-actions">
-        <button id="ocrTextReset" class="ghost">{{#str}} ocr_text_select_reset, mod_flashcards {{/str}}</button>
-        <div class="flex-spacer"></div>
-        <button id="ocrTextCancel" class="ghost">{{#str}} cancel, mod_flashcards {{/str}}</button>
-        <button id="ocrTextApply" class="ok">{{#str}} ocr_text_select_apply, mod_flashcards {{/str}}</button>
       </div>
     </div>
   </div>
