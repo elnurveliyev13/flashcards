@@ -3380,6 +3380,7 @@ switch ($action) {
                             'senses' => $entry['senses'] ?? [],
                             'source' => 'ordbokene',
                             'chosenMeaning' => $chosen['meaning'],
+                            'chosenMeaningText' => $meaning,
                             'url' => $entry['dictmeta']['url'] ?? '',
                             'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
                         ];

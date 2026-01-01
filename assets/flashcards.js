@@ -3831,9 +3831,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           .map(s => (s && s.meaning ? String(s.meaning).trim() : ''))
           .filter(Boolean);
       }
-      const chosenMeaning = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < meanings.length)
-        ? meanings[chosenIdx]
-        : (meanings[0] || '');
+      const chosenMeaningText = String(info.chosenMeaningText || '').trim();
+      const chosenMeaning = chosenMeaningText
+        ? chosenMeaningText
+        : ((chosenIdx !== null && chosenIdx >= 0 && chosenIdx < meanings.length)
+          ? meanings[chosenIdx]
+          : (meanings[0] || ''));
       const normalizeMeaningKey = v => String(v || '').trim().toLowerCase();
       let chosenSense = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < senses.length)
         ? senses[chosenIdx]
@@ -3910,7 +3913,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             if(examples.length){
               const exList = document.createElement('div');
               exList.className = 'ordbokene-examples';
-              examples.slice(0,3).forEach(ex => {
+              examples.forEach(ex => {
                 const exEl = document.createElement('div');
                 exEl.className = 'ordbokene-example';
                 exEl.textContent = ex;
