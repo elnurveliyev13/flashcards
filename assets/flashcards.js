@@ -2487,6 +2487,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionRequestText: '',
       wordMetaByIndex: {},
       wordMetaSourceText: '',
+      spacyTokens: [],
+      spacySourceText: '',
       sentenceAnalysis: [],
       pendingSentenceAnalysis: null
     };
@@ -2991,6 +2993,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!normalized){
         focusHelperState.wordMetaByIndex = {};
         focusHelperState.wordMetaSourceText = '';
+        focusHelperState.spacyTokens = [];
+        focusHelperState.spacySourceText = '';
         setFocusExpressionSuggestions([], '');
         focusHelperState.sentenceAnalysis = [];
         renderSentenceAnalysis([]);
@@ -3014,7 +3018,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           return;
         }
         const data = (resp && typeof resp === 'object' && resp.hasOwnProperty('data')) ? resp.data : resp;
-        setSpaCyStatus(data?.debug?.spacy || null);
+        const spacyDebug = data?.debug?.spacy || null;
+        setSpaCyStatus(spacyDebug);
+        const spacyTokens = Array.isArray(spacyDebug?.tokens) ? spacyDebug.tokens : [];
         const wordMeta = {};
         const words = Array.isArray(data?.words) ? data.words : [];
         words.forEach(w=>{
@@ -3029,6 +3035,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
         focusHelperState.wordMetaByIndex = wordMeta;
         focusHelperState.wordMetaSourceText = normalized;
+        focusHelperState.spacyTokens = spacyTokens;
+        focusHelperState.spacySourceText = normalized;
 
         const expressions = Array.isArray(data?.expressions) ? data.expressions : [];
         const confidenceRank = {high: 3, medium: 2, low: 1};
@@ -4497,6 +4505,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           focusWord: token.text,
           language: userLang2
         };
+        if(focusHelperState.spacyTokens.length && focusHelperState.spacySourceText === payload.frontText){
+          payload.spacyTokens = focusHelperState.spacyTokens;
+          payload.spacyText = focusHelperState.spacySourceText;
+        }
         if(selectedVoice){
           payload.voiceId = selectedVoice;
         }
@@ -4800,6 +4812,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.pendingSentenceAnalysis = null;
         focusHelperState.wordMetaByIndex = {};
         focusHelperState.wordMetaSourceText = '';
+        focusHelperState.spacyTokens = [];
+        focusHelperState.spacySourceText = '';
         focusHelperState.sentenceAnalysis = [];
         setFocusExpressionSuggestions([], '');
         renderSentenceAnalysis([]);

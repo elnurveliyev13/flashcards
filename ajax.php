@@ -309,12 +309,12 @@ function mod_flashcards_choose_front_audio_text(string $fronttext, array $exampl
  * @param array|null $spacydebug Optional: set to the raw spaCy response for debugging.
  * @return array<int,string>
  */
-function mod_flashcards_spacy_expression_candidates(string $fronttext, string $clickedword, ?array &$spacydebug = null): array {
+function mod_flashcards_spacy_expression_candidates(string $fronttext, string $clickedword, ?array &$spacydebug = null, ?array $spacyoverride = null): array {
     $cands = [];
     if ($fronttext === '' || $clickedword === '') {
         return $cands;
     }
-    $spacy = mod_flashcards_spacy_analyze($fronttext);
+    $spacy = $spacyoverride ?: mod_flashcards_spacy_analyze($fronttext);
     if (func_num_args() >= 3) {
         $spacydebug = $spacy;
     }
@@ -2770,6 +2770,31 @@ switch ($action) {
         $voiceid = clean_param($payload['voiceId'] ?? '', PARAM_ALPHANUMEXT);
         $orbokeneenabled = get_config('mod_flashcards', 'orbokene_enabled');
         $debugspacy = !empty($payload['debug']) || !empty($payload['debugSpacy']) || !empty($payload['debug_spacy']);
+        $spacyPayload = null;
+        $payloadText = trim((string)($payload['spacyText'] ?? ''));
+        $payloadTokens = $payload['spacyTokens'] ?? null;
+        if ($payloadText !== '' && $payloadText === $fronttext && is_array($payloadTokens)) {
+            $cleanTokens = [];
+            foreach ($payloadTokens as $tok) {
+                if (!is_array($tok)) {
+                    continue;
+                }
+                $text = trim((string)($tok['text'] ?? ''));
+                if ($text === '') {
+                    continue;
+                }
+                $cleanTokens[] = [
+                    'text' => $text,
+                    'pos' => (string)($tok['pos'] ?? ''),
+                    'lemma' => (string)($tok['lemma'] ?? ''),
+                    'dep' => (string)($tok['dep'] ?? ''),
+                    'is_alpha' => !empty($tok['is_alpha']),
+                ];
+            }
+            if (!empty($cleanTokens)) {
+                $spacyPayload = ['tokens' => $cleanTokens, 'source' => 'payload'];
+            }
+        }
 
         try {
             // Check if using reasoning model for focus task (may take longer)
@@ -2823,7 +2848,7 @@ switch ($action) {
             if ($clickedword !== '') {
                 $cands = \mod_flashcards\local\ordbank_helper::find_candidates($clickedword);
                 if (count($cands) > 1) {
-                    $spacy = mod_flashcards_spacy_analyze($fronttext);
+                    $spacy = $spacyPayload ?: mod_flashcards_spacy_analyze($fronttext);
                     $spacyUsed = true;
                     if ($debugspacy && $spacyDebug === null) {
                         $spacyDebug = $spacy;
@@ -3094,7 +3119,7 @@ switch ($action) {
             $spacyExprs = [];
             if ($orbokeneenabled) {
                 $spacyUsed = true;
-                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword, $spacyDebug);
+                $spacyExprs = mod_flashcards_spacy_expression_candidates($fronttext, $clickedword, $spacyDebug, $spacyPayload);
             }
             if ($wc === 'VERB') {
                 $skipordbokene = true;
