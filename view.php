@@ -62,5 +62,8 @@ if (!$DB->record_exists('flashcards', ['id' => $cm->instance])) {
     echo $OUTPUT->footer();
     exit;
 }
-echo $OUTPUT->render_from_template('mod_flashcards/app', []);
+$templatecontext = [
+    'gullfisk_icon_url' => $OUTPUT->image_url('gullfisk', 'mod_flashcards')->out(false),
+];
+echo $OUTPUT->render_from_template('mod_flashcards/app', $templatecontext);
 echo $OUTPUT->footer();
