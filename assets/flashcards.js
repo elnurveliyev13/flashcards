@@ -3834,9 +3834,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const chosenMeaning = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < meanings.length)
         ? meanings[chosenIdx]
         : (meanings[0] || '');
-      const chosenSense = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < senses.length)
+      const normalizeMeaningKey = v => String(v || '').trim().toLowerCase();
+      let chosenSense = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < senses.length)
         ? senses[chosenIdx]
         : null;
+      if(!chosenSense && chosenMeaning && senses.length){
+        const key = normalizeMeaningKey(chosenMeaning);
+        chosenSense = senses.find(s => normalizeMeaningKey(s?.meaning) === key) || null;
+      }
       let chosenExamples = [];
       if(chosenSense && Array.isArray(chosenSense.examples) && chosenSense.examples.length){
         chosenExamples = chosenSense.examples;
@@ -3866,12 +3871,24 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ordbokeneBlock.appendChild(examplesWrap);
       }
 
+      let otherSenses = [];
+      if(senses.length){
+        const chosenKey = normalizeMeaningKey(chosenMeaning);
+        otherSenses = senses.filter((s, idx) => {
+          const sMeaning = normalizeMeaningKey(s?.meaning);
+          if(!sMeaning) return false;
+          if(chosenIdx !== null && idx === chosenIdx) return false;
+          if(chosenKey && sMeaning === chosenKey) return false;
+          return true;
+        });
+      }
       const otherMeanings = meanings.filter((m, idx) => {
         if(!m) return false;
         if(chosenIdx !== null && idx === chosenIdx) return false;
         return chosenIdx === null ? idx > 0 : true;
       });
-      if(otherMeanings.length){
+      const hasOther = otherSenses.length || otherMeanings.length;
+      if(hasOther){
         const toggleWrap = document.createElement('div');
         toggleWrap.className = 'ordbokene-other-meanings';
         const toggleBtn = document.createElement('button');
@@ -3881,12 +3898,35 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         toggleBtn.textContent = aiStrings.ordbokeneMoreMeanings || 'Other meanings';
         const otherWrap = document.createElement('div');
         otherWrap.className = 'ordbokene-meanings hidden';
-        otherMeanings.forEach(m => {
-          const p = document.createElement('div');
-          p.className = 'ordbokene-meaning';
-          p.textContent = m;
-          otherWrap.appendChild(p);
-        });
+        if(otherSenses.length){
+          otherSenses.forEach(s => {
+            const meaningText = String(s?.meaning || '').trim();
+            if(!meaningText) return;
+            const p = document.createElement('div');
+            p.className = 'ordbokene-meaning';
+            p.textContent = meaningText;
+            otherWrap.appendChild(p);
+            const examples = Array.isArray(s?.examples) ? s.examples : [];
+            if(examples.length){
+              const exList = document.createElement('div');
+              exList.className = 'ordbokene-examples';
+              examples.slice(0,3).forEach(ex => {
+                const exEl = document.createElement('div');
+                exEl.className = 'ordbokene-example';
+                exEl.textContent = ex;
+                exList.appendChild(exEl);
+              });
+              otherWrap.appendChild(exList);
+            }
+          });
+        } else {
+          otherMeanings.forEach(m => {
+            const p = document.createElement('div');
+            p.className = 'ordbokene-meaning';
+            p.textContent = m;
+            otherWrap.appendChild(p);
+          });
+        }
         toggleBtn.addEventListener('click', () => {
           const isHidden = otherWrap.classList.toggle('hidden');
           toggleBtn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');

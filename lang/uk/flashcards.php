@@ -54,6 +54,7 @@ $string['analysis_empty'] = 'Виберіть слово, щоб побачит�
 $string['ordbokene_block_label'] = 'Ordbøkene';
 $string['ordbokene_empty'] = 'Інформація зі словника зʼявиться тут після пошуку.';
 $string['ordbokene_citation'] = '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).';
+$string['ordbokene_more_meanings'] = 'Інші значення';
 $string['ai_question_label'] = 'Запитати AI';
 $string['ai_question_placeholder'] = 'Введіть Ваше запитання…';
 $string['ai_question_button'] = 'Запитати';
