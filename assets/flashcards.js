@@ -534,7 +534,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       success: dataset.aiSuccess || 'Focus phrase updated',
       error: dataset.aiError || 'Unable to detect an expression',
       notext: dataset.aiNoText || 'Type a sentence to enable the helper',
-      analysisEmpty: dataset.analysisEmpty || 'Select a word to see the grammar breakdown.',
+      analysisEmpty: dataset.analysisEmpty || '',
       ordbokeneEmpty: dataset.ordbokeneEmpty || 'Dictionary info will appear here after lookup.',
       ordbokeneCitation: dataset.ordbokeneCitation || '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
       ordbokeneMoreMeanings: dataset.ordbokeneMoreMeanings || 'Other meanings',
@@ -756,7 +756,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
         sentence_analysis: 'Grammar & meaning breakdown',
-        analysis_empty: 'Select a word to see the grammar breakdown.',
+        analysis_empty: '',
         check_text: 'Analyse',
         checking_text: 'Checking text...',
         no_errors_found: 'No errors found!',
@@ -879,7 +879,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         transcription_placeholder: '[\u041c\u0424\u0410 \u043d\u0430\u043f\u0440. /hu:s/]',
         one_per_line_placeholder: '\u043f\u043e \u043e\u0434\u043d\u043e\u043c\u0443 \u043d\u0430 \u0440\u044f\u0434\u043e\u043a...',
         sentence_analysis: 'Граматика та значення',
-        analysis_empty: 'Оберіть слово, щоб побачити граматичний розбір.',
+        analysis_empty: '',
         check_text: 'Перевірити текст',
         checking_text: 'Перевіряємо текст...',
         no_errors_found: 'Помилок не знайдено!',
@@ -1000,7 +1000,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
         sentence_analysis: 'Грамматика и значение',
-        analysis_empty: 'Выберите слово, чтобы увидеть грамматический разбор.',
+        analysis_empty: '',
         check_text: 'Проверить текст',
         checking_text: 'Проверяем текст...',
         no_errors_found: 'Ошибок не найдено!',
@@ -1331,7 +1331,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
         sentence_analysis: 'Gramatyka i znaczenie',
-        analysis_empty: 'Wybierz słowo, aby zobaczyć analizę gramatyczną.',
+        analysis_empty: '',
         check_text: 'Sprawdź tekst',
         checking_text: 'Sprawdzanie tekstu...',
         no_errors_found: 'Nie znaleziono błędów!',
@@ -2474,6 +2474,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
+    const focusHelperSlot = root.querySelector('.focus-helper-slot');
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusSpacyEl = document.getElementById('focusHelperSpacy');
     const focusAnalysisList = document.getElementById('focusAnalysisList');
@@ -3617,6 +3618,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       });
     }
 
+    function updateFocusHelperVisibility({hasTokens, hasAnalysis} = {}){
+      if(typeof hasTokens === 'boolean' && focusHelperSlot){
+        focusHelperSlot.classList.toggle('hidden', !hasTokens);
+      }
+      if(typeof hasAnalysis === 'boolean' && focusWordList){
+        focusWordList.classList.toggle('hidden', hasAnalysis);
+      }
+    }
+
     function renderFocusChips(){
       if(!focusWordList) return;
       closeFocusChipMenu();
@@ -3632,11 +3642,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         renderOrdbokeneBlock(null);
       }
       const wordTokens = tokens.filter(t => t.isWord);
-      if(!wordTokens.length){
-        const span=document.createElement('span');
-        span.className='focus-helper-empty';
-        span.textContent = aiStrings.notext;
-        focusWordList.appendChild(span);
+      const hasWordTokens = wordTokens.length > 0;
+      const hasAnalysis = !!(focusAnalysisList && focusAnalysisList.querySelector('.analysis-item'));
+      updateFocusHelperVisibility({hasTokens: hasWordTokens, hasAnalysis});
+      if(!hasWordTokens){
         return;
       }
         // Show words in the sentence only; expressions render in the analysis list.
@@ -3687,10 +3696,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!focusAnalysisList) return;
       focusAnalysisList.innerHTML = '';
       const list = Array.isArray(items) ? items.filter(it => it && (it.text || it.token)) : [];
+        const hasTokens = Array.isArray(focusHelperState.tokens) && focusHelperState.tokens.length > 0;
         if(!list.length){
           focusAnalysisList.textContent = aiStrings.analysisEmpty || '';
+          updateFocusHelperVisibility({hasTokens, hasAnalysis: false});
           return;
         }
+        updateFocusHelperVisibility({hasTokens, hasAnalysis: true});
         list.forEach(entry => {
           const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
           const chip = document.createElement('div');
