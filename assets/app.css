@@ -4856,6 +4856,17 @@ body.cropper-open #editActionsBar{
   padding:0.75rem;
   background:rgba(15,23,42,0.75);
 }
+.analysis-header {
+  display:flex;
+  flex-direction:column;
+  gap:0.35rem;
+}
+.focus-helper-subhead {
+  font-size:0.9rem;
+  font-weight:600;
+  color:#93c5fd;
+  letter-spacing:0.01em;
+}
 .focus-helper-head {
   display:flex;
   justify-content:space-between;

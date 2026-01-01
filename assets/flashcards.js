@@ -756,7 +756,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         one_per_line_placeholder: '_ _ _',
         sentence_analysis: 'Grammar & meaning breakdown',
         analysis_empty: 'Select a word to see the grammar breakdown.',
-        check_text: 'Check text',
+        check_text: 'Analyse',
         checking_text: 'Checking text...',
         no_errors_found: 'No errors found!',
         errors_found: 'Errors found!',
@@ -3678,17 +3678,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!focusAnalysisList) return;
       focusAnalysisList.innerHTML = '';
       const list = Array.isArray(items) ? items.filter(it => it && (it.text || it.token)) : [];
-      if(!list.length){
-        focusAnalysisList.textContent = aiStrings.analysisEmpty || '';
-        if(focusWordList){
-          focusWordList.classList.remove('hidden');
+        if(!list.length){
+          focusAnalysisList.textContent = aiStrings.analysisEmpty || '';
+          return;
         }
-        return;
-      }
-      const hasWords = list.some(entry => entry.kind === 'word');
-      if(focusWordList){
-        focusWordList.classList.toggle('hidden', hasWords);
-      }
         list.forEach(entry => {
           const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
           const chip = document.createElement('div');
@@ -3714,12 +3707,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
         }
-          if(kind === 'expression' && entry.confidence){
-            const conf = document.createElement('span');
-            conf.className = 'analysis-confidence';
-            conf.textContent = entry.confidence;
-            chip.appendChild(conf);
-          }
+            if(kind === 'expression' && entry.confidence){
+              const conf = document.createElement('span');
+              conf.className = 'analysis-confidence';
+              const confKey = String(entry.confidence || '').trim().toLowerCase();
+              const starCount = confKey === 'high' ? 3 : (confKey === 'medium' ? 2 : 1);
+              conf.textContent = '*'.repeat(starCount);
+              conf.title = 'App confidence: * low, ** medium, *** high.';
+              conf.setAttribute('aria-label', conf.title);
+              chip.appendChild(conf);
+            }
           if(kind === 'word'){
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})

@@ -349,20 +349,18 @@
                 </div>
               </div>
             </div>
-            <div class="slot focus-helper-slot">
-              <div class="focus-helper-head">
-                <span class="tag" data-i18n="choose_focus_word">{{#str}} choose_focus_word, mod_flashcards {{/str}}</span>
-              </div>
-              <div id="focusWordList" class="focus-word-list"></div>
-              <div id="focusHelperStatus" class="focus-helper-status small"></div>
-              <div id="focusHelperSpacy" class="focus-helper-spacy-status small"></div>
-              <div class="focus-helper-analysis">
-                <div class="analysis-header">
-                  <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
+              <div class="slot focus-helper-slot">
+                <div class="focus-helper-analysis">
+                  <div class="analysis-header">
+                    <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
+                    <div class="focus-helper-subhead">Choose focus word/phrase:</div>
+                  </div>
+                  <div id="focusWordList" class="focus-word-list"></div>
+                  <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
                 </div>
-                <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
+                <div id="focusHelperStatus" class="focus-helper-status small"></div>
+                <div id="focusHelperSpacy" class="focus-helper-spacy-status small"></div>
               </div>
-            </div>
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <div class="fokus-input-wrap">
