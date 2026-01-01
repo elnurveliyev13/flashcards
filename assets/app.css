@@ -5050,12 +5050,11 @@ body.cropper-open #editActionsBar{
   color:var(--text-subtle);
 }
 .analysis-confidence {
-  font-size:0.72rem;
-  text-transform:uppercase;
-  letter-spacing:0.04em;
-  padding:0.1rem 0.4rem;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,0.16);
+  font-size:0.95rem;
+  letter-spacing:0.18em;
+  padding:0;
+  border:none;
+  background:transparent;
   color:var(--text-subtle);
 }
 .analysis-item[data-confidence="high"] .analysis-confidence {
