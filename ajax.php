@@ -726,6 +726,34 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $lemmaForExpr[$i] = core_text::strtolower($lemma);
     }
 
+    for ($start = 0; $start + 2 < $count; $start++) {
+        $pos0 = $posMap[$start] ?? '';
+        $pos1 = $posMap[$start + 1] ?? '';
+        $pos2 = $posMap[$start + 2] ?? '';
+        if ($pos0 === 'ADP' && $pos1 === 'CONJ' && $pos2 === 'ADP') {
+            $lemma = [];
+            $surface = [];
+            for ($j = 0; $j < 3; $j++) {
+                $lemmaTok = $lemmaForExpr[$start + $j] ?? '';
+                $surfaceTok = $surfaceLower[$start + $j] ?? '';
+                if ($lemmaTok === '' || $surfaceTok === '') {
+                    continue 2;
+                }
+                $lemma[] = $lemmaTok;
+                $surface[] = $surfaceTok;
+            }
+            $out[] = [
+                'lemma' => implode(' ', $lemma),
+                'surface' => implode(' ', $surface),
+                'len' => 3,
+                'score' => 3,
+                'source' => 'pattern',
+                'start' => $start,
+                'end' => $start + 2,
+            ];
+        }
+    }
+
     $buildCandidate = function(int $start, int $end, string $source, int $scoreBase) use ($posSets, $posMap, $lemmaForExpr, $surfaceLower, $corePos, $reflexives): ?array {
         $lemmaParts = [];
         $surfaceParts = [];
@@ -733,6 +761,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $adpCount = 0;
         $hasVerb = false;
         $hasAdjNoun = false;
+        $lastCorePos = '';
+        $lastCoreIsReflexive = false;
 
         for ($j = $start; $j <= $end; $j++) {
             $posSet = $posSets[$j] ?? [];
@@ -742,6 +772,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 continue;
             }
             $isReflexive = in_array($lemmaTok, $reflexives, true);
+            $primary = $posMap[$j] ?? '';
+            if (!$isReflexive && in_array($primary, ['PRON', 'DET'], true)) {
+                continue;
+            }
             $isParticle = in_array('PART', $posSet, true) ||
                 (in_array('ADV', $posSet, true) && mod_flashcards_is_particle_like($lemmaTok));
             $isCore = $isReflexive || $isParticle || !empty(array_intersect($posSet, $corePos));
@@ -753,7 +787,6 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             $surfaceParts[] = $surfaceTok;
 
             $corePosVal = '';
-            $primary = $posMap[$j] ?? '';
             if ($primary !== '' && in_array($primary, $corePos, true)) {
                 $corePosVal = $primary;
             } elseif ($isParticle) {
@@ -778,6 +811,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($corePosVal === 'NOUN' || $corePosVal === 'ADJ') {
                 $hasAdjNoun = true;
             }
+            $lastCorePos = $corePosVal;
+            $lastCoreIsReflexive = $isReflexive;
         }
 
         if ($coreLen < 2) {
@@ -808,6 +843,9 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             $score += 2;
         } else if ($adpCount >= 1) {
             $score += 1;
+        }
+        if ($adpCount >= 1 && in_array($lastCorePos, ['NOUN','PRON'], true) && !$lastCoreIsReflexive) {
+            $score -= 3;
         }
         return [
             'lemma' => $expr,
