@@ -2808,6 +2808,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!focusSpacyEl){
         return;
       }
+      focusSpacyEl.textContent = '';
+      focusSpacyEl.dataset.state = '';
+      focusSpacyEl.classList.add('hidden');
+      return;
       const tokenCount =
         (spacyInfo && Number.isInteger(spacyInfo.token_count) ? spacyInfo.token_count : null) ??
         (spacyInfo && Array.isArray(spacyInfo.tokens) ? spacyInfo.tokens.length : 0);
@@ -3689,7 +3693,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
           const chip = document.createElement('div');
           chip.className = 'analysis-item';
-          if(kind === 'expression' || kind === 'sentence'){
+          if(kind === 'sentence'){
+            chip.classList.add('analysis-item--sentence');
+          } else if(kind === 'expression'){
             chip.classList.add('analysis-item--expression');
           }
           if(kind === 'word' || kind === 'expression'){
@@ -3717,6 +3723,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(kind === 'word'){
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})
+            });
+          }
+          if(kind === 'expression'){
+            attachFocusChipMenuHandlers(chip, entry.text, {
+              onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry)
             });
           }
           if(kind === 'word' && Number.isInteger(entry.index)){

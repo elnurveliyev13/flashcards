@@ -5020,6 +5020,10 @@ body.cropper-open #editActionsBar{
   border-color:rgba(59,130,246,0.45);
   background:rgba(59,130,246,0.12);
 }
+.analysis-item--sentence {
+  border-color:rgba(16,185,129,0.45);
+  background:linear-gradient(135deg, rgba(16,185,129,0.18), rgba(14,116,144,0.12));
+}
 .analysis-item--clickable {
   cursor:pointer;
 }
