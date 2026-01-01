@@ -71,6 +71,7 @@ $string['ai_thinking'] = 'Thinking...';
 $string['ordbokene_block_label'] = 'Ordbøkene';
 $string['ordbokene_empty'] = 'Dictionary info appears here after lookup.';
 $string['ordbokene_citation'] = '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).';
+$string['ordbokene_more_meanings'] = 'Other meanings';
 $string['ai_question_label'] = 'Ask the AI';
 $string['ai_question_placeholder'] = 'Type a question about this sentence...';
 $string['ai_question_button'] = 'Ask';

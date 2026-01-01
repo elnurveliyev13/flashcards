@@ -5050,7 +5050,7 @@ body.cropper-open #editActionsBar{
   color:var(--text-subtle);
 }
 .analysis-confidence {
-  font-size:0.95rem;
+  font-size:1.15rem;
   letter-spacing:0.18em;
   padding:0;
   border:none;

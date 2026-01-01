@@ -374,8 +374,17 @@ class ordbokene_client {
         // Expressions from sub-articles in definitions.
         $out['expressions'] = self::extract_expressions($article['body']['definitions'] ?? []);
         // Meanings/examples: collect from nested definition elements.
-        $defelements = self::collect_definition_elements($article['body']['definitions'] ?? []);
-        $out['meanings'] = self::extract_meanings($defelements);
+        $definitions = $article['body']['definitions'] ?? [];
+        $defelements = self::collect_definition_elements($definitions);
+        $senses = self::extract_senses($definitions, (string)($out['baseform'] ?? ''));
+        if (!empty($senses)) {
+            $out['senses'] = $senses;
+            $out['meanings'] = array_values(array_unique(array_filter(array_map(function($sense) {
+                return is_array($sense) ? trim((string)($sense['meaning'] ?? '')) : '';
+            }, $senses))));
+        } else {
+            $out['meanings'] = self::extract_meanings($defelements);
+        }
         $out['examples'] = self::extract_examples($defelements, (string)($out['baseform'] ?? ''));
 
         return array_filter($out, fn($v) => !empty($v));
@@ -478,6 +487,83 @@ class ordbokene_client {
             }
         }
         return $out;
+    }
+
+    protected static function collect_definition_elements_for_definition(array $definition): array {
+        $out = [];
+        $stack = [$definition];
+        while (!empty($stack)) {
+            $def = array_shift($stack);
+            if (!is_array($def)) {
+                continue;
+            }
+            $elements = $def['elements'] ?? [];
+            if (!is_array($elements)) {
+                continue;
+            }
+            foreach ($elements as $el) {
+                if (!is_array($el)) {
+                    continue;
+                }
+                $out[] = $el;
+                if (!empty($el['elements']) && is_array($el['elements'])) {
+                    $stack[] = ['elements' => $el['elements']];
+                }
+            }
+        }
+        return $out;
+    }
+
+    protected static function extract_sub_article_labels(array $elements): array {
+        $labels = [];
+        foreach ($elements as $el) {
+            if (($el['type_'] ?? '') !== 'sub_article' || empty($el['lemmas'])) {
+                continue;
+            }
+            foreach ($el['lemmas'] as $l) {
+                if (is_string($l) && trim($l) !== '') {
+                    $labels[] = trim($l);
+                } else if (is_array($l) && !empty($l['lemma'])) {
+                    $lemma = trim((string)$l['lemma']);
+                    if ($lemma !== '') {
+                        $labels[] = $lemma;
+                    }
+                }
+            }
+        }
+        return array_values(array_unique(array_filter($labels)));
+    }
+
+    protected static function extract_senses(array $definitions, string $lemma = ''): array {
+        $senses = [];
+        foreach ($definitions as $def) {
+            if (!is_array($def)) {
+                continue;
+            }
+            $elements = self::collect_definition_elements_for_definition($def);
+            if (empty($elements)) {
+                continue;
+            }
+            $meanings = self::extract_meanings($elements);
+            $examples = self::extract_examples($elements, $lemma);
+            if (empty($meanings)) {
+                $labels = self::extract_sub_article_labels($elements);
+                foreach ($labels as $label) {
+                    $senses[] = [
+                        'meaning' => $label,
+                        'examples' => $examples,
+                    ];
+                }
+                continue;
+            }
+            foreach ($meanings as $meaning) {
+                $senses[] = [
+                    'meaning' => $meaning,
+                    'examples' => $examples,
+                ];
+            }
+        }
+        return $senses;
     }
 
     protected static function extract_expressions(array $definitions): array {

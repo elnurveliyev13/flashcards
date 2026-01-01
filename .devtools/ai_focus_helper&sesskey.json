@@ -1,118 +1,110 @@
 {
     "ok": true,
     "data": {
-        "focusWord": "lyst",
-        "focusBaseform": "lyst",
-        "pos": "substantiv",
+        "focusWord": "p\u00e5 jakt etter",
+        "focusBaseform": "jakt",
+        "pos": "phrase",
         "gender": "",
         "translation_lang": "en",
-        "definition": "a desire or wish to have or do something that gives pleasure or satisfaction",
-        "translation": "to feel like (want)",
+        "definition": "trying to find or obtain something or someone",
+        "translation": "looking for",
         "analysis": [
             {
-                "text": "lyst",
-                "translation": "trang til eller \u00f8nske om \u00e5 f\u00e5 eller gj\u00f8re noe som gir glede eller tilfredsstillelse"
+                "text": "jakt",
+                "translation": "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
             }
         ],
         "collocations": [],
         "examples": [
-            "Hva har du lyst p\u00e5? | What do you feel like (want)?",
-            "Jeg har lyst p\u00e5 sjokolade. | I feel like (want) chocolate.",
-            "Har du lyst til \u00e5 spille piano i kveld? | Do you feel like playing the piano tonight?"
+            "Hva er du p\u00e5 jakt etter? | What are you looking for?",
+            "Jeg er p\u00e5 jakt etter en ny jobb. | I am looking for a new job.",
+            "Hun er p\u00e5 jakt etter en leilighet i byen. | She is looking for an apartment in the city."
         ],
-        "transcription": "'l\u028f.st",
+        "transcription": "'j\u0251kt",
         "forms": {
             "noun": {
                 "indef_sg": [
-                    "lyst"
+                    "jakt"
                 ],
                 "def_sg": [
-                    "lysta",
-                    "lysten"
+                    "jakta",
+                    "jakten"
                 ],
                 "indef_pl": [
-                    "lyster"
+                    "jakter"
                 ],
                 "def_pl": [
-                    "lystene"
+                    "jaktene"
                 ],
                 "by_gender": {
                     "hankjonn": {
                         "indef_sg": [
-                            "lyst"
+                            "jakt"
                         ],
                         "def_sg": [
-                            "lysten"
+                            "jakten"
                         ],
                         "indef_pl": [
-                            "lyster"
+                            "jakter"
                         ],
                         "def_pl": [
-                            "lystene"
+                            "jaktene"
                         ]
                     },
                     "hunkjonn": {
                         "indef_sg": [
-                            "lyst"
+                            "jakt"
                         ],
                         "def_sg": [
-                            "lysta"
+                            "jakta"
                         ],
                         "indef_pl": [
-                            "lyster"
+                            "jakter"
                         ],
                         "def_pl": [
-                            "lystene"
+                            "jaktene"
                         ]
                     }
                 }
             }
         },
         "parts": [
-            "lyst"
+            "p\u00e5 jakt etter"
         ],
-        "expressionNeedsConfirmation": true,
-        "expressionSuggestions": [
-            {
-                "expression": "lyst p\u00e5",
-                "translation": "",
-                "explanation": "",
-                "examples": [],
-                "forms": [],
-                "dictmeta": []
-            }
+        "focusExpression": "p\u00e5 jakt etter",
+        "expressions": [
+            "p\u00e5 jakt etter"
         ],
         "ordbokene": {
-            "expression": "lyst",
+            "expression": "jakt",
             "meanings": [
-                "trang til eller \u00f8nske om \u00e5 f\u00e5 eller gj\u00f8re noe som gir glede eller tilfredsstillelse",
-                "seksuelt begj\u00e6r"
+                "det \u00e5 oppspore og felle dyr",
+                "det \u00e5 pr\u00f8ve \u00e5 finne eller f\u00e5 tak i noe eller noen"
             ],
             "examples": [
-                "f\u00e5 lyst p\u00e5 sjokolade",
-                "ha lyst til \u00e5 spille piano",
-                "f\u00f8lge lystene sine",
-                "sanselige lyster",
-                "har du lyst, har du lov",
-                "vekke lyst",
-                "ha nedsatt lyst",
-                "boka var en lyst \u00e5 lese",
-                "synge av hjertens lyst"
+                "jakt og fiske",
+                "g\u00e5 p\u00e5 jakt",
+                "drive jakt p\u00e5 rein",
+                "komme hjem etter endt jakt",
+                "jakta begynner 10. september",
+                "politiet tok opp jakta p\u00e5 tyvene",
+                "v\u00e6re p\u00e5 jakt etter hybel",
+                "p\u00e5 jakt etter \u00e6re og ber\u00f8mmelse"
             ],
             "forms": [],
             "dictmeta": {
                 "lang": "bm",
-                "url": "https:\/\/ord.uib.no\/bm\/article\/36396.json"
+                "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json"
             },
             "source": "ordbokene",
-            "chosenMeaning": 0,
-            "url": "https:\/\/ord.uib.no\/bm\/article\/36396.json",
-            "citation": "\"lyst\". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https:\/\/ordbokene.no (henta 27.12.2025)."
+            "chosenMeaning": 1,
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
+            "citation": "\"jakt\". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https:\/\/ordbokene.no (henta 01.01.2026)."
         },
         "audio": {
             "front": {
-                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_cc22f61fd43f.mp3",
-                "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_cc22f61fd43f.mp3",
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_front_s2xta7b2ctxppljzch1v_564dccb793c4.mp3",
+                "name": "tts_elevenlabs_front_s2xta7b2ctxppljzch1v_564dccb793c4.mp3",
                 "voice": "s2xtA7B2CTXPPlJzch1v",
                 "provider": "elevenlabs",
                 "provider_decision": {
@@ -123,8 +115,8 @@
                 }
             },
             "focus": {
-                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_focus_s2xta7b2ctxppljzch1v_eaeb7fb1d607.mp3",
-                "name": "tts_elevenlabs_focus_s2xta7b2ctxppljzch1v_eaeb7fb1d607.mp3",
+                "url": "https:\/\/abcnorsk.no\/pluginfile.php\/112\/mod_flashcards\/media\/10\/tts_elevenlabs_focus_s2xta7b2ctxppljzch1v_05586a4d0d68.mp3",
+                "name": "tts_elevenlabs_focus_s2xta7b2ctxppljzch1v_05586a4d0d68.mp3",
                 "voice": "s2xtA7B2CTXPPlJzch1v",
                 "provider": "elevenlabs",
                 "provider_decision": {
@@ -135,7 +127,7 @@
                 }
             }
         },
-        "audioFocusText": "lyst.",
+        "audioFocusText": "p\u00e5 jakt etter.",
         "audioProviderDecision": {
             "preferred": null,
             "resolved": "elevenlabs",
@@ -146,11 +138,11 @@
     },
     "debug": {
         "ordbokene": {
-            "expression": "lyst",
-            "url": "https:\/\/ord.uib.no\/bm\/article\/36396.json",
+            "expression": "jakt",
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27443.json",
             "chosen": {
-                "entry": 0,
-                "meaning": 0
+                "entry": 1,
+                "meaning": 1
             }
         }
     }

@@ -537,6 +537,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       analysisEmpty: dataset.analysisEmpty || 'Select a word to see the grammar breakdown.',
       ordbokeneEmpty: dataset.ordbokeneEmpty || 'Dictionary info will appear here after lookup.',
       ordbokeneCitation: dataset.ordbokeneCitation || '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+      ordbokeneMoreMeanings: dataset.ordbokeneMoreMeanings || 'Other meanings',
       spacyActive: dataset.spacyActive || 'spaCy parsed {$a} tokens',
       spacyInactive: dataset.spacyInactive || 'spaCy analysis unavailable',
       spacyModel: dataset.spacyModel || 'Model: {$a}',
@@ -1627,6 +1628,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       aiStrings.analysisEmpty = t('analysis_empty');
       aiStrings.ordbokeneEmpty = t('ordbokene_empty');
       aiStrings.ordbokeneCitation = t('ordbokene_citation');
+      aiStrings.ordbokeneMoreMeanings = t('ordbokene_more_meanings');
 
       // Update focus hint with new language
       if(typeof updateTranslationModeLabels === 'function'){
@@ -3637,8 +3639,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusWordList.appendChild(span);
         return;
       }
-      // Show multi-word expressions first (when available), then words in the sentence.
-      renderExpressionRows();
+        // Show words in the sentence only; expressions render in the analysis list.
       tokens.forEach((token)=>{
         if(token.isWord){
           const btn=document.createElement('button');
@@ -3721,7 +3722,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               const confKey = String(entry.confidence || '').trim().toLowerCase();
               const starCount = confKey === 'high' ? 3 : (confKey === 'medium' ? 2 : 1);
               conf.textContent = '*'.repeat(starCount);
-              conf.title = 'App confidence: * low, ** medium, *** high.';
+              conf.title = 'Confidence = how sure the app is about this phrase in the sentence.';
               conf.setAttribute('aria-label', conf.title);
               chip.appendChild(conf);
             }
@@ -3823,36 +3824,76 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       ordbokeneBlock.appendChild(head);
 
-      if(Array.isArray(info.meanings) && info.meanings.length){
+      const senses = Array.isArray(info.senses) ? info.senses : [];
+      let meanings = Array.isArray(info.meanings) ? info.meanings.slice() : [];
+      if(!meanings.length && senses.length){
+        meanings = senses
+          .map(s => (s && s.meaning ? String(s.meaning).trim() : ''))
+          .filter(Boolean);
+      }
+      const chosenMeaning = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < meanings.length)
+        ? meanings[chosenIdx]
+        : (meanings[0] || '');
+      const chosenSense = (chosenIdx !== null && chosenIdx >= 0 && chosenIdx < senses.length)
+        ? senses[chosenIdx]
+        : null;
+      let chosenExamples = [];
+      if(chosenSense && Array.isArray(chosenSense.examples) && chosenSense.examples.length){
+        chosenExamples = chosenSense.examples;
+      } else if(Array.isArray(info.examples) && info.examples.length){
+        chosenExamples = info.examples;
+      }
+
+      if(chosenMeaning){
         const meaningsWrap = document.createElement('div');
         meaningsWrap.className = 'ordbokene-meanings';
-        const meanings = info.meanings.slice();
-        if(chosenIdx !== null && chosenIdx >=0 && chosenIdx < meanings.length){
-          const chosenVal = meanings.splice(chosenIdx,1)[0];
-          meanings.unshift(chosenVal);
-        }
-        meanings.slice(0,2).forEach((m, i) => {
-          const p = document.createElement('div');
-          p.className = 'ordbokene-meaning';
-          if(i===0 && chosenIdx !== null){
-            p.classList.add('ordbokene-meaning--highlight');
-          }
-          p.textContent = m;
-          meaningsWrap.appendChild(p);
-        });
+        const p = document.createElement('div');
+        p.className = 'ordbokene-meaning ordbokene-meaning--highlight';
+        p.textContent = chosenMeaning;
+        meaningsWrap.appendChild(p);
         ordbokeneBlock.appendChild(meaningsWrap);
       }
 
-      if(Array.isArray(info.examples) && info.examples.length){
+      if(Array.isArray(chosenExamples) && chosenExamples.length){
         const examplesWrap = document.createElement('div');
         examplesWrap.className = 'ordbokene-examples';
-        info.examples.slice(0,4).forEach(ex => {
+        chosenExamples.slice(0,4).forEach(ex => {
           const exEl = document.createElement('div');
           exEl.className = 'ordbokene-example';
           exEl.textContent = ex;
           examplesWrap.appendChild(exEl);
         });
         ordbokeneBlock.appendChild(examplesWrap);
+      }
+
+      const otherMeanings = meanings.filter((m, idx) => {
+        if(!m) return false;
+        if(chosenIdx !== null && idx === chosenIdx) return false;
+        return chosenIdx === null ? idx > 0 : true;
+      });
+      if(otherMeanings.length){
+        const toggleWrap = document.createElement('div');
+        toggleWrap.className = 'ordbokene-other-meanings';
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'ordbokene-toggle';
+        toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.textContent = aiStrings.ordbokeneMoreMeanings || 'Other meanings';
+        const otherWrap = document.createElement('div');
+        otherWrap.className = 'ordbokene-meanings hidden';
+        otherMeanings.forEach(m => {
+          const p = document.createElement('div');
+          p.className = 'ordbokene-meaning';
+          p.textContent = m;
+          otherWrap.appendChild(p);
+        });
+        toggleBtn.addEventListener('click', () => {
+          const isHidden = otherWrap.classList.toggle('hidden');
+          toggleBtn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+        });
+        toggleWrap.appendChild(toggleBtn);
+        toggleWrap.appendChild(otherWrap);
+        ordbokeneBlock.appendChild(toggleWrap);
       }
 
       const citation = document.createElement('div');

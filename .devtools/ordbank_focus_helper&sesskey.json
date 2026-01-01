@@ -1,17 +1,17 @@
 {
     "ok": true,
     "data": {
-        "token": "lyst",
+        "token": "jakt",
         "selected": {
-            "lemma_id": 42242,
-            "wordform": "lyst",
+            "lemma_id": 32534,
+            "wordform": "jakt",
             "tag": "subst fem appell ent ub normert",
             "paradigme_id": "900",
             "boy_nummer": 1,
-            "ipa": "'l\u028f.st",
-            "xsampa": "\"lY$st",
-            "nofabet": "L YH1 S T",
-            "baseform": "lyst",
+            "ipa": "'j\u0251kt",
+            "xsampa": "\"jAkt",
+            "nofabet": "J AH1 K T",
+            "baseform": "jakt",
             "ordklasse": "subst fem appell",
             "ordklasse_utdyping": "",
             "boy_group": "symbol",
@@ -20,15 +20,15 @@
         },
         "candidates": [
             {
-                "lemma_id": 42242,
-                "wordform": "lyst",
+                "lemma_id": 32534,
+                "wordform": "jakt",
                 "tag": "subst fem appell ent ub normert",
                 "paradigme_id": "900",
                 "boy_nummer": 1,
-                "ipa": "'l\u028f.st",
-                "xsampa": "\"lY$st",
-                "nofabet": "L YH1 S T",
-                "baseform": "lyst",
+                "ipa": "'j\u0251kt",
+                "xsampa": "\"jAkt",
+                "nofabet": "J AH1 K T",
+                "baseform": "jakt",
                 "ordklasse": "subst fem appell",
                 "ordklasse_utdyping": "",
                 "boy_group": "symbol",
@@ -36,47 +36,15 @@
                 "ordbok_boy_text": "symbol\r"
             },
             {
-                "lemma_id": 42127,
-                "wordform": "lyst",
-                "tag": "adj pos n\u00f8yt ub ent normert",
-                "paradigme_id": "500",
-                "boy_nummer": 4,
-                "ipa": "'ly\u02d0.st",
-                "xsampa": "\"ly:$st",
-                "nofabet": "L YY1 S T",
-                "baseform": "lys",
-                "ordklasse": "adj",
-                "ordklasse_utdyping": "n\u00f8ytr_T",
-                "boy_group": "determinativ, <adj>",
-                "boy_text": "be ent",
-                "ordbok_boy_text": "entall_bestemt\r"
-            },
-            {
-                "lemma_id": 42151,
-                "wordform": "lyst",
-                "tag": "verb perf-part <trans1> <intrans2> <part4\/opp> <part1\/ut> <predik3> normert",
-                "paradigme_id": "020",
-                "boy_nummer": 5,
-                "ipa": "'ly\u02d0.st",
-                "xsampa": "\"ly:$st",
-                "nofabet": "L YY1 S T",
-                "baseform": "lyse",
-                "ordklasse": "verb",
-                "ordklasse_utdyping": "pret_suffiks pret_TE",
-                "boy_group": "determinativ, <adj>",
-                "boy_text": "fl",
-                "ordbok_boy_text": "flertall\r"
-            },
-            {
-                "lemma_id": 42247,
-                "wordform": "lyst",
-                "tag": "verb imp <trans8> <trans17> normert",
+                "lemma_id": 32537,
+                "wordform": "jakt",
+                "tag": "verb imp <trans11\/etter> <trans11\/p\u00e5> normert",
                 "paradigme_id": "011",
                 "boy_nummer": 11,
-                "ipa": "'ly\u02d0.st",
-                "xsampa": "\"ly:$st",
-                "nofabet": "L YY1 S T",
-                "baseform": "lyste",
+                "ipa": "'j\u0251kt",
+                "xsampa": "\"jAkt",
+                "nofabet": "J AH1 K T",
+                "baseform": "jakte",
                 "ordklasse": "verb",
                 "ordklasse_utdyping": "pret_suffiks pret_ET adj_be_fl_EDE",
                 "boy_group": "verb, normal",
@@ -111,50 +79,50 @@
             }
         ],
         "parts": [
-            "lyst"
+            "jakt"
         ],
         "forms": {
             "noun": {
                 "indef_sg": [
-                    "lyst"
+                    "jakt"
                 ],
                 "def_sg": [
-                    "lysta",
-                    "lysten"
+                    "jakta",
+                    "jakten"
                 ],
                 "indef_pl": [
-                    "lyster"
+                    "jakter"
                 ],
                 "def_pl": [
-                    "lystene"
+                    "jaktene"
                 ],
                 "by_gender": {
                     "hankjonn": {
                         "indef_sg": [
-                            "lyst"
+                            "jakt"
                         ],
                         "def_sg": [
-                            "lysten"
+                            "jakten"
                         ],
                         "indef_pl": [
-                            "lyster"
+                            "jakter"
                         ],
                         "def_pl": [
-                            "lystene"
+                            "jaktene"
                         ]
                     },
                     "hunkjonn": {
                         "indef_sg": [
-                            "lyst"
+                            "jakt"
                         ],
                         "def_sg": [
-                            "lysta"
+                            "jakta"
                         ],
                         "indef_pl": [
-                            "lyster"
+                            "jakter"
                         ],
                         "def_pl": [
-                            "lystene"
+                            "jaktene"
                         ]
                     }
                 }
@@ -163,77 +131,50 @@
         "gender": "ei",
         "ambiguous": true,
         "ordbokene": {
-            "expression": "lyst",
+            "expression": "jakt",
             "meanings": [
-                "trang til eller \u00f8nske om \u00e5 f\u00e5 eller gj\u00f8re noe som gir glede eller tilfredsstillelse",
-                "seksuelt begj\u00e6r"
+                "enmastet, seilskute med og ofte"
             ],
-            "examples": [
-                "f\u00e5 lyst p\u00e5 sjokolade",
-                "ha lyst til \u00e5 spille piano",
-                "f\u00f8lge lystene sine",
-                "sanselige lyster",
-                "har du lyst, har du lov",
-                "vekke lyst",
-                "ha nedsatt lyst",
-                "boka var en lyst \u00e5 lese",
-                "synge av hjertens lyst"
-            ],
+            "examples": [],
             "forms": [],
             "dictmeta": {
                 "lang": "bm",
-                "url": "https:\/\/ord.uib.no\/bm\/article\/36396.json"
+                "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json"
             },
             "source": "ordbokene",
             "citation": "\u00abKorleis\u00bb. I: Bokm\u00e5lsordboka og Nynorskordboka. Spr\u00e5kr\u00e5det og Universitetet i Bergen. https:\/\/ordb\u00f8kene.no (henta 25.1.2022)."
         },
-        "focusExpression": "lyst",
+        "focusExpression": "jakt",
         "expressions": [
-            "lyst"
+            "jakt"
         ],
-        "definition": "trang til eller \u00f8nske om \u00e5 f\u00e5 eller gj\u00f8re noe som gir glede eller tilfredsstillelse",
-        "examples": [
-            "f\u00e5 lyst p\u00e5 sjokolade",
-            "ha lyst til \u00e5 spille piano",
-            "f\u00f8lge lystene sine",
-            "sanselige lyster",
-            "har du lyst, har du lov",
-            "vekke lyst",
-            "ha nedsatt lyst",
-            "boka var en lyst \u00e5 lese",
-            "synge av hjertens lyst"
-        ],
+        "definition": "enmastet, seilskute med og ofte",
         "analysis": [
             {
-                "text": "lyst",
-                "translation": "trang til eller \u00f8nske om \u00e5 f\u00e5 eller gj\u00f8re noe som gir glede eller tilfredsstillelse"
+                "text": "jakt",
+                "translation": "enmastet, seilskute med og ofte"
             }
         ]
     },
     "debug": {
-        "fullform_count": 9,
+        "fullform_count": 5,
         "fullform_sample": [
             {
-                "lemma_id": "42247",
-                "oppslag": "lyst",
-                "tag": "verb imp <trans8> <trans17> normert"
+                "lemma_id": "32537",
+                "oppslag": "jakt",
+                "tag": "verb imp <trans11\/etter> <trans11\/p\u00e5> normert"
             },
             {
-                "lemma_id": "42127",
-                "oppslag": "lyst",
-                "tag": "adj pos n\u00f8yt ub ent normert"
-            },
-            {
-                "lemma_id": "42242",
-                "oppslag": "lyst",
-                "tag": "subst fem appell ent ub normert"
+                "lemma_id": "32534",
+                "oppslag": "jakt",
+                "tag": "subst mask appell ent ub normert"
             }
         ],
         "spacy_pos": "NOUN",
         "ordbokene": {
             "enabled": true,
-            "expression": "lyst",
-            "url": "https:\/\/ord.uib.no\/bm\/article\/36396.json"
+            "expression": "jakt",
+            "url": "https:\/\/ord.uib.no\/bm\/article\/27442.json"
         }
     }
 }

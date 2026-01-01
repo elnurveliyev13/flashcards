@@ -3364,12 +3364,20 @@ switch ($action) {
                     $entry = $entries[$chosen['entry']];
                     $meaning = $entry['meanings'][$chosen['meaning']] ?? ($entry['meanings'][0] ?? '');
                     $expression = $entry['baseform'] ?? $lookupWord;
+                    $examples = $entry['examples'] ?? [];
+                    if (!empty($entry['senses']) && is_array($entry['senses'])) {
+                        $sense = $entry['senses'][$chosen['meaning']] ?? null;
+                        if (is_array($sense) && !empty($sense['examples']) && is_array($sense['examples'])) {
+                            $examples = $sense['examples'];
+                        }
+                    }
                         $data['ordbokene'] = [
                             'expression' => $expression,
                             'meanings' => $entry['meanings'] ?? [],
-                            'examples' => $entry['examples'] ?? [],
+                            'examples' => $examples,
                             'forms' => $entry['forms'] ?? [],
                             'dictmeta' => $entry['dictmeta'] ?? [],
+                            'senses' => $entry['senses'] ?? [],
                             'source' => 'ordbokene',
                             'chosenMeaning' => $chosen['meaning'],
                             'url' => $entry['dictmeta']['url'] ?? '',
@@ -3377,7 +3385,7 @@ switch ($action) {
                         ];
                         // Do not override focusWord/expression chosen from Ordbank.
                         $debugai['ordbokene'] = ['expression' => $expression, 'url' => $entry['dictmeta']['url'] ?? '', 'chosen' => $chosen];
-                        $seed = !empty($entry['examples']) ? $entry['examples'] : [];
+                        $seed = !empty($examples) ? $examples : [];
                         if ($openaiexpr->is_enabled()) {
                             $gen = $openaiexpr->generate_expression_content($expression, $meaning, $seed, $fronttext, $language, $level);
                             if (!empty($gen['translation'])) {
