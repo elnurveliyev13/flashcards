@@ -902,6 +902,148 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
 }
 
 /**
+ * Resolve lexical multiword expressions directly from token spans via Ordbokene cache/lookup.
+ *
+ * @param array<int,string> $surfaceTokens
+ * @param array<int,string> $lemmaTokens
+ * @param array<int,string> $posMap
+ * @param string $lang
+ * @param int $maxLookups
+ * @return array<int,array<string,mixed>>
+ */
+function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array $lemmaTokens, array $posMap, string $lang = 'begge', int $maxLookups = 10): array {
+    $out = [];
+    $count = count($surfaceTokens);
+    if ($count < 2) {
+        return $out;
+    }
+    $minLen = 2;
+    $maxLen = 5;
+    $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    $contentPos = ['VERB','NOUN','ADJ','ADV'];
+    $allowedPos = ['VERB','NOUN','ADJ','ADV','ADP','CONJ','PART','PRON','DET'];
+    $seenCand = [];
+    $seenExpr = [];
+    $lookups = 0;
+
+    for ($start = 0; $start < $count; $start++) {
+        for ($end = $start + $minLen - 1; $end < $count && $end < $start + $maxLen; $end++) {
+            $len = $end - $start + 1;
+            $posSeq = [];
+            $hasContent = false;
+            $invalid = false;
+            $lemmaParts = [];
+            $surfaceParts = [];
+            for ($i = $start; $i <= $end; $i++) {
+                $lemmaTok = $lemmaTokens[$i] ?? '';
+                $surfaceTok = $surfaceTokens[$i] ?? '';
+                if ($lemmaTok === '' || $surfaceTok === '') {
+                    $invalid = true;
+                    break;
+                }
+                $pos = $posMap[$i] ?? '';
+                if ($pos === '' || !in_array($pos, $allowedPos, true)) {
+                    $invalid = true;
+                    break;
+                }
+                if (in_array($pos, ['PRON','DET'], true) && !in_array($lemmaTok, $reflexives, true)) {
+                    $invalid = true;
+                    break;
+                }
+                if (in_array($pos, $contentPos, true)) {
+                    $hasContent = true;
+                }
+                $posSeq[] = $pos;
+                $lemmaParts[] = $lemmaTok;
+                $surfaceParts[] = $surfaceTok;
+            }
+            if ($invalid) {
+                continue;
+            }
+            if ($posSeq[0] === 'CONJ' || $posSeq[$len - 1] === 'CONJ') {
+                continue;
+            }
+            $isAdpConjAdp = $len === 3 && $posSeq[0] === 'ADP' && $posSeq[1] === 'CONJ' && $posSeq[2] === 'ADP';
+            if (!$hasContent && !$isAdpConjAdp) {
+                continue;
+            }
+            $lemmaPhrase = trim(implode(' ', $lemmaParts));
+            $surfacePhrase = trim(implode(' ', $surfaceParts));
+            if ($lemmaPhrase === '' || $surfacePhrase === '') {
+                continue;
+            }
+            $candidates = array_values(array_unique([$lemmaPhrase, $surfacePhrase]));
+            foreach ($candidates as $cand) {
+                $key = core_text::strtolower($cand);
+                if (isset($seenCand[$key])) {
+                    continue;
+                }
+                $seenCand[$key] = true;
+                $match = null;
+                if (\mod_flashcards\local\orbokene_repository::is_enabled()) {
+                    $cached = \mod_flashcards\local\orbokene_repository::find($cand);
+                    if (!empty($cached)) {
+                        $expression = $cached['baseform'] ?? $cached['entry'] ?? $cand;
+                        $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
+                        $match = [
+                            'expression' => $expression,
+                            'meanings' => $meaning ? [$meaning] : [],
+                            'examples' => $cached['examples'] ?? [],
+                            'dictmeta' => ['source' => 'cache'],
+                            'source' => 'cache',
+                        ];
+                    }
+                }
+                if (empty($match) && $lookups < $maxLookups) {
+                    $lookups++;
+                    $match = mod_flashcards_lookup_or_search_expression($cand, $lang);
+                }
+                if (empty($match)) {
+                    continue;
+                }
+                $expression = (string)($match['expression'] ?? $cand);
+                $exprTokens = mod_flashcards_word_tokens($expression);
+                if (count($exprTokens) < 2) {
+                    continue;
+                }
+                $exprMatch = mod_flashcards_find_phrase_match($lemmaTokens, $exprTokens, 1);
+                if ($exprMatch === null) {
+                    $exprMatch = mod_flashcards_find_phrase_match($surfaceTokens, $exprTokens, 1);
+                }
+                if ($exprMatch === null) {
+                    continue;
+                }
+                $mkey = core_text::strtolower($expression);
+                if (isset($seenExpr[$mkey])) {
+                    continue;
+                }
+                $seenExpr[$mkey] = true;
+                $meaning = '';
+                if (!empty($match['meanings']) && is_array($match['meanings'])) {
+                    $meaning = trim((string)($match['meanings'][0] ?? ''));
+                }
+                $source = $match['source'] ?? 'ordbokene';
+                $confidence = ($source === 'cache' || $source === 'ordbokene') ? 'high' : 'medium';
+                $out[] = [
+                    'expression' => $expression,
+                    'translation' => '',
+                    'explanation' => $meaning,
+                    'examples' => $match['examples'] ?? [],
+                    'dictmeta' => $match['dictmeta'] ?? [],
+                    'source' => $source,
+                    'confidence' => $confidence,
+                    'start' => $exprMatch['start'],
+                    'end' => $exprMatch['end'],
+                    'indices' => $exprMatch['indices'],
+                    'len' => count($exprTokens),
+                ];
+            }
+        }
+    }
+    return $out;
+}
+
+/**
  * True if $needle tokens appear contiguously inside $hay.
  *
  * @param array<int,string> $hay
@@ -2370,9 +2512,20 @@ switch ($action) {
             });
         }
         $cands = array_slice($cands, 0, 20);
-        $resolved = [];
+        $t0 = microtime(true);
+        $resolved = mod_flashcards_resolve_lexical_expressions($sentenceSurfaceTokens, $sentenceLemmaTokens, $posMap, $lang, 10);
+        $timing['expr_lexical'] = microtime(true) - $t0;
+        $lexicalCount = count($resolved);
         $seenCand = [];
         $seenResolved = [];
+        if (!empty($resolved)) {
+            foreach ($resolved as $item) {
+                $key = core_text::strtolower((string)($item['expression'] ?? ''));
+                if ($key !== '') {
+                    $seenResolved[$key] = true;
+                }
+            }
+        }
         $t0 = microtime(true);
         foreach ($cands as $cand) {
             $expr = trim((string)($cand['lemma'] ?? ''));
@@ -2726,6 +2879,11 @@ switch ($action) {
                     'tokens' => $debugtokens,
                 ],
                 'timing' => $timing,
+                'stats' => [
+                    'candidate_count' => count($cands),
+                    'lexical_count' => $lexicalCount ?? 0,
+                    'resolved_count' => count($resolved),
+                ],
             ];
             if (!empty($dataDebugLlm)) {
                 $data['debug']['llm'] = $dataDebugLlm;
