@@ -790,6 +790,37 @@ USERPROMPT;
         $totalUsage['total_tokens'] = ($totalUsage['total_tokens'] ?? 0) + ($usage['total_tokens'] ?? 0);
     }
 
+    /**
+     * Remove error items that don't match the corrected sentence.
+     *
+     * @param array $errors
+     * @param string $correctedText
+     * @return array
+     */
+    private function filter_errors_for_corrected_text(array $errors, string $correctedText): array {
+        $correctedText = trim($correctedText);
+        if ($correctedText === '' || empty($errors)) {
+            return $errors;
+        }
+        $haystack = core_text::strtolower($correctedText);
+        $filtered = array_filter($errors, function($err) use ($haystack) {
+            $original = trim((string)($err['original'] ?? ''));
+            $corrected = trim((string)($err['corrected'] ?? ''));
+            if ($original === '' || $corrected === '') {
+                return true;
+            }
+            if ($original === $corrected) {
+                return false;
+            }
+            $needle = core_text::strtolower($corrected);
+            if ($needle === '') {
+                return false;
+            }
+            return strpos($haystack, $needle) !== false;
+        });
+        return array_values($filtered);
+    }
+
     public function check_norwegian_text(string $text, string $language, int $userid): array {
         $languagemap = [
             'uk' => 'Ukrainian',
@@ -833,8 +864,7 @@ Your tasks (do them in this order):
 
 1) Create the MAIN CORRECTED VERSION:
    - Correct ONLY clear grammar, spelling, agreement, word order and preposition errors.
-   - Do NOT add new words.
-   - Do NOT remove words.
+   - You MAY add or remove 1-2 short function words (e.g. "at", articles, "som", "ikke") only when required for grammatical correctness.
    - Do NOT change the meaning.
    - Keep the sentence as close as possible to the original.
 
@@ -1001,6 +1031,10 @@ USERPROMPT;
                         }
                         return trim((string)$err['original']) !== trim((string)$err['corrected']);
                     }));
+                    $result1['errors'] = $this->filter_errors_for_corrected_text(
+                        $result1['errors'],
+                        (string)($result1['correctedText'] ?? $text)
+                    );
                 }
                 if (empty($result1['errors'])) {
                     $result1['hasErrors'] = false;
@@ -1026,6 +1060,10 @@ USERPROMPT;
                         }
                         return trim((string)$err['original']) !== trim((string)$err['corrected']);
                     }));
+                    $result1['errors'] = $this->filter_errors_for_corrected_text(
+                        $result1['errors'],
+                        (string)($result1['correctedText'] ?? $text)
+                    );
                 }
                 return $result1;
             }
@@ -1314,6 +1352,10 @@ USERPROMPT2;
                     }
                     return trim((string)$err['original']) !== trim((string)$err['corrected']);
                 }));
+                $result1['errors'] = $this->filter_errors_for_corrected_text(
+                    $result1['errors'],
+                    (string)($result1['correctedText'] ?? $text)
+                );
             }
             if (empty($result1['errors'])) {
                 $result1['hasErrors'] = false;
@@ -1517,6 +1559,10 @@ USERPROMPT2;
                     }
                     return trim((string)$err['original']) !== trim((string)$err['corrected']);
                 }));
+                $finalResult['errors'] = $this->filter_errors_for_corrected_text(
+                    $finalResult['errors'],
+                    (string)($finalResult['correctedText'] ?? $text)
+                );
             }
             if (empty($finalResult['errors'])) {
                 $finalResult['hasErrors'] = false;
