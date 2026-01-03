@@ -931,6 +931,30 @@ USERPROMPT;
     }
 
     /**
+     * Clear error list when corrected text matches the original input.
+     *
+     * @param array $result
+     * @param string $originalText
+     * @return array
+     */
+    private function enforce_no_change_no_error(array $result, string $originalText): array {
+        $original = trim($originalText);
+        $corrected = trim((string)($result['correctedText'] ?? ''));
+        if ($original !== '' && $corrected !== '' && $original === $corrected) {
+            $result['hasErrors'] = false;
+            $result['errors'] = [];
+            $result['correctedText'] = $originalText;
+            if (isset($result['alternativeText'])) {
+                $result['alternativeText'] = $originalText;
+            }
+            if (!empty($result['explanation'])) {
+                $result['explanation'] = '';
+            }
+        }
+        return $result;
+    }
+
+    /**
      * Detect missing "at" insertions using spaCy dependency cues.
      *
      * @param string $text
@@ -1366,6 +1390,7 @@ USERPROMPT;
                 }
 
                 $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+                $result1 = $this->enforce_no_change_no_error($result1, $text);
 
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
@@ -1409,6 +1434,7 @@ USERPROMPT;
                         }));
                     }
                     $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+                    $result1 = $this->enforce_no_change_no_error($result1, $text);
                     return $result1;
                 }
 
@@ -1595,12 +1621,14 @@ USERPROMPT2;
                     }
 
                     $finalResult = $this->apply_spacy_missing_at_postcheck($finalResult, $language, $text);
+                    $finalResult = $this->enforce_no_change_no_error($finalResult, $text);
                     return $finalResult;
                 } catch (\Exception $e) {
                     error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
                     $debugtiming['overall'] = microtime(true) - $overallstart;
                     $result1['debugTiming'] = $debugtiming;
                     $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+                    $result1 = $this->enforce_no_change_no_error($result1, $text);
                     return $result1;
                 }
             }
@@ -1698,6 +1726,7 @@ USERPROMPT2;
             $result1['reasoning_effort'] = $reasoningUsed;
 
             $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+            $result1 = $this->enforce_no_change_no_error($result1, $text);
 
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
@@ -1728,6 +1757,7 @@ USERPROMPT2;
                 $result1['usage'] = $totalUsage;
             }
             $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+            $result1 = $this->enforce_no_change_no_error($result1, $text);
             return $result1;
         }
 
@@ -1907,6 +1937,7 @@ USERPROMPT2;
             $finalResult['debugTiming'] = $debugtiming;
 
             $finalResult = $this->apply_spacy_missing_at_postcheck($finalResult, $language, $text);
+            $finalResult = $this->enforce_no_change_no_error($finalResult, $text);
             return $finalResult;
         } catch (\Exception $e) {
             error_log('Error in check_norwegian_text: ' . $e->getMessage());
