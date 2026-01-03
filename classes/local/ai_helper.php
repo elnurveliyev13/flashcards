@@ -889,6 +889,7 @@ Check ALL of these:
 - Word order (subject-verb-object, adverb placement, position of "ikke" and other negations)
 - Verb forms (tense, agreement)
 - Prepositions (correct prepositions and collocations, e.g. "klar over", not "klar p?")
+- Missing "at" after causal "I og med" when it introduces a clause (use "I og med at ...")
 - Articles and agreement (gender, number, definite/indefinite)
 - Spelling (typical mistakes by learners)
 - Punctuation ONLY if it affects understanding
@@ -1120,6 +1121,7 @@ Your tasks:
    - word order
    - prepositions
    - obvious wrong word choice
+   - missing "at" after causal "I og med" when it introduces a clause
 
   2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
      - suggest ONE more natural alternative
