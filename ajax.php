@@ -757,7 +757,9 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         ['id' => 'R26', 'pattern' => ['NOUN','ADP','NOUN'], 'priority' => 2, 'constraints' => [
             ['type' => 'lemma_repeat', 'left' => 0, 'right' => 2],
         ]],
-        ['id' => 'R04', 'pattern' => ['ADP','NOUN'], 'priority' => 3],
+        ['id' => 'R04', 'pattern' => ['ADP','NOUN'], 'priority' => 3, 'constraints' => [
+            ['type' => 'lemma_not_in', 'index' => 0, 'values' => ['enn']],
+        ]],
         ['id' => 'R06', 'pattern' => ['ADP','DET','ADJ'], 'priority' => 3],
         ['id' => 'R05', 'pattern' => ['ADP','DET','NOUN'], 'priority' => 3],
         ['id' => 'R07', 'pattern' => ['ADP','ADV','NOUN'], 'priority' => 3, 'constraints' => [
@@ -844,6 +846,16 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 }
                 $lemma = $lemmaForExpr[$idx] ?? '';
                 if ($lemma === '' || !in_array($lemma, $values, true)) {
+                    return null;
+                }
+            } else if ($type === 'lemma_not_in') {
+                $idx = $start + (int)($c['index'] ?? 0);
+                $values = $c['values'] ?? [];
+                if (!is_array($values) || empty($values)) {
+                    continue;
+                }
+                $lemma = $lemmaForExpr[$idx] ?? '';
+                if ($lemma !== '' && in_array($lemma, $values, true)) {
                     return null;
                 }
             } else if ($type === 'lemma_repeat') {
