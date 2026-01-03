@@ -2631,16 +2631,23 @@ switch ($action) {
         $verbAnyPrepMap = [];
         $exprLemmaMap = $lemmaMap;
         $t0 = microtime(true);
+        $ordbankCache = [];
         foreach ($words as $i => $w) {
             $token = mod_flashcards_normalize_token((string)($w['text'] ?? ''));
             if ($token === '') {
                 continue;
             }
-            $cands = \mod_flashcards\local\ordbank_helper::find_candidates($token);
+            $spacyPos = $posMap[$i] ?? '';
+            if ($spacyPos !== 'VERB') {
+                continue;
+            }
+            if (!array_key_exists($token, $ordbankCache)) {
+                $ordbankCache[$token] = \mod_flashcards\local\ordbank_helper::find_candidates($token);
+            }
+            $cands = $ordbankCache[$token];
             if (empty($cands)) {
                 continue;
             }
-            $spacyPos = $posMap[$i] ?? '';
             $bestBase = '';
             foreach ($cands as $cand) {
                 $pos = mod_flashcards_pos_from_tag((string)($cand['tag'] ?? ''), (string)($cand['ordklasse'] ?? ''));

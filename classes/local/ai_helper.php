@@ -821,6 +821,327 @@ USERPROMPT;
         return array_values($filtered);
     }
 
+    /**
+     * Apply spaCy-based post-checks for missing complementizers in subordinate clauses.
+     *
+     * @param array $result
+     * @param string $language
+     * @param string $fallbackText
+     * @return array
+     */
+    private function apply_spacy_missing_at_postcheck(array $result, string $language, string $fallbackText): array {
+        $text = trim((string)($result['correctedText'] ?? $fallbackText));
+        if ($text === '') {
+            return $result;
+        }
+        $insertions = $this->detect_missing_at_insertions($text);
+        if (empty($insertions)) {
+            return $result;
+        }
+
+        usort($insertions, fn($a, $b) => ($b['position'] ?? 0) <=> ($a['position'] ?? 0));
+        $updatedText = $text;
+        foreach ($insertions as $ins) {
+            $pos = (int)($ins['position'] ?? -1);
+            if ($pos < 0 || $pos > core_text::strlen($updatedText)) {
+                continue;
+            }
+            $before = core_text::substr($updatedText, 0, $pos);
+            $after = core_text::substr($updatedText, $pos);
+            $prefixSpace = preg_match('/\\s$/u', $before) ? '' : ' ';
+            $suffixSpace = preg_match('/^\\s/u', $after) ? '' : ' ';
+            $updatedText = $before . $prefixSpace . 'at' . $suffixSpace . $after;
+        }
+
+        if ($updatedText === $text) {
+            return $result;
+        }
+
+        $errors = is_array($result['errors'] ?? null) ? $result['errors'] : [];
+        $lang = trim($language) !== '' ? $language : 'en';
+        $issueText = $this->localized_missing_at_issue($lang);
+        $explanationText = $this->localized_missing_at_explanation($lang);
+
+        foreach ($insertions as $ins) {
+            $fragStart = $ins['fragment_start'] ?? null;
+            $fragEnd = $ins['fragment_end'] ?? null;
+            $pos = (int)($ins['position'] ?? -1);
+            if ($fragStart === null || $fragEnd === null || $pos < 0) {
+                continue;
+            }
+            $fragStart = (int)$fragStart;
+            $fragEnd = (int)$fragEnd;
+            if ($fragStart < 0 || $fragEnd <= $fragStart || $fragEnd > core_text::strlen($text)) {
+                continue;
+            }
+            $originalFragment = core_text::substr($text, $fragStart, $fragEnd - $fragStart);
+            $localPos = $pos - $fragStart;
+            if ($localPos < 0 || $localPos > core_text::strlen($originalFragment)) {
+                continue;
+            }
+            $before = core_text::substr($originalFragment, 0, $localPos);
+            $after = core_text::substr($originalFragment, $localPos);
+            $prefixSpace = preg_match('/\\s$/u', $before) ? '' : ' ';
+            $suffixSpace = preg_match('/^\\s/u', $after) ? '' : ' ';
+            $correctedFragment = $before . $prefixSpace . 'at' . $suffixSpace . $after;
+
+            $dupKey = $originalFragment . '||' . $correctedFragment;
+            $seen = false;
+            foreach ($errors as $err) {
+                if (!isset($err['original'], $err['corrected'])) {
+                    continue;
+                }
+                if (($err['original'] . '||' . $err['corrected']) === $dupKey) {
+                    $seen = true;
+                    break;
+                }
+            }
+            if ($seen) {
+                continue;
+            }
+
+            $errors[] = [
+                'original' => $originalFragment,
+                'corrected' => $correctedFragment,
+                'issue' => $issueText,
+                'category' => 'grammar',
+                'certainty' => 'medium',
+            ];
+        }
+
+        if (!empty($errors)) {
+            $result['errors'] = $errors;
+            $result['hasErrors'] = true;
+            $result['correctedText'] = $updatedText;
+            if (isset($result['alternativeText'])) {
+                $result['alternativeText'] = $updatedText;
+            }
+            $result['errors'] = $this->filter_errors_for_corrected_text(
+                $result['errors'],
+                (string)($result['correctedText'] ?? $fallbackText)
+            );
+            if (empty(trim((string)($result['explanation'] ?? '')))) {
+                $result['explanation'] = $explanationText;
+            } else {
+                $result['explanation'] = trim((string)$result['explanation']) . ' ' . $explanationText;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Detect missing "at" insertions using spaCy dependency cues.
+     *
+     * @param string $text
+     * @return array<int,array<string,int>>
+     */
+    private function detect_missing_at_insertions(string $text): array {
+        $client = new spacy_client();
+        if (!$client->is_enabled()) {
+            return [];
+        }
+        try {
+            $spacy = $client->analyze_text($text);
+        } catch (\Throwable $e) {
+            return [];
+        }
+        $tokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
+        $count = count($tokens);
+        if ($count === 0) {
+            return [];
+        }
+        $children = array_fill(0, $count, []);
+        foreach ($tokens as $i => $tok) {
+            $head = $tok['head'] ?? null;
+            if (!is_int($head) || $head < 0 || $head >= $count || $head === $i) {
+                continue;
+            }
+            $children[$head][] = $i;
+        }
+
+        $subDeps = ['advcl', 'ccomp', 'csubj', 'csubj:pass'];
+        $insertions = [];
+        foreach ($tokens as $i => $tok) {
+            $pos = core_text::strtoupper(trim((string)($tok['pos'] ?? '')));
+            if ($pos !== 'VERB' && $pos !== 'AUX') {
+                continue;
+            }
+            $dep = core_text::strtolower(trim((string)($tok['dep'] ?? '')));
+            if (!in_array($dep, $subDeps, true)) {
+                continue;
+            }
+            $kids = $children[$i] ?? [];
+            $hasSubject = false;
+            $hasMark = false;
+            foreach ($kids as $kid) {
+                $kdep = core_text::strtolower(trim((string)($tokens[$kid]['dep'] ?? '')));
+                if ($kdep === 'mark') {
+                    $hasMark = true;
+                }
+                if ($kdep === 'nsubj' || $kdep === 'nsubj:pass') {
+                    $hasSubject = true;
+                }
+            }
+            if ($hasMark || !$hasSubject) {
+                continue;
+            }
+
+            $subtree = $this->collect_spacy_subtree_indices($i, $children, $count);
+            if (empty($subtree)) {
+                continue;
+            }
+            $leftmost = min($subtree);
+            if ($leftmost <= 0) {
+                continue;
+            }
+            $leftToken = $tokens[$leftmost];
+            $leftNorm = $this->normalize_spacy_token((string)($leftToken['text'] ?? ''));
+            if ($leftNorm === 'at') {
+                continue;
+            }
+            $connectorStart = $this->find_spacy_connector_start($tokens, $leftmost);
+            if ($connectorStart === null) {
+                continue;
+            }
+
+            $insertPos = $tokens[$leftmost]['start'] ?? null;
+            $fragStart = $tokens[$connectorStart]['start'] ?? null;
+            $fragEnd = $tokens[$leftmost]['end'] ?? null;
+            if ($insertPos === null || $fragStart === null || $fragEnd === null) {
+                continue;
+            }
+            $insertions[] = [
+                'position' => (int)$insertPos,
+                'fragment_start' => (int)$fragStart,
+                'fragment_end' => (int)$fragEnd,
+            ];
+        }
+
+        return $insertions;
+    }
+
+    /**
+     * Collect subtree indices from a spaCy head index.
+     *
+     * @param int $root
+     * @param array $children
+     * @param int $count
+     * @return array<int,int>
+     */
+    private function collect_spacy_subtree_indices(int $root, array $children, int $count): array {
+        $seen = array_fill(0, $count, false);
+        $stack = [$root];
+        $out = [];
+        while (!empty($stack)) {
+            $node = array_pop($stack);
+            if (!is_int($node) || $node < 0 || $node >= $count) {
+                continue;
+            }
+            if ($seen[$node]) {
+                continue;
+            }
+            $seen[$node] = true;
+            $out[] = $node;
+            foreach ($children[$node] ?? [] as $child) {
+                $stack[] = $child;
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * Find the start of a prepositional connector before a clause.
+     *
+     * @param array $tokens
+     * @param int $clauseStart
+     * @return int|null
+     */
+    private function find_spacy_connector_start(array $tokens, int $clauseStart): ?int {
+        $i = $clauseStart - 1;
+        if ($i < 0) {
+            return null;
+        }
+        $allowed = ['ADP', 'ADV', 'CCONJ', 'PART'];
+        $start = null;
+        $count = 0;
+        $hasAdp = false;
+
+        for (; $i >= 0; $i--) {
+            $tok = $tokens[$i] ?? [];
+            $pos = core_text::strtoupper(trim((string)($tok['pos'] ?? '')));
+            $isAlpha = !empty($tok['is_alpha']);
+            if (!$isAlpha) {
+                break;
+            }
+            if (!in_array($pos, $allowed, true)) {
+                break;
+            }
+            $norm = $this->normalize_spacy_token((string)($tok['text'] ?? ''));
+            if ($norm === 'at') {
+                return null;
+            }
+            $start = $i;
+            $count++;
+            if ($pos === 'ADP') {
+                $hasAdp = true;
+            }
+        }
+        if ($count < 2 || !$hasAdp) {
+            return null;
+        }
+        return $start;
+    }
+
+    /**
+     * Normalize a spaCy token for lightweight matching.
+     *
+     * @param string $token
+     * @return string
+     */
+    private function normalize_spacy_token(string $token): string {
+        $token = core_text::strtolower(trim($token));
+        if ($token === '') {
+            return '';
+        }
+        $token = preg_replace('/[^\\p{L}\\p{M}]+/u', '', $token);
+        return $token ?? '';
+    }
+
+    /**
+     * Localized issue text for missing "at".
+     *
+     * @param string $language
+     * @return string
+     */
+    private function localized_missing_at_issue(string $language): string {
+        $lang = core_text::strtolower(trim($language));
+        $map = [
+            'ru' => 'Пропущено «at» перед придаточным предложением.',
+            'uk' => 'Пропущено «at» перед підрядним реченням.',
+            'no' => 'Mangler «at» foran leddsetning.',
+            'en' => 'Missing "at" before a subordinate clause.',
+        ];
+        return $map[$lang] ?? $map['en'];
+    }
+
+    /**
+     * Localized explanation text for missing "at".
+     *
+     * @param string $language
+     * @return string
+     */
+    private function localized_missing_at_explanation(string $language): string {
+        $lang = core_text::strtolower(trim($language));
+        $map = [
+            'ru' => 'Добавлено «at», чтобы корректно ввести придаточное предложение.',
+            'uk' => 'Додано «at», щоб коректно ввести підрядне речення.',
+            'no' => 'La til «at» for å innlede en leddsetning korrekt.',
+            'en' => 'Added "at" to properly introduce a subordinate clause.',
+        ];
+        return $map[$lang] ?? $map['en'];
+    }
+
     public function check_norwegian_text(string $text, string $language, int $userid): array {
         $languagemap = [
             'uk' => 'Ukrainian',
@@ -889,7 +1210,6 @@ Check ALL of these:
 - Word order (subject-verb-object, adverb placement, position of "ikke" and other negations)
 - Verb forms (tense, agreement)
 - Prepositions (correct prepositions and collocations, e.g. "klar over", not "klar p?")
-- Missing "at" after causal "I og med" when it introduces a clause (use "I og med at ...")
 - Articles and agreement (gender, number, definite/indefinite)
 - Spelling (typical mistakes by learners)
 - Punctuation ONLY if it affects understanding
@@ -1045,6 +1365,8 @@ USERPROMPT;
                     }
                 }
 
+                $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
                 $debugtiming['overall'] = microtime(true) - $overallstart;
@@ -1086,6 +1408,7 @@ USERPROMPT;
                             return trim((string)$err['original']) !== trim((string)$err['corrected']);
                         }));
                     }
+                    $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
                     return $result1;
                 }
 
@@ -1121,7 +1444,6 @@ Your tasks:
    - word order
    - prepositions
    - obvious wrong word choice
-   - missing "at" after causal "I og med" when it introduces a clause
 
   2) ONLY if you see a clearly more natural and typical way to say the SAME thing:
      - suggest ONE more natural alternative
@@ -1272,11 +1594,13 @@ USERPROMPT2;
                         $finalResult['reasoning_effort'] = $reasoningUsed ?? 'none';
                     }
 
+                    $finalResult = $this->apply_spacy_missing_at_postcheck($finalResult, $language, $text);
                     return $finalResult;
                 } catch (\Exception $e) {
                     error_log('Error in check_norwegian_text STAGE 2 (multisampling): ' . $e->getMessage());
                     $debugtiming['overall'] = microtime(true) - $overallstart;
                     $result1['debugTiming'] = $debugtiming;
+                    $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
                     return $result1;
                 }
             }
@@ -1373,6 +1697,8 @@ USERPROMPT2;
             $reasoningUsed = $reasoningUsed ?? 'none';
             $result1['reasoning_effort'] = $reasoningUsed;
 
+            $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
+
             // If no errors found, return immediately
             if (!$result1['hasErrors']) {
             $debugtiming['overall'] = microtime(true) - $overallstart;
@@ -1401,6 +1727,7 @@ USERPROMPT2;
             if (!empty($totalUsage)) {
                 $result1['usage'] = $totalUsage;
             }
+            $result1 = $this->apply_spacy_missing_at_postcheck($result1, $language, $text);
             return $result1;
         }
 
@@ -1579,6 +1906,7 @@ USERPROMPT2;
             $debugtiming['overall'] = microtime(true) - $overallstart;
             $finalResult['debugTiming'] = $debugtiming;
 
+            $finalResult = $this->apply_spacy_missing_at_postcheck($finalResult, $language, $text);
             return $finalResult;
         } catch (\Exception $e) {
             error_log('Error in check_norwegian_text: ' . $e->getMessage());
