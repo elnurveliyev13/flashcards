@@ -7009,11 +7009,11 @@ select.inline-prompt-field {
 .text-correction::after {
   content: attr(data-explanation);
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  transform: none;
   bottom: calc(100% + 8px);
   min-width: 12rem;
-  max-width: 20rem;
+  max-width: min(20rem, calc(100vw - 24px));
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 1rem;
@@ -7025,6 +7025,8 @@ select.inline-prompt-field {
   pointer-events: none;
   white-space: pre-line;
   text-align: left;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: opacity 0.2s ease;
   z-index: 10;
@@ -7033,8 +7035,8 @@ select.inline-prompt-field {
 .text-correction::before {
   content: '';
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 12px;
+  transform: none;
   bottom: calc(100% + 4px);
   border: 6px solid transparent;
   border-top-color: #111827;

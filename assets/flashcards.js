@@ -2887,6 +2887,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return map[key] || map[key.toUpperCase?.()] || key;
     }
 
+    const HIDE_LEMMA_POS = new Set(['ADP','CONJ','CCONJ','SCONJ','PART','INTJ']);
+
+    function shouldShowLemma(pos){
+      const key = (pos || '').toString().trim().toUpperCase();
+      return key ? !HIDE_LEMMA_POS.has(key) : true;
+    }
+
     function formatTokenAnalysis(item){
       const parts = [];
       const pos = resolveAnalysisLabel('pos', item.pos || '');
@@ -2897,7 +2904,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const dep = resolveAnalysisLabel('dep', depKey);
         if(dep) parts.push(`role: ${dep}`);
       }
-      if(item.lemma) parts.push(`lemma: ${item.lemma}`);
+      if(item.lemma && shouldShowLemma(item.pos)) parts.push(`lemma: ${item.lemma}`);
       return parts.join(', ');
     }
 
@@ -3660,7 +3667,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(meta && (meta.pos || meta.lemma)){
             const titleParts = [];
             if(meta.pos) titleParts.push(meta.pos);
-            if(meta.lemma) titleParts.push(meta.lemma);
+            if(meta.lemma && shouldShowLemma(meta.pos)) titleParts.push(meta.lemma);
             btn.title = titleParts.join(' · ');
           }
           attachFocusChipMenuHandlers(btn, token.text, {
@@ -13399,8 +13406,35 @@ Regeln:
       return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    function normalizeWhitespace(value) {
+      return String(value || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function isOverlongFragment(fragment, fullText) {
+      const fragmentText = normalizeWhitespace(fragment);
+      const full = normalizeWhitespace(fullText);
+      if (!fragmentText || !full) {
+        return true;
+      }
+      const fragmentWords = fragmentText.split(' ').filter(Boolean).length;
+      return fragmentText.length >= Math.max(80, Math.floor(full.length * 0.6)) || fragmentWords > 8;
+    }
+
+    function sanitizeIssueText(issue) {
+      const cleaned = normalizeWhitespace(issue);
+      if (!cleaned) {
+        return '';
+      }
+      const maxLength = 140;
+      if (cleaned.length <= maxLength) {
+        return cleaned;
+      }
+      return cleaned.slice(0, maxLength).trimEnd() + '...';
+    }
+
     function highlightDifferences(original, corrected, errors) {
       let highlighted = corrected;
+      const fullText = normalizeWhitespace(corrected || original);
 
       // Sort errors by length (longest first) to avoid nested replacements
       const sortedErrors = (errors || []).sort((a, b) =>
@@ -13409,9 +13443,12 @@ Regeln:
 
       sortedErrors.forEach(err => {
         if (err.corrected && err.corrected.trim()) {
-          // Wrap corrected parts in span with title showing explanation
-          const explanation = err.issue || '';
-          const wrappedCorrection = `<span class="text-correction" data-explanation="${escapeHtml(explanation)}" title="${escapeHtml(explanation)}">${escapeHtml(err.corrected)}</span>`;
+          if (isOverlongFragment(err.corrected, fullText)) {
+            return;
+          }
+          // Wrap corrected parts in span with tooltip explanation
+          const explanation = sanitizeIssueText(err.issue || '');
+          const wrappedCorrection = `<span class="text-correction" data-explanation="${escapeHtml(explanation)}">${escapeHtml(err.corrected)}</span>`;
           // Replace whole-token matches only (avoid wrapping inside longer words like "hjemme")
           const escaped = escapeRegExp(err.corrected);
           const pattern = new RegExp(`(^|[^\\p{L}\\p{N}])(${escaped})(?![\\p{L}\\p{N}])`, 'gu');
@@ -13502,9 +13539,13 @@ Regeln:
 
       // Build compact errors list
       let errorsListHtml = '';
-      if (filteredErrors.length > 0) {
+      const visibleErrors = filteredErrors.filter(err => {
+        const sample = (err && (err.original || err.corrected)) ? String(err.original || err.corrected) : '';
+        return !isOverlongFragment(sample, result.correctedText || originalText);
+      });
+      if (visibleErrors.length > 0) {
         errorsListHtml = '<div class="error-details-list">';
-        filteredErrors.forEach((err, idx) => {
+        visibleErrors.forEach((err, idx) => {
           errorsListHtml += `
             <div class="error-detail-item">
               <span class="error-icon">❌</span>

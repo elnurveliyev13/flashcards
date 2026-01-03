@@ -701,8 +701,13 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         return $out;
     }
     $maxLen = 7;
-    $corePos = ['VERB','NOUN','ADJ','ADP','PART'];
+    $corePos = ['VERB','NOUN','ADJ','ADP','PART','CONJ'];
     $reflexives = ['seg','meg','deg','oss','dere','dem'];
+    $particleLexicon = [
+        'opp','ned','ut','inn','bort','fram','tilbake','av','på','an','unna','innom','ifra','hjemme','fast',
+    ];
+    $twoWordSubjunctionWhitelist = ['selv om','som om','om enn','enn si'];
+    $highValueDiscourseWhitelist = ['i det hele tatt','for det meste','med andre ord','før eller siden','ikke bare bare','ikke så verst'];
 
     $posSets = [];
     $lemmaForExpr = [];
@@ -726,41 +731,209 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $lemmaForExpr[$i] = core_text::strtolower($lemma);
     }
 
-    for ($start = 0; $start + 2 < $count; $start++) {
-        $pos0 = $posMap[$start] ?? '';
-        $pos1 = $posMap[$start + 1] ?? '';
-        $pos2 = $posMap[$start + 2] ?? '';
-        if ($pos0 === 'ADP' && $pos1 === 'CONJ' && $pos2 === 'ADP') {
-            $lemma = [];
-            $surface = [];
-            for ($j = 0; $j < 3; $j++) {
-                $lemmaTok = $lemmaForExpr[$start + $j] ?? '';
-                $surfaceTok = $surfaceLower[$start + $j] ?? '';
-                if ($lemmaTok === '' || $surfaceTok === '') {
-                    continue 2;
-                }
-                $lemma[] = $lemmaTok;
-                $surface[] = $surfaceTok;
+    $rules = [
+        ['id' => 'R01', 'pattern' => ['ADP','CONJ','ADP'], 'priority' => 1, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 1, 'value' => 'og'],
+        ]],
+        ['id' => 'R02', 'pattern' => ['ADP','NOUN','ADP'], 'priority' => 1],
+        ['id' => 'R09', 'pattern' => ['VERB','PRON','ADP'], 'priority' => 1, 'verb_prep_required' => true, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 1, 'values' => $reflexives],
+        ]],
+        ['id' => 'R10', 'pattern' => ['VERB','ADP','PRON'], 'priority' => 1, 'verb_prep_required' => true, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 2, 'values' => $reflexives],
+        ]],
+        ['id' => 'R11', 'pattern' => ['VERB','NOUN','ADP'], 'priority' => 1, 'verb_prep_required' => true],
+        ['id' => 'R03', 'pattern' => ['ADP','NOUN','NOUN'], 'priority' => 2],
+        ['id' => 'R08', 'pattern' => ['ADV','CONJ','ADV'], 'priority' => 2, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 1, 'value' => 'og'],
+        ]],
+        ['id' => 'R14', 'pattern' => ['VERB','PRON','ADV'], 'priority' => 2, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 1, 'values' => $reflexives],
+            ['type' => 'lemma_in', 'index' => 2, 'values' => $particleLexicon],
+        ]],
+        ['id' => 'R20', 'pattern' => ['ADP','NOUN','CONJ','NOUN'], 'priority' => 2, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 2, 'value' => 'og'],
+        ]],
+        ['id' => 'R26', 'pattern' => ['NOUN','ADP','NOUN'], 'priority' => 2, 'constraints' => [
+            ['type' => 'lemma_repeat', 'left' => 0, 'right' => 2],
+        ]],
+        ['id' => 'R04', 'pattern' => ['ADP','NOUN'], 'priority' => 3],
+        ['id' => 'R06', 'pattern' => ['ADP','DET','ADJ'], 'priority' => 3],
+        ['id' => 'R05', 'pattern' => ['ADP','DET','NOUN'], 'priority' => 3],
+        ['id' => 'R07', 'pattern' => ['ADP','ADV','NOUN'], 'priority' => 3, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 1, 'values' => ['så']],
+        ]],
+        ['id' => 'R13', 'pattern' => ['VERB','ADV'], 'priority' => 3, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 1, 'values' => $particleLexicon],
+        ]],
+        ['id' => 'R15', 'pattern' => ['VERB','ADP','NOUN'], 'priority' => 3, 'verb_prep_required' => true, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 0, 'values' => ['gå','komme','være','sette','bli']],
+        ]],
+        ['id' => 'R21', 'pattern' => ['ADV','ADV'], 'priority' => 3, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 0, 'values' => $particleLexicon],
+            ['type' => 'lemma_in', 'index' => 1, 'values' => $particleLexicon],
+        ]],
+        ['id' => 'R27', 'pattern' => ['VERB','CONJ','VERB'], 'priority' => 4, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 1, 'value' => 'og'],
+        ]],
+        ['id' => 'R24', 'pattern' => ['ADJ','CONJ','ADJ'], 'priority' => 4, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 1, 'value' => 'og'],
+        ]],
+        ['id' => 'R28', 'pattern' => ['ADV','CONJ'], 'priority' => 4, 'constraints' => [
+            ['type' => 'whitelist_phrase', 'items' => $twoWordSubjunctionWhitelist],
+        ]],
+        ['id' => 'R29', 'pattern' => ['ADP','DET','ADJ','VERB'], 'priority' => 4, 'constraints' => [
+            ['type' => 'whitelist_phrase', 'items' => $highValueDiscourseWhitelist],
+        ]],
+        ['id' => 'R30', 'pattern' => ['ADP','DET','NOUN'], 'priority' => 5, 'constraints' => [
+            ['type' => 'whitelist_phrase', 'items' => $highValueDiscourseWhitelist],
+        ]],
+        ['id' => 'R31', 'pattern' => ['ADP','ADJ','NOUN'], 'priority' => 5, 'constraints' => [
+            ['type' => 'whitelist_phrase', 'items' => $highValueDiscourseWhitelist],
+        ]],
+        ['id' => 'R32', 'pattern' => ['ADV','CONJ','ADV'], 'priority' => 5, 'constraints' => [
+            ['type' => 'lemma_equals', 'index' => 1, 'value' => 'eller'],
+        ]],
+        ['id' => 'R12', 'pattern' => ['VERB','ADP'], 'priority' => 6, 'verb_prep_required' => true],
+        ['id' => 'R16', 'pattern' => ['VERB','ADV','ADP'], 'priority' => 6, 'verb_prep_required' => true, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 1, 'values' => $particleLexicon],
+        ]],
+        ['id' => 'R17', 'pattern' => ['ADJ','ADP'], 'priority' => 6],
+        ['id' => 'R18', 'pattern' => ['VERB','ADJ','ADP'], 'priority' => 6, 'verb_prep_required' => true, 'constraints' => [
+            ['type' => 'lemma_in', 'index' => 0, 'values' => ['være','bli']],
+        ]],
+        ['id' => 'R19', 'pattern' => ['NOUN','ADP','NOUN'], 'priority' => 6],
+        ['id' => 'R22', 'pattern' => ['VERB','NOUN'], 'priority' => 7],
+        ['id' => 'R23', 'pattern' => ['PRON','VERB','VERB'], 'priority' => 8],
+    ];
+
+    $matchRule = function(int $start, array $rule) use ($posSets, $lemmaForExpr, $surfaceLower, $verbPrepsMap, $verbAnyPrepMap): ?array {
+        $pattern = $rule['pattern'] ?? [];
+        $len = count($pattern);
+        $lemmaParts = [];
+        $surfaceParts = [];
+        for ($i = 0; $i < $len; $i++) {
+            $idx = $start + $i;
+            $pos = $pattern[$i];
+            $set = $posSets[$idx] ?? [];
+            if (empty($set) || !in_array($pos, $set, true)) {
+                return null;
             }
-            $out[] = [
-                'lemma' => implode(' ', $lemma),
-                'surface' => implode(' ', $surface),
-                'len' => 3,
-                'score' => 3,
-                'source' => 'pattern',
-                'start' => $start,
-                'end' => $start + 2,
-            ];
+            $lemmaTok = $lemmaForExpr[$idx] ?? '';
+            $surfaceTok = $surfaceLower[$idx] ?? '';
+            if ($lemmaTok === '' || $surfaceTok === '') {
+                return null;
+            }
+            $lemmaParts[] = $lemmaTok;
+            $surfaceParts[] = $surfaceTok;
+        }
+        $constraints = $rule['constraints'] ?? [];
+        foreach ($constraints as $c) {
+            $type = $c['type'] ?? '';
+            if ($type === 'lemma_equals') {
+                $idx = $start + (int)($c['index'] ?? 0);
+                $val = (string)($c['value'] ?? '');
+                if ($val === '' || ($lemmaForExpr[$idx] ?? '') !== $val) {
+                    return null;
+                }
+            } else if ($type === 'lemma_in') {
+                $idx = $start + (int)($c['index'] ?? 0);
+                $values = $c['values'] ?? [];
+                if (!is_array($values) || empty($values)) {
+                    return null;
+                }
+                $lemma = $lemmaForExpr[$idx] ?? '';
+                if ($lemma === '' || !in_array($lemma, $values, true)) {
+                    return null;
+                }
+            } else if ($type === 'lemma_repeat') {
+                $left = $start + (int)($c['left'] ?? 0);
+                $right = $start + (int)($c['right'] ?? 0);
+                if (($lemmaForExpr[$left] ?? '') === '' || ($lemmaForExpr[$right] ?? '') === '') {
+                    return null;
+                }
+                if ($lemmaForExpr[$left] !== $lemmaForExpr[$right]) {
+                    return null;
+                }
+            } else if ($type === 'whitelist_phrase') {
+                $items = $c['items'] ?? [];
+                if (!is_array($items) || empty($items)) {
+                    return null;
+                }
+                $phrase = implode(' ', $lemmaParts);
+                if (!in_array($phrase, $items, true)) {
+                    return null;
+                }
+            }
+        }
+        if (!empty($rule['verb_prep_required'])) {
+            $verbPos = array_search('VERB', $pattern, true);
+            if ($verbPos !== false) {
+                $verbIdx = $start + $verbPos;
+                $preps = $verbPrepsMap[$verbIdx] ?? [];
+                $allowAny = !empty($verbAnyPrepMap[$verbIdx]);
+                if (!$allowAny) {
+                    $prepSet = !empty($preps) ? array_flip($preps) : [];
+                    $matched = false;
+                    foreach ($pattern as $pIdx => $pos) {
+                        if ($pos !== 'ADP') {
+                            continue;
+                        }
+                        $pLemma = $lemmaForExpr[$start + $pIdx] ?? '';
+                        if ($pLemma !== '' && isset($prepSet[$pLemma])) {
+                            $matched = true;
+                            break;
+                        }
+                    }
+                    if (!$matched) {
+                        return null;
+                    }
+                }
+            }
+        }
+        $priority = (int)($rule['priority'] ?? 5);
+        $score = max(1, 10 - $priority) + $len;
+        return [
+            'lemma' => implode(' ', $lemmaParts),
+            'surface' => implode(' ', $surfaceParts),
+            'len' => $len,
+            'score' => $score,
+            'source' => $rule['id'] ?? 'rule',
+            'start' => $start,
+            'end' => $start + $len - 1,
+        ];
+    };
+
+    $seenRule = [];
+    foreach ($rules as $rule) {
+        $len = count($rule['pattern'] ?? []);
+        if ($len < 2) {
+            continue;
+        }
+        for ($start = 0; $start + $len - 1 < $count; $start++) {
+            $candidate = $matchRule($start, $rule);
+            if ($candidate === null) {
+                continue;
+            }
+            $key = core_text::strtolower($candidate['lemma']);
+            if ($key === '' || isset($seenRule[$key])) {
+                continue;
+            }
+            $seenRule[$key] = true;
+            $out[] = $candidate;
         }
     }
 
-    $buildCandidate = function(int $start, int $end, string $source, int $scoreBase) use ($posSets, $posMap, $lemmaForExpr, $surfaceLower, $corePos, $reflexives): ?array {
+    $buildCandidate = function(int $start, int $end, string $source, int $scoreBase) use ($posSets, $posMap, $lemmaForExpr, $surfaceLower, $corePos, $reflexives, $verbPrepsMap, $verbAnyPrepMap): ?array {
         $lemmaParts = [];
         $surfaceParts = [];
         $coreLen = 0;
         $adpCount = 0;
         $hasVerb = false;
         $hasAdjNoun = false;
+        $corePosSeq = [];
+        $verbIndices = [];
+        $adpTokens = [];
         $lastCorePos = '';
         $lastCoreIsReflexive = false;
 
@@ -802,11 +975,14 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($corePosVal === '') {
                 $corePosVal = $isReflexive ? 'PRON' : 'X';
             }
+            $corePosSeq[] = $corePosVal;
             if ($corePosVal === 'ADP' || $corePosVal === 'PART') {
                 $adpCount++;
+                $adpTokens[] = $lemmaTok;
             }
             if ($corePosVal === 'VERB') {
                 $hasVerb = true;
+                $verbIndices[] = $j;
             }
             if ($corePosVal === 'NOUN' || $corePosVal === 'ADJ') {
                 $hasAdjNoun = true;
@@ -823,6 +999,50 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         }
         if (!$hasVerb && !$hasAdjNoun) {
             return null;
+        }
+        if (count($verbIndices) > 1) {
+            return null;
+        }
+        if ($hasVerb) {
+            $firstPos = $corePosSeq[0] ?? '';
+            if ($firstPos !== 'VERB') {
+                return null;
+            }
+            if ($adpCount >= 1 && !empty($verbIndices)) {
+                $verbIdx = $verbIndices[0];
+                $preps = $verbPrepsMap[$verbIdx] ?? [];
+                $allowAny = !empty($verbAnyPrepMap[$verbIdx]);
+                $prepSet = !empty($preps) ? array_flip($preps) : [];
+                if (!$allowAny) {
+                    $matched = false;
+                    foreach ($adpTokens as $prep) {
+                        if ($prep !== '' && isset($prepSet[$prep])) {
+                            $matched = true;
+                            break;
+                        }
+                    }
+                    if (!$matched) {
+                        return null;
+                    }
+                }
+            }
+        } else {
+            if ($coreLen > 4) {
+                return null;
+            }
+            $posSeq = implode(' ', $corePosSeq);
+            $allowed = [
+                'NOUN ADP',
+                'ADJ ADP',
+                'ADP NOUN',
+                'ADP ADJ',
+                'ADP NOUN ADP',
+                'ADP ADJ ADP',
+                'NOUN ADP NOUN',
+            ];
+            if (!in_array($posSeq, $allowed, true)) {
+                return null;
+            }
         }
         $expr = trim(implode(' ', array_filter($lemmaParts)));
         $surface = trim(implode(' ', array_filter($surfaceParts)));
@@ -858,14 +1078,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         ];
     };
 
-    for ($start = 0; $start < $count; $start++) {
-        for ($end = $start + 1; $end < $count && $end < $start + $maxLen; $end++) {
-            $candidate = $buildCandidate($start, $end, 'pattern', 0);
-            if ($candidate !== null) {
-                $out[] = $candidate;
-            }
-        }
-    }
+    // General pattern builder removed: rely on explicit MWE rules + argstr expansion.
 
     $verbIndices = array_unique(array_merge(array_keys($verbPrepsMap), array_keys($verbAnyPrepMap)));
     foreach ($verbIndices as $i) {

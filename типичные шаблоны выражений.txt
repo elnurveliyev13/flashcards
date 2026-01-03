@@ -1,0 +1,471 @@
+{
+  "schema_version": "1.1",
+  "tagset": "UPOS (spaCy/UD-style)",
+  "language": "Norwegian (Bokmål/Nynorsk mixed texts possible)",
+  "goal": "Generate candidate MWEs (multiword expressions) in Norwegian texts by POS-pattern matching, then rank by statistics/heuristics and optional lexicon checks.",
+  "rules": [
+    {
+      "id": "R01",
+      "pattern": ["ADP", "CONJ", "ADP"],
+      "length": 3,
+      "name": "ADP og ADP",
+      "description": "Предлог + 'og' + предлог. Очень сильный индикатор фиксированного выражения.",
+      "examples": ["av og til", "til og med", "fra og med"],
+      "priority": 1,
+      "expected_precision": "very_high",
+      "constraints": [
+        { "token_index": 1, "lemma_equals": "og" }
+      ]
+    },
+    {
+      "id": "R02",
+      "pattern": ["ADP", "NOUN", "ADP"],
+      "length": 3,
+      "name": "Compound prepositions",
+      "description": "Составные предлоги/предложные обороты: ADP+NOUN+ADP.",
+      "examples": ["på grunn av", "i stedet for", "i henhold til", "ved siden av"],
+      "priority": 1,
+      "expected_precision": "very_high"
+    },
+    {
+      "id": "R09",
+      "pattern": ["VERB", "PRON", "ADP"],
+      "length": 3,
+      "name": "V + (reflexive) PRON + ADP",
+      "description": "Возвратное/квазивозвратное ядро + предлог. Часто лексикализовано.",
+      "examples": ["dreie seg om", "venne seg til", "tenke seg om", "bli noe av"],
+      "priority": 1,
+      "expected_precision": "very_high",
+      "constraints": [
+        { "token_index": 1, "lemma_in": ["seg", "meg", "deg", "oss", "dere"] }
+      ]
+    },
+    {
+      "id": "R10",
+      "pattern": ["VERB", "ADP", "PRON"],
+      "length": 3,
+      "name": "V + ADP + (reflexive) PRON",
+      "description": "Глагол + предлог/частица + возвратное местоимение в конце.",
+      "examples": ["få med seg", "kle på seg", "ta på seg"],
+      "priority": 1,
+      "expected_precision": "high",
+      "constraints": [
+        { "token_index": 2, "lemma_in": ["seg", "meg", "deg", "oss", "dere"] }
+      ]
+    },
+    {
+      "id": "R11",
+      "pattern": ["VERB", "NOUN", "ADP"],
+      "length": 3,
+      "name": "Light-verb / idiomatic noun + prep",
+      "description": "Очень продуктивный тип: глагол + (часто «голое») существительное + предлог.",
+      "examples": [
+        "bære preg av",
+        "få tak i",
+        "få øye på",
+        "gjøre narr av",
+        "sette pris på",
+        "gå glipp av",
+        "ha lyst på"
+      ],
+      "priority": 1,
+      "expected_precision": "high",
+      "notes": [
+        "Обычно NOUN без DET повышает шанс устойчивости.",
+        "Нужен скоринг (PMI/t-score), чтобы отсечь буквальные сочетания."
+      ]
+    },
+    {
+      "id": "R03",
+      "pattern": ["ADP", "NOUN", "NOUN"],
+      "length": 3,
+      "name": "ADP + NOUN + NOUN (often 'X skyld')",
+      "description": "Часто фиксированные рамки типа 'for X skyld'.",
+      "examples": ["for sikkerhets skyld"],
+      "priority": 2,
+      "expected_precision": "high",
+      "notes": [
+        "Можно бустить, если token2 выглядит как GEN (орфография -s)."
+      ]
+    },
+    {
+      "id": "R08",
+      "pattern": ["ADV", "CONJ", "ADV"],
+      "length": 3,
+      "name": "ADV og ADV",
+      "description": "Парные наречия через 'og' часто образуют клише/устойчивые выражения.",
+      "examples": ["der og da", "først og fremst"],
+      "priority": 2,
+      "expected_precision": "high",
+      "constraints": [
+        { "token_index": 1, "lemma_equals": "og" }
+      ]
+    },
+    {
+      "id": "R14",
+      "pattern": ["VERB", "PRON", "ADV"],
+      "length": 3,
+      "name": "V + (reflexive) PRON + particle-ADV",
+      "description": "Возвратное местоимение + частица (ut/opp/inn/...). Часто идиоматично.",
+      "examples": ["dumme seg ut", "skille seg ut", "slite seg ut"],
+      "priority": 2,
+      "expected_precision": "high",
+      "constraints": [
+        { "token_index": 1, "lemma_in": ["seg", "meg", "deg", "oss", "dere"] }
+      ]
+    },
+    {
+      "id": "R20",
+      "pattern": ["ADP", "NOUN", "CONJ", "NOUN"],
+      "length": 4,
+      "name": "ADP + NOUN og NOUN",
+      "description": "Предлог + парные существительные (часто формула).",
+      "examples": ["uten mål og mening"],
+      "priority": 2,
+      "expected_precision": "high",
+      "constraints": [
+        { "token_index": 2, "lemma_equals": "og" }
+      ]
+    },
+    {
+      "id": "R26",
+      "pattern": ["NOUN", "ADP", "NOUN"],
+      "length": 3,
+      "name": "NOUN ADP NOUN with lemma repetition",
+      "description": "Формулы постепенности/повтора: X for X / X etter X / X på X.",
+      "examples": ["skritt for skritt", "bit for bit", "gang på gang", "år etter år"],
+      "priority": 2,
+      "expected_precision": "high",
+      "constraints": [
+        { "type": "lemma_repeat", "left_index": 0, "right_index": 2 }
+      ],
+      "notes": [
+        "Можно дополнительно бустить, если ADP lemma in {for, etter, på}."
+      ]
+    },
+
+    {
+      "id": "R04",
+      "pattern": ["ADP", "NOUN"],
+      "length": 2,
+      "name": "ADP + NOUN (prepositional adverbials)",
+      "description": "Двусловные предложные наречные выражения (очень много кандидатов).",
+      "examples": [
+        "for tiden",
+        "i gang",
+        "i stand",
+        "i stykker",
+        "på forhånd",
+        "på rad",
+        "på sikt",
+        "på spreng",
+        "på vei",
+        "til stede",
+        "i utgangspunktet"
+      ],
+      "priority": 3,
+      "expected_precision": "medium_high",
+      "notes": [
+        "Требуется ранжирование: частота + PMI + фиксированность.",
+        "Бустить, если NOUN редко встречается вне этой биграммы."
+      ]
+    },
+    {
+      "id": "R06",
+      "pattern": ["ADP", "DET", "ADJ"],
+      "length": 3,
+      "name": "ADP + det + ADJ (elliptic/substantivized)",
+      "description": "Часто дискурсивные/временные выражения с эллипсисом.",
+      "examples": ["i det siste", "i det minste"],
+      "priority": 3,
+      "expected_precision": "medium"
+    },
+    {
+      "id": "R05",
+      "pattern": ["ADP", "DET", "NOUN"],
+      "length": 3,
+      "name": "ADP + DET + NOUN",
+      "description": "Дискурсивные/смягчающие формулы (и много буквальных).",
+      "examples": ["på en måte"],
+      "priority": 3,
+      "expected_precision": "medium"
+    },
+    {
+      "id": "R07",
+      "pattern": ["ADP", "ADV", "NOUN"],
+      "length": 3,
+      "name": "ADP + ADV + NOUN",
+      "description": "Некоторые очень устойчивые (напр. 'i så fall'), но шаблон общий.",
+      "examples": ["i så fall"],
+      "priority": 3,
+      "expected_precision": "medium",
+      "notes": [
+        "Подслучай с ADV lemma == 'så' обычно хороший."
+      ]
+    },
+    {
+      "id": "R13",
+      "pattern": ["VERB", "ADV"],
+      "length": 2,
+      "name": "VERB + particle-ADV (phrasal verbs)",
+      "description": "Фразовые глаголы с частицами (opp/ut/inn/bort/an/...).",
+      "examples": [
+        "dukke opp",
+        "gripe inn",
+        "gå an",
+        "skli ut",
+        "slappe av",
+        "slippe unna",
+        "slå an",
+        "slå opp",
+        "snakke ut",
+        "stikke innom"
+      ],
+      "priority": 3,
+      "expected_precision": "medium",
+      "notes": [
+        "Нужен список частиц + скоринг. Это самый продуктивный генератор кандидатов."
+      ]
+    },
+    {
+      "id": "R15",
+      "pattern": ["VERB", "ADP", "NOUN"],
+      "length": 3,
+      "name": "VERB + ADP + NOUN (frames like gå i X / være i X)",
+      "description": "Широкий шаблон, но важен для многих устойчивых рамок.",
+      "examples": ["gå i oppfyllelse", "gå i vasken", "gå over streken", "være i rute"],
+      "priority": 3,
+      "expected_precision": "medium",
+      "notes": [
+        "Бустить, если VERB lemma in {gå, komme, være, sette, bli} и ADP in {i, på, over}."
+      ]
+    },
+    {
+      "id": "R21",
+      "pattern": ["ADV", "ADV"],
+      "length": 2,
+      "name": "Paired adverbs (often directional)",
+      "description": "Пары наречий часто лексикализуются (особенно направления).",
+      "examples": ["opp ned", "rett frem"],
+      "priority": 3,
+      "expected_precision": "medium",
+      "notes": [
+        "Бустить, если оба слова из списка направленных частиц."
+      ]
+    },
+    {
+      "id": "R27",
+      "pattern": ["VERB", "CONJ", "VERB"],
+      "length": 3,
+      "name": "VERB og VERB (pseudo-coordination / repetition)",
+      "description": "Псевдокоординация (sitte og lese) и повтор глагола (prøve og prøve).",
+      "examples": ["sitte og lese", "stå og vente", "drive og pusle", "prøve og prøve"],
+      "priority": 4,
+      "expected_precision": "medium",
+      "constraints": [
+        { "token_index": 1, "lemma_equals": "og" }
+      ],
+      "notes": [
+        "Очень точный подслучай: lemma(verb1) == lemma(verb2) (повтор).",
+        "Для псевдокоординации фильтровать по списку VERB1-триггеров."
+      ]
+    },
+    {
+      "id": "R24",
+      "pattern": ["ADJ", "CONJ", "ADJ"],
+      "length": 3,
+      "name": "ADJ og ADJ",
+      "description": "Парные прилагательные через 'og'.",
+      "examples": ["kort og godt", "klar og tydelig", "klappet og klart"],
+      "priority": 4,
+      "expected_precision": "medium",
+      "constraints": [
+        { "token_index": 1, "lemma_equals": "og" }
+      ],
+      "notes": [
+        "Очень много обычных однородных определений — нужен PMI."
+      ]
+    },
+    {
+      "id": "R28",
+      "pattern": ["ADV", "SCONJ"],
+      "length": 2,
+      "name": "Two-word subjunction starters (often lexical)",
+      "description": "Двусловные союзные выражения (лучше как white-list).",
+      "examples": ["selv om", "som om"],
+      "priority": 4,
+      "expected_precision": "high",
+      "notes": [
+        "POS может прыгать; надежнее ловить лексически."
+      ]
+    },
+    {
+      "id": "R29",
+      "pattern": ["ADP", "DET", "ADJ", "VERB"],
+      "length": 4,
+      "name": "Discourse 4-grams (e.g., i det hele tatt)",
+      "description": "Фиксированные дискурсивные 4-граммы.",
+      "examples": ["i det hele tatt"],
+      "priority": 4,
+      "expected_precision": "high",
+      "notes": [
+        "Последний токен иногда будет ADJ вместо VERB (теггер). Можно разрешить VERB|ADJ в реализации."
+      ]
+    },
+    {
+      "id": "R30",
+      "pattern": ["ADP", "DET", "NOUN"],
+      "length": 3,
+      "name": "Discourse 3-grams (e.g., for det meste)",
+      "description": "Устойчивые дискурсивные 3-граммы.",
+      "examples": ["for det meste"],
+      "priority": 5,
+      "expected_precision": "medium"
+    },
+    {
+      "id": "R31",
+      "pattern": ["ADP", "ADJ", "NOUN"],
+      "length": 3,
+      "name": "Formulaic frames (e.g., med andre ord)",
+      "description": "Часто вводные клише.",
+      "examples": ["med andre ord"],
+      "priority": 5,
+      "expected_precision": "medium"
+    },
+    {
+      "id": "R32",
+      "pattern": ["ADV", "CONJ", "ADV"],
+      "length": 3,
+      "name": "X eller Y (often lexical, e.g., før eller siden)",
+      "description": "Формулы через 'eller' — лучше как white-list/PMI.",
+      "examples": ["før eller siden"],
+      "priority": 5,
+      "expected_precision": "medium_low",
+      "constraints": [
+        { "token_index": 1, "lemma_equals": "eller" }
+      ]
+    },
+
+    {
+      "id": "R12",
+      "pattern": ["VERB", "ADP"],
+      "length": 2,
+      "name": "VERB + ADP (valency-like)",
+      "description": "Глагол + предлог: часто это управление, но часть сочетаний лексикализована.",
+      "examples": ["drive med", "følge med", "stole på", "tyde på", "hoppe over", "sitte på"],
+      "priority": 6,
+      "expected_precision": "medium_low"
+    },
+    {
+      "id": "R16",
+      "pattern": ["VERB", "ADV", "ADP"],
+      "length": 3,
+      "name": "VERB + particle-ADV + ADP",
+      "description": "Тип 'se bort fra' и похожие: полезно, но шумно.",
+      "examples": ["se bort fra"],
+      "priority": 6,
+      "expected_precision": "medium_low"
+    },
+    {
+      "id": "R17",
+      "pattern": ["ADJ", "ADP"],
+      "length": 2,
+      "name": "ADJ + ADP (government)",
+      "description": "Управление прилагательных предлогом (часто важно для обучения, но не всегда идиома).",
+      "examples": ["lei av"],
+      "priority": 6,
+      "expected_precision": "medium_low"
+    },
+    {
+      "id": "R18",
+      "pattern": ["VERB", "ADJ", "ADP"],
+      "length": 3,
+      "name": "være + ADJ/PART + ADP frame",
+      "description": "Часто 'være' + причастие/прилагательное + предлог.",
+      "examples": ["være opptatt av"],
+      "priority": 6,
+      "expected_precision": "medium"
+    },
+    {
+      "id": "R19",
+      "pattern": ["NOUN", "ADP", "NOUN"],
+      "length": 3,
+      "name": "NOUN + ADP + NOUN (nominal idioms/metaphors)",
+      "description": "Именные метафоры и клише, но также много буквальных NPs.",
+      "examples": ["glimt i øyet", "smør på flesk"],
+      "priority": 6,
+      "expected_precision": "low_medium"
+    },
+    {
+      "id": "R22",
+      "pattern": ["VERB", "NOUN"],
+      "length": 2,
+      "name": "VERB + bare NOUN",
+      "description": "Иногда устойчиво (finne sted), но шаблон общий.",
+      "examples": ["finne sted", "holde mål"],
+      "priority": 7,
+      "expected_precision": "low_medium"
+    },
+    {
+      "id": "R23",
+      "pattern": ["PRON", "VERB", "VERB"],
+      "length": 3,
+      "name": "Short clause-like formulas",
+      "description": "Короткие разговорные формулы (если хочешь ловить и предложения).",
+      "examples": ["vi får se"],
+      "priority": 8,
+      "expected_precision": "low"
+    }
+  ],
+
+  "lexical_modules": {
+    "particle_lexicon": {
+      "description": "Частицы/наречия, которые часто образуют фразовые глаголы (для R13/R14/R16/R21).",
+      "lemmas": ["opp", "ned", "ut", "inn", "bort", "fram", "tilbake", "av", "på", "an", "unna", "innom", "ifra", "hjemme", "fast"]
+    },
+    "reflexive_pronouns": {
+      "description": "Возвратные/квазивозвратные местоимения для буста (R09/R10/R14).",
+      "lemmas": ["seg", "meg", "deg", "oss", "dere"]
+    },
+    "two_word_subjunction_whitelist": {
+      "description": "Двусловные союзные выражения лучше ловить лексически (POS может быть нестабилен).",
+      "items": ["selv om", "som om", "om enn", "enn si"]
+    },
+    "correlative_conjunctions": {
+      "description": "Разрывные коррелятивы (ловить на уровне предложения).",
+      "pairs": [
+        { "left": "enten", "right": "eller" },
+        { "left": "både", "right": "og" },
+        { "left": "hverken", "right": "eller" },
+        { "left": "jo", "right": "desto" }
+      ]
+    },
+    "high_value_discourse_whitelist": {
+      "description": "Очень частотные фиксированные дискурсивные выражения (можно сразу принимать).",
+      "items": ["i det hele tatt", "for det meste", "med andre ord", "før eller siden", "ikke bare bare", "ikke så verst"]
+    }
+  },
+
+  "post_filters": [
+    {
+      "name": "contiguity",
+      "description": "По умолчанию ищем только подряд идущие токены.",
+      "default": { "allow_gaps": false, "max_gap_tokens": 0 }
+    },
+    {
+      "name": "optional_gap_for_det",
+      "description": "Опционально разрешить 1 «слабый» токен (DET/ADV) внутри некоторых шаблонов, если хочешь больше полноты.",
+      "recommended_for_rules": ["R04", "R15", "R19"],
+      "settings": { "allow_gaps": true, "max_gap_tokens": 1, "gap_upos_allowed": ["DET", "ADV"] }
+    }
+  ],
+
+  "ranking_suggestions": [
+    "Считай частоту surface n-gram и lemma n-gram по корпусу (Språkbanken или твой).",
+    "Считай ассоциации (PMI и/или t-score) для 2–3-грамм; принимай кандидаты выше порога.",
+    "Считай fixedness: насколько часто внутренние слова заменяются (энтропия слотов).",
+    "Бустить кандидаты с 'seg' и частицами из particle_lexicon.",
+    "Сильно понижать общий шаблонный шум (VERB+ADP, NOUN+ADP+NOUN), если PMI низкий.",
+    "Кросс-проверка: идиомы Språkbanken + Ordbøkene API (если выражение/лемма известны как фраза)."
+  ]
+}
