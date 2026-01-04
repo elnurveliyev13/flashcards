@@ -226,6 +226,58 @@ function mod_flashcards_lookup_or_search_expression(string $expression, string $
 }
 
 /**
+ * Lookup phrase via Ordbokene and return trace for debugging.
+ *
+ * @param string $expression
+ * @param string $lang
+ * @return array{match:?array,trace:array<string,mixed>}
+ */
+function mod_flashcards_lookup_or_search_expression_debug(string $expression, string $lang = 'begge'): array {
+    $norm = mod_flashcards_normalize_infinitive($expression);
+    $trace = [
+        'expression' => $expression,
+        'norm' => $norm,
+        'lookup_hit' => false,
+        'search_hit' => false,
+        'lookup_error' => '',
+        'search_error' => '',
+        'match_source' => '',
+        'match_expression' => '',
+        'url' => '',
+    ];
+    if ($norm === '') {
+        return ['match' => null, 'trace' => $trace];
+    }
+    try {
+        $lookup = ordbokene_client::lookup($norm, $lang);
+        if (!empty($lookup)) {
+            $lookup['expression'] = mod_flashcards_normalize_infinitive($lookup['baseform'] ?? $norm);
+            $trace['lookup_hit'] = true;
+            $trace['match_source'] = 'lookup';
+            $trace['match_expression'] = $lookup['expression'] ?? '';
+            $trace['url'] = $lookup['dictmeta']['url'] ?? ($lookup['url'] ?? '');
+            return ['match' => $lookup, 'trace' => $trace];
+        }
+    } catch (\Throwable $ex) {
+        $trace['lookup_error'] = $ex->getMessage();
+    }
+    try {
+        $search = ordbokene_client::search_expressions($norm, $lang);
+        if (!empty($search)) {
+            $search['expression'] = mod_flashcards_normalize_infinitive($search['baseform'] ?? $norm);
+            $trace['search_hit'] = true;
+            $trace['match_source'] = 'search';
+            $trace['match_expression'] = $search['expression'] ?? '';
+            $trace['url'] = $search['dictmeta']['url'] ?? ($search['url'] ?? '');
+            return ['match' => $search, 'trace' => $trace];
+        }
+    } catch (\Throwable $ex) {
+        $trace['search_error'] = $ex->getMessage();
+    }
+    return ['match' => null, 'trace' => $trace];
+}
+
+/**
  * Produce lightweight expression variants for better Ordbøkene coverage.
  *
  * @param string $expression
@@ -370,3 +422,5 @@ function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $
 
     return null;
 }
+
+

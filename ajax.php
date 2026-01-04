@@ -3184,6 +3184,8 @@ switch ($action) {
         $lexicalCount = count($resolved);
         $seenCand = [];
         $seenResolved = [];
+        $debugLookupMap = [];
+        $debugLookupLimit = 10;
         if (!empty($resolved)) {
             foreach ($resolved as $item) {
                 $key = core_text::strtolower((string)($item['expression'] ?? ''));
@@ -3199,6 +3201,9 @@ switch ($action) {
             if ($expr === '' && $surfaceExpr === '') {
                 continue;
             }
+            $candSource = (string)($cand['source'] ?? '');
+            $candDebugKey = $expr !== '' ? $expr : $surfaceExpr;
+            $candDebugTrace = [];
             $candStart = isset($cand['start']) ? (int)$cand['start'] : null;
             $candEnd = isset($cand['end']) ? (int)$cand['end'] : null;
             if ($candStart !== null && $candEnd !== null && !empty($resolved)) {
@@ -3283,6 +3288,13 @@ switch ($action) {
                 if (\mod_flashcards\local\orbokene_repository::is_enabled()) {
                     $cached = \mod_flashcards\local\orbokene_repository::find($variant);
                     if (!empty($cached)) {
+                        if ($debug) {
+                            $candDebugTrace[] = [
+                                'method' => 'cache',
+                                'expression' => $variant,
+                                'hit' => true,
+                            ];
+                        }
                         $expression = $cached['baseform'] ?? $cached['entry'] ?? $variant;
                         $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
                         $match = [
@@ -3295,7 +3307,13 @@ switch ($action) {
                         break;
                     }
                 }
-                $match = mod_flashcards_lookup_or_search_expression($variant, $lang);
+                if ($debug) {
+                    $debugResult = mod_flashcards_lookup_or_search_expression_debug($variant, $lang);
+                    $candDebugTrace[] = $debugResult['trace'];
+                    $match = $debugResult['match'];
+                } else {
+                    $match = mod_flashcards_lookup_or_search_expression($variant, $lang);
+                }
                 if (!empty($match)) {
                     break;
                 }
@@ -3309,9 +3327,23 @@ switch ($action) {
                         $lang
                     );
                     if (!empty($exampleMatch)) {
+                        if ($debug) {
+                            $candDebugTrace[] = [
+                                'method' => 'example_match',
+                                'expression' => $surfaceExpr !== '' ? $surfaceExpr : $expr,
+                                'hit' => true,
+                            ];
+                        }
                         $match = $exampleMatch;
                     }
                 }
+            }
+            if ($debug && !empty($candDebugTrace) && count($debugLookupMap) < $debugLookupLimit) {
+                $debugLookupMap[] = [
+                    'candidate' => $candDebugKey,
+                    'source' => $candSource,
+                    'traces' => $candDebugTrace,
+                ];
             }
             if (empty($match)) {
                 // Fallback: allow ordbank-based noun+prep collocation patterns.
@@ -3585,6 +3617,7 @@ switch ($action) {
                     'resolved_count' => count($resolved),
                 ],
                 'expr_candidates' => $debugCandidates,
+                'expr_lookup' => $debugLookupMap,
             ];
             if (!empty($dataDebugLlm)) {
                 $data['debug']['llm'] = $dataDebugLlm;
