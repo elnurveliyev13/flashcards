@@ -13312,7 +13312,7 @@ Regeln:
      * Check Norwegian text for grammatical errors
      */
     async function checkTextForErrors() {
-      const text = $('#uFront').value.trim();
+      const text = normalizeWhitespace($('#uFront').value);
       if (!text) {
         return;
       }

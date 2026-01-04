@@ -821,7 +821,45 @@ USERPROMPT;
         return array_values($filtered);
     }
 
+    /**
+     * Remove error items that don't match the original sentence.
+     *
+     * @param array $errors
+     * @param string $originalText
+     * @return array
+     */
+    private function filter_errors_for_original_text(array $errors, string $originalText): array {
+        $originalText = trim($originalText);
+        if ($originalText === '' || empty($errors)) {
+            return $errors;
+        }
+        $filtered = array_filter($errors, function($err) use ($originalText) {
+            $original = (string)($err['original'] ?? '');
+            $corrected = (string)($err['corrected'] ?? '');
+            if ($original === '' || $corrected === '') {
+                return true;
+            }
+            if (trim($original) === trim($corrected)) {
+                return false;
+            }
+            return strpos($originalText, $original) !== false;
+        });
+        return array_values($filtered);
+    }
+
+    /**
+     * Normalize whitespace by collapsing runs to single spaces.
+     *
+     * @param string $text
+     * @return string
+     */
+    private function normalize_whitespace_simple(string $text): string {
+        $text = preg_replace('/\\s+/u', ' ', $text);
+        return trim($text ?? '');
+    }
+
     public function check_norwegian_text(string $text, string $language, int $userid): array {
+        $text = $this->normalize_whitespace_simple($text);
         $languagemap = [
             'uk' => 'Ukrainian',
             'ru' => 'Russian',
@@ -983,6 +1021,7 @@ USERPROMPT;
                         $result1['errors'],
                         (string)($result1['correctedText'] ?? $text)
                     );
+                    $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
                 }
                 if (empty($result1['errors'])) {
                     $result1['hasErrors'] = false;
@@ -1013,6 +1052,7 @@ USERPROMPT;
                         $result1['errors'],
                         (string)($result1['correctedText'] ?? $text)
                     );
+                    $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
                 }
                 return $result1;
             }
@@ -1305,6 +1345,7 @@ USERPROMPT2;
                     $result1['errors'],
                     (string)($result1['correctedText'] ?? $text)
                 );
+                $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
             }
             if (empty($result1['errors'])) {
                 $result1['hasErrors'] = false;
@@ -1513,6 +1554,7 @@ USERPROMPT2;
                     $finalResult['errors'],
                     (string)($finalResult['correctedText'] ?? $text)
                 );
+                $finalResult['errors'] = $this->filter_errors_for_original_text($finalResult['errors'], $text);
             }
             if (empty($finalResult['errors'])) {
                 $finalResult['hasErrors'] = false;

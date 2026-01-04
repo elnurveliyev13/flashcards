@@ -739,6 +739,13 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         ['id' => 'R09', 'pattern' => ['VERB','PRON','ADP'], 'priority' => 1, 'verb_prep_required' => true, 'constraints' => [
             ['type' => 'lemma_in', 'index' => 1, 'values' => $reflexives],
         ]],
+        ['id' => 'R09B', 'pattern' => ['VERB','PRON','PRON','ADP'], 'priority' => 1, 'verb_prep_required' => true,
+            'drop_indices' => [1],
+            'constraints' => [
+                ['type' => 'lemma_equals', 'index' => 1, 'value' => 'det'],
+                ['type' => 'lemma_in', 'index' => 2, 'values' => $reflexives],
+            ],
+        ],
         ['id' => 'R10', 'pattern' => ['VERB','ADP','PRON'], 'priority' => 1, 'verb_prep_required' => true, 'constraints' => [
             ['type' => 'lemma_in', 'index' => 2, 'values' => $reflexives],
         ]],
@@ -814,6 +821,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $len = count($pattern);
         $lemmaParts = [];
         $surfaceParts = [];
+        $drop = $rule['drop_indices'] ?? [];
+        $dropSet = is_array($drop) ? array_flip($drop) : [];
         for ($i = 0; $i < $len; $i++) {
             $idx = $start + $i;
             $pos = $pattern[$i];
@@ -826,8 +835,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($lemmaTok === '' || $surfaceTok === '') {
                 return null;
             }
-            $lemmaParts[] = $lemmaTok;
-            $surfaceParts[] = $surfaceTok;
+            if (!isset($dropSet[$i])) {
+                $lemmaParts[] = $lemmaTok;
+                $surfaceParts[] = $surfaceTok;
+            }
         }
         $constraints = $rule['constraints'] ?? [];
         foreach ($constraints as $c) {
