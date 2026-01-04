@@ -711,6 +711,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
     $particleDepLabels = ['prt','compound:prt','compound_prt'];
     $blockedPos = ['VERB','AUX','SCONJ','CCONJ'];
     $gapAllowedNoun = ['DET','ADJ','ADV','NUM','PROPN'];
+    $gapAllowedVerbPrep = ['DET','ADJ','ADV','NUM','PROPN','NOUN','PRON'];
     $gapAllowedAdj = ['ADV','PART'];
     $gapAllowedReflexive = ['ADV','PART','DET','ADJ','NOUN','PRON','NUM','PROPN'];
     $copularVerbs = ['v?re','bli'];
@@ -1185,6 +1186,44 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                         $addCandidate($expr, $i, $adpIdx, 'gap_adj_prep', 9, $maxGap);
                     }
                 }
+            }
+        }
+        $maxVerbPrepGap = 6;
+        $prepIdx = null;
+        $prepAllowed = true;
+        for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxVerbPrepGap; $j++) {
+            if (in_array(($posMap[$j] ?? ''), $blockedPos, true)) {
+                break;
+            }
+            if (($posMap[$j] ?? '') !== 'ADP') {
+                if (!$posIn($j, $gapAllowedVerbPrep)) {
+                    break;
+                }
+                continue;
+            }
+            $prepLemma = $lemmaForExpr[$j] ?? '';
+            if ($prepLemma === '') {
+                continue;
+            }
+            $preps = $verbPrepsMap[$i] ?? [];
+            $allowAny = !empty($verbAnyPrepMap[$i]);
+            if (!$allowAny && !empty($preps)) {
+                $prepSet = array_flip($preps);
+                if (!isset($prepSet[$prepLemma])) {
+                    $prepAllowed = false;
+                }
+            }
+            $prepIdx = $j;
+            break;
+        }
+        if ($prepIdx !== null) {
+            $prepLemma = $lemmaForExpr[$prepIdx] ?? '';
+            if ($prepLemma !== '') {
+                $expr = trim($verbLemma . ' ' . $prepLemma);
+                $gap = $prepIdx - $i - 1;
+                $source = $prepAllowed ? 'gap_verb_prep' : 'gap_verb_prep_soft';
+                $score = $prepAllowed ? 9 : 7;
+                $addCandidate($expr, $i, $prepIdx, $source, $score, $gap);
             }
         }
         $maxNounGap = 4;
