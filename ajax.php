@@ -3076,6 +3076,52 @@ switch ($action) {
         $lang = 'begge';
         $t0 = microtime(true);
         $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap, $depMap);
+        if (empty($cands)) {
+            $fallbackCands = [];
+            $seenFallback = [];
+            $countWords = count($words);
+            $maxGap = 6;
+            for ($i = 0; $i < $countWords; $i++) {
+                if (($posMap[$i] ?? '') !== 'VERB') {
+                    continue;
+                }
+                $verbLemma = $exprLemmaMap[$i] ?? '';
+                if ($verbLemma === '') {
+                    continue;
+                }
+                for ($j = $i + 1; $j < $countWords && ($j - $i - 1) <= $maxGap; $j++) {
+                    if (in_array(($posMap[$j] ?? ''), ['VERB','AUX','SCONJ','CCONJ'], true)) {
+                        break;
+                    }
+                    if (($posMap[$j] ?? '') !== 'ADP') {
+                        continue;
+                    }
+                    $prepLemma = $exprLemmaMap[$j] ?? '';
+                    if ($prepLemma === '') {
+                        continue;
+                    }
+                    $expr = trim($verbLemma . ' ' . $prepLemma);
+                    $key = core_text::strtolower($expr);
+                    if ($key === '' || isset($seenFallback[$key])) {
+                        continue;
+                    }
+                    $seenFallback[$key] = true;
+                    $fallbackCands[] = [
+                        'lemma' => $expr,
+                        'surface' => $expr,
+                        'len' => 2,
+                        'score' => 6,
+                        'source' => 'gap_verb_prep_fallback',
+                        'start' => $i,
+                        'end' => $j,
+                        'max_gap' => $j - $i - 1,
+                    ];
+                }
+            }
+            if (!empty($fallbackCands)) {
+                $cands = array_merge($cands, $fallbackCands);
+            }
+        }
         $timing['expr_candidates'] = microtime(true) - $t0;
         if (!empty($cands)) {
             usort($cands, function($a, $b) {
