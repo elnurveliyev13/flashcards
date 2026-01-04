@@ -823,11 +823,12 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         ['id' => 'R23', 'pattern' => ['PRON','VERB','VERB'], 'priority' => 8],
     ];
 
-    $matchRule = function(int $start, array $rule) use ($posSets, $lemmaForExpr, $surfaceLower, $verbPrepsMap, $verbAnyPrepMap): ?array {
+    $matchRule = function(int $start, array $rule) use ($posSets, $lemmaForExpr, $surfaceLower, $verbPrepsMap, $verbAnyPrepMap, $reflexives): ?array {
         $pattern = $rule['pattern'] ?? [];
         $len = count($pattern);
         $lemmaParts = [];
         $surfaceParts = [];
+        $hasVerb = in_array('VERB', $pattern, true);
         $drop = $rule['drop_indices'] ?? [];
         $dropSet = is_array($drop) ? array_flip($drop) : [];
         $indexMap = [];
@@ -880,7 +881,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 return null;
             }
             if (!isset($dropSet[$i])) {
-                $lemmaParts[] = $lemmaTok;
+                $useLemma = $hasVerb && ($pos === 'VERB' || in_array($lemmaTok, $reflexives, true));
+                $lemmaParts[] = $useLemma ? $lemmaTok : $surfaceTok;
                 $surfaceParts[] = $surfaceTok;
             }
         }
@@ -3328,14 +3330,9 @@ switch ($action) {
                     'source' => 'pattern',
                 ];
             }
-            $candSource = (string)($cand['source'] ?? '');
             $expression = (string)($match['expression'] ?? '');
             if ($expression === '') {
-                if ($surfaceExpr !== '' && in_array($candSource, ['R02','R04'], true)) {
-                    $expression = $surfaceExpr;
-                } else {
-                    $expression = $expr !== '' ? $expr : $surfaceExpr;
-                }
+                $expression = $expr !== '' ? $expr : $surfaceExpr;
             }
             $exprTokens = mod_flashcards_word_tokens($expression);
             if (count($exprTokens) < 2) {
