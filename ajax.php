@@ -3328,7 +3328,15 @@ switch ($action) {
                     'source' => 'pattern',
                 ];
             }
-            $expression = (string)($match['expression'] ?? ($expr !== '' ? $expr : $surfaceExpr));
+            $candSource = (string)($cand['source'] ?? '');
+            $expression = (string)($match['expression'] ?? '');
+            if ($expression === '') {
+                if ($surfaceExpr !== '' && in_array($candSource, ['R02','R04'], true)) {
+                    $expression = $surfaceExpr;
+                } else {
+                    $expression = $expr !== '' ? $expr : $surfaceExpr;
+                }
+            }
             $exprTokens = mod_flashcards_word_tokens($expression);
             if (count($exprTokens) < 2) {
                 continue;
