@@ -1815,6 +1815,34 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       setMediaStatus(state, label);
     }
 
+    const MEDIA_STATUS_DISPLAY_DURATION = 1700;
+    let mediaStatusHideTimer = null;
+
+    function showMediaStatusIndicator(){
+      if(!mediaStatusIndicator){
+        return;
+      }
+      mediaStatusIndicator.classList.add('visible');
+      if(mediaStatusHideTimer){
+        clearTimeout(mediaStatusHideTimer);
+      }
+      mediaStatusHideTimer = setTimeout(()=>{
+        mediaStatusIndicator.classList.remove('visible');
+        mediaStatusHideTimer = null;
+      }, MEDIA_STATUS_DISPLAY_DURATION);
+    }
+
+    function hideMediaStatusIndicator(){
+      if(!mediaStatusIndicator){
+        return;
+      }
+      mediaStatusIndicator.classList.remove('visible');
+      if(mediaStatusHideTimer){
+        clearTimeout(mediaStatusHideTimer);
+        mediaStatusHideTimer = null;
+      }
+    }
+
     function setMediaStatus(state, label){
       if(!mediaStatusIndicator){
         return;
@@ -1827,6 +1855,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         mediaStatusIndicator.classList.add('error');
       } else if(state === 'success'){
         mediaStatusIndicator.classList.add('success');
+      }
+      if(text){
+        showMediaStatusIndicator();
+      } else {
+        hideMediaStatusIndicator();
       }
     }
 
@@ -2514,12 +2547,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
-    const frontTextActions = document.querySelector('.front-text-actions');
-    const frontStatusHost = document.querySelector('.slot-head-extra');
     if(mediaStatusIndicator){
-      mediaStatusIndicator.classList.add('translation-status-inline');
-      const host = frontStatusHost || frontTextActions;
-      if(host && !host.contains(mediaStatusIndicator)){
+      mediaStatusIndicator.classList.add('media-status-indicator');
+      const host = document.body || document.documentElement;
+      if(host && mediaStatusIndicator.parentElement !== host){
         host.appendChild(mediaStatusIndicator);
       }
     }

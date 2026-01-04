@@ -3574,6 +3574,26 @@ body.cropper-open #editActionsBar{
   color: #bbf7d0;
 }
 
+.media-status-indicator {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  max-width: min(65vw, 20rem);
+  text-align: center;
+  word-break: anywhere;
+  white-space: normal;
+}
+
+.media-status-indicator.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .translation-mode-inline {
   margin-left: 0;
   display:inline-flex;
@@ -6659,22 +6679,6 @@ select.inline-prompt-field {
   align-items: center;
   flex-wrap: wrap;
 }
-.front-text-actions .translation-status-inline{
-  margin-left: 0;
-  align-self: center;
-  flex: 0 0 auto;
-  min-width: fit-content;
-  max-width: 12rem;
-  width: auto;
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
-  text-align: center;
-  overflow-wrap: anywhere;
-  white-space: normal;
-  justify-content: flex-start;
-}
-
 .front-slot,
 .front-slot .fokus-input-wrap,
 .front-slot .textarea-wrap {
