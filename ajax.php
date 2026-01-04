@@ -1434,6 +1434,31 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
 
     // General pattern builder removed: rely on explicit MWE rules + argstr expansion.
 
+    $protectedSpans = [];
+    foreach ($out as $cand) {
+        if (!is_array($cand)) {
+            continue;
+        }
+        if (($cand['source'] ?? '') === 'argstr') {
+            continue;
+        }
+        if (!isset($cand['start'], $cand['end'])) {
+            continue;
+        }
+        $start = (int)$cand['start'];
+        $end = (int)$cand['end'];
+        if ($start < 0 || $end < $start) {
+            continue;
+        }
+        $verbLemma = '';
+        for ($k = $start; $k <= $end; $k++) {
+            if (($posMap[$k] ?? '') === 'VERB') {
+                $verbLemma = (string)($lemmaForExpr[$k] ?? '');
+                break;
+            }
+        }
+        $protectedSpans[] = ['start' => $start, 'end' => $end, 'verb' => $verbLemma];
+    }
     $verbIndices = array_unique(array_merge(array_keys($verbPrepsMap), array_keys($verbAnyPrepMap)));
     foreach ($verbIndices as $i) {
         $preps = $verbPrepsMap[$i] ?? [];
@@ -1457,6 +1482,24 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 if (array_intersect($nextSet, ['NOUN','PRON','ADJ'])) {
                     $end = $nextIdx;
                 }
+            }
+            $overlapsForeign = false;
+            if (!empty($protectedSpans)) {
+                foreach ($protectedSpans as $span) {
+                    $s = $span['start'];
+                    $e = $span['end'];
+                    if ($end < $s || $i > $e) {
+                        continue;
+                    }
+                    $otherVerb = (string)($span['verb'] ?? '');
+                    if ($otherVerb === '' || $otherVerb !== ($lemmaForExpr[$i] ?? '')) {
+                        $overlapsForeign = true;
+                        break;
+                    }
+                }
+            }
+            if ($overlapsForeign) {
+                continue;
             }
             $candidate = $buildCandidate($i, $end, 'argstr', 2);
             if ($candidate !== null) {
