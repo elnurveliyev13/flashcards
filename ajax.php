@@ -694,7 +694,7 @@ function mod_flashcards_is_particle_like(string $token): bool {
  * @param array<int,bool> $verbAnyPrepMap
  * @return array<int,array{lemma:string,surface:string,len:int,score:int,source:string}>
  */
-function mod_flashcards_expression_candidates_from_words(array $words, array $lemmaMap, array $posMap, array $posCandidatesMap, array $verbPrepsMap, array $verbAnyPrepMap): array {
+function mod_flashcards_expression_candidates_from_words(array $words, array $lemmaMap, array $posMap, array $posCandidatesMap, array $verbPrepsMap, array $verbAnyPrepMap, array $depMap = []): array {
     $out = [];
     $count = count($words);
     if ($count < 2) {
@@ -708,6 +708,12 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
     ];
     $twoWordSubjunctionWhitelist = ['selv om','som om','om enn','enn si'];
     $highValueDiscourseWhitelist = ['i det hele tatt','for det meste','med andre ord','før eller siden','ikke bare bare','ikke så verst'];
+    $particleDepLabels = ['prt','compound:prt','compound_prt'];
+    $blockedPos = ['VERB','AUX','SCONJ','CCONJ'];
+    $gapAllowedNoun = ['DET','ADJ','ADV','NUM','PROPN'];
+    $gapAllowedAdj = ['ADV','PART'];
+    $gapAllowedReflexive = ['ADV','PART','DET','ADJ','NOUN','PRON','NUM','PROPN'];
+    $copularVerbs = ['v?re','bli'];
 
     $posSets = [];
     $lemmaForExpr = [];
@@ -823,8 +829,45 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $surfaceParts = [];
         $drop = $rule['drop_indices'] ?? [];
         $dropSet = is_array($drop) ? array_flip($drop) : [];
+        $indexMap = [];
+        $gapSpec = $rule['gap_after_first'] ?? null;
+        if (is_array($gapSpec) && $len === 3) {
+            $maxGap = (int)($gapSpec['max'] ?? 0);
+            $allowPos = $gapSpec['allow_pos'] ?? [];
+            if ($maxGap < 0) {
+                return null;
+            }
+            $indexMap[0] = $start;
+            $pronIndex = null;
+            for ($j = $start + 1; $j <= $start + 1 + $maxGap; $j++) {
+                if (!isset($posSets[$j])) {
+                    return null;
+                }
+                if (!isset($posSets[$j]) || !in_array('PRON', $posSets[$j], true)) {
+                    $posOk = true;
+                    if (is_array($allowPos) && !empty($allowPos)) {
+                        $posOk = (bool)array_intersect($posSets[$j], $allowPos);
+                    }
+                    if (!$posOk) {
+                        return null;
+                    }
+                    continue;
+                }
+                $pronIndex = $j;
+                break;
+            }
+            if ($pronIndex === null) {
+                return null;
+            }
+            $adpIndex = $pronIndex + 1;
+            if (!isset($posSets[$adpIndex]) || !in_array('ADP', $posSets[$adpIndex], true)) {
+                return null;
+            }
+            $indexMap[1] = $pronIndex;
+            $indexMap[2] = $adpIndex;
+        }
         for ($i = 0; $i < $len; $i++) {
-            $idx = $start + $i;
+            $idx = $indexMap[$i] ?? ($start + $i);
             $pos = $pattern[$i];
             $set = $posSets[$idx] ?? [];
             if (empty($set) || !in_array($pos, $set, true)) {
@@ -844,13 +887,15 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         foreach ($constraints as $c) {
             $type = $c['type'] ?? '';
             if ($type === 'lemma_equals') {
-                $idx = $start + (int)($c['index'] ?? 0);
+                $patternIdx = (int)($c['index'] ?? 0);
+                $idx = $indexMap[$patternIdx] ?? ($start + $patternIdx);
                 $val = (string)($c['value'] ?? '');
                 if ($val === '' || ($lemmaForExpr[$idx] ?? '') !== $val) {
                     return null;
                 }
             } else if ($type === 'lemma_in') {
-                $idx = $start + (int)($c['index'] ?? 0);
+                $patternIdx = (int)($c['index'] ?? 0);
+                $idx = $indexMap[$patternIdx] ?? ($start + $patternIdx);
                 $values = $c['values'] ?? [];
                 if (!is_array($values) || empty($values)) {
                     return null;
@@ -860,7 +905,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     return null;
                 }
             } else if ($type === 'lemma_not_in') {
-                $idx = $start + (int)($c['index'] ?? 0);
+                $patternIdx = (int)($c['index'] ?? 0);
+                $idx = $indexMap[$patternIdx] ?? ($start + $patternIdx);
                 $values = $c['values'] ?? [];
                 if (!is_array($values) || empty($values)) {
                     continue;
@@ -870,8 +916,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     return null;
                 }
             } else if ($type === 'lemma_repeat') {
-                $left = $start + (int)($c['left'] ?? 0);
-                $right = $start + (int)($c['right'] ?? 0);
+                $leftIdx = (int)($c['left'] ?? 0);
+                $rightIdx = (int)($c['right'] ?? 0);
+                $left = $indexMap[$leftIdx] ?? ($start + $leftIdx);
+                $right = $indexMap[$rightIdx] ?? ($start + $rightIdx);
                 if (($lemmaForExpr[$left] ?? '') === '' || ($lemmaForExpr[$right] ?? '') === '') {
                     return null;
                 }
@@ -928,6 +976,247 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
     };
 
     $seenRule = [];
+    $posIn = function(int $idx, array $allowed) use ($posSets, $posMap): bool {
+        $primary = $posMap[$idx] ?? '';
+        if ($primary !== '' && in_array($primary, $allowed, true)) {
+            return true;
+        }
+        $set = $posSets[$idx] ?? [];
+        return !empty(array_intersect($set, $allowed));
+    };
+    $isParticleToken = function(int $idx) use ($lemmaForExpr, $posMap, $posSets, $depMap, $particleLexicon, $particleDepLabels): bool {
+        $lemma = $lemmaForExpr[$idx] ?? '';
+        if ($lemma === '' || !in_array($lemma, $particleLexicon, true)) {
+            return false;
+        }
+        $dep = $depMap[$idx] ?? '';
+        if ($dep !== '' && in_array($dep, $particleDepLabels, true)) {
+            return true;
+        }
+        $primary = $posMap[$idx] ?? '';
+        if (in_array($primary, ['ADV','PART'], true)) {
+            return true;
+        }
+        $set = $posSets[$idx] ?? [];
+        return !empty(array_intersect($set, ['ADV','PART']));
+    };
+    $addCandidate = function(string $expr, int $start, int $end, string $source, int $score, ?int $maxGap = null) use (&$out, &$seenRule) {
+        $expr = trim($expr);
+        if ($expr === '') {
+            return;
+        }
+        $key = core_text::strtolower($expr);
+        if (isset($seenRule[$key])) {
+            return;
+        }
+        $seenRule[$key] = true;
+        $len = count(array_filter(explode(' ', $expr)));
+        $candidate = [
+            'lemma' => $expr,
+            'surface' => $expr,
+            'len' => $len,
+            'score' => $score,
+            'source' => $source,
+            'start' => $start,
+            'end' => $end,
+        ];
+        if ($maxGap !== null) {
+            $candidate['max_gap'] = $maxGap;
+        }
+        $out[] = $candidate;
+    };
+    if (!empty($depMap)) {
+        for ($i = 0; $i < $count; $i++) {
+            if (($posMap[$i] ?? '') !== 'VERB') {
+                continue;
+            }
+            $verbLemma = $lemmaForExpr[$i] ?? '';
+            if ($verbLemma === '') {
+                continue;
+            }
+            for ($j = $i + 1; $j < $count; $j++) {
+                $lemma = $lemmaForExpr[$j] ?? '';
+                if ($lemma === '' || !in_array($lemma, $reflexives, true)) {
+                    continue;
+                }
+                $dep = $depMap[$j] ?? '';
+                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl'], true)) {
+                    continue;
+                }
+                $blocked = false;
+                for ($k = $i + 1; $k < $j; $k++) {
+                    if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
+                        $blocked = true;
+                        break;
+                    }
+                }
+                if ($blocked) {
+                    continue;
+                }
+                $prepIdx = null;
+                $maxRefGap = 8;
+                for ($k = $j + 1; $k < $count && ($k - $j - 1) <= $maxRefGap; $k++) {
+                    if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
+                        break;
+                    }
+                    if (($posMap[$k] ?? '') !== 'ADP') {
+                        if (!$posIn($k, $gapAllowedReflexive)) {
+                            break;
+                        }
+                        continue;
+                    }
+                    $prepLemma = $lemmaForExpr[$k] ?? '';
+                    if ($prepLemma === '') {
+                        continue;
+                    }
+                    $preps = $verbPrepsMap[$i] ?? [];
+                    $allowAny = !empty($verbAnyPrepMap[$i]);
+                    if (!$allowAny && !empty($preps)) {
+                        $prepSet = array_flip($preps);
+                        if (!isset($prepSet[$prepLemma])) {
+                            continue;
+                        }
+                    }
+                    $prepIdx = $k;
+                    break;
+                }
+                if ($prepIdx === null) {
+                    continue;
+                }
+                $expr = trim($verbLemma . ' seg ' . ($lemmaForExpr[$prepIdx] ?? ''));
+                if ($expr === '') {
+                    continue;
+                }
+                $gap1 = $j - $i - 1;
+                $gap2 = $prepIdx - $j - 1;
+                $maxGap = max($gap1, $gap2);
+                $addCandidate($expr, $i, $prepIdx, 'dep_reflexive', 12, $maxGap);
+            }
+        }
+    }
+    for ($i = 0; $i < $count; $i++) {
+        if (($posMap[$i] ?? '') !== 'VERB') {
+            continue;
+        }
+        $verbLemma = $lemmaForExpr[$i] ?? '';
+        if ($verbLemma === '') {
+            continue;
+        }
+        $maxParticleGap = 8;
+        for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxParticleGap; $j++) {
+            if (in_array(($posMap[$j] ?? ''), $blockedPos, true)) {
+                break;
+            }
+            if (!$isParticleToken($j)) {
+                continue;
+            }
+            $particleLemma = $lemmaForExpr[$j] ?? '';
+            if ($particleLemma === '') {
+                continue;
+            }
+            $segIdx = null;
+            for ($k = $i + 1; $k < $j; $k++) {
+                $lemma = $lemmaForExpr[$k] ?? '';
+                if ($lemma === '' || !in_array($lemma, $reflexives, true)) {
+                    continue;
+                }
+                $dep = $depMap[$k] ?? '';
+                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl'], true)) {
+                    continue;
+                }
+                if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
+                    break;
+                }
+                $segIdx = $k;
+                break;
+            }
+            if ($segIdx !== null) {
+                $gap1 = $segIdx - $i - 1;
+                $gap2 = $j - $segIdx - 1;
+                $maxGap = max($gap1, $gap2);
+                $expr = trim($verbLemma . ' seg ' . $particleLemma);
+                $addCandidate($expr, $i, $j, 'dep_reflexive_particle', 11, $maxGap);
+            } else {
+                $gap = $j - $i - 1;
+                $expr = trim($verbLemma . ' ' . $particleLemma);
+                $addCandidate($expr, $i, $j, 'dep_particle', 10, $gap);
+            }
+        }
+        if (in_array($verbLemma, $copularVerbs, true)) {
+            $maxAdjGap = 3;
+            $adjIdx = null;
+            for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxAdjGap; $j++) {
+                if (in_array(($posMap[$j] ?? ''), $blockedPos, true)) {
+                    break;
+                }
+                if (($posMap[$j] ?? '') === 'ADJ') {
+                    $adjIdx = $j;
+                    break;
+                }
+                if (!$posIn($j, $gapAllowedAdj)) {
+                    break;
+                }
+            }
+            if ($adjIdx !== null) {
+                $adpIdx = null;
+                for ($k = $adjIdx + 1; $k < $count && ($k - $adjIdx - 1) <= 1; $k++) {
+                    if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
+                        break;
+                    }
+                    if (($posMap[$k] ?? '') === 'ADP') {
+                        $adpIdx = $k;
+                        break;
+                    }
+                    if (!$posIn($k, $gapAllowedAdj)) {
+                        break;
+                    }
+                }
+                if ($adpIdx !== null) {
+                    $adjLemma = $lemmaForExpr[$adjIdx] ?? '';
+                    $prepLemma = $lemmaForExpr[$adpIdx] ?? '';
+                    if ($adjLemma !== '' && $prepLemma !== '') {
+                        $gap1 = $adjIdx - $i - 1;
+                        $gap2 = $adpIdx - $adjIdx - 1;
+                        $maxGap = max($gap1, $gap2);
+                        $expr = trim($verbLemma . ' ' . $adjLemma . ' ' . $prepLemma);
+                        $addCandidate($expr, $i, $adpIdx, 'gap_adj_prep', 9, $maxGap);
+                    }
+                }
+            }
+        }
+        $maxNounGap = 4;
+        $nounIdx = null;
+        for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxNounGap; $j++) {
+            if (in_array(($posMap[$j] ?? ''), $blockedPos, true)) {
+                break;
+            }
+            if (($posMap[$j] ?? '') === 'NOUN') {
+                $nounIdx = $j;
+                break;
+            }
+            if (!$posIn($j, $gapAllowedNoun)) {
+                break;
+            }
+        }
+        if ($nounIdx !== null) {
+            $adpIdx = $nounIdx + 1;
+            if ($adpIdx < $count && ($posMap[$adpIdx] ?? '') === 'ADP') {
+                $prepLemma = $lemmaForExpr[$adpIdx] ?? '';
+                if ($prepLemma !== '') {
+                    $preps = $verbPrepsMap[$i] ?? [];
+                    $allowAny = !empty($verbAnyPrepMap[$i]);
+                    if ($allowAny || empty($preps) || in_array($prepLemma, $preps, true)) {
+                        $nounLemma = $lemmaForExpr[$nounIdx] ?? '';
+                        if ($nounLemma !== '') {
+                            $gap = $nounIdx - $i - 1;
+                            $expr = trim($verbLemma . ' ' . $nounLemma . ' ' . $prepLemma);
+                            $addCandidate($expr, $i, $adpIdx, 'gap_noun_prep', 9, $gap);
+                        }
+                    }
+                }
+            }
+        }
+    }
     foreach ($rules as $rule) {
         $len = count($rule['pattern'] ?? []);
         if ($len < 2) {
@@ -2744,7 +3033,7 @@ switch ($action) {
         };
         $lang = 'begge';
         $t0 = microtime(true);
-        $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap);
+    $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap, $depMap);
         $timing['expr_candidates'] = microtime(true) - $t0;
         if (!empty($cands)) {
             usort($cands, function($a, $b) {
@@ -2841,11 +3130,17 @@ switch ($action) {
             $lemmaTokens = $expr !== '' ? mod_flashcards_word_tokens($expr) : [];
             $surfaceTokens = $surfaceExpr !== '' ? mod_flashcards_word_tokens($surfaceExpr) : [];
             $phraseMatch = null;
+            $maxGap = isset($cand['max_gap']) ? max(0, (int)$cand['max_gap']) : 2;
             if (!empty($lemmaTokens)) {
-                $phraseMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $lemmaTokens, 2);
+                $phraseMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $lemmaTokens, $maxGap);
             }
             if ($phraseMatch === null && !empty($surfaceTokens)) {
-                $phraseMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $surfaceTokens, 2);
+                $phraseMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $surfaceTokens, $maxGap);
+            }
+            if ($phraseMatch !== null && $candStart !== null && $candEnd !== null) {
+                if ($phraseMatch['start'] < $candStart || $phraseMatch['end'] > $candEnd) {
+                    $phraseMatch = null;
+                }
             }
             if ($phraseMatch === null) {
                 continue;
@@ -2906,9 +3201,14 @@ switch ($action) {
             if (count($exprTokens) < 2) {
                 continue;
             }
-            $exprMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $exprTokens, 2);
+            $exprMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $exprTokens, $maxGap);
             if ($exprMatch === null) {
-                $exprMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $exprTokens, 2);
+                $exprMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $exprTokens, $maxGap);
+            }
+            if ($exprMatch !== null && $candStart !== null && $candEnd !== null) {
+                if ($exprMatch['start'] < $candStart || $exprMatch['end'] > $candEnd) {
+                    $exprMatch = null;
+                }
             }
             if ($exprMatch === null) {
                 continue;
