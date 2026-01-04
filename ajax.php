@@ -1040,7 +1040,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     continue;
                 }
                 $dep = $depMap[$j] ?? '';
-                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl'], true)) {
+                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl','nmod','obl'], true)) {
                     continue;
                 }
                 $blocked = false;
@@ -1124,7 +1124,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     continue;
                 }
                 $dep = $depMap[$k] ?? '';
-                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl'], true)) {
+                if ($dep !== '' && !in_array($dep, ['obj','iobj','expl','nmod','obl'], true)) {
                     continue;
                 }
                 if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
