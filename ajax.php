@@ -3033,7 +3033,7 @@ switch ($action) {
         };
         $lang = 'begge';
         $t0 = microtime(true);
-    $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap, $depMap);
+        $cands = mod_flashcards_expression_candidates_from_words($words, $exprLemmaMap, $posMap, $posCandidatesMap, $verbPrepsMap, $verbAnyPrepMap, $depMap);
         $timing['expr_candidates'] = microtime(true) - $t0;
         if (!empty($cands)) {
             usort($cands, function($a, $b) {
@@ -3043,6 +3043,7 @@ switch ($action) {
                 return ($b['score'] ?? 0) <=> ($a['score'] ?? 0);
             });
         }
+        $candRawCount = count($cands);
         $cands = array_slice($cands, 0, 20);
         $t0 = microtime(true);
         $resolved = mod_flashcards_resolve_lexical_expressions($sentenceSurfaceTokens, $sentenceLemmaTokens, $posMap, $lang, 10);
@@ -3413,6 +3414,21 @@ switch ($action) {
                     'is_alpha' => !empty($t['is_alpha']),
                 ];
             }
+            $debugCandidates = [];
+            foreach (array_slice($cands, 0, 10) as $cand) {
+                if (!is_array($cand)) {
+                    continue;
+                }
+                $debugCandidates[] = [
+                    'lemma' => (string)($cand['lemma'] ?? ''),
+                    'source' => (string)($cand['source'] ?? ''),
+                    'score' => (int)($cand['score'] ?? 0),
+                    'len' => (int)($cand['len'] ?? 0),
+                    'start' => isset($cand['start']) ? (int)$cand['start'] : null,
+                    'end' => isset($cand['end']) ? (int)$cand['end'] : null,
+                    'max_gap' => isset($cand['max_gap']) ? (int)$cand['max_gap'] : null,
+                ];
+            }
             $timing['overall'] = microtime(true) - $overallstart;
             $data['debug'] = [
                 'spacy' => [
@@ -3423,10 +3439,12 @@ switch ($action) {
                 ],
                 'timing' => $timing,
                 'stats' => [
-                    'candidate_count' => count($cands),
+                    'candidate_count' => $candRawCount ?? count($cands),
+                    'candidate_count_used' => count($cands),
                     'lexical_count' => $lexicalCount ?? 0,
                     'resolved_count' => count($resolved),
                 ],
+                'expr_candidates' => $debugCandidates,
             ];
             if (!empty($dataDebugLlm)) {
                 $data['debug']['llm'] = $dataDebugLlm;
