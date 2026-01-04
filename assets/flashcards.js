@@ -2804,6 +2804,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     function setFocusStatus(state, text){
+      if(mediaStatusIndicator && text){
+        setMediaStatus(state, text);
+      }
       if(!focusStatusEl) return;
       focusStatusEl.dataset.state = state || '';
       focusStatusEl.textContent = text || '';

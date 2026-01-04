@@ -1054,6 +1054,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     continue;
                 }
                 $prepIdx = null;
+                $prepAllowed = true;
                 $maxRefGap = 8;
                 for ($k = $j + 1; $k < $count && ($k - $j - 1) <= $maxRefGap; $k++) {
                     if (in_array(($posMap[$k] ?? ''), $blockedPos, true)) {
@@ -1074,7 +1075,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                     if (!$allowAny && !empty($preps)) {
                         $prepSet = array_flip($preps);
                         if (!isset($prepSet[$prepLemma])) {
-                            continue;
+                            $prepAllowed = false;
                         }
                     }
                     $prepIdx = $k;
@@ -1090,7 +1091,9 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 $gap1 = $j - $i - 1;
                 $gap2 = $prepIdx - $j - 1;
                 $maxGap = max($gap1, $gap2);
-                $addCandidate($expr, $i, $prepIdx, 'dep_reflexive', 12, $maxGap);
+                $source = $prepAllowed ? 'dep_reflexive' : 'dep_reflexive_soft';
+                $score = $prepAllowed ? 12 : 8;
+                $addCandidate($expr, $i, $prepIdx, $source, $score, $maxGap);
             }
         }
     }
@@ -3436,6 +3439,10 @@ switch ($action) {
                     'text' => $spacy['text'] ?? '',
                     'token_count' => is_array($spacy['tokens'] ?? null) ? count($spacy['tokens']) : 0,
                     'tokens' => $debugtokens,
+                ],
+                'expr_probe' => [
+                    'verb_preps' => $verbPrepsMap,
+                    'verb_any_prep' => array_keys($verbAnyPrepMap),
                 ],
                 'timing' => $timing,
                 'stats' => [
