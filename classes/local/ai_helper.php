@@ -822,6 +822,110 @@ USERPROMPT;
     }
 
     /**
+     * Suggest fixed expressions in a sentence (independent LLM analysis).
+     *
+     * @param string $text
+     * @param string $language
+     * @param int $userid
+     * @return array{expressions:array<int,array<string,string>>,usage?:array}
+     */
+    public function suggest_sentence_expressions(string $text, string $language, int $userid): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+        $languagemap = [
+            'uk' => 'Ukrainian',
+            'ru' => 'Russian',
+            'en' => 'English',
+            'no' => 'Norwegian',
+        ];
+        $langname = $languagemap[$language] ?? 'English';
+        $text = trim($text);
+        if ($text === '') {
+            return ['expressions' => []];
+        }
+        $systemprompt = <<<"SYSTEMPROMPT"
+You are an expert Norwegian (Bokm\u00e5l) linguist.
+Return ONLY valid JSON, no extra text.
+All translations and notes must be in $langname.
+SYSTEMPROMPT;
+
+        $userprompt = <<<"USERPROMPT"
+Sentence:
+"$text"
+
+Task:
+Identify multiword expressions (2+ words) that are fixed collocations or idiomatic expressions used in this sentence.
+Be strict: do NOT include normal grammar fragments, only expressions that function as a single semantic unit.
+
+Return JSON in this exact schema:
+{
+  "expressions": [
+    {
+      "expression": "expression in Norwegian (grunnform if possible)",
+      "translation": "short translation",
+      "note": "very short meaning note (optional)"
+    }
+  ]
+}
+
+Rules:
+- Return an empty expressions array if none.
+- Do NOT include single words.
+USERPROMPT;
+
+        $client = $this->openai;
+        $reflection = new \ReflectionClass($client);
+        $getModelMethod = $reflection->getMethod('get_model_for_task');
+        $getModelMethod->setAccessible(true);
+        $model = $getModelMethod->invoke($client, 'expression');
+
+        $payload = [
+            'model' => $model,
+            'temperature' => 0.2,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemprompt],
+                ['role' => 'user', 'content' => $userprompt],
+            ],
+        ];
+
+        $modelkey = core_text::strtolower(trim((string)$model));
+        if ($modelkey !== '' && $this->requires_default_temperature($modelkey)) {
+            unset($payload['temperature']);
+            $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
+            $getReasoningMethod->setAccessible(true);
+            $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'expression');
+        }
+
+        $method = $reflection->getMethod('request');
+        $method->setAccessible(true);
+        $recordMethod = $reflection->getMethod('record_usage');
+        $recordMethod->setAccessible(true);
+
+        $response = $method->invoke($client, $payload);
+        $recordMethod->invoke($client, $userid, $response->usage ?? null);
+
+        $content = trim($response->choices[0]->message->content ?? '');
+        $parsed = $this->parse_json_response($content);
+        if ($parsed === null) {
+            return ['expressions' => []];
+        }
+        $expressions = is_array($parsed['expressions'] ?? null) ? $parsed['expressions'] : [];
+        $result = ['expressions' => $expressions];
+        $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
+        if ($modelused !== '') {
+            $result['model'] = $modelused;
+        }
+        if (!empty($payload['reasoning_effort'])) {
+            $result['reasoning_effort'] = $payload['reasoning_effort'];
+        }
+        if (!empty($response->usage)) {
+            $result['usage'] = (array)$response->usage;
+        }
+        return $result;
+    }
+
+    /**
      * Remove error items that don't match the original sentence.
      *
      * @param array $errors

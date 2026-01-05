@@ -3515,63 +3515,61 @@ switch ($action) {
             $resolved = mod_flashcards_filter_expression_overlaps($resolved, $posMap);
         }
         if ($enrich && !empty($resolved)) {
-            $lowCandidates = array_values(array_filter($resolved, function($item){
-                return isset($item['confidence']) && $item['confidence'] === 'low';
-            }));
-            $lowCandidates = array_slice($lowCandidates, 0, 8);
-            if (!empty($lowCandidates)) {
-                try {
-                    $helper = new \mod_flashcards\local\ai_helper();
-                    $t0 = microtime(true);
-                    $llm = $helper->confirm_expression_candidates($text, $lowCandidates, $language, $userid);
-                    $timing['llm_confirm'] = microtime(true) - $t0;
-                    $confirmed = is_array($llm['confirmed'] ?? null) ? $llm['confirmed'] : [];
-                    if (!empty($confirmed)) {
-                        $resolvedMap = [];
-                        foreach ($resolved as $idx => $item) {
-                            $key = core_text::strtolower((string)($item['expression'] ?? ''));
-                            if ($key !== '') {
-                                $resolvedMap[$key] = $idx;
-                            }
-                        }
-                        foreach ($confirmed as $item) {
-                            $expr = trim((string)($item['expression'] ?? ''));
-                            if ($expr === '') {
-                                continue;
-                            }
-                            $key = core_text::strtolower($expr);
-                            if (!isset($resolvedMap[$key])) {
-                                continue;
-                            }
-                            $idx = $resolvedMap[$key];
-                            $currentConfidence = $resolved[$idx]['confidence'] ?? 'low';
-                            if ($currentConfidence !== 'high') {
-                                $resolved[$idx]['confidence'] = 'medium';
-                                $resolved[$idx]['source'] = 'llm';
-                            }
-                            $translation = trim((string)($item['translation'] ?? ''));
-                            $note = trim((string)($item['note'] ?? ''));
-                            $explanation = $translation;
-                            if ($note !== '') {
-                                $explanation = $translation !== '' ? ($translation . ' — ' . $note) : $note;
-                            }
-                            if ($translation !== '' && empty($resolved[$idx]['translation'])) {
-                                $resolved[$idx]['translation'] = $translation;
-                            }
-                            if ($explanation !== '' && empty($resolved[$idx]['explanation'])) {
-                                $resolved[$idx]['explanation'] = $explanation;
-                            }
-                        }
+            try {
+                $helper = new \mod_flashcards\local\ai_helper();
+                $t0 = microtime(true);
+                $llm = $helper->suggest_sentence_expressions($text, $language, $userid);
+                $timing['llm_confirm'] = microtime(true) - $t0;
+                $suggested = is_array($llm['expressions'] ?? null) ? $llm['expressions'] : [];
+                $suggestedMap = [];
+                foreach ($suggested as $item) {
+                    $expr = trim((string)($item['expression'] ?? ''));
+                    if ($expr === '') {
+                        continue;
                     }
-                    if ($debug && !empty($llm)) {
-                        $dataDebugLlm = [
-                            'confirm_model' => $llm['model'] ?? '',
-                            'confirm_reasoning_effort' => $llm['reasoning_effort'] ?? '',
-                        ];
+                    $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($expr);
+                    if ($key !== '') {
+                        $suggestedMap[$key] = $item;
                     }
-                } catch (\Throwable $ex) {
-                    // Ignore LLM fallback errors, keep deterministic results.
                 }
+                foreach ($resolved as $idx => $item) {
+                    $source = $item['source'] ?? '';
+                    if (in_array($source, ['ordbokene','cache','examples'], true)) {
+                        continue;
+                    }
+                    $expr = trim((string)($item['expression'] ?? ''));
+                    if ($expr === '') {
+                        $resolved[$idx]['confidence'] = 'low';
+                        continue;
+                    }
+                    $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($expr);
+                    if ($key === '' || !isset($suggestedMap[$key])) {
+                        $resolved[$idx]['confidence'] = 'low';
+                        continue;
+                    }
+                    $resolved[$idx]['confidence'] = 'medium';
+                    $resolved[$idx]['source'] = 'llm';
+                    $translation = trim((string)($suggestedMap[$key]['translation'] ?? ''));
+                    $note = trim((string)($suggestedMap[$key]['note'] ?? ''));
+                    $explanation = $translation;
+                    if ($note !== '') {
+                        $explanation = $translation !== '' ? ($translation . ' - ' . $note) : $note;
+                    }
+                    if ($translation !== '' && empty($resolved[$idx]['translation'])) {
+                        $resolved[$idx]['translation'] = $translation;
+                    }
+                    if ($explanation !== '' && empty($resolved[$idx]['explanation'])) {
+                        $resolved[$idx]['explanation'] = $explanation;
+                    }
+                }
+                if ($debug && !empty($llm)) {
+                    $dataDebugLlm = [
+                        'confirm_model' => $llm['model'] ?? '',
+                        'confirm_reasoning_effort' => $llm['reasoning_effort'] ?? '',
+                    ];
+                }
+            } catch (\Throwable $ex) {
+                // Ignore LLM fallback errors, keep deterministic results.
             }
         }
         if (!empty($resolved)) {
