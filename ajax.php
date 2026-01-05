@@ -3521,6 +3521,21 @@ switch ($action) {
                 $llm = $helper->suggest_sentence_expressions($text, $language, $userid);
                 $timing['llm_confirm'] = microtime(true) - $t0;
                 $suggested = is_array($llm['expressions'] ?? null) ? $llm['expressions'] : [];
+                $suggestedList = [];
+                foreach ($suggested as $item) {
+                    $expr = trim((string)($item['expression'] ?? ''));
+                    if ($expr !== '') {
+                        $suggestedList[] = $expr;
+                    }
+                    if (count($suggestedList) >= 8) {
+                        break;
+                    }
+                }
+                if (!empty($suggestedList)) {
+                    $data['llm_suggested'] = $suggestedList;
+                } else {
+                    $data['llm_suggested'] = [];
+                }
                 $suggestedMap = [];
                 foreach ($suggested as $item) {
                     $expr = trim((string)($item['expression'] ?? ''));
@@ -3563,16 +3578,6 @@ switch ($action) {
                     }
                 }
                 if ($debug && !empty($llm)) {
-                    $suggestedList = [];
-                    foreach ($suggested as $item) {
-                        $expr = trim((string)($item['expression'] ?? ''));
-                        if ($expr !== '') {
-                            $suggestedList[] = $expr;
-                        }
-                        if (count($suggestedList) >= 8) {
-                            break;
-                        }
-                    }
                     $dataDebugLlm = [
                         'confirm_model' => $llm['model'] ?? '',
                         'confirm_reasoning_effort' => $llm['reasoning_effort'] ?? '',
