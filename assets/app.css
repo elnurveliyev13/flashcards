@@ -5038,6 +5038,7 @@ body.cropper-open #editActionsBar{
 }
 .analysis-item {
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   gap:0.35rem;
   padding:0.35rem 0.65rem;
@@ -5077,6 +5078,12 @@ body.cropper-open #editActionsBar{
   background:transparent;
   color:var(--text-subtle);
 }
+.analysis-variants {
+  flex:0 0 100%;
+  font-size:0.78rem;
+  color:var(--text-subtle);
+  margin-top:0.15rem;
+}
 .analysis-item[data-confidence="high"] .analysis-confidence {
   color:#16a34a;
   border-color:rgba(34,197,94,0.45);
@@ -5100,6 +5107,11 @@ body.cropper-open #editActionsBar{
   font-weight:700;
   margin-bottom:0.35rem;
   font-size:1.05rem;
+}
+.ordbokene-variants {
+  font-size:0.85rem;
+  color:var(--text-subtle);
+  margin-bottom:0.35rem;
 }
 .ordbokene-meaning {
   margin:0.15rem 0;

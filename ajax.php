@@ -3368,6 +3368,16 @@ switch ($action) {
             }
             $exprTokens = mod_flashcards_word_tokens($expression);
             if (count($exprTokens) < 2) {
+                $fallbackExpr = $surfaceExpr !== '' ? $surfaceExpr : $expr;
+                if ($fallbackExpr !== '') {
+                    $fallbackTokens = mod_flashcards_word_tokens($fallbackExpr);
+                    if (count($fallbackTokens) >= 2) {
+                        $expression = $fallbackExpr;
+                        $exprTokens = $fallbackTokens;
+                    }
+                }
+            }
+            if (count($exprTokens) < 2) {
                 continue;
             }
             $exprMatch = mod_flashcards_find_phrase_match($sentenceLemmaTokens, $exprTokens, $maxGap);
@@ -3391,6 +3401,31 @@ switch ($action) {
             if (!empty($match['meanings']) && is_array($match['meanings'])) {
                 $meaning = trim((string)($match['meanings'][0] ?? ''));
             }
+            $variants = [];
+            $variantMap = [];
+            $addVariant = function(string $value) use (&$variants, &$variantMap) {
+                $value = trim($value);
+                if ($value === '') {
+                    return;
+                }
+                $key = core_text::strtolower($value);
+                if (isset($variantMap[$key])) {
+                    return;
+                }
+                $variantMap[$key] = true;
+                $variants[] = $value;
+            };
+            $addVariant($expression);
+            $addVariant($surfaceExpr);
+            $addVariant($expr);
+            $addVariant((string)($match['expression'] ?? ''));
+            $addVariant((string)($match['baseform'] ?? ''));
+            $addVariant((string)($match['entry'] ?? ''));
+            if (count($variants) < 2) {
+                $variants = [];
+            } else if (count($variants) > 4) {
+                $variants = array_slice($variants, 0, 4);
+            }
             $confidence = 'low';
             $source = $match['source'] ?? 'pattern';
             if ($source === 'cache' || $source === 'ordbokene') {
@@ -3406,6 +3441,7 @@ switch ($action) {
                 'dictmeta' => $match['dictmeta'] ?? [],
                 'source' => $source,
                 'confidence' => $confidence,
+                'variants' => $variants,
                 'start' => $exprMatch['start'],
                 'end' => $exprMatch['end'],
                 'indices' => $exprMatch['indices'],
@@ -4301,6 +4337,29 @@ switch ($action) {
                             $examples = $sense['examples'];
                         }
                     }
+                        $variants = [];
+                        $variantMap = [];
+                        $addVariant = function(string $value) use (&$variants, &$variantMap) {
+                            $value = trim($value);
+                            if ($value === '') {
+                                return;
+                            }
+                            $key = core_text::strtolower($value);
+                            if (isset($variantMap[$key])) {
+                                return;
+                            }
+                            $variantMap[$key] = true;
+                            $variants[] = $value;
+                        };
+                        $addVariant((string)($data['focusExpression'] ?? ''));
+                        $addVariant((string)$expression);
+                        $addVariant((string)($entry['baseform'] ?? ''));
+                        $addVariant((string)($entry['expression'] ?? ''));
+                        if (count($variants) < 2) {
+                            $variants = [];
+                        } else if (count($variants) > 4) {
+                            $variants = array_slice($variants, 0, 4);
+                        }
                         $data['ordbokene'] = [
                             'expression' => $expression,
                             'meanings' => $entry['meanings'] ?? [],
@@ -4312,6 +4371,7 @@ switch ($action) {
                             'chosenMeaning' => $chosen['meaning'],
                             'chosenMeaningText' => $meaning,
                             'url' => $entry['dictmeta']['url'] ?? '',
+                            'variants' => $variants,
                             'citation' => sprintf('"%s". I: Nynorskordboka. Sprakradet og Universitetet i Bergen. https://ordbokene.no (henta %s).', $expression, date('d.m.Y')),
                         ];
                         // Do not override focusWord/expression chosen from Ordbank.

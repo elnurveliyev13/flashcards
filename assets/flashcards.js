@@ -538,6 +538,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ordbokeneEmpty: dataset.ordbokeneEmpty || 'Dictionary info will appear here after lookup.',
       ordbokeneCitation: dataset.ordbokeneCitation || '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
       ordbokeneMoreMeanings: dataset.ordbokeneMoreMeanings || 'Other meanings',
+      variantsLabel: dataset.variantsLabel || 'Variants',
+      otherSpellingsLabel: dataset.otherSpellingsLabel || 'Other spellings',
       spacyActive: dataset.spacyActive || 'spaCy parsed {$a} tokens',
       spacyInactive: dataset.spacyInactive || 'spaCy analysis unavailable',
       spacyModel: dataset.spacyModel || 'Model: {$a}',
@@ -3779,6 +3781,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               conf.setAttribute('aria-label', conf.title);
               chip.appendChild(conf);
             }
+        if(kind === 'expression'){
+          const variantsRaw = (entry.meta && entry.meta.variants) || entry.variants || [];
+          const baseText = String(entry.text || '').trim().toLowerCase();
+          const variants = Array.isArray(variantsRaw)
+            ? variantsRaw.map(v => String(v || '').trim()).filter(Boolean)
+            : [];
+          const filtered = variants.filter(v => v.toLowerCase() !== baseText);
+          if(filtered.length){
+            const varEl = document.createElement('span');
+            varEl.className = 'analysis-variants';
+            const label = aiStrings.variantsLabel || 'Variants';
+            varEl.textContent = `${label}: ${filtered.join(', ')}`;
+            chip.appendChild(varEl);
+          }
+        }
           if(kind === 'word'){
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})
@@ -3876,6 +3893,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         head.textContent = exprText;
       }
       ordbokeneBlock.appendChild(head);
+      const variantsRaw = Array.isArray(info.variants) ? info.variants : [];
+      if(variantsRaw.length){
+        const baseText = String(exprText || '').trim().toLowerCase();
+        const variants = variantsRaw.map(v => String(v || '').trim()).filter(Boolean);
+        const filtered = variants.filter(v => v.toLowerCase() !== baseText);
+        if(filtered.length){
+          const variantsEl = document.createElement('div');
+          variantsEl.className = 'ordbokene-variants';
+          const label = aiStrings.otherSpellingsLabel || 'Other spellings';
+          variantsEl.textContent = `${label}: ${filtered.join(', ')}`;
+          ordbokeneBlock.appendChild(variantsEl);
+        }
+      }
 
       const senses = Array.isArray(info.senses) ? info.senses : [];
       let meanings = Array.isArray(info.meanings) ? info.meanings.slice() : [];
