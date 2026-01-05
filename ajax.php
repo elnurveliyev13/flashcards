@@ -1572,7 +1572,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
  * @param int $maxLookups
  * @return array<int,array<string,mixed>>
  */
-function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array $lemmaTokens, array $posMap, string $lang = 'begge', int $maxLookups = 10): array {
+function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array $lemmaTokens, array $posMap, array $words = [], string $sentenceText = '', string $lang = 'begge', int $maxLookups = 10): array {
     $out = [];
     $count = count($surfaceTokens);
     if ($count < 2) {
@@ -1684,15 +1684,53 @@ function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array 
                     $meaning = trim((string)($match['meanings'][0] ?? ''));
                 }
                 $source = $match['source'] ?? 'ordbokene';
+                if ($source === 'ordbokene' && !empty($words) && is_array($words)) {
+                    $match = mod_flashcards_pick_ordbokene_sense_for_sentence($match, $words, $exprMatch['indices'] ?? []);
+                    if (!empty($match['meanings']) && is_array($match['meanings'])) {
+                        $meaning = trim((string)($match['meanings'][0] ?? ''));
+                    }
+                }
                 $confidence = ($source === 'cache' || $source === 'ordbokene') ? 'high' : 'medium';
+                $variants = [];
+                if (in_array($source, ['ordbokene','cache'], true)) {
+                    $variantMap = [];
+                    $addVariant = function(string $value) use (&$variants, &$variantMap) {
+                        $value = trim($value);
+                        if ($value === '') {
+                            return;
+                        }
+                        $key = core_text::strtolower($value);
+                        if (isset($variantMap[$key])) {
+                            return;
+                        }
+                        $variantMap[$key] = true;
+                        $variants[] = $value;
+                    };
+                    $addVariant((string)($match['expression'] ?? ''));
+                    $addVariant((string)($match['baseform'] ?? ''));
+                    $addVariant((string)($match['entry'] ?? ''));
+                    $addVariant($expression);
+                    $addVariant($surfacePhrase);
+                    $addVariant($lemmaPhrase);
+                    if (count($variants) < 2) {
+                        $variants = [];
+                    } else if (count($variants) > 4) {
+                        $variants = array_slice($variants, 0, 4);
+                    }
+                }
                 $out[] = [
                     'expression' => $expression,
                     'translation' => '',
                     'explanation' => $meaning,
                     'examples' => $match['examples'] ?? [],
+                    'examples_sentence' => ($source === 'ordbokene' && empty($match['examples'])) ? [($sentenceText !== '' ? $sentenceText : trim(implode(' ', $surfaceTokens)))] : [],
                     'dictmeta' => $match['dictmeta'] ?? [],
                     'source' => $source,
                     'confidence' => $confidence,
+                    'variants' => $variants,
+                    'chosenMeaning' => $match['chosenMeaning'] ?? null,
+                    'meanings_all' => $match['meanings_all'] ?? null,
+                    'rule' => 'lexical_orbokene',
                     'start' => $exprMatch['start'],
                     'end' => $exprMatch['end'],
                     'indices' => $exprMatch['indices'],
@@ -3357,7 +3395,7 @@ switch ($action) {
         $candRawCount = count($cands);
         $cands = array_slice($cands, 0, 20);
         $t0 = microtime(true);
-        $resolved = mod_flashcards_resolve_lexical_expressions($sentenceSurfaceTokens, $sentenceLemmaTokens, $posMap, $lang, 10);
+        $resolved = mod_flashcards_resolve_lexical_expressions($sentenceSurfaceTokens, $sentenceLemmaTokens, $posMap, $words, $text, $lang, 10);
         $timing['expr_lexical'] = microtime(true) - $t0;
         $lexicalCount = count($resolved);
         $seenCand = [];
