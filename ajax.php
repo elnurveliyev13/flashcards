@@ -1,6 +1,9 @@
 ﻿<?php
 define('AJAX_SCRIPT', true);
 
+// Bump this when changing sentence_elements pipeline behavior to help verify deployments/opcache.
+define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-05.1');
+
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir . '/weblib.php');
@@ -3179,6 +3182,8 @@ switch ($action) {
         $overallstart = microtime(true);
         $timing = [];
         $dataDebugLlm = null;
+        $llmSuggested = [];
+        $llmConfirmMeta = null;
         $t0 = microtime(true);
         $spacy = mod_flashcards_spacy_analyze($text);
         $timing['spacy'] = microtime(true) - $t0;
@@ -3645,6 +3650,9 @@ switch ($action) {
                 'translation' => '',
                 'explanation' => $meaning,
                 'examples' => $match['examples'] ?? [],
+                // If Ordbøkene confirms the expression but the chosen meaning has no examples,
+                // show the current sentence as a safe usage example instead of mixing wrong examples from other meanings.
+                'examples_sentence' => ($source === 'ordbokene' && empty($match['examples'])) ? [$text] : [],
                 'dictmeta' => $match['dictmeta'] ?? [],
                 'source' => $source,
                 'confidence' => $confidence,
@@ -3682,11 +3690,7 @@ switch ($action) {
                         break;
                     }
                 }
-                if (!empty($suggestedList)) {
-                    $data['llm_suggested'] = $suggestedList;
-                } else {
-                    $data['llm_suggested'] = [];
-                }
+                $llmSuggested = $suggestedList;
                 $suggestedMap = [];
                 foreach ($suggested as $item) {
                     $expr = trim((string)($item['expression'] ?? ''));
@@ -3748,6 +3752,10 @@ switch ($action) {
                         'suggested' => $suggestedList,
                     ];
                 }
+                $llmConfirmMeta = [
+                    'model' => $llm['model'] ?? '',
+                    'reasoning_effort' => $llm['reasoning_effort'] ?? '',
+                ];
             } catch (\Throwable $ex) {
                 // Ignore LLM fallback errors, keep deterministic results.
             }
@@ -3784,10 +3792,13 @@ switch ($action) {
             ];
         }
         $data = [
+            'pipeline_rev' => MOD_FLASHCARDS_PIPELINE_REV,
             'text' => $text,
             'words' => $words,
             'expressions' => $resolved,
             'expr_candidates' => $publicCandidates,
+            'llm_suggested' => $llmSuggested,
+            'llm_confirm' => $llmConfirmMeta,
         ];
         if ($enrich) {
             try {
