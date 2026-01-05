@@ -2072,6 +2072,7 @@ function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $w
 
     $allMeanings = [];
     $bestIdx = 0;
+    $bestHits = -1;
     $bestScore = -INF;
     foreach ($senses as $idx => $sense) {
         if (!is_array($sense)) {
@@ -2098,6 +2099,7 @@ function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $w
             }
         }
 
+        $hits = 0;
         $score = 0;
         // De-prioritize placeholder meanings like "Se:" if there are alternatives.
         if ($meaning !== '' && preg_match('~^Se:?\s*$~iu', $meaning)) {
@@ -2105,18 +2107,20 @@ function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $w
         }
         foreach ($keywords as $kw) {
             if (isset($exampleTokens[$kw])) {
+                $hits++;
                 $score += 3;
             }
         }
-        // Small preference for senses that actually have examples.
-        if (!empty($examples)) {
-            $score += 0.5;
-        }
-
-        if ($score > $bestScore) {
+        // If nothing in the sentence matches any sense examples, default to the first meaning
+        // (this prevents picking a wrong sense just because it has examples).
+        if ($hits > $bestHits || ($hits === $bestHits && $score > $bestScore)) {
+            $bestHits = $hits;
             $bestScore = $score;
             $bestIdx = (int)$idx;
         }
+    }
+    if ($bestHits <= 0) {
+        $bestIdx = 0;
     }
 
     $bestSense = $senses[$bestIdx] ?? null;
