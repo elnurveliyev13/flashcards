@@ -850,18 +850,30 @@ Return ONLY valid JSON, no extra text.
 All translations and notes must be in $langname.
 SYSTEMPROMPT;
 
-        $userprompt = <<<"USERPROMPT"
-Sentence:
-"$text"
-
-Task:
-Identify multiword expressions (2+ words) that are fixed collocations or idiomatic expressions used in this sentence.
-Be strict: do NOT include normal grammar fragments, only expressions that function as a single semantic unit.
-
-Return JSON in this exact schema:
-{
-  "expressions": [
-    {
+         $userprompt = <<<"USERPROMPT"
+ Sentence:
+ "$text"
+ 
+ Task:
+ Identify multiword expressions (2+ words) that are fixed collocations or idiomatic expressions used in this sentence.
+ Be strict: do NOT include normal grammar fragments, only expressions that function as a single semantic unit.
+ Do NOT output generic fragments like:
+ - "med meg"
+ - "alt læreren sa"
+ - "til været i"
+ - "for kaffe"
+ If the sentence uses a reflexive pronoun (meg/deg/oss/dere/dem), normalize it to "seg" in the expression form.
+ If the sentence uses a particle/preposition with a verb, include it (e.g. "fikk med meg" -> "få med seg").
+ Prefer these idiom/collocation types:
+ - verb + particle/preposition: "handle om", "stole på"
+ - verb + seg + preposition: "venne seg til", "dreie seg om"
+ - fixed prepositional/adverbial phrases: "i stedet for", "på grunn av", "i og med", "til og med"
+ Avoid producing anything that is simply a topic clause or a literal substring without idiomatic meaning.
+ 
+ Return JSON in this exact schema:
+ {
+   "expressions": [
+     {
       "expression": "expression in Norwegian (grunnform if possible)",
       "translation": "short translation",
       "note": "very short meaning note (optional)"

@@ -3361,6 +3361,21 @@ switch ($action) {
                     $match = mod_flashcards_lookup_or_search_expression($variant, $lang);
                 }
                 if (!empty($match)) {
+                    // Guardrail: avoid confirming multiword candidates by a single-token Ordbøkene hit
+                    // that matches only one component token (e.g. "få med" -> "med").
+                    $searchedTokens = mod_flashcards_word_tokens($variant);
+                    $matchExpr = trim((string)($match['expression'] ?? $match['baseform'] ?? ''));
+                    $matchTokens = $matchExpr !== '' ? mod_flashcards_word_tokens($matchExpr) : [];
+                    if (count($searchedTokens) >= 2 && count($matchTokens) === 1) {
+                        $single = core_text::strtolower((string)($matchTokens[0] ?? ''));
+                        $searchedLower = array_map(function($t) {
+                            return core_text::strtolower((string)$t);
+                        }, $searchedTokens);
+                        if ($single !== '' && in_array($single, $searchedLower, true)) {
+                            $match = null;
+                            continue;
+                        }
+                    }
                     break;
                 }
             }
@@ -3489,6 +3504,8 @@ switch ($action) {
                 $confidence = 'high';
             } else if ($source === 'examples') {
                 $confidence = 'medium';
+            } else if ($source === 'pattern' && in_array($candSource, ['R09','R10'], true)) {
+                $confidence = 'medium';
             } else if ($source === 'pattern' && in_array($candSource, ['dep_reflexive','dep_reflexive_particle'], true)) {
                 $confidence = 'medium';
             }
@@ -3501,6 +3518,7 @@ switch ($action) {
                 'source' => $source,
                 'confidence' => $confidence,
                 'variants' => $variants,
+                'rule' => $candSource,
                 'start' => $exprMatch['start'],
                 'end' => $exprMatch['end'],
                 'indices' => $exprMatch['indices'],
@@ -3550,6 +3568,19 @@ switch ($action) {
                 foreach ($resolved as $idx => $item) {
                     $source = $item['source'] ?? '';
                     if (in_array($source, ['ordbokene','cache','examples'], true)) {
+                        continue;
+                    }
+                    $rule = trim((string)($item['rule'] ?? ''));
+                    $strongRule = in_array($rule, [
+                        'R09',
+                        'R10',
+                        'dep_reflexive',
+                        'dep_reflexive_soft',
+                        'dep_reflexive_particle',
+                        'dep_reflexive_particle_soft',
+                    ], true);
+                    // Strong structural rules are explainable; don't require LLM overlap.
+                    if ($strongRule) {
                         continue;
                     }
                     $expr = trim((string)($item['expression'] ?? ''));
@@ -3602,10 +3633,28 @@ switch ($action) {
                 return $item;
             }, $resolved));
         }
+        // Expose the candidate list in the response (trimmed) to make the pipeline transparent without using debug=1.
+        $publicCandidates = [];
+        foreach (array_slice($cands, 0, 20) as $cand) {
+            if (!is_array($cand)) {
+                continue;
+            }
+            $publicCandidates[] = [
+                'lemma' => (string)($cand['lemma'] ?? ''),
+                'surface' => (string)($cand['surface'] ?? ''),
+                'source' => (string)($cand['source'] ?? ''),
+                'score' => (int)($cand['score'] ?? 0),
+                'len' => (int)($cand['len'] ?? 0),
+                'start' => isset($cand['start']) ? (int)$cand['start'] : null,
+                'end' => isset($cand['end']) ? (int)$cand['end'] : null,
+                'max_gap' => isset($cand['max_gap']) ? (int)$cand['max_gap'] : null,
+            ];
+        }
         $data = [
             'text' => $text,
             'words' => $words,
             'expressions' => $resolved,
+            'expr_candidates' => $publicCandidates,
         ];
         if ($enrich) {
             try {

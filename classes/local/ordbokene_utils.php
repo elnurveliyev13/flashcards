@@ -288,45 +288,26 @@ function mod_flashcards_expand_expression_variants(string $expression): array {
     if ($expression === '') {
         return [];
     }
+    // Only generate orthographic variants (no semantic "trimming"/prefixing).
+    // Goal: improve Ordbøkene coverage for spelling/spacing variants like:
+    // "i stedet for" <-> "istedenfor", "i stedet" <-> "isteden".
     $variants = [$expression];
-    $leadVerbs = ['være', 'ha', 'bli', 'få', 'holde', 'gå', 'komme'];
-    foreach ($leadVerbs as $verb) {
-        $pattern = '~^' . preg_quote($verb, '~') . '\s+~iu';
-        if (preg_match($pattern, $expression)) {
-            $trimmed = trim(preg_replace($pattern, '', $expression));
-            if ($trimmed !== '') {
-                $variants[] = $trimmed;
-            }
-            foreach ($leadVerbs as $alt) {
-                if ($alt === $verb) {
-                    continue;
-                }
-                $variants[] = trim($alt . ' ' . $trimmed);
-            }
-            break;
+
+    // Collapsed form (remove spaces): helps when Ordbøkene stores a single-token variant.
+    if (strpos($expression, ' ') !== false) {
+        $collapsed = preg_replace('/\s+/u', '', $expression);
+        if (is_string($collapsed) && $collapsed !== '') {
+            $variants[] = $collapsed;
         }
     }
 
-    $trimTokens = ['å', 'på', 'med', 'til', 'over', 'for', 'om', 'av', 'i', 'seg'];
-    foreach ($trimTokens as $token) {
-        $pattern = '~\b' . preg_quote($token, '~') . '$~iu';
-        if (preg_match($pattern, $expression)) {
-            $trimmed = trim(preg_replace($pattern, '', $expression));
-            if ($trimmed !== '') {
-                $variants[] = $trimmed;
-            }
-        }
+    // Also try removing spaces around common clitics (very conservative).
+    // Example: "i stedet" -> "istedet".
+    $collapsed2 = preg_replace('/\s+/u', '', $expression);
+    if (is_string($collapsed2) && $collapsed2 !== '' && $collapsed2 !== $expression) {
+        $variants[] = $collapsed2;
     }
-    $verbs = ['være', 'ha', 'bli', 'få', 'holde', 'gå', 'komme'];
-    foreach ($verbs as $verb) {
-        $prefixed = trim($verb . ' ' . $expression);
-        if ($prefixed !== '') {
-            $variants[] = $prefixed;
-        }
-    }
-    if (preg_match('~\bpå$~iu', $expression)) {
-        $variants[] = trim($expression . ' med');
-    }
+
     $cleaned = [];
     foreach (array_unique($variants) as $variant) {
         $variant = trim($variant);
