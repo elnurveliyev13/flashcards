@@ -593,6 +593,11 @@ class ordbokene_client {
                 $content = $el['content'] ?? '';
                 if (is_string($content) && trim($content) !== '') {
                     $clean = trim($content);
+                    // Drop pure cross-references like "Se:" / "Se: X" which are not meanings.
+                    // (They otherwise become a misleading "meaning" for expressions like "ta på seg".)
+                    if (preg_match('~^(se|sjå)\\s*:?\\s*\\S*\\s*$~iu', $clean)) {
+                        continue;
+                    }
                     // Some articles contain placeholder content like "$" - ignore/strip it.
                     if (str_contains($clean, '$')) {
                         $clean = trim(preg_replace('/\\s*\\$+\\s*/u', ' ', $clean) ?? '');
