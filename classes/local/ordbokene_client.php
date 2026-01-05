@@ -540,27 +540,45 @@ class ordbokene_client {
             if (!is_array($def)) {
                 continue;
             }
-            $elements = self::collect_definition_elements_for_definition($def);
-            if (empty($elements)) {
-                continue;
+
+            // Prefer splitting senses by inner "definition" blocks when present.
+            // This prevents mixing examples from one meaning into another (e.g. "ta på seg" clothing vs responsibility).
+            $subdefs = [];
+            if (!empty($def['elements']) && is_array($def['elements'])) {
+                foreach ($def['elements'] as $el) {
+                    if (is_array($el) && ($el['type_'] ?? '') === 'definition') {
+                        $subdefs[] = $el;
+                    }
+                }
             }
-            $meanings = self::extract_meanings($elements);
-            $examples = self::extract_examples($elements, $lemma);
-            if (empty($meanings)) {
-                $labels = self::extract_sub_article_labels($elements);
-                foreach ($labels as $label) {
+
+            $defBlocks = !empty($subdefs) ? $subdefs : [$def];
+            foreach ($defBlocks as $block) {
+                if (!is_array($block)) {
+                    continue;
+                }
+                $elements = self::collect_definition_elements_for_definition($block);
+                if (empty($elements)) {
+                    continue;
+                }
+                $meanings = self::extract_meanings($elements);
+                $examples = self::extract_examples($elements, $lemma);
+                if (empty($meanings)) {
+                    $labels = self::extract_sub_article_labels($elements);
+                    foreach ($labels as $label) {
+                        $senses[] = [
+                            'meaning' => $label,
+                            'examples' => $examples,
+                        ];
+                    }
+                    continue;
+                }
+                foreach ($meanings as $meaning) {
                     $senses[] = [
-                        'meaning' => $label,
+                        'meaning' => $meaning,
                         'examples' => $examples,
                     ];
                 }
-                continue;
-            }
-            foreach ($meanings as $meaning) {
-                $senses[] = [
-                    'meaning' => $meaning,
-                    'examples' => $examples,
-                ];
             }
         }
         return $senses;
