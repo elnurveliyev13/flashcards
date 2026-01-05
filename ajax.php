@@ -819,7 +819,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             ['type' => 'lemma_in', 'index' => 0, 'values' => ['være','bli']],
         ]],
         ['id' => 'R19', 'pattern' => ['NOUN','ADP','NOUN'], 'priority' => 6],
-        ['id' => 'R22', 'pattern' => ['VERB','NOUN'], 'priority' => 7],
+        // R22 removed: VERB+NOUN is too noisy for expression candidates.
         ['id' => 'R23', 'pattern' => ['PRON','VERB','VERB'], 'priority' => 8],
     ];
 
@@ -3402,29 +3402,31 @@ switch ($action) {
                 $meaning = trim((string)($match['meanings'][0] ?? ''));
             }
             $variants = [];
-            $variantMap = [];
-            $addVariant = function(string $value) use (&$variants, &$variantMap) {
-                $value = trim($value);
-                if ($value === '') {
-                    return;
+            if (in_array($source, ['ordbokene','cache'], true)) {
+                $variantMap = [];
+                $addVariant = function(string $value) use (&$variants, &$variantMap) {
+                    $value = trim($value);
+                    if ($value === '') {
+                        return;
+                    }
+                    $key = core_text::strtolower($value);
+                    if (isset($variantMap[$key])) {
+                        return;
+                    }
+                    $variantMap[$key] = true;
+                    $variants[] = $value;
+                };
+                $addVariant((string)($match['expression'] ?? ''));
+                $addVariant((string)($match['baseform'] ?? ''));
+                $addVariant((string)($match['entry'] ?? ''));
+                $addVariant($expression);
+                $addVariant($surfaceExpr);
+                $addVariant($expr);
+                if (count($variants) < 2) {
+                    $variants = [];
+                } else if (count($variants) > 4) {
+                    $variants = array_slice($variants, 0, 4);
                 }
-                $key = core_text::strtolower($value);
-                if (isset($variantMap[$key])) {
-                    return;
-                }
-                $variantMap[$key] = true;
-                $variants[] = $value;
-            };
-            $addVariant($expression);
-            $addVariant($surfaceExpr);
-            $addVariant($expr);
-            $addVariant((string)($match['expression'] ?? ''));
-            $addVariant((string)($match['baseform'] ?? ''));
-            $addVariant((string)($match['entry'] ?? ''));
-            if (count($variants) < 2) {
-                $variants = [];
-            } else if (count($variants) > 4) {
-                $variants = array_slice($variants, 0, 4);
             }
             $confidence = 'low';
             $source = $match['source'] ?? 'pattern';
