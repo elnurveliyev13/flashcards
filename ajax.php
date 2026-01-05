@@ -880,9 +880,13 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($lemmaTok === '' || $surfaceTok === '') {
                 return null;
             }
+            $lemmaTokNorm = $lemmaTok;
+            if ($pos === 'PRON' && in_array($surfaceTok, $reflexives, true)) {
+                $lemmaTokNorm = 'seg';
+            }
             if (!isset($dropSet[$i])) {
-                $useLemma = $hasVerb && ($pos === 'VERB' || in_array($lemmaTok, $reflexives, true));
-                $lemmaParts[] = $useLemma ? $lemmaTok : $surfaceTok;
+                $useLemma = $hasVerb && ($pos === 'VERB' || $lemmaTokNorm === 'seg');
+                $lemmaParts[] = $useLemma ? $lemmaTokNorm : $surfaceTok;
                 $surfaceParts[] = $surfaceTok;
             }
         }
@@ -905,7 +909,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 }
                 $lemma = $lemmaForExpr[$idx] ?? '';
                 if ($lemma === '' || !in_array($lemma, $values, true)) {
-                    return null;
+                    $surface = $surfaceLower[$idx] ?? '';
+                    if ($surface === '' || !in_array($surface, $values, true)) {
+                        return null;
+                    }
                 }
             } else if ($type === 'lemma_not_in') {
                 $patternIdx = (int)($c['index'] ?? 0);
@@ -1038,8 +1045,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 continue;
             }
             for ($j = $i + 1; $j < $count; $j++) {
-                $lemma = $lemmaForExpr[$j] ?? '';
-                if ($lemma === '' || !in_array($lemma, $reflexives, true)) {
+                $surface = $surfaceLower[$j] ?? '';
+                if ($surface === '' || !in_array($surface, $reflexives, true)) {
                     continue;
                 }
                 $dep = $depMap[$j] ?? '';
@@ -1104,12 +1111,12 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         if (($posMap[$i] ?? '') !== 'VERB') {
             continue;
         }
-        $verbLemma = $lemmaForExpr[$i] ?? '';
-        if ($verbLemma === '') {
-            continue;
-        }
-        $maxParticleGap = 8;
-        for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxParticleGap; $j++) {
+            $verbLemma = $lemmaForExpr[$i] ?? '';
+            if ($verbLemma === '') {
+                continue;
+            }
+            $maxParticleGap = 8;
+            for ($j = $i + 1; $j < $count && ($j - $i - 1) <= $maxParticleGap; $j++) {
             if (in_array(($posMap[$j] ?? ''), $blockedPos, true)) {
                 break;
             }
@@ -1122,8 +1129,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             }
             $segIdx = null;
             for ($k = $i + 1; $k < $j; $k++) {
-                $lemma = $lemmaForExpr[$k] ?? '';
-                if ($lemma === '' || !in_array($lemma, $reflexives, true)) {
+                $surface = $surfaceLower[$k] ?? '';
+                if ($surface === '' || !in_array($surface, $reflexives, true)) {
                     continue;
                 }
                 $dep = $depMap[$k] ?? '';
@@ -1300,7 +1307,10 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             if ($lemmaTok === '' || $surfaceTok === '') {
                 continue;
             }
-            $isReflexive = in_array($lemmaTok, $reflexives, true);
+            $isReflexive = in_array($surfaceTok, $reflexives, true);
+            if ($isReflexive) {
+                $lemmaTok = 'seg';
+            }
             $primary = $posMap[$j] ?? '';
             if (!$isReflexive && in_array($primary, ['PRON', 'DET'], true)) {
                 continue;

@@ -848,6 +848,71 @@ USERPROMPT;
     }
 
     /**
+     * Ensure errors actually transform original text into corrected text.
+     *
+     * @param array $result
+     * @param string $originalText
+     * @return array
+     */
+    private function enforce_errors_match_correction(array $result, string $originalText): array {
+        $errors = is_array($result['errors'] ?? null) ? $result['errors'] : [];
+        if (empty($errors)) {
+            return $result;
+        }
+        $corrected = (string)($result['correctedText'] ?? '');
+        if (trim($corrected) === '') {
+            return $result;
+        }
+
+        $positions = [];
+        foreach ($errors as $idx => $err) {
+            $orig = (string)($err['original'] ?? '');
+            $corr = (string)($err['corrected'] ?? '');
+            if ($orig === '' || $corr === '') {
+                continue;
+            }
+            $pos = strpos($originalText, $orig);
+            if ($pos === false) {
+                return $this->force_no_errors_result($result, $originalText);
+            }
+            $positions[] = ['idx' => $idx, 'pos' => $pos, 'len' => strlen($orig)];
+        }
+
+        usort($positions, function($a, $b) {
+            if ($a['pos'] === $b['pos']) {
+                return $b['len'] <=> $a['len'];
+            }
+            return $a['pos'] <=> $b['pos'];
+        });
+
+        $working = $originalText;
+        foreach ($positions as $item) {
+            $err = $errors[$item['idx']] ?? null;
+            if (!$err) {
+                continue;
+            }
+            $orig = (string)($err['original'] ?? '');
+            $corr = (string)($err['corrected'] ?? '');
+            if ($orig === '' || $corr === '') {
+                continue;
+            }
+            $pos = strpos($working, $orig);
+            if ($pos === false) {
+                return $this->force_no_errors_result($result, $originalText);
+            }
+            $working = substr_replace($working, $corr, $pos, strlen($orig));
+        }
+
+        $normalizedWorking = $this->normalize_whitespace_simple($working);
+        $normalizedCorrected = $this->normalize_whitespace_simple($corrected);
+        if ($normalizedWorking !== $normalizedCorrected) {
+            return $this->force_no_errors_result($result, $originalText);
+        }
+
+        return $result;
+    }
+
+    /**
      * Normalize whitespace by collapsing runs to single spaces.
      *
      * @param string $text
@@ -1022,6 +1087,7 @@ USERPROMPT;
                         (string)($result1['correctedText'] ?? $text)
                     );
                     $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
+                    $result1 = $this->enforce_errors_match_correction($result1, $text);
                 }
                 if (empty($result1['errors'])) {
                     $result1['hasErrors'] = false;
@@ -1053,6 +1119,7 @@ USERPROMPT;
                         (string)($result1['correctedText'] ?? $text)
                     );
                     $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
+                    $result1 = $this->enforce_errors_match_correction($result1, $text);
                 }
                 return $result1;
             }
@@ -1346,6 +1413,7 @@ USERPROMPT2;
                     (string)($result1['correctedText'] ?? $text)
                 );
                 $result1['errors'] = $this->filter_errors_for_original_text($result1['errors'], $text);
+                $result1 = $this->enforce_errors_match_correction($result1, $text);
             }
             if (empty($result1['errors'])) {
                 $result1['hasErrors'] = false;
@@ -1555,6 +1623,7 @@ USERPROMPT2;
                     (string)($finalResult['correctedText'] ?? $text)
                 );
                 $finalResult['errors'] = $this->filter_errors_for_original_text($finalResult['errors'], $text);
+                $finalResult = $this->enforce_errors_match_correction($finalResult, $text);
             }
             if (empty($finalResult['errors'])) {
                 $finalResult['hasErrors'] = false;
