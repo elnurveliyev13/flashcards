@@ -820,7 +820,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         ]],
         ['id' => 'R19', 'pattern' => ['NOUN','ADP','NOUN'], 'priority' => 6],
         // R22 removed: VERB+NOUN is too noisy for expression candidates.
-        ['id' => 'R23', 'pattern' => ['PRON','VERB','VERB'], 'priority' => 8],
+        // R23 removed: PRON+VERB+VERB is too noisy for expression candidates.
     ];
 
     $matchRule = function(int $start, array $rule) use ($posSets, $lemmaForExpr, $surfaceLower, $verbPrepsMap, $verbAnyPrepMap, $reflexives): ?array {
@@ -1035,6 +1035,32 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         }
         $out[] = $candidate;
     };
+    $addCandidateSurface = function(string $lemmaExpr, string $surfaceExpr, int $start, int $end, string $source, int $score, ?int $maxGap = null) use (&$out, &$seenRule) {
+        $lemmaExpr = trim($lemmaExpr);
+        $surfaceExpr = trim($surfaceExpr);
+        if ($lemmaExpr === '' || $surfaceExpr === '') {
+            return;
+        }
+        $key = core_text::strtolower($lemmaExpr);
+        if (isset($seenRule[$key])) {
+            return;
+        }
+        $seenRule[$key] = true;
+        $len = count(array_filter(explode(' ', $lemmaExpr)));
+        $candidate = [
+            'lemma' => $lemmaExpr,
+            'surface' => $surfaceExpr,
+            'len' => $len,
+            'score' => $score,
+            'source' => $source,
+            'start' => $start,
+            'end' => $end,
+        ];
+        if ($maxGap !== null) {
+            $candidate['max_gap'] = $maxGap;
+        }
+        $out[] = $candidate;
+    };
     if (!empty($depMap)) {
         for ($i = 0; $i < $count; $i++) {
             if (($posMap[$i] ?? '') !== 'VERB') {
@@ -1098,12 +1124,17 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 if ($expr === '') {
                     continue;
                 }
+                $surfaceExpr = trim(
+                    ($surfaceLower[$i] ?? $verbLemma) . ' ' .
+                    ($surfaceLower[$j] ?? 'seg') . ' ' .
+                    ($surfaceLower[$prepIdx] ?? ($lemmaForExpr[$prepIdx] ?? ''))
+                );
                 $gap1 = $j - $i - 1;
                 $gap2 = $prepIdx - $j - 1;
                 $maxGap = max($gap1, $gap2);
                 $source = $prepAllowed ? 'dep_reflexive' : 'dep_reflexive_soft';
                 $score = $prepAllowed ? 12 : 8;
-                $addCandidate($expr, $i, $prepIdx, $source, $score, $maxGap);
+                $addCandidateSurface($expr, $surfaceExpr, $i, $prepIdx, $source, $score, $maxGap);
             }
         }
     }
@@ -1148,7 +1179,12 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 $gap2 = $j - $segIdx - 1;
                 $maxGap = max($gap1, $gap2);
                 $expr = trim($verbLemma . ' seg ' . $particleLemma);
-                $addCandidate($expr, $i, $j, 'dep_reflexive_particle', 11, $maxGap);
+                $surfaceExpr = trim(
+                    ($surfaceLower[$i] ?? $verbLemma) . ' ' .
+                    ($surfaceLower[$segIdx] ?? 'seg') . ' ' .
+                    ($surfaceLower[$j] ?? $particleLemma)
+                );
+                $addCandidateSurface($expr, $surfaceExpr, $i, $j, 'dep_reflexive_particle', 11, $maxGap);
             } else {
                 $gap = $j - $i - 1;
                 $expr = trim($verbLemma . ' ' . $particleLemma);
