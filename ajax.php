@@ -2021,6 +2021,129 @@ function mod_flashcards_orbokene_example_match(string $lemma, string $surfaceExp
 }
 
 /**
+ * Pick the best Ordbøkene meaning/examples for a matched expression using sentence context.
+ *
+ * Ordbøkene entries may contain multiple meanings; `ordbokene_client` exposes them as `senses` with examples per sense.
+ * This function selects the sense whose examples best match the sentence content words outside the expression span.
+ *
+ * @param array<string,mixed> $match Ordbøkene match payload
+ * @param array<int,array<string,mixed>> $words Sentence tokens (surface/lemma/pos)
+ * @param array<int,int> $excludeIndices Token indices that belong to the expression span
+ * @return array<string,mixed> Updated match with filtered meanings/examples and chosenMeaning metadata
+ */
+function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $words, array $excludeIndices = []): array {
+    $senses = $match['senses'] ?? null;
+    if (!is_array($senses) || empty($senses)) {
+        return $match;
+    }
+
+    $exclude = [];
+    foreach ($excludeIndices as $idx) {
+        $exclude[(int)$idx] = true;
+    }
+
+    $keywords = [];
+    foreach ($words as $i => $w) {
+        if (!empty($exclude[$i]) || !is_array($w)) {
+            continue;
+        }
+        $pos = core_text::strtoupper((string)($w['pos'] ?? ''));
+        if (!in_array($pos, ['NOUN', 'PROPN', 'ADJ'], true)) {
+            continue;
+        }
+        $surface = core_text::strtolower(trim((string)($w['text'] ?? '')));
+        $lemma = core_text::strtolower(trim((string)($w['lemma'] ?? $surface)));
+        foreach ([$surface, $lemma] as $kw) {
+            $kw = trim($kw);
+            if ($kw === '' || mb_strlen($kw) < 3) {
+                continue;
+            }
+            // Skip very common noise tokens.
+            if (in_array($kw, ['den', 'det', 'dei', 'de', 'en', 'ei', 'et'], true)) {
+                continue;
+            }
+            $keywords[$kw] = true;
+        }
+    }
+    $keywords = array_keys($keywords);
+    if (empty($keywords)) {
+        return $match;
+    }
+
+    $allMeanings = [];
+    $bestIdx = 0;
+    $bestScore = -INF;
+    foreach ($senses as $idx => $sense) {
+        if (!is_array($sense)) {
+            continue;
+        }
+        $meaning = trim((string)($sense['meaning'] ?? ''));
+        $allMeanings[] = $meaning;
+        $examples = $sense['examples'] ?? [];
+        if (!is_array($examples)) {
+            $examples = [];
+        }
+
+        $exampleTokens = [];
+        foreach ($examples as $ex) {
+            $ex = trim((string)$ex);
+            if ($ex === '') {
+                continue;
+            }
+            foreach (mod_flashcards_word_tokens($ex) as $tok) {
+                $tok = core_text::strtolower((string)$tok);
+                if ($tok !== '') {
+                    $exampleTokens[$tok] = true;
+                }
+            }
+        }
+
+        $score = 0;
+        // De-prioritize placeholder meanings like "Se:" if there are alternatives.
+        if ($meaning !== '' && preg_match('~^Se:?\s*$~iu', $meaning)) {
+            $score -= 1;
+        }
+        foreach ($keywords as $kw) {
+            if (isset($exampleTokens[$kw])) {
+                $score += 3;
+            }
+        }
+        // Small preference for senses that actually have examples.
+        if (!empty($examples)) {
+            $score += 0.5;
+        }
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $bestIdx = (int)$idx;
+        }
+    }
+
+    $bestSense = $senses[$bestIdx] ?? null;
+    if (!is_array($bestSense)) {
+        return $match;
+    }
+
+    $bestMeaning = trim((string)($bestSense['meaning'] ?? ''));
+    $bestExamples = $bestSense['examples'] ?? [];
+    if (!is_array($bestExamples)) {
+        $bestExamples = [];
+    }
+    $bestExamples = array_values(array_filter(array_map('trim', array_map('strval', $bestExamples))));
+    if (count($bestExamples) > 6) {
+        $bestExamples = array_slice($bestExamples, 0, 6);
+    }
+
+    $match['chosenMeaning'] = $bestIdx;
+    $match['meanings_all'] = array_values(array_unique(array_filter(array_map('trim', array_map('strval', $allMeanings)))));
+    if ($bestMeaning !== '') {
+        $match['meanings'] = [$bestMeaning];
+    }
+    $match['examples'] = $bestExamples;
+    return $match;
+}
+
+/**
  * Find token index matching word + context.
  *
  * @param array<int,string> $tokens
@@ -3423,6 +3546,10 @@ switch ($action) {
                     'source' => 'pattern',
                 ];
             }
+            if (!empty($match) && ($match['source'] ?? '') === 'ordbokene') {
+                $exclude = is_array($phraseMatch['indices'] ?? null) ? $phraseMatch['indices'] : [];
+                $match = mod_flashcards_pick_ordbokene_sense_for_sentence($match, $words, $exclude);
+            }
             $expression = (string)($match['expression'] ?? '');
             if ($expression === '') {
                 $expression = $expr !== '' ? $expr : $surfaceExpr;
@@ -3518,6 +3645,8 @@ switch ($action) {
                 'source' => $source,
                 'confidence' => $confidence,
                 'variants' => $variants,
+                'chosenMeaning' => $match['chosenMeaning'] ?? null,
+                'meanings_all' => $match['meanings_all'] ?? null,
                 'rule' => $candSource,
                 'start' => $exprMatch['start'],
                 'end' => $exprMatch['end'],
