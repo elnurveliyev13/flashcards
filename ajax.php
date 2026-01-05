@@ -753,7 +753,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 ['type' => 'lemma_in', 'index' => 2, 'values' => $reflexives],
             ],
         ],
-        ['id' => 'R10', 'pattern' => ['VERB','ADP','PRON'], 'priority' => 1, 'verb_prep_required' => true, 'constraints' => [
+        ['id' => 'R10', 'pattern' => ['VERB','ADP','PRON'], 'priority' => 1, 'constraints' => [
             ['type' => 'lemma_in', 'index' => 2, 'values' => $reflexives],
         ]],
         ['id' => 'R11', 'pattern' => ['VERB','NOUN','ADP'], 'priority' => 1, 'verb_prep_required' => true],
@@ -3563,9 +3563,20 @@ switch ($action) {
                     }
                 }
                 if ($debug && !empty($llm)) {
+                    $suggestedList = [];
+                    foreach ($suggested as $item) {
+                        $expr = trim((string)($item['expression'] ?? ''));
+                        if ($expr !== '') {
+                            $suggestedList[] = $expr;
+                        }
+                        if (count($suggestedList) >= 8) {
+                            break;
+                        }
+                    }
                     $dataDebugLlm = [
                         'confirm_model' => $llm['model'] ?? '',
                         'confirm_reasoning_effort' => $llm['reasoning_effort'] ?? '',
+                        'suggested' => $suggestedList,
                     ];
                 }
             } catch (\Throwable $ex) {
