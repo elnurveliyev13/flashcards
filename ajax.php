@@ -3430,6 +3430,12 @@ switch ($action) {
             if ($exprMatch === null) {
                 $exprMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $exprTokens, $maxGap);
             }
+            if ($exprMatch === null && $surfaceExpr !== '' && $surfaceExpr !== $expression) {
+                $surfaceExprTokens = mod_flashcards_word_tokens($surfaceExpr);
+                if (!empty($surfaceExprTokens)) {
+                    $exprMatch = mod_flashcards_find_phrase_match($sentenceSurfaceTokens, $surfaceExprTokens, $maxGap);
+                }
+            }
             if ($exprMatch !== null && $candStart !== null && $candEnd !== null) {
                 if ($exprMatch['start'] < $candStart || $exprMatch['end'] > $candEnd) {
                     $exprMatch = null;
@@ -3476,9 +3482,14 @@ switch ($action) {
             }
             $confidence = 'low';
             $source = $match['source'] ?? 'pattern';
+            if ($source === 'pattern' && in_array($candSource, ['R02','R04'], true)) {
+                continue;
+            }
             if ($source === 'cache' || $source === 'ordbokene') {
                 $confidence = 'high';
             } else if ($source === 'examples') {
+                $confidence = 'medium';
+            } else if ($source === 'pattern' && in_array($candSource, ['dep_reflexive','dep_reflexive_particle'], true)) {
                 $confidence = 'medium';
             }
             $resolved[] = [
