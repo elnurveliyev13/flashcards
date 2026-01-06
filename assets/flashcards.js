@@ -3311,6 +3311,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function buildOrdbokeneExpressionUrl(expressionText, dictmeta){
       const expr = String(expressionText || '').trim();
       const dictmetaUrl = dictmeta && typeof dictmeta === 'object' ? (dictmeta.url || dictmeta.web || '') : '';
+      // For multi-word expressions we prefer the Ordbokene phrase page, since it can have its own entry
+      // even when the API confirmation came via a host-word article id.
+      if(expr && /\s/.test(expr)){
+        if(dictmetaUrl){
+          return `https://ordbokene.no/nno/bm,nn/${encodeOrdbokeneQuery(expr).replace(/\+/g, '%20')}`;
+        }
+        return buildOrdbokeneSearchUrl(expr, {dict:'bm', scope:'eif'});
+      }
       const web = ordbokeneWebUrlFromDictmetaUrl(dictmetaUrl);
       if(web){
         return web;
