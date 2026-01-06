@@ -2,7 +2,7 @@
 define('AJAX_SCRIPT', true);
 
 // Bump this when changing sentence_elements pipeline behavior to help verify deployments/opcache.
-define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-05.2');
+define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-06.2');
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -2145,7 +2145,106 @@ function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $w
         }
     }
     if ($bestHits <= 0) {
+        // Heuristic fallback for ambiguous particle verbs where example-keyword overlap is often zero.
+        // Example: "de går ut" should prefer the "dra til utested" sense over "ikke være gyldig lenger".
         $bestIdx = 0;
+        $expr = trim(core_text::strtolower((string)($match['expression'] ?? '')));
+        $exprTokens = $expr !== '' ? preg_split('/\\s+/u', $expr) : [];
+        $exprTokens = is_array($exprTokens) ? array_values(array_filter(array_map('trim', $exprTokens))) : [];
+        $looksLikeParticleVerb = (count($exprTokens) === 2 && in_array($exprTokens[1], [
+            'ut','inn','opp','ned','av','på','til','over','fram','frem','tilbake','igjen',
+        ], true));
+
+        if ($looksLikeParticleVerb && !empty($exclude)) {
+            $startIdx = min(array_keys($exclude));
+            $prev = $words[$startIdx - 1] ?? null;
+            $prevPos = is_array($prev) ? core_text::strtoupper((string)($prev['pos'] ?? '')) : '';
+            $prevLemma = is_array($prev) ? core_text::strtolower(trim((string)($prev['lemma'] ?? ''))) : '';
+            $prevSurface = is_array($prev) ? core_text::strtolower(trim((string)($prev['text'] ?? ''))) : '';
+
+            $contextTokens = [];
+            foreach ($words as $i => $w) {
+                if (!empty($exclude[$i]) || !is_array($w)) {
+                    continue;
+                }
+                $surface = core_text::strtolower(trim((string)($w['text'] ?? '')));
+                $lemma = core_text::strtolower(trim((string)($w['lemma'] ?? $surface)));
+                foreach ([$surface, $lemma] as $t) {
+                    $t = trim($t);
+                    if ($t !== '' && mb_strlen($t) >= 2) {
+                        $contextTokens[$t] = true;
+                    }
+                }
+            }
+            $contextTokens = array_keys($contextTokens);
+
+            $expiryNeedles = ['gyldig', 'frist', 'avtale', 'kontrakt', 'tillatelse', 'lisens', 'garanti', 'dato', 'mandag', 'tirsdag', 'onsdag', 'torsdag', 'fredag', 'lørdag', 'søndag'];
+            $outingNeedles = ['utested', 'byen', 'på byen', 'fest', 'kino', 'restaurant', 'bar', 'pub', 'klubb'];
+
+            $isAgentive = in_array($prevPos, ['PRON', 'PROPN'], true);
+            $isExpiryContext = false;
+            if (in_array($prevLemma, ['frist', 'avtale', 'kontrakt', 'tillatelse', 'lisens', 'garanti'], true)) {
+                $isExpiryContext = true;
+            }
+            foreach ($contextTokens as $t) {
+                if (preg_match('/\\d/u', $t)) {
+                    $isExpiryContext = true;
+                    break;
+                }
+                if (in_array($t, $expiryNeedles, true)) {
+                    $isExpiryContext = true;
+                    break;
+                }
+            }
+
+            $bestExpiryIdx = 0;
+            $bestExpiryScore = -1;
+            $bestOutIdx = 0;
+            $bestOutScore = -1;
+            foreach ($senses as $idx => $sense) {
+                if (!is_array($sense)) {
+                    continue;
+                }
+                $meaning = core_text::strtolower(trim((string)($sense['meaning'] ?? '')));
+                $examples = $sense['examples'] ?? [];
+                if (!is_array($examples)) {
+                    $examples = [];
+                }
+                $blob = $meaning . ' ' . core_text::strtolower(implode(' ', array_map('strval', $examples)));
+
+                $exp = 0;
+                $out = 0;
+                foreach ($expiryNeedles as $n) {
+                    if ($n !== '' && str_contains($blob, $n)) {
+                        $exp++;
+                    }
+                }
+                foreach ($outingNeedles as $n) {
+                    if ($n !== '' && str_contains($blob, $n)) {
+                        $out++;
+                    }
+                }
+                // Extra bias: if the sentence subject right before the verb is a pronoun ("de", "han", "hun"),
+                // prefer "outing" when available (even if no markers match).
+                if ($isAgentive && in_array($prevSurface, ['de','han','hun','jeg','du','vi','dere'], true)) {
+                    $out += 1;
+                }
+                if ($exp > $bestExpiryScore) {
+                    $bestExpiryScore = $exp;
+                    $bestExpiryIdx = (int)$idx;
+                }
+                if ($out > $bestOutScore) {
+                    $bestOutScore = $out;
+                    $bestOutIdx = (int)$idx;
+                }
+            }
+
+            if ($isExpiryContext && $bestExpiryScore > 0) {
+                $bestIdx = $bestExpiryIdx;
+            } else if ($isAgentive && $bestOutScore >= 0 && ($bestOutScore > $bestExpiryScore || !$isExpiryContext)) {
+                $bestIdx = $bestOutIdx;
+            }
+        }
     }
 
     $bestSense = $senses[$bestIdx] ?? null;
@@ -2170,6 +2269,175 @@ function mod_flashcards_pick_ordbokene_sense_for_sentence(array $match, array $w
     }
     $match['examples'] = $bestExamples;
     return $match;
+}
+
+/**
+ * Confirm expressions via Ordbøkene freetext scope (lookup by meanings/inline phrases), then cache as aliases.
+ *
+ * Uses /api/articles?scope=f to find articles where the phrase appears somewhere in the article text.
+ * To avoid false positives, we only accept a match when the phrase equals:
+ * - an Ordbøkene expression lemma (sub-article), OR
+ * - a sense meaning (explanation/definition) in the normalized article payload.
+ *
+ * @param array<int,string> $phrases
+ * @param string $lang bm|nn|begge
+ * @param array<int,array<string,mixed>> $words
+ * @return array<string,array<string,mixed>> map normalized_phrase => match payload
+ */
+function mod_flashcards_ordbokene_freetext_confirm_map(array $phrases, string $lang, array $words): array {
+    if (empty($phrases)) {
+        return [];
+    }
+    $normalizedList = [];
+    foreach ($phrases as $p) {
+        $p = trim((string)$p);
+        if ($p === '') {
+            continue;
+        }
+        $key = \mod_flashcards\local\orbokene_repository::normalize_phrase($p);
+        if ($key !== '') {
+            $normalizedList[$key] = $p;
+        }
+    }
+    if (empty($normalizedList)) {
+        return [];
+    }
+
+    // One freetext search for all phrases (| concatenation), then verify inside fetched articles.
+    $query = implode('|', array_keys($normalizedList));
+    $ids = \mod_flashcards\local\ordbokene_client::list_article_ids($query, $lang, 'f');
+
+    $articleQueue = [];
+    foreach (['bm', 'nn'] as $dict) {
+        foreach (array_slice(($ids[$dict] ?? []), 0, 8) as $id) {
+            $articleQueue[] = ['dict' => $dict, 'id' => (int)$id];
+        }
+    }
+    if (empty($articleQueue)) {
+        return [];
+    }
+
+    $articles = [];
+    foreach ($articleQueue as $item) {
+        $dict = (string)($item['dict'] ?? 'bm');
+        $id = (int)($item['id'] ?? 0);
+        if ($id <= 0) {
+            continue;
+        }
+        $norm = \mod_flashcards\local\ordbokene_client::fetch_article($id, $dict);
+        if (!empty($norm)) {
+            $articles[] = $norm;
+        }
+    }
+    if (empty($articles)) {
+        return [];
+    }
+
+    $out = [];
+    foreach ($normalizedList as $needleNorm => $needleRaw) {
+        foreach ($articles as $article) {
+            if (!is_array($article)) {
+                continue;
+            }
+            $exprs = [];
+            if (!empty($article['expressions']) && is_array($article['expressions'])) {
+                foreach ($article['expressions'] as $e) {
+                    $k = \mod_flashcards\local\orbokene_repository::normalize_phrase((string)$e);
+                    if ($k !== '') {
+                        $exprs[$k] = true;
+                    }
+                }
+            }
+            $meanings = [];
+            if (!empty($article['meanings']) && is_array($article['meanings'])) {
+                foreach ($article['meanings'] as $m) {
+                    $k = \mod_flashcards\local\orbokene_repository::normalize_phrase((string)$m);
+                    if ($k !== '') {
+                        $meanings[$k] = true;
+                    }
+                }
+            }
+
+            $matchType = null;
+            if (isset($exprs[$needleNorm])) {
+                $matchType = 'expression';
+            } else if (isset($meanings[$needleNorm])) {
+                $matchType = 'meaning';
+            } else {
+                continue;
+            }
+
+            // Build a "virtual match" for the needle itself, using the matched article's sense data.
+            // For meaning-only matches, restrict senses/meanings to the matching meaning to avoid leaking unrelated meanings.
+            $senses = $article['senses'] ?? [];
+            if (!is_array($senses)) {
+                $senses = [];
+            }
+            $virtualMeanings = $article['meanings'] ?? [];
+            $virtualExamples = $article['examples'] ?? [];
+            if ($matchType === 'meaning') {
+                $virtualMeanings = [$needleRaw];
+                $virtualExamples = [];
+                if (!empty($senses)) {
+                    $filtered = [];
+                    foreach ($senses as $sense) {
+                        if (!is_array($sense)) {
+                            continue;
+                        }
+                        $m = \mod_flashcards\local\orbokene_repository::normalize_phrase((string)($sense['meaning'] ?? ''));
+                        if ($m !== '' && $m === $needleNorm) {
+                            $filtered[] = $sense;
+                        }
+                    }
+                    if (!empty($filtered)) {
+                        $senses = $filtered;
+                    }
+                }
+            }
+            $match = [
+                'expression' => $needleRaw,
+                'meanings' => $virtualMeanings,
+                'examples' => $virtualExamples,
+                'senses' => $senses,
+                'variants' => $article['variants'] ?? [],
+                'dictmeta' => $article['dictmeta'] ?? [],
+                'source' => 'ordbokene',
+                'meta' => [
+                    'match_type' => $matchType,
+                    'via_article' => $article['baseform'] ?? '',
+                ],
+            ];
+
+            // Pick best sense for the sentence context (also filters examples by sense).
+            $match = mod_flashcards_pick_ordbokene_sense_for_sentence($match, $words, []);
+
+            $out[$needleNorm] = $match;
+
+            // Cache as alias so future calls are fast and don't hit the network.
+            try {
+                \mod_flashcards\local\orbokene_repository::upsert($needleRaw, [
+                    'entry' => $needleRaw,
+                    'baseform' => (string)($match['expression'] ?? $needleRaw),
+                    'definition' => !empty($match['meanings'][0]) ? (string)$match['meanings'][0] : '',
+                    'examples' => $match['examples'] ?? [],
+                    'meta' => [
+                        'source' => 'ordbokene_freetext',
+                        'dictmeta' => $match['dictmeta'] ?? [],
+                        'chosenMeaning' => $match['chosenMeaning'] ?? null,
+                        'meanings_all' => $match['meanings_all'] ?? null,
+                        'variants' => $match['variants'] ?? [],
+                        'via' => $match['meta']['via_article'] ?? '',
+                        'match_type' => $match['meta']['match_type'] ?? '',
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                // ignore cache errors
+            }
+            break;
+        }
+    }
+
+    return $out;
 }
 
 /**
@@ -3378,6 +3646,54 @@ switch ($action) {
         }
         $candRawCount = count($cands);
         $cands = array_slice($cands, 0, 20);
+
+        // Ordbøkene freetext fallback (scope=f): for strong patterns that are valid but lack a dedicated Ordbøkene header entry
+        // (e.g. "kle på seg" appears as a meaning/phrase inside other articles).
+        $freetextStart = microtime(true);
+        $freetextAllowSources = [
+            'R09',
+            'R10',
+            'dep_reflexive',
+            'dep_reflexive_soft',
+            'dep_reflexive_particle',
+            'dep_reflexive_particle_soft',
+            'dep_particle',
+        ];
+        $freetextNeedles = [];
+        foreach ($cands as $cand) {
+            if (!is_array($cand)) {
+                continue;
+            }
+            $src = (string)($cand['source'] ?? '');
+            if (!in_array($src, $freetextAllowSources, true)) {
+                continue;
+            }
+            $expr = trim((string)($cand['lemma'] ?? ''));
+            if ($expr === '' || count(mod_flashcards_word_tokens($expr)) < 2) {
+                continue;
+            }
+            $key = \mod_flashcards\local\orbokene_repository::normalize_phrase($expr);
+            if ($key === '') {
+                continue;
+            }
+            $freetextNeedles[$key] = $expr;
+            if (count($freetextNeedles) >= 5) {
+                break;
+            }
+        }
+        $ordbokeneFreetextMap = [];
+        if (!empty($freetextNeedles) && \mod_flashcards\local\orbokene_repository::is_enabled()) {
+            try {
+                $ordbokeneFreetextMap = mod_flashcards_ordbokene_freetext_confirm_map(array_values($freetextNeedles), $lang, $words);
+            } catch (\Throwable $e) {
+                $ordbokeneFreetextMap = [];
+            }
+        }
+        // Only add freetext timing to debug to keep the public response minimal.
+        if ($debug) {
+            $timing['ordbokene_freetext'] = microtime(true) - $freetextStart;
+        }
+
         $t0 = microtime(true);
         $resolved = mod_flashcards_resolve_lexical_expressions($sentenceSurfaceTokens, $sentenceLemmaTokens, $posMap, $words, $text, $lang, 10);
         $timing['expr_lexical'] = microtime(true) - $t0;
@@ -3495,14 +3811,24 @@ switch ($action) {
                                 'hit' => true,
                             ];
                         }
+                        $cachedmeta = is_array($cached['meta'] ?? null) ? $cached['meta'] : [];
+                        $cacheddictmeta = $cachedmeta['dictmeta'] ?? null;
+                        if (!is_array($cacheddictmeta)) {
+                            $cacheddictmeta = ['source' => 'cache'];
+                        } else if (empty($cacheddictmeta['source'])) {
+                            $cacheddictmeta['source'] = 'cache';
+                        }
                         $expression = $cached['baseform'] ?? $cached['entry'] ?? $variant;
                         $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
                         $match = [
                             'expression' => $expression,
                             'meanings' => $meaning ? [$meaning] : [],
                             'examples' => $cached['examples'] ?? [],
-                            'dictmeta' => ['source' => 'cache'],
+                            'dictmeta' => $cacheddictmeta,
                             'source' => 'cache',
+                            'variants' => $cachedmeta['variants'] ?? [],
+                            'chosenMeaning' => $cachedmeta['chosenMeaning'] ?? null,
+                            'meanings_all' => $cachedmeta['meanings_all'] ?? null,
                         ];
                         break;
                     }
@@ -3550,6 +3876,15 @@ switch ($action) {
                             ];
                         }
                         $match = $exampleMatch;
+                    }
+                }
+            }
+            if (empty($match) && !empty($ordbokeneFreetextMap)) {
+                foreach ([$expr, $surfaceExpr] as $candidateKey) {
+                    $k = \mod_flashcards\local\orbokene_repository::normalize_phrase($candidateKey);
+                    if ($k !== '' && isset($ordbokeneFreetextMap[$k])) {
+                        $match = $ordbokeneFreetextMap[$k];
+                        break;
                     }
                 }
             }
@@ -3635,6 +3970,37 @@ switch ($action) {
                     $variants = [];
                 } else if (count($variants) > 4) {
                     $variants = array_slice($variants, 0, 4);
+                }
+            }
+            // Ordbøkene sometimes returns inflected verb-phrase lemmas alongside the baseform (e.g. "ta på seg, tar på seg").
+            // For UI purposes, `variants` must only represent orthographic alternatives, not conjugations.
+            if (!empty($variants) && !empty($exprMatch['indices']) && is_array($exprMatch['indices'])) {
+                $firstIndex = min(array_map('intval', $exprMatch['indices']));
+                $firstPos = core_text::strtoupper((string)($posMap[$firstIndex] ?? ''));
+                if (in_array($firstPos, ['VERB', 'AUX'], true)) {
+                    $baseTokens = mod_flashcards_word_tokens($expression);
+                    if (count($baseTokens) >= 2) {
+                        $baseRest = array_slice($baseTokens, 1);
+                        $baseFirst = $baseTokens[0] ?? '';
+                        $variants = array_values(array_filter($variants, function(string $v) use ($baseFirst, $baseRest) {
+                            $vTokens = mod_flashcards_word_tokens($v);
+                            if (count($vTokens) !== (count($baseRest) + 1)) {
+                                return true;
+                            }
+                            if (array_slice($vTokens, 1) !== $baseRest) {
+                                return true;
+                            }
+                            $vFirst = $vTokens[0] ?? '';
+                            if ($vFirst === '' || $vFirst === $baseFirst) {
+                                return true;
+                            }
+                            // Drop common finite forms when only the verb token differs.
+                            return !preg_match('~(r|te|de)$~u', $vFirst);
+                        }));
+                        if (count($variants) < 2) {
+                            $variants = [];
+                        }
+                    }
                 }
             }
             $confidence = 'low';

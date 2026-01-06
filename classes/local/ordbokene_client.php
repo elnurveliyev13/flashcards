@@ -29,6 +29,8 @@ class ordbokene_client {
     protected const ARTICLE = 'https://ord.uib.no/%s/article/%d.json';
     /** @var int max articles to inspect for exact lemma match */
     protected const MATCH_LIMIT = 6;
+    /** @var string freetext/lemma article listing endpoint */
+    protected const ARTICLES = 'https://ord.uib.no/api/articles';
 
     /**
      * Build a search URL with optional part-of-speech filter (wc).
@@ -42,6 +44,68 @@ class ordbokene_client {
             $url .= '&wc=' . rawurlencode($wc);
         }
         return $url;
+    }
+
+    /**
+     * List matching article IDs via /api/articles (supports scope=f freetext).
+     *
+     * @param string $w Query string (supports wildcards and | concatenation)
+     * @param string $lang bm|nn|begge
+     * @param string $scope e|f|i|ef|...
+     * @param string $wc Optional part-of-speech filter, e.g. VERB/ADJ/ADV
+     * @return array{bm:array<int,int>,nn:array<int,int>}
+     */
+    public static function list_article_ids(string $w, string $lang = 'begge', string $scope = 'e', string $wc = ''): array {
+        $w = trim($w);
+        if ($w === '') {
+            return ['bm' => [], 'nn' => []];
+        }
+        $lang = in_array($lang, ['bm', 'nn', 'begge'], true) ? $lang : 'begge';
+        $scope = trim($scope) !== '' ? trim($scope) : 'e';
+        $url = self::ARTICLES . '?w=' . rawurlencode($w) . '&dict=' . ($lang === 'begge' ? 'bm,nn' : $lang) . '&scope=' . rawurlencode($scope);
+        $wc = trim($wc);
+        if ($wc !== '') {
+            $url .= '&wc=' . rawurlencode($wc);
+        }
+        try {
+            $curl = new \curl();
+            $resp = $curl->get($url);
+            $data = json_decode($resp, true);
+            if (!is_array($data) || empty($data['articles']) || !is_array($data['articles'])) {
+                return ['bm' => [], 'nn' => []];
+            }
+            $bm = !empty($data['articles']['bm']) && is_array($data['articles']['bm']) ? array_map('intval', $data['articles']['bm']) : [];
+            $nn = !empty($data['articles']['nn']) && is_array($data['articles']['nn']) ? array_map('intval', $data['articles']['nn']) : [];
+            return ['bm' => $bm, 'nn' => $nn];
+        } catch (\Throwable $e) {
+            return ['bm' => [], 'nn' => []];
+        }
+    }
+
+    /**
+     * Fetch and normalize an article by ID.
+     *
+     * @param int $articleid
+     * @param string $dict bm|nn
+     * @return array Normalized article payload or empty array
+     */
+    public static function fetch_article(int $articleid, string $dict = 'bm'): array {
+        $dict = in_array($dict, ['bm', 'nn'], true) ? $dict : 'bm';
+        if ($articleid <= 0) {
+            return [];
+        }
+        try {
+            $articleurl = sprintf(self::ARTICLE, $dict, $articleid);
+            $curl = new \curl();
+            $resp = $curl->get($articleurl);
+            $article = json_decode($resp, true);
+            if (!is_array($article)) {
+                return [];
+            }
+            return self::normalize_article($article, $dict, $articleurl);
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     protected static function normalize_lemma_key(string $text): string {
