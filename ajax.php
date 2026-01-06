@@ -539,13 +539,30 @@ function mod_flashcards_spacy_pos_to_coarse(string $pos): string {
 }
 
 /**
+ * Map spaCy POS to output POS tags (UI-facing).
+ * Keeps SCONJ/CCONJ distinct so the UI can display subjunctions correctly.
+ *
+ * @param string $pos
+ * @return string
+ */
+function mod_flashcards_spacy_pos_to_output(string $pos): string {
+    $pos = core_text::strtoupper(trim($pos));
+    // Preserve current behavior for AUX (UI expects "Verb"), but keep conjunction subtypes distinct.
+    if ($pos === 'AUX') {
+        return 'VERB';
+    }
+    return $pos;
+}
+
+/**
  * Build spaCy POS map aligned to word tokens.
  *
  * @param string $text
  * @param array $spacy
+ * @param string $mode 'coarse' (default) or 'output'
  * @return array<int,string>
  */
-function mod_flashcards_spacy_pos_map(string $text, array $spacy): array {
+function mod_flashcards_spacy_pos_map(string $text, array $spacy, string $mode = 'coarse'): array {
     $map = [];
     $spacytokens = is_array($spacy['tokens'] ?? null) ? $spacy['tokens'] : [];
     if (empty($spacytokens)) {
@@ -557,6 +574,7 @@ function mod_flashcards_spacy_pos_map(string $text, array $spacy): array {
     }
     $j = 0;
     $sn = count($spacytokens);
+    $mode = core_text::strtolower(trim($mode));
     foreach ($wordtokens as $i => $w) {
         $wText = core_text::strtolower((string)($w['text'] ?? ''));
         $wNorm = mod_flashcards_normalize_token($wText);
@@ -571,7 +589,12 @@ function mod_flashcards_spacy_pos_map(string $text, array $spacy): array {
             $sText = core_text::strtolower((string)($s['text'] ?? ''));
             $sNorm = mod_flashcards_normalize_token($sText);
             if ($sNorm !== '' && $sNorm === $wNorm) {
-                $map[$i] = mod_flashcards_spacy_pos_to_coarse((string)($s['pos'] ?? ''));
+                $rawpos = (string)($s['pos'] ?? '');
+                if ($mode === 'output') {
+                    $map[$i] = mod_flashcards_spacy_pos_to_output($rawpos);
+                } else {
+                    $map[$i] = mod_flashcards_spacy_pos_to_coarse($rawpos);
+                }
                 $j++;
                 break;
             }
@@ -3543,7 +3566,9 @@ switch ($action) {
         $t0 = microtime(true);
         $spacy = mod_flashcards_spacy_analyze($text);
         $timing['spacy'] = microtime(true) - $t0;
-        $posMap = mod_flashcards_spacy_pos_map($text, $spacy);
+        // Use coarse POS for pattern matching, but keep output POS more precise (e.g. SCONJ vs CONJ) for UI.
+        $posMap = mod_flashcards_spacy_pos_map($text, $spacy, 'coarse');
+        $posMapOut = mod_flashcards_spacy_pos_map($text, $spacy, 'output');
         $lemmaMap = mod_flashcards_spacy_lemma_map($text, $spacy);
         $depMap = mod_flashcards_spacy_dep_map($text, $spacy);
         $wordtokens = mod_flashcards_word_tokens_with_offsets($text);
@@ -3554,7 +3579,7 @@ switch ($action) {
                 'text' => (string)($w['text'] ?? ''),
                 'start' => (int)($w['start'] ?? 0),
                 'end' => (int)($w['end'] ?? 0),
-                'pos' => $posMap[$i] ?? '',
+                'pos' => $posMapOut[$i] ?? ($posMap[$i] ?? ''),
                 'lemma' => $lemmaMap[$i] ?? '',
                 'dep' => $depMap[$i] ?? '',
             ];
