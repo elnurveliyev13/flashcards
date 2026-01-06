@@ -2,7 +2,7 @@
 define('AJAX_SCRIPT', true);
 
 // Bump this when changing sentence_elements pipeline behavior to help verify deployments/opcache.
-define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-06.4');
+define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-06.6');
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -1671,6 +1671,9 @@ function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array 
                         $expression = $cached['baseform'] ?? $cached['entry'] ?? $cand;
                         $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
                         $matchsource = ($cachedsource === 'ordbokene_freetext') ? 'ordbokene' : 'cache';
+                        if ($matchsource === 'ordbokene') {
+                            $cacheddictmeta['source'] = 'ordbokene';
+                        }
                         $match = [
                             'expression' => $expression,
                             'meanings' => $meaning ? [$meaning] : [],
@@ -2364,6 +2367,8 @@ function mod_flashcards_ordbokene_freetext_confirm_map(array $phrases, string $l
 
     $out = [];
     foreach ($normalizedList as $needleNorm => $needleRaw) {
+        $best = null;
+        $bestScore = -INF;
         foreach ($articles as $article) {
             if (!is_array($article)) {
                 continue;
@@ -2396,17 +2401,36 @@ function mod_flashcards_ordbokene_freetext_confirm_map(array $phrases, string $l
                 continue;
             }
 
+            $score = 0;
+            if ($matchType === 'expression') {
+                $score += 10;
+            } else {
+                $score += 3;
+            }
+            $needleTokens = mod_flashcards_word_tokens($needleRaw);
+            $firstTok = $needleTokens[0] ?? '';
+            $baseform = core_text::strtolower(trim((string)($article['baseform'] ?? '')));
+            if ($firstTok !== '' && $baseform !== '' && $firstTok === \mod_flashcards\local\orbokene_repository::normalize_phrase($baseform)) {
+                $score += 5;
+            }
+            $pos = core_text::strtolower(trim((string)($article['pos'] ?? '')));
+            if ($pos !== '' && str_contains($pos, 'verb') && !empty($needleTokens)) {
+                $score += 1;
+            }
+
             // Build a "virtual match" for the needle itself, using the matched article's sense data.
-            // For meaning-only matches, restrict senses/meanings to the matching meaning to avoid leaking unrelated meanings.
+            // For meaning-only matches, restrict senses/meanings to the matching meaning and do not inherit lemma variants.
             $senses = $article['senses'] ?? [];
             if (!is_array($senses)) {
                 $senses = [];
             }
             $virtualMeanings = $article['meanings'] ?? [];
             $virtualExamples = $article['examples'] ?? [];
+            $virtualVariants = $article['variants'] ?? [];
             if ($matchType === 'meaning') {
                 $virtualMeanings = [$needleRaw];
                 $virtualExamples = [];
+                $virtualVariants = [];
                 if (!empty($senses)) {
                     $filtered = [];
                     foreach ($senses as $sense) {
@@ -2423,13 +2447,18 @@ function mod_flashcards_ordbokene_freetext_confirm_map(array $phrases, string $l
                     }
                 }
             }
+            $dictmeta = $article['dictmeta'] ?? [];
+            if (!is_array($dictmeta)) {
+                $dictmeta = [];
+            }
+            $dictmeta['source'] = 'ordbokene';
             $match = [
                 'expression' => $needleRaw,
                 'meanings' => $virtualMeanings,
                 'examples' => $virtualExamples,
                 'senses' => $senses,
-                'variants' => $article['variants'] ?? [],
-                'dictmeta' => $article['dictmeta'] ?? [],
+                'variants' => $virtualVariants,
+                'dictmeta' => $dictmeta,
                 'source' => 'ordbokene',
                 'meta' => [
                     'match_type' => $matchType,
@@ -2440,29 +2469,37 @@ function mod_flashcards_ordbokene_freetext_confirm_map(array $phrases, string $l
             // Pick best sense for the sentence context (also filters examples by sense).
             $match = mod_flashcards_pick_ordbokene_sense_for_sentence($match, $words, []);
 
-            $out[$needleNorm] = $match;
-
-            // Cache as alias so future calls are fast and don't hit the network.
-            try {
-                \mod_flashcards\local\orbokene_repository::upsert($needleRaw, [
-                    'entry' => $needleRaw,
-                    'baseform' => (string)($match['expression'] ?? $needleRaw),
-                    'definition' => !empty($match['meanings'][0]) ? (string)$match['meanings'][0] : '',
-                    'examples' => $match['examples'] ?? [],
-                    'meta' => [
-                        'source' => 'ordbokene_freetext',
-                        'dictmeta' => $match['dictmeta'] ?? [],
-                        'chosenMeaning' => $match['chosenMeaning'] ?? null,
-                        'meanings_all' => $match['meanings_all'] ?? null,
-                        'variants' => $match['variants'] ?? [],
-                        'via' => $match['meta']['via_article'] ?? '',
-                        'match_type' => $match['meta']['match_type'] ?? '',
-                    ],
-                ]);
-            } catch (\Throwable $e) {
-                // ignore cache errors
+            if ($score > $bestScore) {
+                $bestScore = $score;
+                $best = $match;
             }
-            break;
+        }
+
+        if (empty($best) || !is_array($best)) {
+            continue;
+        }
+
+        $out[$needleNorm] = $best;
+
+        // Cache as alias so future calls are fast and don't hit the network.
+        try {
+            \mod_flashcards\local\orbokene_repository::upsert($needleRaw, [
+                'entry' => $needleRaw,
+                'baseform' => (string)($best['expression'] ?? $needleRaw),
+                'definition' => !empty($best['meanings'][0]) ? (string)$best['meanings'][0] : '',
+                'examples' => $best['examples'] ?? [],
+                'meta' => [
+                    'source' => 'ordbokene_freetext',
+                    'dictmeta' => $best['dictmeta'] ?? [],
+                    'chosenMeaning' => $best['chosenMeaning'] ?? null,
+                    'meanings_all' => $best['meanings_all'] ?? null,
+                    'variants' => $best['variants'] ?? [],
+                    'via' => $best['meta']['via_article'] ?? '',
+                    'match_type' => $best['meta']['match_type'] ?? '',
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            // ignore cache errors
         }
     }
 
@@ -3872,6 +3909,9 @@ switch ($action) {
                         $expression = $cached['baseform'] ?? $cached['entry'] ?? $variant;
                         $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
                         $matchsource = ($cachedsource === 'ordbokene_freetext') ? 'ordbokene' : 'cache';
+                        if ($matchsource === 'ordbokene') {
+                            $cacheddictmeta['source'] = 'ordbokene';
+                        }
                         $match = [
                             'expression' => $expression,
                             'meanings' => $meaning ? [$meaning] : [],
