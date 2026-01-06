@@ -355,6 +355,7 @@ class ordbokene_client {
             'source' => 'ordbokene',
             'dictmeta' => ['lang' => $lang, 'url' => $url],
             'baseform' => '',
+            'variants' => [],
             'pos' => '',
             'forms' => [],
             'expressions' => [],
@@ -365,6 +366,25 @@ class ordbokene_client {
         // Baseform from first lemma.
         if (!empty($article['lemmas'][0]['lemma'])) {
             $out['baseform'] = $article['lemmas'][0]['lemma'];
+        }
+        // Orthographic variants from lemma list, as shown in Ordbøkene header (e.g. "løse, løyse").
+        if (!empty($article['lemmas']) && is_array($article['lemmas'])) {
+            $vars = [];
+            foreach ($article['lemmas'] as $l) {
+                if (!is_array($l)) {
+                    continue;
+                }
+                $lemma = trim((string)($l['lemma'] ?? ''));
+                if ($lemma === '') {
+                    continue;
+                }
+                $lemma = preg_replace('/\\s+/u', ' ', $lemma) ?? $lemma;
+                $vars[] = $lemma;
+            }
+            $vars = array_values(array_unique(array_filter($vars)));
+            if (count($vars) >= 2) {
+                $out['variants'] = $vars;
+            }
         }
         if (!empty($article['word_class'])) {
             $out['pos'] = (string)$article['word_class'];

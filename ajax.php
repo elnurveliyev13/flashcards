@@ -2,7 +2,7 @@
 define('AJAX_SCRIPT', true);
 
 // Bump this when changing sentence_elements pipeline behavior to help verify deployments/opcache.
-define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-05.1');
+define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-05.2');
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -1691,27 +1691,11 @@ function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array 
                     }
                 }
                 $confidence = ($source === 'cache' || $source === 'ordbokene') ? 'high' : 'medium';
+                // Variants are only orthographic variants provided by Ordbøkene itself (e.g. "løse, løyse").
+                // Do not include inflected surface forms.
                 $variants = [];
-                if (in_array($source, ['ordbokene','cache'], true)) {
-                    $variantMap = [];
-                    $addVariant = function(string $value) use (&$variants, &$variantMap) {
-                        $value = trim($value);
-                        if ($value === '') {
-                            return;
-                        }
-                        $key = core_text::strtolower($value);
-                        if (isset($variantMap[$key])) {
-                            return;
-                        }
-                        $variantMap[$key] = true;
-                        $variants[] = $value;
-                    };
-                    $addVariant((string)($match['expression'] ?? ''));
-                    $addVariant((string)($match['baseform'] ?? ''));
-                    $addVariant((string)($match['entry'] ?? ''));
-                    $addVariant($expression);
-                    $addVariant($surfacePhrase);
-                    $addVariant($lemmaPhrase);
+                if (!empty($match['variants']) && is_array($match['variants'])) {
+                    $variants = array_values(array_unique(array_filter(array_map('trim', array_map('strval', $match['variants'])))));
                     if (count($variants) < 2) {
                         $variants = [];
                     } else if (count($variants) > 4) {
@@ -3642,27 +3626,11 @@ switch ($action) {
             if (!empty($match['meanings']) && is_array($match['meanings'])) {
                 $meaning = trim((string)($match['meanings'][0] ?? ''));
             }
+            // Variants are only orthographic variants provided by Ordbøkene itself (e.g. "løse, løyse").
+            // Do not include inflected surface forms like "tar på seg".
             $variants = [];
-            if (in_array($source, ['ordbokene','cache'], true)) {
-                $variantMap = [];
-                $addVariant = function(string $value) use (&$variants, &$variantMap) {
-                    $value = trim($value);
-                    if ($value === '') {
-                        return;
-                    }
-                    $key = core_text::strtolower($value);
-                    if (isset($variantMap[$key])) {
-                        return;
-                    }
-                    $variantMap[$key] = true;
-                    $variants[] = $value;
-                };
-                $addVariant((string)($match['expression'] ?? ''));
-                $addVariant((string)($match['baseform'] ?? ''));
-                $addVariant((string)($match['entry'] ?? ''));
-                $addVariant($expression);
-                $addVariant($surfaceExpr);
-                $addVariant($expr);
+            if (!empty($match['variants']) && is_array($match['variants'])) {
+                $variants = array_values(array_unique(array_filter(array_map('trim', array_map('strval', $match['variants'])))));
                 if (count($variants) < 2) {
                     $variants = [];
                 } else if (count($variants) > 4) {
