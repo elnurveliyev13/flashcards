@@ -3273,9 +3273,60 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     }
 
+    function encodeOrdbokeneQuery(value){
+      return encodeURIComponent(String(value || '').trim()).replace(/%20/g, '+');
+    }
+
+    function buildOrdbokeneSearchUrl(query, opts = {}){
+      const q = String(query || '').trim();
+      if(!q){
+        return '';
+      }
+      const dict = String(opts.dict || 'bm').trim() || 'bm';
+      const scope = String(opts.scope || 'ei').trim() || 'ei';
+      const pos = (opts.pos === null || typeof opts.pos === 'undefined') ? '' : String(opts.pos || '').trim();
+      let url = `https://ordbokene.no/nno/search?q=${encodeOrdbokeneQuery(q)}&dict=${encodeOrdbokeneQuery(dict)}&scope=${encodeOrdbokeneQuery(scope)}`;
+      if(pos){
+        url += `&pos=${encodeOrdbokeneQuery(pos)}`;
+      }
+      return url;
+    }
+
+    function ordbokeneWebUrlFromDictmetaUrl(url){
+      const raw = String(url || '').trim();
+      if(!raw){
+        return '';
+      }
+      const alreadyWeb = raw.match(/^https:\/\/ordbokene\.no\/(bm|nn)\/(\d+)(?:[/?#].*)?$/i);
+      if(alreadyWeb){
+        return `https://ordbokene.no/${alreadyWeb[1].toLowerCase()}/${alreadyWeb[2]}`;
+      }
+      const m = raw.match(/^https:\/\/ord\.uib\.no\/(bm|nn)\/article\/(\d+)\.json(?:[?#].*)?$/i);
+      if(m){
+        return `https://ordbokene.no/${m[1].toLowerCase()}/${m[2]}`;
+      }
+      return '';
+    }
+
+    function buildOrdbokeneExpressionUrl(expressionText, dictmeta){
+      const expr = String(expressionText || '').trim();
+      const dictmetaUrl = dictmeta && typeof dictmeta === 'object' ? (dictmeta.url || dictmeta.web || '') : '';
+      const web = ordbokeneWebUrlFromDictmetaUrl(dictmetaUrl);
+      if(web){
+        return web;
+      }
+      return buildOrdbokeneSearchUrl(expr, {dict:'bm', scope:'eif'});
+    }
+
+    function buildOrdbokeneTokenUrl(tokenText, posTag){
+      const token = String(tokenText || '').trim();
+      const pos = String(posTag || '').trim();
+      return buildOrdbokeneSearchUrl(token, {dict:'bm', scope:'ei', pos: pos || null});
+    }
+
     function openFocusChipMenu(target, options){
       if(!target) return;
-      const hasActions = !!(options?.onCreate || options?.onEdit);
+      const hasActions = !!(options?.onCreate || options?.onEdit || options?.ordbokeneUrl);
       if(!hasActions){
         return;
       }
@@ -3283,6 +3334,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const menu = document.createElement('div');
       menu.className = 'focus-expression-menu';
       const actions = [];
+      if(options?.ordbokeneUrl){
+        const url = String(options.ordbokeneUrl || '').trim();
+        if(url){
+          actions.push({
+            label: 'ordbokene.no',
+            handler: ()=>{
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          });
+        }
+      }
       if(options?.onCreate){
         actions.push({
           label: aiStrings.tokenCreateCard || 'Create card',
@@ -3629,6 +3691,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         openFocusChipMenu(btn, {
           x: clientX,
           y: clientY,
+          ordbokeneUrl: options.ordbokeneUrl,
           onCreate: options.onCreate,
           onEdit: options.onEdit
         });
@@ -3707,7 +3770,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             btn.title = titleParts.join(' · ');
           }
           attachFocusChipMenuHandlers(btn, token.text, {
-            onCreate: ()=>createCardFromToken(token)
+            onCreate: ()=>createCardFromToken(token),
+            ordbokeneUrl: buildOrdbokeneTokenUrl(token.text, meta ? meta.pos : '')
           });
           btn.addEventListener('click', ()=>{
             focusHelperState.activeExpressionIndex = null;
@@ -3797,13 +3861,22 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
           if(kind === 'word'){
+            const pos = entry.pos
+              || (entry.meta && entry.meta.pos)
+              || (Number.isInteger(entry.index) && focusHelperState.wordMetaByIndex && focusHelperState.wordMetaByIndex[entry.index] ? focusHelperState.wordMetaByIndex[entry.index].pos : '')
+              || '';
             attachFocusChipMenuHandlers(chip, entry.text, {
-              onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index})
+              onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index}),
+              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, pos)
             });
           }
           if(kind === 'expression'){
+            const meta = entry.meta || entry || {};
+            const exprText = (meta && meta.expression) ? meta.expression : (entry.text || '');
+            const dictmeta = meta && meta.dictmeta ? meta.dictmeta : (entry.dictmeta || null);
             attachFocusChipMenuHandlers(chip, entry.text, {
-              onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry)
+              onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry),
+              ordbokeneUrl: buildOrdbokeneExpressionUrl(exprText, dictmeta)
             });
           }
           if(kind === 'word' && Number.isInteger(entry.index)){
