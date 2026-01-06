@@ -2,7 +2,7 @@
 define('AJAX_SCRIPT', true);
 
 // Bump this when changing sentence_elements pipeline behavior to help verify deployments/opcache.
-define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-06.2');
+define('MOD_FLASHCARDS_PIPELINE_REV', '2026-01-06.3');
 
 require(__DIR__ . '/../../config.php');
 require_once($CFG->libdir . '/filelib.php');
@@ -3818,14 +3818,37 @@ switch ($action) {
                         } else if (empty($cacheddictmeta['source'])) {
                             $cacheddictmeta['source'] = 'cache';
                         }
+                        $cachedsource = (string)($cachedmeta['source'] ?? 'cache');
+                        // If this cache entry came from Ordbøkene freetext but lacks dict meta (older cached row),
+                        // refresh it once and treat as Ordbøkene-confirmed.
+                        if ($cachedsource === 'ordbokene_freetext' && (empty($cacheddictmeta['url']) || empty($cacheddictmeta['lang']))) {
+                            try {
+                                $refresh = mod_flashcards_ordbokene_freetext_confirm_map([$variant], $lang, $words);
+                                $rk = \mod_flashcards\local\orbokene_repository::normalize_phrase($variant);
+                                if ($rk !== '' && !empty($refresh[$rk]) && is_array($refresh[$rk])) {
+                                    if ($debug) {
+                                        $candDebugTrace[] = [
+                                            'method' => 'cache_refresh',
+                                            'expression' => $variant,
+                                            'hit' => true,
+                                        ];
+                                    }
+                                    $match = $refresh[$rk];
+                                    break;
+                                }
+                            } catch (\Throwable $e) {
+                                // ignore refresh errors, fallback to cached payload
+                            }
+                        }
                         $expression = $cached['baseform'] ?? $cached['entry'] ?? $variant;
                         $meaning = $cached['definition'] ?? $cached['translation'] ?? '';
+                        $matchsource = ($cachedsource === 'ordbokene_freetext') ? 'ordbokene' : 'cache';
                         $match = [
                             'expression' => $expression,
                             'meanings' => $meaning ? [$meaning] : [],
                             'examples' => $cached['examples'] ?? [],
                             'dictmeta' => $cacheddictmeta,
-                            'source' => 'cache',
+                            'source' => $matchsource,
                             'variants' => $cachedmeta['variants'] ?? [],
                             'chosenMeaning' => $cachedmeta['chosenMeaning'] ?? null,
                             'meanings_all' => $cachedmeta['meanings_all'] ?? null,
