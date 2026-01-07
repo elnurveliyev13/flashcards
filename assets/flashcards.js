@@ -3277,6 +3277,51 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return encodeURIComponent(String(value || '').trim()).replace(/%20/g, '+');
     }
 
+    function encodeLexinQuery(value){
+      return encodeURIComponent(String(value || '').trim());
+    }
+
+    function lexinLangFromUi(){
+      const lang = (currentInterfaceLang || 'en').toLowerCase();
+      if(lang === 'ru' || lang === 'uk'){
+        return 'russian';
+      }
+      if(lang === 'pl'){
+        return 'polish';
+      }
+      return 'english';
+    }
+
+    function buildLexinUrl(query){
+      const q = String(query || '').trim();
+      if(!q){
+        return '';
+      }
+      const lang = lexinLangFromUi();
+      return `https://lexin.oslomet.no/#/findwords/message.bokmal-${lang}?q=${encodeLexinQuery(q)}`;
+    }
+
+    function buildNaobUrl(query){
+      const q = String(query || '').trim();
+      if(!q){
+        return '';
+      }
+      return `https://naob.no/s%C3%B8k?q=${encodeURIComponent(q)}`;
+    }
+
+    function buildForvoUrl(query, isSingleWord){
+      const q = String(query || '').trim();
+      if(!q){
+        return '';
+      }
+      if(isSingleWord){
+        // Example: https://forvo.com/search/handle/no/
+        return `https://forvo.com/search/${encodeURIComponent(q)}/no/`;
+      }
+      // Example: https://forvo.com/search/ta%20p%C3%A5%20seg/
+      return `https://forvo.com/search/${encodeURIComponent(q)}/`;
+    }
+
     function buildOrdbokeneSearchUrl(query, opts = {}){
       const q = String(query || '').trim();
       if(!q){
@@ -3334,7 +3379,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function openFocusChipMenu(target, options){
       if(!target) return;
-      const hasActions = !!(options?.onCreate || options?.onEdit || options?.ordbokeneUrl);
+      const hasActions = !!(options?.onCreate || options?.onEdit || options?.ordbokeneUrl || options?.lexinUrl || options?.naobUrl || options?.forvoUrl);
       if(!hasActions){
         return;
       }
@@ -3347,6 +3392,39 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(url){
           actions.push({
             label: 'ordbokene.no',
+            handler: ()=>{
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          });
+        }
+      }
+      if(options?.lexinUrl){
+        const url = String(options.lexinUrl || '').trim();
+        if(url){
+          actions.push({
+            label: 'LEXIN',
+            handler: ()=>{
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          });
+        }
+      }
+      if(options?.naobUrl){
+        const url = String(options.naobUrl || '').trim();
+        if(url){
+          actions.push({
+            label: 'NAOB',
+            handler: ()=>{
+              window.open(url, '_blank', 'noopener,noreferrer');
+            }
+          });
+        }
+      }
+      if(options?.forvoUrl){
+        const url = String(options.forvoUrl || '').trim();
+        if(url){
+          actions.push({
+            label: 'forvo',
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3700,6 +3778,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           x: clientX,
           y: clientY,
           ordbokeneUrl: options.ordbokeneUrl,
+          lexinUrl: options.lexinUrl,
+          naobUrl: options.naobUrl,
+          forvoUrl: options.forvoUrl,
           onCreate: options.onCreate,
           onEdit: options.onEdit
         });
@@ -3779,7 +3860,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
           attachFocusChipMenuHandlers(btn, token.text, {
             onCreate: ()=>createCardFromToken(token),
-            ordbokeneUrl: buildOrdbokeneTokenUrl(token.text, meta ? meta.pos : '')
+            ordbokeneUrl: buildOrdbokeneTokenUrl(token.text, meta ? meta.pos : ''),
+            lexinUrl: buildLexinUrl(token.text),
+            naobUrl: buildNaobUrl(token.text),
+            forvoUrl: buildForvoUrl(token.text, true)
           });
           btn.addEventListener('click', ()=>{
             focusHelperState.activeExpressionIndex = null;
@@ -3875,7 +3959,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
               || '';
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index}),
-              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, pos)
+              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, pos),
+              lexinUrl: buildLexinUrl(entry.text),
+              naobUrl: buildNaobUrl(entry.text),
+              forvoUrl: buildForvoUrl(entry.text, true)
             });
           }
           if(kind === 'expression'){
@@ -3884,7 +3971,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             const dictmeta = meta && meta.dictmeta ? meta.dictmeta : (entry.dictmeta || null);
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry),
-              ordbokeneUrl: buildOrdbokeneExpressionUrl(exprText, dictmeta)
+              ordbokeneUrl: buildOrdbokeneExpressionUrl(exprText, dictmeta),
+              lexinUrl: buildLexinUrl(exprText),
+              naobUrl: buildNaobUrl(exprText),
+              forvoUrl: buildForvoUrl(exprText, false)
             });
           }
           if(kind === 'word' && Number.isInteger(entry.index)){
