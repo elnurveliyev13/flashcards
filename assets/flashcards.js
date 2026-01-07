@@ -2528,7 +2528,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       spacyTokens: [],
       spacySourceText: '',
       sentenceAnalysis: [],
-      pendingSentenceAnalysis: null
+      pendingSentenceAnalysis: null,
+      llmSuggested: [],
+      llmConfirm: null,
+      aiDebug: null
     };
     if(focusSpacyEl){
       focusSpacyEl.textContent = '';
@@ -3041,6 +3044,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.wordMetaSourceText = '';
         focusHelperState.spacyTokens = [];
         focusHelperState.spacySourceText = '';
+        focusHelperState.llmSuggested = [];
+        focusHelperState.llmConfirm = null;
+        focusHelperState.aiDebug = null;
         setFocusExpressionSuggestions([], '');
         focusHelperState.sentenceAnalysis = [];
         renderSentenceAnalysis([]);
@@ -3055,6 +3061,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       try{
         const payload = {text: normalized};
         payload.debug = true;
+        payload.debug_ai = true;
         if(options && options.enrich){
           payload.enrich = true;
           payload.language = options.language || currentInterfaceLang || 'en';
@@ -3092,6 +3099,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         });
         focusHelperState.expressionRequestText = normalized;
         setFocusExpressionSuggestions(sortedExpressions, normalized);
+
+        focusHelperState.llmSuggested = Array.isArray(data?.llm_suggested) ? data.llm_suggested : [];
+        focusHelperState.llmConfirm = data?.llm_confirm || null;
+        focusHelperState.aiDebug = data?.ai_debug || null;
 
         const enrichment = data?.enrichment || null;
         if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
@@ -3331,7 +3342,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     };
 
     const externalDictionaryIconFallbacks = {
-      forvo: ((window.M && window.M.cfg && window.M.cfg.wwwroot) ? window.M.cfg.wwwroot : '') + '/mod/flashcards/pix/forvo.svg',
+      // Local copy of the Forvo favicon, to avoid intermittent ORB blocks.
+      forvo: ((window.M && window.M.cfg && window.M.cfg.wwwroot) ? window.M.cfg.wwwroot : '') + '/mod/flashcards/pix/forvo.ico',
     };
 
     function buildOrdbokeneSearchUrl(query, opts = {}){
@@ -4059,6 +4071,77 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         focusAnalysisList.appendChild(chip);
       });
+
+      const llmSuggested = Array.isArray(focusHelperState.llmSuggested) ? focusHelperState.llmSuggested : [];
+      const llmConfirm = focusHelperState.llmConfirm && typeof focusHelperState.llmConfirm === 'object' ? focusHelperState.llmConfirm : null;
+      const aiDebug = focusHelperState.aiDebug && typeof focusHelperState.aiDebug === 'object' ? focusHelperState.aiDebug : null;
+      const hasAiBlock = (llmSuggested && llmSuggested.length) || llmConfirm || aiDebug;
+      if(hasAiBlock){
+        const stringify = (obj)=>{
+          try{
+            const txt = JSON.stringify(obj, null, 2);
+            const maxLen = 20000;
+            return txt.length > maxLen ? (txt.slice(0, maxLen) + '\n…(truncated)') : txt;
+          }catch(_e){
+            try{ return String(obj); }catch(_e2){ return '[unprintable]'; }
+          }
+        };
+
+        const aiDetails = document.createElement('details');
+        aiDetails.className = 'analysis-ai';
+        const aiSummary = document.createElement('summary');
+        aiSummary.textContent = aiStrings.analysisAiSummary || 'AI';
+        aiDetails.appendChild(aiSummary);
+
+        if(llmConfirm){
+          const meta = document.createElement('div');
+          meta.className = 'analysis-ai__meta';
+          const model = (llmConfirm.model || '').toString().trim();
+          const effort = (llmConfirm.reasoning_effort || '').toString().trim();
+          const parts = [];
+          if(model) parts.push(`model: ${model}`);
+          if(effort) parts.push(`reasoning: ${effort}`);
+          if(llmConfirm.usage && typeof llmConfirm.usage === 'object'){
+            const total = llmConfirm.usage.total_tokens;
+            if(Number.isFinite(total)) parts.push(`tokens: ${total}`);
+          }
+          meta.textContent = parts.length ? parts.join(' · ') : '';
+          if(meta.textContent){
+            aiDetails.appendChild(meta);
+          }
+        }
+
+        if(llmSuggested && llmSuggested.length){
+          const title = document.createElement('div');
+          title.className = 'analysis-ai__label';
+          title.textContent = aiStrings.analysisAiSuggested || 'LLM suggested';
+          aiDetails.appendChild(title);
+          const ul = document.createElement('ul');
+          ul.className = 'analysis-ai__list';
+          llmSuggested.slice(0, 30).forEach(item=>{
+            const li = document.createElement('li');
+            li.textContent = String(item || '').trim();
+            ul.appendChild(li);
+          });
+          aiDetails.appendChild(ul);
+        }
+
+        if(aiDebug){
+          const dbgDetails = document.createElement('details');
+          dbgDetails.className = 'analysis-ai__debug';
+          const dbgSummary = document.createElement('summary');
+          dbgSummary.textContent = aiStrings.analysisAiDebug || 'AI debug (admin)';
+          dbgDetails.appendChild(dbgSummary);
+
+          const pre = document.createElement('pre');
+          pre.className = 'analysis-ai__pre';
+          pre.textContent = stringify(aiDebug);
+          dbgDetails.appendChild(pre);
+          aiDetails.appendChild(dbgDetails);
+        }
+
+        focusAnalysisList.appendChild(aiDetails);
+      }
     }
 
     function renderOrdbokeneBlock(info){

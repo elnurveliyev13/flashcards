@@ -5042,6 +5042,64 @@ body.cropper-open #editActionsBar{
   gap:0.4rem;
   min-height:1.6rem;
 }
+.analysis-ai {
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:0.55rem 0.75rem;
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  margin-top:0.35rem;
+}
+.analysis-ai > summary {
+  cursor:pointer;
+  user-select:none;
+  font-weight:600;
+  color:var(--text);
+}
+.analysis-ai__meta {
+  margin-top:0.25rem;
+  font-size:0.82rem;
+  color:var(--text-subtle);
+}
+.analysis-ai__label {
+  margin-top:0.5rem;
+  font-size:0.85rem;
+  font-weight:600;
+  color:var(--text);
+}
+.analysis-ai__list {
+  margin:0.25rem 0 0 1.1rem;
+  padding:0;
+}
+.analysis-ai__list li {
+  margin:0.15rem 0;
+  font-size:0.85rem;
+  color:var(--text-subtle);
+}
+.analysis-ai__debug {
+  margin-top:0.5rem;
+}
+.analysis-ai__debug > summary {
+  cursor:pointer;
+  user-select:none;
+  font-weight:600;
+  font-size:0.85rem;
+  color:var(--text);
+}
+.analysis-ai__pre {
+  margin-top:0.35rem;
+  padding:0.6rem 0.75rem;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(0,0,0,0.25);
+  color:var(--text-subtle);
+  font-size:0.78rem;
+  line-height:1.25;
+  white-space:pre-wrap;
+  word-break:break-word;
+  max-height:320px;
+  overflow:auto;
+}
 .analysis-item {
   display:flex;
   flex-wrap:wrap;
