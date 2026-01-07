@@ -14030,9 +14030,16 @@ Regeln:
     }
 
     function setErrorCheckToggleVisibility(visible) {
-      const toggleBtn = $('#toggleErrorCheckBtn');
-      if (!toggleBtn) return;
-      toggleBtn.style.display = visible ? 'inline-flex' : 'none';
+      const checkBtn = document.getElementById('checkTextBtn');
+      if (!checkBtn) {
+        return;
+      }
+      const labelEl =
+        checkBtn.querySelector('[data-i18n="check_text"]') ||
+        checkBtn.querySelector('span') ||
+        checkBtn;
+      const baseLabel = (t('check_text') || '').trim() || (labelEl.textContent || '').replace(/\s*✓\s*$/, '').trim() || 'Check';
+      labelEl.textContent = visible ? `${baseLabel} ✓` : baseLabel;
     }
 
     function openErrorCheckBlock() {
@@ -14042,11 +14049,6 @@ Regeln:
       block.classList.remove('error-check-collapsed');
       block.style.display = 'block';
       block.dataset.opened = '1';
-      const toggleBtn = $('#toggleErrorCheckBtn');
-      if (toggleBtn) {
-        toggleBtn.classList.add('is-active');
-        toggleBtn.setAttribute('aria-expanded', 'true');
-      }
     }
 
     function renderExpressionRows(){
@@ -14196,11 +14198,6 @@ Regeln:
       block.classList.add('error-check-collapsed');
       block.style.display = 'none';
       block.dataset.opened = '0';
-      const toggleBtn = $('#toggleErrorCheckBtn');
-      if (toggleBtn) {
-        toggleBtn.classList.remove('is-active');
-        toggleBtn.setAttribute('aria-expanded', 'false');
-      }
     }
 
     function toggleErrorCheckBlock() {
@@ -14228,13 +14225,7 @@ Regeln:
       closeErrorCheckBlock();
     }
 
-    const toggleErrorCheckBtn = $('#toggleErrorCheckBtn');
-    if (toggleErrorCheckBtn) {
-      toggleErrorCheckBtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        toggleErrorCheckBlock();
-      });
-    }
+    // Note: no separate toggle button; checkTextBtn toggles the panel after running check once.
 
     const collapseErrorCheckBtn = $('#collapseErrorCheckBtn');
     if (collapseErrorCheckBtn) {
@@ -14833,6 +14824,11 @@ Rules:
     if (checkTextBtn) {
       checkTextBtn.addEventListener('click', (e) => {
         e.preventDefault();
+        const block = $('#errorCheckBlock');
+        if (block && block.dataset.hasContent === '1') {
+          toggleErrorCheckBlock();
+          return;
+        }
         checkTextForErrors();
       });
     }

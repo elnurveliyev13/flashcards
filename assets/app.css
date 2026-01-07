@@ -6806,7 +6806,8 @@ select.inline-prompt-field {
   opacity: 1;
 }
 
-/* Keep the text-check action aligned with the dark card chrome and stay legible on hover. */
+/* Keep the Analyse/Check actions aligned with the dark card chrome and stay legible on hover. */
+.analyse-btn,
 .check-text-btn {
   display: inline-flex;
   align-items: center;
@@ -6823,6 +6824,8 @@ select.inline-prompt-field {
   transition: background 0.2s, border 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
+.analyse-btn:hover,
+.analyse-btn:focus-visible,
 .check-text-btn:hover,
 .check-text-btn:focus-visible {
   background: #1a2333;
@@ -6832,6 +6835,7 @@ select.inline-prompt-field {
   transform: translateY(-1px);
 }
 
+.analyse-btn .btn-icon,
 .check-text-btn .btn-icon {
   font-size: 14px;
   color: inherit;
