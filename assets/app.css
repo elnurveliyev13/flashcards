@@ -6824,6 +6824,49 @@ select.inline-prompt-field {
   transition: background 0.2s, border 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
+.checkmark-ok{
+  color:#22c55e;
+  font-weight:700;
+  text-shadow:0 0 10px rgba(34,197,94,0.35);
+}
+
+.analyse-btn{
+  position:relative;
+  isolation:isolate;
+}
+
+.analyse-btn::before{
+  content:"";
+  position:absolute;
+  inset:-10px;
+  border-radius:10px;
+  background:radial-gradient(circle at 35% 35%, rgba(59,130,246,0.42), rgba(59,130,246,0) 60%);
+  filter:blur(12px);
+  opacity:0.22;
+  transform:scale(0.98);
+  pointer-events:none;
+  z-index:-1;
+  animation:analyseGlow 2.6s ease-in-out infinite;
+}
+
+.analyse-btn:hover::before,
+.analyse-btn:focus-visible::before{
+  opacity:0.38;
+  transform:scale(1.02);
+  animation:none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .analyse-btn::before{
+    animation:none;
+  }
+}
+
+@keyframes analyseGlow{
+  0%,100%{opacity:0.22;transform:scale(0.98)}
+  50%{opacity:0.38;transform:scale(1.02)}
+}
+
 .analyse-btn:hover,
 .analyse-btn:focus-visible,
 .check-text-btn:hover,
@@ -6831,7 +6874,8 @@ select.inline-prompt-field {
   background: #1a2333;
   border-color: #3b4b63;
   color: #f8fafc;
-  box-shadow: 0 10px 25px rgba(5, 10, 25, 0.45);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.55), 0 10px 25px rgba(5, 10, 25, 0.45);
   transform: translateY(-1px);
 }
 

@@ -14038,8 +14038,23 @@ Regeln:
         checkBtn.querySelector('[data-i18n="check_text"]') ||
         checkBtn.querySelector('span') ||
         checkBtn;
-      const baseLabel = (t('check_text') || '').trim() || (labelEl.textContent || '').replace(/\s*✓\s*$/, '').trim() || 'Check';
-      labelEl.textContent = visible ? `${baseLabel} ✓` : baseLabel;
+      const translatedBase = (t('check_text') || '').trim();
+      const cachedBase = (labelEl.dataset && labelEl.dataset.baseLabel) ? labelEl.dataset.baseLabel : '';
+      const baseLabel = translatedBase || cachedBase || (labelEl.textContent || '').trim() || 'Check';
+      if (labelEl.dataset) {
+        labelEl.dataset.baseLabel = baseLabel;
+      }
+
+      if (!visible) {
+        labelEl.textContent = baseLabel;
+        return;
+      }
+
+      labelEl.textContent = `${baseLabel} `;
+      const ok = document.createElement('span');
+      ok.className = 'checkmark-ok';
+      ok.textContent = '✓';
+      labelEl.appendChild(ok);
     }
 
     function openErrorCheckBlock() {
