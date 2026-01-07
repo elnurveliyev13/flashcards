@@ -6885,17 +6885,25 @@ select.inline-prompt-field {
 }
 
 .analyse-btn.is-loading{
-  border-color: rgba(34, 197, 94, 0.65);
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.20), 0 12px 26px rgba(2, 6, 23, 0.55);
+  border-color: transparent;
+  border-width: 1px;
+  background:
+    linear-gradient(180deg, rgba(16, 185, 129, 0.18) 0%, rgba(17, 24, 39, 1) 55%, rgba(2, 6, 23, 1) 100%) padding-box,
+    conic-gradient(from 90deg, rgba(34, 197, 94, 0.15), rgba(56, 189, 248, 0.55), rgba(34, 197, 94, 0.15)) border-box;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18), 0 16px 34px rgba(2, 6, 23, 0.70);
 }
 
 .analyse-btn.is-loading::before{
-  opacity: 0.28;
-  animation: analyseGlow 1.7s ease-in-out infinite;
+  opacity: 0.35;
+  animation: analyseGlow 1.4s ease-in-out infinite;
+  background: radial-gradient(circle at 35% 35%, rgba(34,197,94,0.55), rgba(56,189,248,0.0) 60%);
 }
 
 .analyse-btn.is-loading .btn-icon{
-  opacity: 0.0;
+  position: relative;
+  font-size: 0;
+  width: 14px;
+  height: 14px;
 }
 
 .analyse-btn.is-loading .btn-icon::after{
@@ -6920,6 +6928,11 @@ select.inline-prompt-field {
   }
   .analyse-btn.is-loading .btn-icon::after{
     animation:none;
+  }
+  .analyse-btn.is-loading{
+    background:
+      linear-gradient(180deg, rgba(16, 185, 129, 0.14) 0%, rgba(17, 24, 39, 1) 55%, rgba(2, 6, 23, 1) 100%) padding-box,
+      linear-gradient(90deg, rgba(34, 197, 94, 0.45), rgba(56, 189, 248, 0.45)) border-box;
   }
 }
 
@@ -6971,8 +6984,8 @@ select.inline-prompt-field {
 #mod_flashcards_container button#analyseBtn.analyse-btn.is-loading,
 #mod_flashcards_container #analyseBtn.analyse-btn[aria-busy="true"],
 #mod_flashcards_container button#analyseBtn.analyse-btn[aria-busy="true"] {
-  border-color: rgba(34, 197, 94, 0.65) !important;
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.20), 0 12px 26px rgba(2, 6, 23, 0.55) !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.18), 0 16px 34px rgba(2, 6, 23, 0.70) !important;
 }
 
 .analyse-btn .btn-icon,
