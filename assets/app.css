@@ -3601,6 +3601,10 @@ body.cropper-open #editActionsBar{
   gap:0.35rem;
 }
 
+.translation-mode-top {
+  margin-bottom: 8px;
+}
+
 .fc-quick-media-btn {
   background: var(--surface-1);
   border: 1px solid var(--border);
@@ -4834,12 +4838,7 @@ body.cropper-open #editActionsBar{
     width:100%;
   }
   .front-text-actions {
-    flex-wrap: nowrap;
-  }
-  .front-text-actions .translation-mode {
-    width: auto;
-    flex: 1 1 auto;
-    min-width: 0;
+    flex-wrap: wrap;
   }
   #checkTextBtn {
     flex-shrink: 0;
@@ -6751,9 +6750,25 @@ select.inline-prompt-field {
   width: 100%;
   max-width: min(var(--slot-content-max-width), 100%);
   box-sizing: border-box;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
+}
+
+.front-text-actions-left,
+.front-text-actions-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.front-text-actions-left {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.front-text-actions-right {
+  flex: 0 0 auto;
 }
 .front-slot,
 .front-slot .fokus-input-wrap,

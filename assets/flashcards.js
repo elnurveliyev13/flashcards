@@ -759,7 +759,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         one_per_line_placeholder: '_ _ _',
         sentence_analysis: 'Grammar & meaning breakdown',
         analysis_empty: '',
-        check_text: 'Analyse',
+        analyse_text: 'Analyse',
+        check_text: 'Check',
         checking_text: 'Checking text...',
         no_errors_found: 'No errors found!',
         errors_found: 'Errors found!',
@@ -778,6 +779,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       uk: {
         app_title: 'MyMemory',
+        analyse_text: 'Аналіз',
         interface_language_label: '\u041c\u043e\u0432\u0430 \u0456\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0443',
         font_scale_label: '\u0420\u043e\u0437\u043c\u0456\u0440 \u0448\u0440\u0438\u0444\u0442\u0443',
         gestures_heading: '\u041a\u0435\u0440\u0443\u0432\u0430\u043d\u043d\u044f \u0436\u0435\u0441\u0442\u0430\u043c\u0438',
@@ -899,6 +901,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       ru: {
         app_title: 'MyMemory',
+        analyse_text: 'Анализ',
         interface_language_label: '\u042f\u0437\u044b\u043a \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430',
         font_scale_label: '\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0440\u0438\u0444\u0442\u0430',
         gestures_heading: 'Управление жестами',
@@ -1230,6 +1233,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       },
       pl: {
         app_title: 'MyMemory',
+        analyse_text: 'Analizuj',
         interface_language_label: 'Jezyk interfejsu',
         font_scale_label: 'Rozmiar czcionki',
         gestures_heading: 'Sterowanie gestami',
@@ -14792,6 +14796,35 @@ Rules:
     // ==========================================================================
     // EVENT HANDLERS - SETUP
     // ==========================================================================
+
+    /**
+     * Setup event handler for analyse button (sentence analysis only, no error checking)
+     */
+    const analyseBtn = document.getElementById('analyseBtn');
+    if (analyseBtn) {
+      analyseBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const text = normalizeWhitespace($('#uFront').value);
+        if (!text) {
+          return;
+        }
+
+        // Reset expression suggestion state (avoid stale "AI suggested" blocks).
+        focusHelperState.expressionSuggestions = [];
+        focusHelperState.expressionSourceText = '';
+        focusHelperState.expressionReady = false;
+        focusHelperState.activeExpressionIndex = null;
+        focusHelperState.expressionRequestText = '';
+        focusHelperState.pendingSentenceAnalysis = null;
+
+        // Use interface language for explanations, NOT learning language
+        const language = currentInterfaceLang || 'en';
+
+        clearErrorCheckBlock();
+        renderFocusChips();
+        await fetchSentenceElements(text, {enrich: true, language});
+      });
+    }
 
     /**
      * Setup event handler for check text button
