@@ -1926,11 +1926,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const direction = options.direction || translationDirection;
       const sourceEl = options.sourceEl || (direction === 'user-no' ? translationInputLocal : frontInput);
       if(!sourceEl && !options.text){
-        return;
+        return '';
       }
       if(!aiEnabled){
         setTranslationPreview('error', aiStrings.disabled);
-        return;
+        return '';
       }
       const sourceText = (options.text ?? (sourceEl?.value || '')).trim();
       if(sourceText.length < 2){
@@ -1939,7 +1939,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }else{
           setTranslationPreview('', aiStrings.translationIdle);
         }
-        return;
+        return '';
       }
       if(translationAbortController){
         translationAbortController.abort();
@@ -1958,13 +1958,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const data = await api('ai_translate', {}, 'POST', payload, {signal: controller.signal});
         updateUsageFromResponse(data);
         if(seq !== translationRequestSeq){
-          return;
+          return '';
         }
         const translated = (data.translation || '').trim();
         if(direction === 'no-user'){
           if(translationInputLocal){
-            translationInputLocal.value = translated;
-            syncExampleOneTranslationFromLocal();
+            const respectUserEdits = options.respectUserEdits === true;
+            const userEdited = translationInputLocal.dataset.userEdited === '1';
+            if(!respectUserEdits || !userEdited){
+              translationInputLocal.value = translated;
+              translationInputLocal.dataset.autoFilled = '1';
+              translationInputLocal.dataset.userEdited = '0';
+              translationInputLocal.dataset.autoFilledSourceText = sourceText;
+              syncExampleOneTranslationFromLocal();
+            }
           }
           // Request English translation separately if user language is not English
           if(translationInputEn && userLang2 !== 'en'){
@@ -2006,12 +2013,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
         setTranslationPreview('success');
+        return translated;
       }catch(err){
         if(controller.signal.aborted){
-          return;
+          return '';
         }
         console.error('[Flashcards][AI] translation failed', err);
         setTranslationPreview('error');
+        return '';
       }finally{
         if(translationAbortController === controller){
           translationAbortController = null;
@@ -2535,7 +2544,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       pendingSentenceAnalysis: null,
       llmSuggested: [],
       llmConfirm: null,
-      aiDebug: null
+      aiDebug: null,
+      instantTranslationSeq: 0,
+      instantTranslationText: ''
     };
     if(focusSpacyEl){
       focusSpacyEl.textContent = '';
@@ -2657,6 +2668,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if (capitalized !== currentValue) {
           translationInputLocal.value = capitalized;
         }
+        translationInputLocal.dataset.userEdited = '1';
+        translationInputLocal.dataset.autoFilled = '0';
+        translationInputLocal.dataset.autoFilledSourceText = '';
         syncExampleOneTranslationFromLocal();
       });
       translationInputLocal.addEventListener('focus', ()=>{
@@ -14803,6 +14817,44 @@ Rules:
     // EVENT HANDLERS - SETUP
     // ==========================================================================
 
+    function upsertSentenceTranslationRow(sentenceText, translationText){
+      if(!focusAnalysisList){
+        return;
+      }
+      const cleanText = (sentenceText || '').trim();
+      if(!cleanText){
+        return;
+      }
+      let row = focusAnalysisList.querySelector('.analysis-item--sentence');
+      const existingText = row ? (row.querySelector('.analysis-text')?.textContent || '').trim() : '';
+      const needsReplace = !row || (row.dataset.sentenceText && row.dataset.sentenceText !== cleanText) || (existingText && existingText !== cleanText);
+      if(needsReplace){
+        focusAnalysisList.querySelectorAll('.analysis-item--sentence').forEach(el=>el.remove());
+        row = document.createElement('div');
+        row.className = 'analysis-item analysis-item--sentence';
+        row.dataset.sentenceText = cleanText;
+        const textEl = document.createElement('span');
+        textEl.className = 'analysis-text';
+        textEl.textContent = cleanText;
+        row.appendChild(textEl);
+        focusAnalysisList.insertBefore(row, focusAnalysisList.firstChild || null);
+      }else if(row && row.dataset.sentenceText !== cleanText){
+        row.dataset.sentenceText = cleanText;
+      }
+      const cleanTranslation = (translationText || '').trim();
+      let trEl = row.querySelector('.analysis-translation');
+      if(cleanTranslation){
+        if(!trEl){
+          trEl = document.createElement('span');
+          trEl.className = 'analysis-translation';
+          row.appendChild(trEl);
+        }
+        trEl.textContent = cleanTranslation;
+      }else if(trEl){
+        trEl.remove();
+      }
+    }
+
     /**
      * Setup event handler for analyse button (sentence analysis only, no error checking)
      */
@@ -14833,7 +14885,36 @@ Rules:
 
           clearErrorCheckBlock();
           renderFocusChips();
+
+          // Show translation ASAP (without waiting for full sentence_elements).
+          const translationSeq = ++focusHelperState.instantTranslationSeq;
+          focusHelperState.instantTranslationText = text;
+          renderSentenceAnalysis([{kind: 'sentence', text, translation: '…'}]);
+          runTranslationHelper({direction: 'no-user', text, respectUserEdits: true})
+            .then(translated => {
+              if(!translated){
+                return;
+              }
+              if(focusHelperState.instantTranslationSeq !== translationSeq){
+                return;
+              }
+              const currentText = normalizeWhitespace($('#uFront').value);
+              if(currentText !== text){
+                return;
+              }
+              upsertSentenceTranslationRow(text, translated);
+            })
+            .catch(()=>{});
+
           await fetchSentenceElements(text, {enrich: true, language});
+
+          // sentence_elements re-renders the analysis list; ensure the instant translation row survives.
+          if (normalizeWhitespace($('#uFront').value) === text) {
+            const translated = (typeof $('#uTransLocal')?.value === 'string') ? $('#uTransLocal').value : '';
+            if (translated && translated.trim()) {
+              upsertSentenceTranslationRow(text, translated);
+            }
+          }
         } finally {
           analyseBtn.disabled = false;
           analyseBtn.classList.remove('is-loading');

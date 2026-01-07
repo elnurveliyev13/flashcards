@@ -240,6 +240,9 @@ class ai_helper {
             return ['sentenceTranslation' => '', 'elements' => []];
         }
 
+        // Keep llm_enrich lightweight: sentence-level translation + multiword expressions only.
+        // Word-by-word "gloss" tends to be misleading in context (e.g. "i dag" -> "dag=day"),
+        // and it significantly increases token usage.
         $elements = [];
         $seen = [];
         $exprs = array_slice(array_values($expressions), 0, 20);
@@ -256,22 +259,6 @@ class ai_helper {
             $elements[] = [
                 'type' => 'phrase',
                 'text' => $label,
-                'hint' => trim((string)($expr['explanation'] ?? '')),
-            ];
-        }
-        $wlist = array_slice(array_values($words), 0, 80);
-        foreach ($wlist as $w) {
-            $label = trim((string)($w['text'] ?? ''));
-            if ($label === '') {
-                continue;
-            }
-            $elements[] = [
-                'type' => 'word',
-                'index' => (int)($w['index'] ?? 0),
-                'text' => $label,
-                'pos' => trim((string)($w['pos'] ?? '')),
-                'dep' => trim((string)($w['dep'] ?? '')),
-                'lemma' => trim((string)($w['lemma'] ?? '')),
             ];
         }
 
@@ -283,35 +270,31 @@ SYSTEMPROMPT;
 
         $elementJson = json_encode($elements, JSON_UNESCAPED_UNICODE);
         $userprompt = <<<"USERPROMPT"
-Analyze the Norwegian sentence and provide translations.
+Translate the Norwegian sentence and (if present) the listed multiword expressions.
 
 Sentence:
 "$text"
 
-Elements (do NOT add/remove/reorder):
+Expressions (do NOT add/remove/reorder):
 $elementJson
 
-Return JSON in this exact schema:
+Return ONLY valid JSON in this schema:
 {
   "sentenceTranslation": "translation of the whole sentence",
   "elements": [
     {
-      "type": "phrase|word",
-      "text": "exact element text",
-      "index": 0,
-      "translation": "short translation of the element (meaning only, no POS labels)",
-      "note": "very short grammar note (optional, 3-6 words)"
+      "type": "phrase",
+      "text": "exact expression text",
+      "translation": "short translation",
+      "note": "optional short meaning note"
     }
   ]
 }
 
 Rules:
 - Keep the SAME order as provided.
-- For words, keep the same "index" value.
-- "translation" must be short and literal (meaning only).
-- Do NOT include part-of-speech labels or grammar terms in "translation".
-- Use "note" only if needed, and keep it very short.
-- If unsure about a translation, use an empty string.
+- Only output the provided phrases in "elements".
+- If unsure, use an empty string.
 USERPROMPT;
 
         $client = $this->openai;
