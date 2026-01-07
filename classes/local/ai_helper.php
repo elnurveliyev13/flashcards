@@ -202,6 +202,17 @@ class ai_helper {
         return $result;
     }
 
+    protected function truncate_debug_text(string $text, int $maxChars = 8000): string {
+        $text = (string)$text;
+        if ($maxChars <= 0) {
+            return '';
+        }
+        if (core_text::strlen($text) <= $maxChars) {
+            return $text;
+        }
+        return core_text::substr($text, 0, $maxChars) . "\n(truncated)";
+    }
+
     /**
      * Enrich sentence elements with translations/notes via LLM.
      *
@@ -210,9 +221,10 @@ class ai_helper {
      * @param array $expressions Multi-word expressions
      * @param string $language Interface language for output
      * @param int $userid User ID for usage tracking
+     * @param bool $debugAi When true, include debug info (prompts + raw model output)
      * @return array{sentenceTranslation:string,elements:array<int,array<string,mixed>>,usage?:array}
      */
-    public function enrich_sentence_elements(string $text, array $words, array $expressions, string $language, int $userid): array {
+    public function enrich_sentence_elements(string $text, array $words, array $expressions, string $language, int $userid, bool $debugAi = false): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
@@ -343,6 +355,15 @@ USERPROMPT;
             'sentenceTranslation' => trim((string)($parsed['sentenceTranslation'] ?? '')),
             'elements' => is_array($parsed['elements'] ?? null) ? $parsed['elements'] : [],
         ];
+        if ($debugAi) {
+            $result['_debug'] = [
+                'task' => 'translation',
+                'system' => $this->truncate_debug_text($systemprompt),
+                'user' => $this->truncate_debug_text($userprompt),
+                'payload' => $payload,
+                'raw' => $this->truncate_debug_text($content),
+            ];
+        }
         $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
         if ($modelused !== '') {
             $result['model'] = $modelused;
@@ -365,9 +386,10 @@ USERPROMPT;
      * @param array $candidates
      * @param string $language
      * @param int $userid
+     * @param bool $debugAi When true, include debug info (prompts + raw model output)
      * @return array{confirmed:array<int,array<string,string>>,usage?:array}
      */
-    public function confirm_expression_candidates(string $text, array $candidates, string $language, int $userid): array {
+    public function confirm_expression_candidates(string $text, array $candidates, string $language, int $userid, bool $debugAi = false): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
@@ -464,6 +486,15 @@ USERPROMPT;
         }
         $confirmed = is_array($parsed['confirmed'] ?? null) ? $parsed['confirmed'] : [];
         $result = ['confirmed' => $confirmed];
+        if ($debugAi) {
+            $result['_debug'] = [
+                'task' => 'expression_confirm',
+                'system' => $this->truncate_debug_text($systemprompt),
+                'user' => $this->truncate_debug_text($userprompt),
+                'payload' => $payload,
+                'raw' => $this->truncate_debug_text($content),
+            ];
+        }
         $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
         if ($modelused !== '') {
             $result['model'] = $modelused;
@@ -827,9 +858,10 @@ USERPROMPT;
      * @param string $text
      * @param string $language
      * @param int $userid
+     * @param bool $debugAi When true, include debug info (prompts + raw model output)
      * @return array{expressions:array<int,array<string,string>>,usage?:array}
      */
-    public function suggest_sentence_expressions(string $text, string $language, int $userid): array {
+    public function suggest_sentence_expressions(string $text, string $language, int $userid, bool $debugAi = false): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
@@ -924,6 +956,15 @@ USERPROMPT;
         }
         $expressions = is_array($parsed['expressions'] ?? null) ? $parsed['expressions'] : [];
         $result = ['expressions' => $expressions];
+        if ($debugAi) {
+            $result['_debug'] = [
+                'task' => 'expression_suggest',
+                'system' => $this->truncate_debug_text($systemprompt),
+                'user' => $this->truncate_debug_text($userprompt),
+                'payload' => $payload,
+                'raw' => $this->truncate_debug_text($content),
+            ];
+        }
         $modelused = (string)($response->model ?? ($payload['model'] ?? ''));
         if ($modelused !== '') {
             $result['model'] = $modelused;

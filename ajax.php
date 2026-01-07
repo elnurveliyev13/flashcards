@@ -3556,6 +3556,8 @@ switch ($action) {
             throw new invalid_parameter_exception('Missing text');
         }
         $debug = !empty($payload['debug']);
+        $debugAi = !empty($payload['debug_ai']) && is_siteadmin();
+        $aiDebug = [];
         $enrich = !empty($payload['enrich']) || !empty($payload['useLlm']) || !empty($payload['llm']);
         $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
         $overallstart = microtime(true);
@@ -4166,8 +4168,12 @@ switch ($action) {
             try {
                 $helper = new \mod_flashcards\local\ai_helper();
                 $t0 = microtime(true);
-                $llm = $helper->suggest_sentence_expressions($text, $language, $userid);
+                $llm = $helper->suggest_sentence_expressions($text, $language, $userid, $debugAi);
                 $timing['llm_confirm'] = microtime(true) - $t0;
+                if ($debugAi && !empty($llm['_debug']) && is_array($llm['_debug'])) {
+                    $aiDebug['llm_confirm'] = $llm['_debug'];
+                    unset($llm['_debug']);
+                }
                 $suggested = is_array($llm['expressions'] ?? null) ? $llm['expressions'] : [];
                 $suggestedList = [];
                 foreach ($suggested as $item) {
@@ -4245,6 +4251,9 @@ switch ($action) {
                     'model' => $llm['model'] ?? '',
                     'reasoning_effort' => $llm['reasoning_effort'] ?? '',
                 ];
+                if ($debugAi && !empty($llm['usage'])) {
+                    $llmConfirmMeta['usage'] = $llm['usage'];
+                }
             } catch (\Throwable $ex) {
                 // Ignore LLM fallback errors, keep deterministic results.
             }
@@ -4293,7 +4302,12 @@ switch ($action) {
             try {
                 $helper = new \mod_flashcards\local\ai_helper();
                 $t0 = microtime(true);
-                $data['enrichment'] = $helper->enrich_sentence_elements($text, $words, $resolved, $language, $userid);
+                $enrichment = $helper->enrich_sentence_elements($text, $words, $resolved, $language, $userid, $debugAi);
+                if ($debugAi && !empty($enrichment['_debug']) && is_array($enrichment['_debug'])) {
+                    $aiDebug['llm_enrich'] = $enrichment['_debug'];
+                    unset($enrichment['_debug']);
+                }
+                $data['enrichment'] = $enrichment;
                 $timing['llm_enrich'] = microtime(true) - $t0;
             } catch (\Throwable $ex) {
                 $data['enrichment'] = [
@@ -4413,6 +4427,9 @@ switch ($action) {
             if (!empty($dataDebugLlm)) {
                 $data['debug']['llm'] = $dataDebugLlm;
             }
+        }
+        if ($debugAi && !empty($aiDebug)) {
+            $data['ai_debug'] = $aiDebug;
         }
         echo json_encode(['ok' => true, 'data' => $data]);
         break;

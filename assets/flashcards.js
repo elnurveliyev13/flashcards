@@ -3326,7 +3326,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       ordbokene: 'https://ordbokene.no/favicon.ico',
       lexin: 'https://lexin.oslomet.no/favicon.ico',
       naob: 'https://naob.no/favicon.ico',
+      // Keep hotlink (favicon) as primary, but have a local fallback for stability.
       forvo: 'https://forvo.com/favicon.ico',
+    };
+
+    const externalDictionaryIconFallbacks = {
+      forvo: ((window.M && window.M.cfg && window.M.cfg.wwwroot) ? window.M.cfg.wwwroot : '') + '/mod/flashcards/pix/forvo.svg',
     };
 
     function buildOrdbokeneSearchUrl(query, opts = {}){
@@ -3436,6 +3441,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           actions.push({
             label: 'forvo',
             iconUrl: externalDictionaryIcons.forvo,
+            iconFallbackUrl: externalDictionaryIconFallbacks.forvo,
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3463,10 +3469,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           icon.className = 'focus-expression-menu__icon';
           icon.alt = '';
           icon.src = action.iconUrl;
-          icon.loading = 'lazy';
+          icon.loading = 'eager';
           icon.decoding = 'async';
           icon.referrerPolicy = 'no-referrer';
-          icon.addEventListener('error', ()=>icon.remove());
+          icon.addEventListener('error', ()=>{
+            const fallbackUrl = String(action.iconFallbackUrl || '').trim();
+            if(fallbackUrl && icon.src !== fallbackUrl){
+              icon.src = fallbackUrl;
+              return;
+            }
+            icon.remove();
+          });
           btn.appendChild(icon);
         }
         const label = document.createElement('span');

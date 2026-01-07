@@ -4978,7 +4978,7 @@ body.cropper-open #editActionsBar{
   border-radius:12px;
   padding:6px;
   box-shadow:var(--shadow-elevated);
-  z-index:1000;
+  z-index:2201; /* above #editActionsBar (2200) */
   min-width:170px;
   animation:menu-appear 0.18s ease;
 }
