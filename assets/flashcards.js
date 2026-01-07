@@ -14815,20 +14815,30 @@ Rules:
           return;
         }
 
-        // Reset expression suggestion state (avoid stale "AI suggested" blocks).
-        focusHelperState.expressionSuggestions = [];
-        focusHelperState.expressionSourceText = '';
-        focusHelperState.expressionReady = false;
-        focusHelperState.activeExpressionIndex = null;
-        focusHelperState.expressionRequestText = '';
-        focusHelperState.pendingSentenceAnalysis = null;
+        analyseBtn.disabled = true;
+        analyseBtn.classList.add('is-loading');
+        analyseBtn.setAttribute('aria-busy', 'true');
 
-        // Use interface language for explanations, NOT learning language
-        const language = currentInterfaceLang || 'en';
+        try {
+          // Reset expression suggestion state (avoid stale "AI suggested" blocks).
+          focusHelperState.expressionSuggestions = [];
+          focusHelperState.expressionSourceText = '';
+          focusHelperState.expressionReady = false;
+          focusHelperState.activeExpressionIndex = null;
+          focusHelperState.expressionRequestText = '';
+          focusHelperState.pendingSentenceAnalysis = null;
 
-        clearErrorCheckBlock();
-        renderFocusChips();
-        await fetchSentenceElements(text, {enrich: true, language});
+          // Use interface language for explanations, NOT learning language
+          const language = currentInterfaceLang || 'en';
+
+          clearErrorCheckBlock();
+          renderFocusChips();
+          await fetchSentenceElements(text, {enrich: true, language});
+        } finally {
+          analyseBtn.disabled = false;
+          analyseBtn.classList.remove('is-loading');
+          analyseBtn.removeAttribute('aria-busy');
+        }
       });
     }
 
