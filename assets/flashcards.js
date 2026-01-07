@@ -3322,6 +3322,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return `https://forvo.com/search/${encodeURIComponent(q)}/`;
     }
 
+    const externalDictionaryIcons = {
+      ordbokene: 'https://ordbokene.no/favicon.ico',
+      lexin: 'https://lexin.oslomet.no/favicon.ico',
+      naob: 'https://naob.no/favicon.ico',
+      forvo: 'https://forvo.com/favicon.ico',
+    };
+
     function buildOrdbokeneSearchUrl(query, opts = {}){
       const q = String(query || '').trim();
       if(!q){
@@ -3392,6 +3399,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(url){
           actions.push({
             label: 'ordbokene.no',
+            iconUrl: externalDictionaryIcons.ordbokene,
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3403,6 +3411,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(url){
           actions.push({
             label: 'LEXIN',
+            iconUrl: externalDictionaryIcons.lexin,
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3414,6 +3423,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(url){
           actions.push({
             label: 'NAOB',
+            iconUrl: externalDictionaryIcons.naob,
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3425,6 +3435,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(url){
           actions.push({
             label: 'forvo',
+            iconUrl: externalDictionaryIcons.forvo,
             handler: ()=>{
               window.open(url, '_blank', 'noopener,noreferrer');
             }
@@ -3447,7 +3458,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'focus-expression-menu__item';
-        btn.textContent = action.label;
+        if(action.iconUrl){
+          const icon = document.createElement('img');
+          icon.className = 'focus-expression-menu__icon';
+          icon.alt = '';
+          icon.src = action.iconUrl;
+          icon.loading = 'lazy';
+          icon.decoding = 'async';
+          icon.referrerPolicy = 'no-referrer';
+          icon.addEventListener('error', ()=>icon.remove());
+          btn.appendChild(icon);
+        }
+        const label = document.createElement('span');
+        label.textContent = action.label;
+        btn.appendChild(label);
         btn.addEventListener('click', ()=>{
           closeFocusChipMenu();
           action.handler();

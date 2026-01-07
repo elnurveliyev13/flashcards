@@ -4996,6 +4996,12 @@ body.cropper-open #editActionsBar{
   cursor:pointer;
   text-align:left;
 }
+.focus-expression-menu__icon {
+  width:16px;
+  height:16px;
+  flex:0 0 16px;
+  border-radius:3px;
+}
 .focus-expression-menu__item:hover {
   background:var(--hover);
 }
