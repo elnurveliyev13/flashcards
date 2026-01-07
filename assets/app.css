@@ -6901,6 +6901,7 @@ select.inline-prompt-field {
 
 .analyse-btn.is-loading .btn-icon{
   position: relative;
+  display: inline-block;
   font-size: 0;
   width: 14px;
   height: 14px;
@@ -6915,7 +6916,7 @@ select.inline-prompt-field {
   border: 2px solid rgba(34, 197, 94, 0.35);
   border-top-color: rgba(34, 197, 94, 0.95);
   animation: analyseSpin 0.9s linear infinite;
-  vertical-align: -2px;
+  vertical-align: middle;
 }
 
 @keyframes analyseSpin{
@@ -6990,6 +6991,9 @@ select.inline-prompt-field {
 
 .analyse-btn .btn-icon,
 .check-text-btn .btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
   color: inherit;
 }

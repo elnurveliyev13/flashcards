@@ -2951,6 +2951,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return key ? !HIDE_LEMMA_POS.has(key) : true;
     }
 
+    function normalizeForLemmaCompare(value){
+      return (value || '').toString().trim().toLowerCase();
+    }
+
+    function formatDisplayTextWithLemma(surfaceText, lemma, pos){
+      const surface = (surfaceText || '').toString();
+      const cleanLemma = (lemma || '').toString().trim();
+      if(!cleanLemma || !shouldShowLemma(pos)){
+        return surface;
+      }
+      // Hide lemma when it's effectively the same (case-insensitive), e.g. "Hva" vs "hva".
+      if(normalizeForLemmaCompare(surface) === normalizeForLemmaCompare(cleanLemma)){
+        return surface;
+      }
+      return `${surface} (${cleanLemma})`;
+    }
+
     function formatTokenAnalysis(item){
       const parts = [];
       const pos = resolveAnalysisLabel('pos', item.pos || '');
@@ -2961,7 +2978,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const dep = resolveAnalysisLabel('dep', depKey);
         if(dep) parts.push(`role: ${dep}`);
       }
-      if(item.lemma && shouldShowLemma(item.pos)) parts.push(`lemma: ${item.lemma}`);
       return parts.join(', ');
     }
 
@@ -2971,7 +2987,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       wordItems.forEach(w => {
         if(!w || !w.text) return;
         list.push({
-          text: w.text,
+          text: formatDisplayTextWithLemma(w.text, w.lemma, w.pos),
           translation: formatTokenAnalysis(w),
           kind: 'word',
           index: Number.isInteger(w.index) ? w.index : null
@@ -3014,9 +3030,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const enriched = idx !== null ? enrichWordsByIndex[idx] : null;
         const translation = (enriched?.translation || '').toString().trim();
         const grammar = formatTokenAnalysis(w);
-        const combined = translation ? (grammar ? `${translation} — ${grammar}` : translation) : grammar;
+        const combined = translation ? (grammar ? `${translation} - ${grammar}` : translation) : grammar;
         list.push({
-          text: w.text,
+          text: formatDisplayTextWithLemma(w.text, w.lemma, w.pos),
           translation: combined,
           kind:'word',
           index: idx
