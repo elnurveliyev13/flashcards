@@ -3665,7 +3665,9 @@ switch ($action) {
         foreach ($words as $i => $w) {
             $surface = mod_flashcards_normalize_token((string)($w['text'] ?? ''));
             $sentenceSurfaceTokens[] = $surface;
-            $lemma = $exprLemmaMap[$i] ?? $surface;
+            // Для глобального лемма-токен ряда используем первичную лемму из spaCy,
+            // чтобы не терять инфинитив (например, "skille seg ut"), даже если exprLemmaMap переопределялось baseform-ами.
+            $lemma = $lemmaMap[$i] ?? $surface;
             $sentenceLemmaTokens[] = mod_flashcards_normalize_token((string)$lemma);
         }
         $inOrder = function(array $needle, array $hay): bool {
