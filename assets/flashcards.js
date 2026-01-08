@@ -20,6 +20,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } catch (_e) {}
       return false;
     })();
+    // Expose a safe fallback so downstream widgets that expect a global flag do not crash.
+    try{
+      if(typeof window.isAdmin === 'undefined'){
+        window.isAdmin = isAdmin;
+      }
+      if(typeof window.__flashcardsIsAdmin === 'undefined'){
+        window.__flashcardsIsAdmin = isAdmin;
+      }
+    }catch(_e){}
     const getModString = key => {
       try{
         return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[key]) || '';
@@ -2234,7 +2243,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       no: 'Norsk', nb: 'Norsk', nn: 'Nynorsk'
     };
     const TRANSLATION_LANGUAGE_CODES = ['uk','en','ru','pl','de','fr','es','it'];
-    const INTERFACE_LANGUAGE_CODES = ['en','uk','ru','fr','es','pl','it','de'];
+    const INTERFACE_LANGUAGE_CODES = ['en','nb','uk','ru','fr','es','pl','it','de'];
 
     function languageName(code){
       const c = (code||'').toLowerCase();
@@ -5085,7 +5094,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         aiSummary.textContent = aiStrings.analysisAiSummary || 'AI';
         aiDetails.appendChild(aiSummary);
 
-        if(llmConfirm){
+        if(isAdmin && llmConfirm){
           const meta = document.createElement('div');
           meta.className = 'analysis-ai__meta';
           const model = (llmConfirm.model || '').toString().trim();
@@ -5106,19 +5115,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(llmSuggested && llmSuggested.length){
           const title = document.createElement('div');
           title.className = 'analysis-ai__label';
-          title.textContent = aiStrings.analysisAiSuggested || 'LLM suggested';
+          title.textContent = aiStrings.analysisAiSuggested || 'AI suggested';
           aiDetails.appendChild(title);
           const ul = document.createElement('ul');
           ul.className = 'analysis-ai__list';
           llmSuggested.slice(0, 30).forEach(item=>{
             const li = document.createElement('li');
-            li.textContent = String(item || '').trim();
+            li.textContent = `✨ ${String(item || '').trim()}`;
             ul.appendChild(li);
           });
           aiDetails.appendChild(ul);
         }
 
-        if(aiDebug){
+        if(isAdmin && aiDebug){
           const dbgDetails = document.createElement('details');
           dbgDetails.className = 'analysis-ai__debug';
           const dbgSummary = document.createElement('summary');
@@ -5158,22 +5167,29 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       } else if(status === 'success' && focusHelperState.aiTutor){
         const data = focusHelperState.aiTutor;
         html += `<details class="ai-tutor-details" open><summary>${escapeHtml(aiStrings.aiTutorTitle || 'AI explanation')}</summary>`;
+
+        // Sentence translation (quick surface)
         if(data.sentenceTranslation){
-          html += `<div class="ai-tutor-translation">${escapeHtml(data.sentenceTranslation)}</div>`;
+          html += `<div class="ai-tutor-translation">💡 ${escapeHtml(data.sentenceTranslation)}</div>`;
         }
+
+        // Full explanation (allow simple markdown-ish new lines)
         if(data.analysis){
-          const formatted = escapeHtml(String(data.analysis)).replace(/\n/g, '<br>');
-          html += `<div class="ai-tutor-analysis">${formatted}</div>`;
+          const formatted = escapeHtml(String(data.analysis))
+            .replace(/\n{2,}/g, '<br><br>')
+            .replace(/\n/g, '<br>');
+          html += `<div class="ai-tutor-analysis">🧠 ${formatted}</div>`;
         }
+
         const exprs = Array.isArray(focusHelperState.aiTutorExpressions) ? focusHelperState.aiTutorExpressions : [];
         if(exprs.length){
           html += `<div class="ai-tutor-expressions"><div class="ai-tutor-subtitle">${escapeHtml(aiStrings.aiTutorExprs || 'AI expressions')}</div><ul>`;
           exprs.forEach(ex=>{
             const expr = escapeHtml(ex.expression || '');
-            const tr = ex.translation ? ` — ${escapeHtml(ex.translation)}` : '';
+            const tr = ex.translation ? ` - ${escapeHtml(ex.translation)}` : '';
             const note = ex.note ? ` <span class="ai-tutor-note">${escapeHtml(ex.note)}</span>` : '';
             if(expr){
-              html += `<li><strong>${expr}</strong>${tr}${note}</li>`;
+              html += `<li>✨ <strong>${expr}</strong>${tr}${note}</li>`;
             }
           });
           html += '</ul></div>';

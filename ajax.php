@@ -756,6 +756,13 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
             $set = array_merge($set, $posCandidatesMap[$i]);
         }
         $set = array_values(array_unique(array_filter($set)));
+        // Treat lower‑case proper nouns as common nouns for pattern matching (e.g. "for ordens skyld").
+        if (in_array('PROPN', $set, true)) {
+            $orig = (string)($w['text'] ?? '');
+            if ($orig !== '' && core_text::strtolower($orig) === $orig) {
+                $set[] = 'NOUN';
+            }
+        }
         $posSets[$i] = $set ?: ['X'];
         $lemma = $lemmaMap[$i] ?? '';
         if ($lemma === '') {
