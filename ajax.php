@@ -1660,15 +1660,12 @@ function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array 
             }
             $lemmaPhrase = trim(implode(' ', $lemmaParts));
             $surfacePhrase = trim(implode(' ', $surfaceParts));
-            if ($lemmaPhrase === '' && $surfacePhrase === '') {
+            // Для поиска по орфословарю используем только лемматизированную форму.
+            // Если леммы нет (редкие случаи), кандидат пропускаем.
+            if ($lemmaPhrase === '') {
                 continue;
             }
-            $candidates = [];
-            if ($lemmaPhrase !== '') {
-                $candidates[] = $lemmaPhrase;
-            } else {
-                $candidates[] = $surfacePhrase;
-            }
+            $candidates = [$lemmaPhrase];
             foreach ($candidates as $cand) {
                 $key = core_text::strtolower($cand);
                 if (isset($seenCand[$key])) {
