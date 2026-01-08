@@ -763,7 +763,8 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
                 $set[] = 'NOUN';
             }
         }
-        $posSets[$i] = $set ?: ['X'];
+        $posTagSet = $set ?: ['X'];
+        $posSets[$i] = $posTagSet;
         $lemma = $lemmaMap[$i] ?? '';
         if ($lemma === '') {
             $lemma = $surface;
@@ -771,7 +772,7 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         $lemma = core_text::strtolower($lemma);
         // Normalize verb lemmas to infinitive so expression candidates hit Ordbokene
         // (e.g. "skilte" -> "skille").
-        if (in_array('VERB', $posSets[$i], true) || in_array('AUX', $posSets[$i], true)) {
+        if (in_array('VERB', $posTagSet, true) || in_array('AUX', $posTagSet, true)) {
             $lemma = mod_flashcards_normalize_infinitive($lemma);
         }
         $lemmaForExpr[$i] = $lemma;
