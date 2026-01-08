@@ -264,20 +264,6 @@
             <input id="uImage" type="file" accept="image/*" class="hidden">
             <img id="imgPrev" class="media hidden" alt=""/>
             <div class="slot front-slot">
-              <div class="slot-head slot-head-stacked slot-head-inline">
-                <div class="slot-head-row slot-head-inline-row translation-header">
-              <div class="slot-head-main">
-                <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
-              </div>
-              <div class="slot-head-extra">
-                <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
-                  <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
-                    <span aria-hidden="true">&#8634;</span>
-                    <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
-                  </button>
-              </div>
-            </div>
-          </div>
           <div class="fokus-input-wrap front-input-wrap">
             <div id="errorCheckBlock" class="error-check-block error-check-collapsed" style="display:none;" aria-live="polite">
               <div class="error-check-content"></div>
@@ -286,6 +272,13 @@
               <button type="button" class="translation-mode-btn" data-dir="no-user" data-translation-btn>
                 <span class="translation-mode-label" id="translationModeForward">Norsk > English</span>
               </button>
+              <div class="translation-mode-status">
+                <span class="status-chip translation-status" id="mediaStatusIndicator" aria-live="polite">Status</span>
+                <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
+                  <span aria-hidden="true">&#8634;</span>
+                  <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
+                </button>
+              </div>
             </div>
             <textarea id="uFront" class="autogrow" placeholder="{{#str}} front_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="front_placeholder" autofocus></textarea>
           </div>

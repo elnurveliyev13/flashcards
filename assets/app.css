@@ -3575,23 +3575,18 @@ body.cropper-open #editActionsBar{
 }
 
 .media-status-indicator {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 9999;
-  pointer-events: none;
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-  max-width: min(65vw, 20rem);
-  text-align: center;
-  word-break: anywhere;
-  white-space: normal;
+  display: none;
 }
 
 .media-status-indicator.visible {
-  opacity: 1;
-  transform: translateY(0);
+  display: inline-flex;
+}
+
+.translation-mode-status{
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .translation-mode-inline {

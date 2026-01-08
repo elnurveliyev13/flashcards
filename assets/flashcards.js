@@ -3087,10 +3087,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
     if(mediaStatusIndicator){
       mediaStatusIndicator.classList.add('media-status-indicator');
-      const host = document.body || document.documentElement;
-      if(host && mediaStatusIndicator.parentElement !== host){
-        host.appendChild(mediaStatusIndicator);
-      }
     }
     const focusTranslationText = document.getElementById('focusTranslationText');
     const translationHintDefault = translationModeHint ? translationModeHint.textContent : '';
