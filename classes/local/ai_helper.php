@@ -606,6 +606,11 @@ USERPROMPT;
         }
         $exprs = [];
         if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
+            $breakdownStop = array_fill_keys([
+                'å', 'i', 'på', 'til', 'og', 'som', 'ikke',
+                'en', 'ei', 'et', 'den', 'det', 'de', 'der',
+                'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de',
+            ], true);
             foreach ($raw['expressions'] as $ex) {
                 $expr = trim((string)($ex['expression'] ?? $ex['text'] ?? ''));
                 if ($expr === '') {
@@ -620,6 +625,13 @@ USERPROMPT;
                         $no = trim((string)($part['no'] ?? ''));
                         $tr = trim((string)($part['tr'] ?? ''));
                         if ($no === '' && $tr === '') {
+                            continue;
+                        }
+                        $nokey = core_text::strtolower($no);
+                        if ($nokey !== '' && isset($breakdownStop[$nokey])) {
+                            continue;
+                        }
+                        if ($tr === '') {
                             continue;
                         }
                         $breakdown[] = ['no' => $no, 'tr' => $tr];
@@ -637,6 +649,9 @@ USERPROMPT;
                         $no = trim((string)($example['no'] ?? ''));
                         $tr = trim((string)($example['tr'] ?? ''));
                         if ($no === '' && $tr === '') {
+                            continue;
+                        }
+                        if ($no === '') {
                             continue;
                         }
                         $examples[] = ['no' => $no, 'tr' => $tr];
