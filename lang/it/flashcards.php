@@ -117,6 +117,7 @@ $string['empty'] = 'Niente da fare oggi';
 $string['resetform'] = 'Pulisci';
 $string['addtomycards'] = 'Aggiungi alle mie schede';
 $string['install_app'] = 'Installa app';
+$string['settings_page_label'] = 'Impostazioni';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Trascrizione';

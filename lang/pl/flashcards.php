@@ -119,6 +119,7 @@ $string['empty'] = 'Nic do nauki dzisiaj';
 $string['resetform'] = 'Wyczyść';
 $string['addtomycards'] = 'Dodaj do moich fiszek';
 $string['install_app'] = 'Zainstaluj aplikację';
+$string['settings_page_label'] = 'Ustawienia';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Transkrypcja';

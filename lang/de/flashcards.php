@@ -117,6 +117,7 @@ $string['empty'] = 'Heute nichts fällig';
 $string['resetform'] = 'Leeren';
 $string['addtomycards'] = 'Zu meinen Karten hinzufügen';
 $string['install_app'] = 'App installieren';
+$string['settings_page_label'] = 'Einstellungen';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Transkription';

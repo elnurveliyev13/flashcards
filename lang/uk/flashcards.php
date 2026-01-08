@@ -153,6 +153,7 @@ $string['font_scale_plus15'] = 'Великий (+15%)';
 $string['font_scale_plus30'] = 'Дуже великий (+30%)';
 $string['preferences_toggle_label'] = 'Меню налаштувань';
 $string['header_preferences_label'] = 'Налаштування відображення';
+$string['settings_page_label'] = 'Налаштування';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Транскрипція';

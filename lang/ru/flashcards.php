@@ -169,6 +169,7 @@ $string['font_scale_plus15'] = 'Крупный (+15%)';
 $string['font_scale_plus30'] = 'Очень крупный (+30%)';
 $string['preferences_toggle_label'] = 'Меню настроек';
 $string['header_preferences_label'] = 'Настройки отображения';
+$string['settings_page_label'] = 'Настройки';
 
 // Linguistic enrichment fields
 $string['transcription'] = 'Транскрипция';
