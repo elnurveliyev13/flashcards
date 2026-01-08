@@ -1660,10 +1660,15 @@ function mod_flashcards_resolve_lexical_expressions(array $surfaceTokens, array 
             }
             $lemmaPhrase = trim(implode(' ', $lemmaParts));
             $surfacePhrase = trim(implode(' ', $surfaceParts));
-            if ($lemmaPhrase === '' || $surfacePhrase === '') {
+            if ($lemmaPhrase === '' && $surfacePhrase === '') {
                 continue;
             }
-            $candidates = array_values(array_unique([$lemmaPhrase, $surfacePhrase]));
+            $candidates = [];
+            if ($lemmaPhrase !== '') {
+                $candidates[] = $lemmaPhrase;
+            } else {
+                $candidates[] = $surfacePhrase;
+            }
             foreach ($candidates as $cand) {
                 $key = core_text::strtolower($cand);
                 if (isset($seenCand[$key])) {
