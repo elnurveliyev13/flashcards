@@ -3993,9 +3993,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const payload = {text: normalized};
         payload.debug = true;
         payload.debug_ai = true;
+        payload.language = options.language || currentInterfaceLang || 'en';
         if(enrich){
           payload.enrich = true;
-          payload.language = options.language || currentInterfaceLang || 'en';
           if(skipSentenceTranslation){
             payload.skip_sentence_translation = true;
           }
@@ -4092,6 +4092,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             local.value = aiSentenceTranslation;
           }
           upsertSentenceTranslationRow(normalized, aiSentenceTranslation);
+        }
+
+        // Use AI tutor expressions as fallback suggestions (helps when sentence_elements runs without LLM).
+        if (Array.isArray(focusHelperState.aiTutorExpressions) && focusHelperState.aiTutorExpressions.length) {
+          const prepared = focusHelperState.aiTutorExpressions
+            .map(ex => {
+              const expression = (ex?.expression || '').toString().trim();
+              const translation = (ex?.translation || '').toString().trim();
+              const explanation = (ex?.note || '').toString().trim();
+              const examples = Array.isArray(ex?.examples)
+                ? ex.examples.map(e => (e?.no || '').toString().trim()).filter(Boolean)
+                : [];
+              return {expression, translation, explanation, examples, confidence: 'medium'};
+            })
+            .filter(item => item.expression);
+          if (prepared.length) {
+            const shouldReplace = (!focusHelperState.expressionSuggestions.length) || (focusHelperState.expressionSourceText !== normalized);
+            if (shouldReplace) {
+              setFocusExpressionSuggestions(prepared, normalized);
+              activateExpressionSuggestions(normalized);
+            }
+          }
         }
         renderAiTutorBlock();
       }catch(err){
@@ -5175,15 +5197,40 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         // Sentence translation (quick surface)
         if(data.sentenceTranslation){
-          html += `<div class="ai-tutor-translation">💡 ${escapeHtml(data.sentenceTranslation)}</div>`;
+          html += `<div class="ai-tutor-translation">${escapeHtml(data.sentenceTranslation)}</div>`;
         }
 
-        // Full explanation (allow simple markdown-ish new lines)
-        if(data.analysis){
+        // Structured sections (preferred)
+        const sections = Array.isArray(data.sections) ? data.sections : [];
+        if(sections.length){
+          html += '<div class="ai-tutor-analysis">';
+          sections.slice(0, 6).forEach(sec=>{
+            const title = (sec?.title || '').toString().trim();
+            const bullets = Array.isArray(sec?.bullets) ? sec.bullets : [];
+            if(!title && !bullets.length){
+              return;
+            }
+            if(title){
+              html += `<div class="ai-tutor-section-title">${escapeHtml(title)}</div>`;
+            }
+            if(bullets.length){
+              html += '<ul class="ai-tutor-section-list">';
+              bullets.slice(0, 12).forEach(b=>{
+                const t = (b || '').toString().trim();
+                if(t){
+                  html += `<li>${escapeHtml(t)}</li>`;
+                }
+              });
+              html += '</ul>';
+            }
+          });
+          html += '</div>';
+        } else if(data.analysis){
+          // Fallback: plain text with line breaks
           const formatted = escapeHtml(String(data.analysis))
             .replace(/\n{2,}/g, '<br><br>')
             .replace(/\n/g, '<br>');
-          html += `<div class="ai-tutor-analysis">🧠 ${formatted}</div>`;
+          html += `<div class="ai-tutor-analysis">${formatted}</div>`;
         }
 
         const exprs = Array.isArray(focusHelperState.aiTutorExpressions) ? focusHelperState.aiTutorExpressions : [];
@@ -5194,7 +5241,32 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             const tr = ex.translation ? ` - ${escapeHtml(ex.translation)}` : '';
             const note = ex.note ? ` <span class="ai-tutor-note">${escapeHtml(ex.note)}</span>` : '';
             if(expr){
-              html += `<li>✨ <strong>${expr}</strong>${tr}${note}</li>`;
+              html += `<li><strong>${expr}</strong>${tr}${note}`;
+              const breakdown = Array.isArray(ex?.breakdown) ? ex.breakdown : [];
+              if(breakdown.length){
+                html += '<ul class="ai-tutor-sublist">';
+                breakdown.slice(0, 6).forEach(p=>{
+                  const no = (p?.no || '').toString().trim();
+                  const tr = (p?.tr || '').toString().trim();
+                  if(no || tr){
+                    html += `<li>${escapeHtml(no)}${tr ? ` — ${escapeHtml(tr)}` : ''}</li>`;
+                  }
+                });
+                html += '</ul>';
+              }
+              const examples = Array.isArray(ex?.examples) ? ex.examples : [];
+              if(examples.length){
+                html += '<ul class="ai-tutor-sublist">';
+                examples.slice(0, 3).forEach(e=>{
+                  const no = (e?.no || '').toString().trim();
+                  const tr = (e?.tr || '').toString().trim();
+                  if(no || tr){
+                    html += `<li>${escapeHtml(no)}${tr ? ` — ${escapeHtml(tr)}` : ''}</li>`;
+                  }
+                });
+                html += '</ul>';
+              }
+              html += '</li>';
             }
           });
           html += '</ul></div>';
@@ -15984,9 +16056,9 @@ Rules:
           // Fire AI tutor explanation in parallel (best effort, no await).
           fetchAiSentenceExplain(text, language).catch(()=>{});
 
-           // Avoid duplicating the full-sentence translation: we already requested it via runTranslationHelper above.
-           // Keep llm_enrich for phrase translations/notes only.
-           await fetchSentenceElements(text, {enrich: true, language, skipSentenceTranslation: true});
+           // Keep sentence_elements lightweight: we already requested translation + AI explanation separately.
+           // sentence_elements is still useful for POS/lemma/dep and Ordbokene-based expression resolution.
+           await fetchSentenceElements(text, {enrich: false, language});
            ok = true;
 
            // sentence_elements re-renders the analysis list; ensure the instant translation row survives.

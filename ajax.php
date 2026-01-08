@@ -6171,21 +6171,35 @@ if (!empty($ordbokene_debug)) {
         } else if ($uiLang === 'pl') {
             $uiLangName = 'Polish';
         }
-        $system = "You are an expert Norwegian (Bokmål) tutor. Write in {$uiLangName}. Return ONLY valid JSON, no extra text.";
+        $system = "You are an expert Norwegian (Bokmål) tutor.\n"
+            . "Write in {$uiLangName}.\n"
+            . "Return ONLY valid JSON (no markdown fences, no extra text).\n"
+            . "Be concise and structured for learners.";
         $schema = <<<JSON
 {
-  "analysis": "short structured explanation in {$uiLangName} (markdown allowed)",
-  "sentenceTranslation": "translation of the full sentence",
+  "sentenceTranslation": "natural translation of the full sentence in {$uiLangName}",
+  "sections": [
+    {
+      "title": "short section title in {$uiLangName}",
+      "bullets": ["short bullet 1", "short bullet 2"]
+    }
+  ],
   "expressions": [
     {
       "expression": "expression in Norwegian (grunnform if possible)",
-      "translation": "short translation",
-      "note": "very short meaning note (optional)"
+      "translation": "short translation in {$uiLangName}",
+      "note": "very short meaning note in {$uiLangName} (optional)",
+      "breakdown": [
+        { "no": "part", "tr": "meaning in {$uiLangName}" }
+      ],
+      "examples": [
+        { "no": "short Norwegian example", "tr": "translation in {$uiLangName}" }
+      ]
     }
   ]
 }
 JSON;
-        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) Explain the sentence in {$uiLangName} (grammar, meaning, key nuances). Keep it concise.\n2) Give a natural translation of the whole sentence.\n3) Extract multiword expressions (2+ words, idioms/collocations) that appear here. Normalize reflexives to \"seg\" and infinitives to base form if needed.\n\nReturn JSON EXACTLY in this schema:\n{$schema}\nRules:\n- Do NOT include single words.\n- If no expressions, use an empty array.";
+        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) Provide a natural translation (sentenceTranslation).\n2) Explain the sentence for a learner using 2–4 short sections (sections).\n   - Each section: 2–5 short bullets.\n   - Cover: grammar structure, meaning/nuance, and (if present) the key multiword expression.\n3) Extract 0–3 multiword expressions (2+ words) that are FIXED collocations/idioms used in this sentence.\n   - Be strict: do NOT include normal grammar fragments.\n   - Prefer the shortest base expression (avoid adding objects if the base collocation already captures the meaning).\n   - Include verb + particle/preposition when it belongs to the expression.\n   - Normalize reflexives to \"seg\" ONLY if they appear.\n   - Keep expressions in Norwegian; translations/notes/bullets MUST be in {$uiLangName}.\n\nConstraints:\n- Total output should be compact.\n- If unsure about a translation/note, use an empty string.\n\nReturn JSON EXACTLY in this schema:\n{$schema}\nRules:\n- Do NOT include single words.\n- If no expressions, use an empty expressions array.\n- In sections, do NOT invent facts not present in the sentence.";
         $chatPayload = [
             'model' => 'gpt-5-nano',
             'messages' => [
@@ -6193,9 +6207,15 @@ JSON;
                 ['role' => 'user', 'content' => $userPrompt],
             ],
             'reasoning_effort' => 'minimal',
+            'max_completion_tokens' => 520,
         ];
         $helper = new \mod_flashcards\local\ai_helper();
-        $resp = $helper->explain_sentence($userid, $text, ['payload' => $chatPayload, 'debug_ai' => is_siteadmin()]);
+        $cachekey = sha1('ai_sentence_explain:v2:' . $uiLang . ':' . core_text::strtolower($text));
+        $resp = $helper->explain_sentence($userid, $text, [
+            'payload' => $chatPayload,
+            'debug_ai' => is_siteadmin(),
+            'cache_key' => $cachekey,
+        ]);
         echo json_encode(['ok' => true, 'data' => $resp]);
         break;
 

@@ -187,6 +187,20 @@ class ai_helper {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
+        $textnorm = core_text::strtolower(trim($text));
+        $direction = trim((string)($options['direction'] ?? ''));
+        $cachekey = sha1('ai_translate:v1:' . $source . ':' . $target . ':' . $direction . ':' . $textnorm);
+        try {
+            $cache = \cache::make('mod_flashcards', 'ai_translate');
+            $cached = $cache->get($cachekey);
+            if (is_array($cached) && isset($cached['translation'])) {
+                $cached['cached'] = true;
+                return $cached;
+            }
+        } catch (\Throwable $e) {
+            // Ignore cache failures.
+        }
+
         $translation = $this->openai->translate_text($userid, $text, $source, $target, $options);
         $result = [
             'translation' => $translation['translation'] ?? '',
@@ -197,6 +211,13 @@ class ai_helper {
         // Include token usage information if available
         if (!empty($translation['usage'])) {
             $result['usage'] = $translation['usage'];
+        }
+
+        try {
+            $cache = \cache::make('mod_flashcards', 'ai_translate');
+            $cache->set($cachekey, $result);
+        } catch (\Throwable $e) {
+            // Ignore cache failures.
         }
 
         return $result;
@@ -325,6 +346,13 @@ USERPROMPT;
             $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
             $getReasoningMethod->setAccessible(true);
             $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'translation');
+        }
+        if ($modelkey !== '' && !isset($payload['max_tokens']) && !isset($payload['max_completion_tokens'])) {
+            if ($this->uses_max_completion_tokens($modelkey)) {
+                $payload['max_completion_tokens'] = 320;
+            } else {
+                $payload['max_tokens'] = 320;
+            }
         }
 
         $method = $reflection->getMethod('request');
@@ -511,12 +539,71 @@ USERPROMPT;
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
+        $debugAi = !empty($options['debug_ai']);
+        $cachekey = trim((string)($options['cache_key'] ?? ''));
+        if (!$debugAi && $cachekey !== '') {
+            try {
+                $cache = \cache::make('mod_flashcards', 'ai_sentence_explain');
+                $cached = $cache->get($cachekey);
+                if (is_array($cached) && !empty($cached)) {
+                    $cached['cached'] = true;
+                    return $cached;
+                }
+            } catch (\Throwable $e) {
+                // Ignore cache failures.
+            }
+        }
+
         // Payload should already contain prompt/messages on caller side; here we just pass through to OpenAI.
         $payload = $options['payload'] ?? [];
-        $debugAi = !empty($options['debug_ai']);
         $raw = $this->openai->chat($userid, $payload, $debugAi);
-        $analysis = trim((string)($raw['analysis'] ?? ''));
+
         $sentenceTranslation = trim((string)($raw['sentenceTranslation'] ?? ''));
+        $analysis = trim((string)($raw['analysis'] ?? ''));
+        $sections = [];
+        if (!empty($raw['sections']) && is_array($raw['sections'])) {
+            foreach ($raw['sections'] as $section) {
+                if (!is_array($section)) {
+                    continue;
+                }
+                $title = trim((string)($section['title'] ?? ''));
+                if ($title === '') {
+                    continue;
+                }
+                $bullets = [];
+                if (!empty($section['bullets']) && is_array($section['bullets'])) {
+                    foreach ($section['bullets'] as $b) {
+                        $b = trim((string)$b);
+                        if ($b !== '') {
+                            $bullets[] = $b;
+                        }
+                        if (count($bullets) >= 8) {
+                            break;
+                        }
+                    }
+                }
+                $sections[] = [
+                    'title' => $title,
+                    'bullets' => $bullets,
+                ];
+                if (count($sections) >= 6) {
+                    break;
+                }
+            }
+        }
+
+        if ($analysis === '' && !empty($sections)) {
+            $parts = [];
+            foreach ($sections as $s) {
+                $block = $s['title'];
+                $bullets = is_array($s['bullets'] ?? null) ? $s['bullets'] : [];
+                foreach ($bullets as $b) {
+                    $block .= "\n- " . $b;
+                }
+                $parts[] = $block;
+            }
+            $analysis = trim(implode("\n\n", $parts));
+        }
         $exprs = [];
         if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
             foreach ($raw['expressions'] as $ex) {
@@ -524,15 +611,52 @@ USERPROMPT;
                 if ($expr === '') {
                     continue;
                 }
+                $breakdown = [];
+                if (!empty($ex['breakdown']) && is_array($ex['breakdown'])) {
+                    foreach ($ex['breakdown'] as $part) {
+                        if (!is_array($part)) {
+                            continue;
+                        }
+                        $no = trim((string)($part['no'] ?? ''));
+                        $tr = trim((string)($part['tr'] ?? ''));
+                        if ($no === '' && $tr === '') {
+                            continue;
+                        }
+                        $breakdown[] = ['no' => $no, 'tr' => $tr];
+                        if (count($breakdown) >= 6) {
+                            break;
+                        }
+                    }
+                }
+                $examples = [];
+                if (!empty($ex['examples']) && is_array($ex['examples'])) {
+                    foreach ($ex['examples'] as $example) {
+                        if (!is_array($example)) {
+                            continue;
+                        }
+                        $no = trim((string)($example['no'] ?? ''));
+                        $tr = trim((string)($example['tr'] ?? ''));
+                        if ($no === '' && $tr === '') {
+                            continue;
+                        }
+                        $examples[] = ['no' => $no, 'tr' => $tr];
+                        if (count($examples) >= 6) {
+                            break;
+                        }
+                    }
+                }
                 $exprs[] = [
                     'expression' => $expr,
                     'translation' => trim((string)($ex['translation'] ?? '')),
                     'note' => trim((string)($ex['note'] ?? '')),
+                    'breakdown' => $breakdown,
+                    'examples' => $examples,
                 ];
             }
         }
         $result = [
             'analysis' => $analysis,
+            'sections' => $sections,
             'sentenceTranslation' => $sentenceTranslation,
             'expressions' => $exprs,
         ];
@@ -541,6 +665,15 @@ USERPROMPT;
         }
         if ($debugAi && !empty($raw['ai_debug'])) {
             $result['ai_debug'] = $raw['ai_debug'];
+        }
+
+        if (!$debugAi && $cachekey !== '') {
+            try {
+                $cache = \cache::make('mod_flashcards', 'ai_sentence_explain');
+                $cache->set($cachekey, $result);
+            } catch (\Throwable $e) {
+                // Ignore cache failures.
+            }
         }
         return $result;
     }
@@ -976,6 +1109,13 @@ USERPROMPT;
             $getReasoningMethod = $reflection->getMethod('get_reasoning_effort_for_task');
             $getReasoningMethod->setAccessible(true);
             $payload['reasoning_effort'] = $getReasoningMethod->invoke($client, 'expression');
+        }
+        if ($modelkey !== '' && !isset($payload['max_tokens']) && !isset($payload['max_completion_tokens'])) {
+            if ($this->uses_max_completion_tokens($modelkey)) {
+                $payload['max_completion_tokens'] = 260;
+            } else {
+                $payload['max_tokens'] = 260;
+            }
         }
 
         $method = $reflection->getMethod('request');
@@ -2429,6 +2569,17 @@ If NO constructions found, return empty constructions array.";
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check if model uses max_completion_tokens instead of max_tokens.
+     *
+     * @param string $modelkey Lowercase model name
+     */
+    private function uses_max_completion_tokens(string $modelkey): bool {
+        return strpos($modelkey, '5-mini') !== false ||
+               strpos($modelkey, '5-nano') !== false ||
+               strpos($modelkey, 'o1-') !== false;
     }
 
     /**

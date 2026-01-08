@@ -368,6 +368,15 @@ PROMPT;
             unset($payload['temperature']); // Remove temperature for reasoning models
         }
 
+        // Keep translations compact.
+        if (!isset($payload['max_tokens']) && !isset($payload['max_completion_tokens'])) {
+            if ($this->uses_max_completion_tokens($modelkey)) {
+                $payload['max_completion_tokens'] = 160;
+            } else {
+                $payload['max_tokens'] = 160;
+            }
+        }
+
         $response = $this->request($payload);
         $this->record_usage($userid, $response->usage ?? null);
         $content = trim($response->choices[0]->message->content ?? '');
