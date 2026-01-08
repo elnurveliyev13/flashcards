@@ -893,20 +893,43 @@ PROMPT;
         $content = trim($response->choices[0]->message->content ?? '');
 
         $decoded = null;
+        $decodeError = '';
         if ($content !== '') {
             // Strip common formatting wrappers (models sometimes ignore instructions).
             $clean = preg_replace('~^```(?:json)?\s*|\s*```$~m', '', $content);
             $clean = trim((string)$clean);
-            if (preg_match('~\{.*\}~s', $content, $m)) {
-                $decoded = json_decode($m[0], true);
-            }
+            // Remove UTF-8 BOM if present.
+            $clean = preg_replace('/^\xEF\xBB\xBF/u', '', $clean);
+
+            $tryDecode = function(string $s) use (&$decodeError) {
+                $decodeError = '';
+                if ($s === '') {
+                    return null;
+                }
+                try {
+                    $out = json_decode($s, true, 512, JSON_THROW_ON_ERROR);
+                    return is_array($out) ? $out : null;
+                } catch (\Throwable $e) {
+                    $decodeError = $e->getMessage();
+                    return null;
+                }
+            };
+
+            // 1) Try direct decode.
+            $decoded = $tryDecode($clean);
+
+            // 2) Extract first JSON object-like substring.
             if (!is_array($decoded)) {
-                if ($clean !== '' && preg_match('~\{.*\}~s', $clean, $m2)) {
-                    $decoded = json_decode($m2[0], true);
+                $first = strpos($clean, '{');
+                $last = strrpos($clean, '}');
+                if ($first !== false && $last !== false && $last > $first) {
+                    $decoded = $tryDecode(substr($clean, $first, ($last - $first + 1)));
                 }
             }
-            if (!is_array($decoded)) {
-                $decoded = json_decode($clean !== '' ? $clean : $content, true);
+
+            // 3) Fallback: regex grab (greedy), then decode.
+            if (!is_array($decoded) && preg_match('~\{.*\}~s', $clean, $m)) {
+                $decoded = $tryDecode($m[0]);
             }
         }
         $result = is_array($decoded) ? $decoded : [];
@@ -935,6 +958,9 @@ PROMPT;
                 'payload' => $payload,
                 'raw' => $this->trim_debug_snippet($content),
             ];
+            if (!is_array($decoded) && $decodeError !== '') {
+                $dbg['decode_error'] = $decodeError;
+            }
             if (isset($response->usage)) {
                 $dbg['usage'] = (array)$response->usage;
             }
