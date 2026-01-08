@@ -3012,7 +3012,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusWordList = document.getElementById('focusWordList');
     const focusHelperSlot = root.querySelector('.focus-helper-slot');
     let aiTutorContainer = null;
-    renderAiTutorBlock();
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusSpacyEl = document.getElementById('focusHelperSpacy');
     const focusAnalysisList = document.getElementById('focusAnalysisList');
@@ -3043,6 +3042,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       instantTranslationSeq: 0,
       instantTranslationText: ''
     };
+    renderAiTutorBlock();
     if(focusSpacyEl){
       focusSpacyEl.textContent = '';
       focusSpacyEl.dataset.state = '';
