@@ -6217,20 +6217,39 @@ JSON;
             $maxTokens = 2000;
         }
 
+        $modelkey = core_text::strtolower(trim($model));
+        $usesMaxCompletionTokens = (
+            strpos($modelkey, '5-mini') !== false ||
+            strpos($modelkey, '5-nano') !== false ||
+            strpos($modelkey, 'gpt-5') !== false ||
+            strpos($modelkey, 'o1-') !== false
+        );
+
         $chatPayload = [
             'model' => $model,
             'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $userPrompt],
             ],
-            'reasoning_effort' => $reasoning,
-            'max_completion_tokens' => $maxTokens,
         ];
-        if ($reasoning === '' || $reasoning === 'none') {
-            unset($chatPayload['reasoning_effort']);
+        // Enforce strict JSON output when supported (reduces parse failures and empty UI).
+        if (strpos($modelkey, 'o1-') === false) {
+            $chatPayload['response_format'] = ['type' => 'json_object'];
+        }
+
+        // Only send reasoning_effort for models that support it (gpt-5 / o1).
+        if ($usesMaxCompletionTokens && $reasoning !== '' && $reasoning !== 'none') {
+            $chatPayload['reasoning_effort'] = $reasoning;
+        }
+
+        // Use correct max tokens parameter by model family.
+        if ($usesMaxCompletionTokens) {
+            $chatPayload['max_completion_tokens'] = $maxTokens;
+        } else {
+            $chatPayload['max_tokens'] = $maxTokens;
         }
         $helper = new \mod_flashcards\local\ai_helper();
-        $cachekey = sha1('ai_sentence_explain:v4:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
+        $cachekey = sha1('ai_sentence_explain:v5:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
         $resp = $helper->explain_sentence($userid, $text, [
             'payload' => $chatPayload,
             'debug_ai' => is_siteadmin(),

@@ -894,11 +894,19 @@ PROMPT;
 
         $decoded = null;
         if ($content !== '') {
+            // Strip common formatting wrappers (models sometimes ignore instructions).
+            $clean = preg_replace('~^```(?:json)?\s*|\s*```$~m', '', $content);
+            $clean = trim((string)$clean);
             if (preg_match('~\{.*\}~s', $content, $m)) {
                 $decoded = json_decode($m[0], true);
             }
             if (!is_array($decoded)) {
-                $decoded = json_decode($content, true);
+                if ($clean !== '' && preg_match('~\{.*\}~s', $clean, $m2)) {
+                    $decoded = json_decode($m2[0], true);
+                }
+            }
+            if (!is_array($decoded)) {
+                $decoded = json_decode($clean !== '' ? $clean : $content, true);
             }
         }
         $result = is_array($decoded) ? $decoded : [];

@@ -5232,6 +5232,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             .replace(/\n/g, '<br>');
           html += `<div class="ai-tutor-analysis">${formatted}</div>`;
         }
+        const hasText = !!(String(data.sentenceTranslation || '').trim());
+        const hasSections = !!(Array.isArray(data.sections) && data.sections.length);
+        const hasAnalysis = !!(String(data.analysis || '').trim());
+        const hasExprs = !!(Array.isArray(focusHelperState.aiTutorExpressions) && focusHelperState.aiTutorExpressions.length);
+        if(!hasText && !hasSections && !hasAnalysis && !hasExprs){
+          html += `<div class="ai-tutor-status ai-tutor-status--error">${escapeHtml(aiStrings.error || 'Error')}: empty AI response</div>`;
+        }
 
         const exprs = Array.isArray(focusHelperState.aiTutorExpressions) ? focusHelperState.aiTutorExpressions : [];
         if(exprs.length){
