@@ -6201,17 +6201,36 @@ if (!empty($ordbokene_debug)) {
 }
 JSON;
         $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) sections: explain like a good tutor (ChatGPT-style), with simple structure.\n   Use EXACTLY these section titles (translated to {$uiLangName}):\n   - \"Grammar structure\"\n   - \"Translation\"\n   - \"Key expression\"\n   - \"Nuance / usage\"\n   Rules for sections:\n   - 3-5 bullets per section, short and clear.\n   - In \"Grammar structure\": explain the role of the main parts (subject/verb/infinitive phrase/object) in plain words.\n   - In \"Translation\": include 1 natural translation + (optional) 1 literal hint.\n   - In \"Key expression\": explain meaning + when used; keep it short.\n   - In \"Nuance / usage\": 2-4 bullets max.\n\n3) expressions: extract 0-2 multiword expressions (2+ words) that are FIXED collocations/idioms used in this sentence.\n   - Be strict: do NOT include normal grammar fragments.\n   - Prefer the base collocation (avoid adding objects if the base collocation already captures the meaning).\n   - Include verb + particle/preposition if it belongs to the expression.\n   - breakdown: ONLY for meaningful/content parts. Do NOT include function words like \"å\", \"i\", articles, conjunctions.\n\nHard language rules:\n- ALL titles/bullets/notes/translations MUST be in {$uiLangName}.\n- Do NOT use Norwegian words in sections/bullets/notes/translations.\n- Norwegian is allowed ONLY inside expressions[].expression and examples[].no.\n\nOutput constraints:\n- Keep it compact.\n- If unsure, use an empty string.\n\nReturn JSON EXACTLY in this schema:\n{$schema}";
+        $config = get_config('mod_flashcards');
+        $model = trim((string)($config->ai_sentence_explain_model ?? ''));
+        if ($model === '') {
+            $model = trim((string)($config->openai_model ?? ''));
+        }
+        if ($model === '') {
+            $model = 'gpt-4o-mini';
+        }
+        $reasoning = trim((string)($config->ai_sentence_explain_reasoning_effort ?? 'minimal'));
+        $maxTokens = (int)($config->ai_sentence_explain_max_tokens ?? 520);
+        if ($maxTokens < 80) {
+            $maxTokens = 80;
+        } else if ($maxTokens > 2000) {
+            $maxTokens = 2000;
+        }
+
         $chatPayload = [
-            'model' => 'gpt-5-nano',
+            'model' => $model,
             'messages' => [
                 ['role' => 'system', 'content' => $system],
                 ['role' => 'user', 'content' => $userPrompt],
             ],
-            'reasoning_effort' => 'minimal',
-            'max_completion_tokens' => 520,
+            'reasoning_effort' => $reasoning,
+            'max_completion_tokens' => $maxTokens,
         ];
+        if ($reasoning === '' || $reasoning === 'none') {
+            unset($chatPayload['reasoning_effort']);
+        }
         $helper = new \mod_flashcards\local\ai_helper();
-        $cachekey = sha1('ai_sentence_explain:v3:' . $uiLang . ':' . core_text::strtolower($text));
+        $cachekey = sha1('ai_sentence_explain:v4:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
         $resp = $helper->explain_sentence($userid, $text, [
             'payload' => $chatPayload,
             'debug_ai' => is_siteadmin(),

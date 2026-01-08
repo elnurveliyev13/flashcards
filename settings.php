@@ -111,6 +111,35 @@ if ($hassiteconfig) {
         ''
     ));
 
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_sentence_explain_model',
+        get_string('settings_ai_sentence_explain_model', 'mod_flashcards'),
+        get_string('settings_ai_sentence_explain_model_desc', 'mod_flashcards'),
+        ''
+    ));
+
+    $settings->add(new admin_setting_configselect(
+        'mod_flashcards/ai_sentence_explain_reasoning_effort',
+        get_string('settings_ai_sentence_explain_reasoning_effort', 'mod_flashcards'),
+        get_string('settings_ai_sentence_explain_reasoning_effort_desc', 'mod_flashcards'),
+        'minimal',
+        [
+            'none' => get_string('settings_reasoning_effort_none', 'mod_flashcards'),
+            'minimal' => get_string('settings_reasoning_effort_minimal', 'mod_flashcards'),
+            'low' => get_string('settings_reasoning_effort_low', 'mod_flashcards'),
+            'medium' => get_string('settings_reasoning_effort_medium', 'mod_flashcards'),
+            'high' => get_string('settings_reasoning_effort_high', 'mod_flashcards'),
+        ]
+    ));
+
+    $settings->add(new admin_setting_configtext(
+        'mod_flashcards/ai_sentence_explain_max_tokens',
+        get_string('settings_ai_sentence_explain_max_tokens', 'mod_flashcards'),
+        get_string('settings_ai_sentence_explain_max_tokens_desc', 'mod_flashcards'),
+        520,
+        PARAM_INT
+    ));
+
     $settings->add(new admin_setting_configselect(
         'mod_flashcards/ai_question_reasoning_effort',
         get_string('settings_ai_question_reasoning_effort', 'mod_flashcards'),

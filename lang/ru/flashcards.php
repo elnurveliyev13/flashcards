@@ -357,6 +357,12 @@ $string['settings_openai_model'] = 'Модель OpenAI';
 $string['settings_openai_model_desc'] = 'Например, gpt-4o-mini. Помощник использует chat-completions.';
 $string['settings_openai_url'] = 'Конечная точка OpenAI';
 $string['settings_openai_url_desc'] = 'Измените только при использовании конечной точки, совместимой с прокси.';
+$string['settings_ai_sentence_explain_model'] = 'Модель объяснения предложения';
+$string['settings_ai_sentence_explain_model_desc'] = 'Дополнительная модель для AI-объяснения предложения (Analyse). Оставьте пустым, чтобы использовать основную модель.';
+$string['settings_ai_sentence_explain_reasoning_effort'] = 'Уровень рассуждений для объяснения предложения';
+$string['settings_ai_sentence_explain_reasoning_effort_desc'] = 'Уровень рассуждений для объяснения предложения при использовании моделей o1/o3 или gpt-5.';
+$string['settings_ai_sentence_explain_max_tokens'] = 'Максимум токенов для объяснения предложения';
+$string['settings_ai_sentence_explain_max_tokens_desc'] = 'Ограничивает максимальную длину ответа AI для объяснения предложения.';
 
 $string['settings_tts_section'] = 'Синтез речи';
 $string['settings_tts_section_desc'] = 'Настройте провайдеров речи для полных предложений (ElevenLabs) и коротких фокусных фраз (Amazon Polly).';

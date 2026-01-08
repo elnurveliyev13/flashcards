@@ -396,6 +396,12 @@ $string['settings_ai_translation_reasoning_effort_desc'] = 'Reasoning effort lev
 
 $string['settings_ai_question_model'] = 'Question answering model';
 $string['settings_ai_question_model_desc'] = 'Optional model for answering questions about text. Leave empty to use the main model.';
+$string['settings_ai_sentence_explain_model'] = 'Sentence explanation model';
+$string['settings_ai_sentence_explain_model_desc'] = 'Optional model for AI sentence explanations (Analyse). Leave empty to use the main model.';
+$string['settings_ai_sentence_explain_reasoning_effort'] = 'Sentence explanation reasoning effort';
+$string['settings_ai_sentence_explain_reasoning_effort_desc'] = 'Reasoning effort level for sentence explanations when using o1/o3 or gpt-5 models.';
+$string['settings_ai_sentence_explain_max_tokens'] = 'Sentence explanation max tokens';
+$string['settings_ai_sentence_explain_max_tokens_desc'] = 'Limit the maximum length of AI sentence explanations.';
 
 $string['settings_ai_construction_model'] = 'Construction detection model';
 $string['settings_ai_construction_model_desc'] = 'Optional model for detecting grammatical constructions. Leave empty to use the main model.';
