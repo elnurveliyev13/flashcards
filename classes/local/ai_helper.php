@@ -514,7 +514,35 @@ USERPROMPT;
         // Payload should already contain prompt/messages on caller side; here we just pass through to OpenAI.
         $payload = $options['payload'] ?? [];
         $debugAi = !empty($options['debug_ai']);
-        return $this->openai->chat($userid, $payload, $debugAi);
+        $raw = $this->openai->chat($userid, $payload, $debugAi);
+        $analysis = trim((string)($raw['analysis'] ?? ''));
+        $sentenceTranslation = trim((string)($raw['sentenceTranslation'] ?? ''));
+        $exprs = [];
+        if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
+            foreach ($raw['expressions'] as $ex) {
+                $expr = trim((string)($ex['expression'] ?? $ex['text'] ?? ''));
+                if ($expr === '') {
+                    continue;
+                }
+                $exprs[] = [
+                    'expression' => $expr,
+                    'translation' => trim((string)($ex['translation'] ?? '')),
+                    'note' => trim((string)($ex['note'] ?? '')),
+                ];
+            }
+        }
+        $result = [
+            'analysis' => $analysis,
+            'sentenceTranslation' => $sentenceTranslation,
+            'expressions' => $exprs,
+        ];
+        if (!empty($raw['usage'])) {
+            $result['usage'] = (array)$raw['usage'];
+        }
+        if ($debugAi && !empty($raw['ai_debug'])) {
+            $result['ai_debug'] = $raw['ai_debug'];
+        }
+        return $result;
     }
 
     public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {

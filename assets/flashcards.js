@@ -3806,17 +3806,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return (value || '').toString().trim().toLowerCase();
     }
 
-    function formatDisplayTextWithLemma(surfaceText, lemma, pos){
+    function computeDisplayLemma(surfaceText, lemma, pos){
       const surface = (surfaceText || '').toString();
       const cleanLemma = (lemma || '').toString().trim();
       if(!cleanLemma || !shouldShowLemma(pos)){
-        return surface;
+        return '';
       }
       // Hide lemma when it's effectively the same (case-insensitive), e.g. "Hva" vs "hva".
       if(normalizeForLemmaCompare(surface) === normalizeForLemmaCompare(cleanLemma)){
-        return surface;
+        return '';
       }
-      return `${surface} (${cleanLemma})`;
+      return cleanLemma;
     }
 
     function formatTokenAnalysis(item){
@@ -3838,8 +3838,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos);
         list.push({
-          text: formatDisplayTextWithLemma(w.text, w.lemma, w.pos),
+          text: w.text,
+          lemmaText,
           translation: formatTokenAnalysis(w),
           kind: 'word',
           index: Number.isInteger(w.index) ? w.index : null
@@ -3883,8 +3885,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const translation = (enriched?.translation || '').toString().trim();
         const grammar = formatTokenAnalysis(w);
         const combined = translation ? (grammar ? `${translation} - ${grammar}` : translation) : grammar;
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos);
         list.push({
-          text: formatDisplayTextWithLemma(w.text, w.lemma, w.pos),
+          text: w.text,
+          lemmaText,
           translation: combined,
           kind:'word',
           index: idx
@@ -4894,7 +4898,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         const textEl = document.createElement('span');
         textEl.className = 'analysis-text';
-        textEl.textContent = entry.text || entry.token || '';
+        const surfaceText = entry.text || entry.token || '';
+        const lemmaText = (entry.lemmaText || '').toString().trim();
+        if(lemmaText){
+          const surfaceSpan = document.createElement('span');
+          surfaceSpan.className = 'analysis-surface';
+          surfaceSpan.textContent = surfaceText;
+          const lemmaSpan = document.createElement('span');
+          lemmaSpan.className = 'analysis-lemma';
+          lemmaSpan.textContent = ` (${lemmaText})`;
+          textEl.textContent = '';
+          textEl.appendChild(surfaceSpan);
+          textEl.appendChild(lemmaSpan);
+        } else {
+          textEl.textContent = surfaceText;
+        }
         chip.appendChild(textEl);
         if(entry.translation){
           const trEl = document.createElement('span');
@@ -15821,6 +15839,7 @@ Rules:
      */
     const analyseBtn = document.getElementById('analyseBtn');
     if (analyseBtn) {
+      let analyseBtnFeedbackTimer = null;
       analyseBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         const text = normalizeWhitespace($('#uFront').value);
@@ -15828,10 +15847,17 @@ Rules:
           return;
         }
 
+        if (analyseBtnFeedbackTimer) {
+          clearTimeout(analyseBtnFeedbackTimer);
+          analyseBtnFeedbackTimer = null;
+        }
+        analyseBtn.classList.remove('is-done', 'is-error');
+
         analyseBtn.disabled = true;
         analyseBtn.classList.add('is-loading');
         analyseBtn.setAttribute('aria-busy', 'true');
 
+        let ok = false;
         try {
           // Reset expression suggestion state (avoid stale "AI suggested" blocks).
           focusHelperState.expressionSuggestions = [];
@@ -15870,21 +15896,38 @@ Rules:
           // Fire AI tutor explanation in parallel (best effort, no await).
           fetchAiSentenceExplain(text, language).catch(()=>{});
 
-          // Avoid duplicating the full-sentence translation: we already requested it via runTranslationHelper above.
-          // Keep llm_enrich for phrase translations/notes only.
-          await fetchSentenceElements(text, {enrich: true, language, skipSentenceTranslation: true});
+           // Avoid duplicating the full-sentence translation: we already requested it via runTranslationHelper above.
+           // Keep llm_enrich for phrase translations/notes only.
+           await fetchSentenceElements(text, {enrich: true, language, skipSentenceTranslation: true});
+           ok = true;
 
-          // sentence_elements re-renders the analysis list; ensure the instant translation row survives.
-          if (normalizeWhitespace($('#uFront').value) === text) {
-            const translated = (typeof $('#uTransLocal')?.value === 'string') ? $('#uTransLocal').value : '';
-            if (translated && translated.trim()) {
+           // sentence_elements re-renders the analysis list; ensure the instant translation row survives.
+           if (normalizeWhitespace($('#uFront').value) === text) {
+             const translated = (typeof $('#uTransLocal')?.value === 'string') ? $('#uTransLocal').value : '';
+             if (translated && translated.trim()) {
               upsertSentenceTranslationRow(text, translated);
             }
           }
+        } catch (err) {
+          ok = false;
+          try { console.error('[flashcards] analyse failed', err); } catch (_) {}
         } finally {
           analyseBtn.disabled = false;
           analyseBtn.classList.remove('is-loading');
           analyseBtn.removeAttribute('aria-busy');
+          if (ok) {
+            analyseBtn.classList.add('is-done');
+            analyseBtnFeedbackTimer = setTimeout(() => {
+              analyseBtn.classList.remove('is-done');
+              analyseBtnFeedbackTimer = null;
+            }, 1200);
+          } else {
+            analyseBtn.classList.add('is-error');
+            analyseBtnFeedbackTimer = setTimeout(() => {
+              analyseBtn.classList.remove('is-error');
+              analyseBtnFeedbackTimer = null;
+            }, 1600);
+          }
         }
       });
     }

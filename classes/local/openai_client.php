@@ -846,6 +846,90 @@ PROMPT;
         return core_text::substr($text, 0, $length);
     }
 
+    protected function trim_debug_snippet(string $text, int $maxChars = 4000): string {
+        $text = trim($text);
+        if (core_text::strlen($text) > $maxChars) {
+            return core_text::substr($text, 0, $maxChars) . '…';
+        }
+        return $text;
+    }
+
+    /**
+     * Generic chat helper that passes a prebuilt payload through to OpenAI.
+     *
+     * @param int $userid
+     * @param array $payload
+     * @param bool $debug
+     * @return array
+     * @throws moodle_exception
+     */
+    public function chat(int $userid, array $payload, bool $debug = false): array {
+        if (!$this->is_enabled()) {
+            throw new coding_exception('openai client is not configured');
+        }
+        $payload = $payload ?? [];
+        if (empty($payload['model'])) {
+            $payload['model'] = $this->model;
+        }
+        $modelkey = core_text::strtolower(trim((string)$payload['model']));
+        if ($this->requires_default_temperature($modelkey)) {
+            unset($payload['temperature'], $payload['top_p']);
+            if (!isset($payload['reasoning_effort'])) {
+                $payload['reasoning_effort'] = 'medium';
+            }
+        }
+
+        $response = $this->request($payload);
+        $this->record_usage($userid, $response->usage ?? null);
+        $content = trim($response->choices[0]->message->content ?? '');
+
+        $decoded = null;
+        if ($content !== '') {
+            if (preg_match('~\{.*\}~s', $content, $m)) {
+                $decoded = json_decode($m[0], true);
+            }
+            if (!is_array($decoded)) {
+                $decoded = json_decode($content, true);
+            }
+        }
+        $result = is_array($decoded) ? $decoded : [];
+
+        if (isset($response->usage)) {
+            $result['usage'] = (array)$response->usage;
+        }
+
+        if ($debug) {
+            $system = '';
+            $user = '';
+            if (!empty($payload['messages']) && is_array($payload['messages'])) {
+                foreach ($payload['messages'] as $msg) {
+                    if (($msg['role'] ?? '') === 'system' && $system === '') {
+                        $system = (string)($msg['content'] ?? '');
+                    }
+                    if (($msg['role'] ?? '') === 'user' && $user === '') {
+                        $user = (string)($msg['content'] ?? '');
+                    }
+                }
+            }
+            $dbg = [
+                'task' => 'chat',
+                'system' => $this->trim_debug_snippet($system),
+                'user' => $this->trim_debug_snippet($user),
+                'payload' => $payload,
+                'raw' => $this->trim_debug_snippet($content),
+            ];
+            if (isset($response->usage)) {
+                $dbg['usage'] = (array)$response->usage;
+            }
+            if (!empty($response->model)) {
+                $dbg['model'] = (string)$response->model;
+            }
+            $result['ai_debug'] = $dbg;
+        }
+
+        return $result;
+    }
+
     protected function request(array $payload) {
         // Some newer models (e.g. gpt-5-mini/gpt-5-nano) only support the
         // default temperature and expose reasoning controls. For those,
