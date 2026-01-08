@@ -8,6 +8,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     if(!root) return;
     const $ = s => root.querySelector(s);
     const $$ = s => Array.from(root.querySelectorAll(s));
+    const isAdmin = (() => {
+      try {
+        if (typeof window.isAdmin !== 'undefined') return !!window.isAdmin;
+      } catch (_e) {}
+      try {
+        if (typeof window.__flashcardsIsAdmin !== 'undefined') return !!window.__flashcardsIsAdmin;
+      } catch (_e) {}
+      try {
+        if (typeof window.flashcardsIsAdmin !== 'undefined') return !!window.flashcardsIsAdmin;
+      } catch (_e) {}
+      return false;
+    })();
     const getModString = key => {
       try{
         return (M && M.str && M.str.mod_flashcards && M.str.mod_flashcards[key]) || '';
@@ -3040,7 +3052,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       llmConfirm: null,
       aiDebug: null,
       instantTranslationSeq: 0,
-      instantTranslationText: ''
+      instantTranslationText: '',
+      aiTutorSentenceTranslation: '',
+      lastAnalysedText: ''
     };
     renderAiTutorBlock();
     if(focusSpacyEl){
@@ -3123,6 +3137,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if (capitalized !== currentValue) {
           frontInput.value = capitalized;
         }
+        try{
+          const analyseBtn = document.getElementById('analyseBtn');
+          const lastAnalysed = (focusHelperState && typeof focusHelperState.lastAnalysedText === 'string') ? focusHelperState.lastAnalysedText : '';
+          const currentText = normalizeWhitespace(frontInput.value || '');
+          if(lastAnalysed && currentText !== lastAnalysed){
+            analyseBtn?.classList?.remove('is-done', 'is-error');
+          }
+        }catch(_){}
       });
       frontInput.addEventListener('focus', ()=>{
         if(translationDirection !== 'no-user' && !frontInput.value.trim()){
@@ -3821,7 +3843,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function formatTokenAnalysis(item){
       const parts = [];
-      const pos = resolveAnalysisLabel('pos', item.pos || '');
+      let posKey = item.pos || '';
+      if((posKey || '').toString().toUpperCase() === 'PROPN' && item.text && item.text[0] === item.text[0].toLowerCase()){
+        posKey = 'NOUN';
+      }
+      const pos = resolveAnalysisLabel('pos', posKey || '');
       if(pos) parts.push(pos);
       const depKey = (item.dep || '').toString().toLowerCase();
       const roleDeps = new Set(['nsubj','csubj','obj','iobj']);
@@ -4042,6 +4068,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.aiTutorExpressions = Array.isArray(data?.expressions) ? data.expressions : [];
         focusHelperState.aiTutorDebug = isAdmin ? (data?.ai_debug || null) : null;
         focusHelperState.aiTutorStatus = 'success';
+        const aiSentenceTranslation = (data?.sentenceTranslation || '').toString().trim();
+        focusHelperState.aiTutorSentenceTranslation = aiSentenceTranslation || '';
+        const currentFront = normalizeWhitespace($('#uFront')?.value || '');
+        if(aiSentenceTranslation && currentFront === normalized){
+          focusHelperState.aiTutorSentenceTranslation = aiSentenceTranslation;
+          const local = $('#uTransLocal');
+          if(local && (!local.value || !local.value.trim())){
+            local.value = aiSentenceTranslation;
+          }
+          upsertSentenceTranslationRow(normalized, aiSentenceTranslation);
+        }
         renderAiTutorBlock();
       }catch(err){
         if(seq !== focusHelperState.aiTutorSeq){
@@ -4049,6 +4086,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         focusHelperState.aiTutorStatus = 'error';
         focusHelperState.aiTutor = {error: err?.message || aiStrings.error || 'Error'};
+        focusHelperState.aiTutorSentenceTranslation = '';
         renderAiTutorBlock();
       }
     }
@@ -4946,13 +4984,21 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
         }
           if(kind === 'word'){
+            const normalizeDisplayPos = (posValue, surfaceText)=>{
+              const raw = (posValue || '').toString().trim();
+              if(!raw) return '';
+              if(raw.toUpperCase() === 'PROPN' && surfaceText && surfaceText[0] === surfaceText[0].toLowerCase()){
+                return 'NOUN';
+              }
+              return raw;
+            };
             const pos = entry.pos
               || (entry.meta && entry.meta.pos)
               || (Number.isInteger(entry.index) && focusHelperState.wordMetaByIndex && focusHelperState.wordMetaByIndex[entry.index] ? focusHelperState.wordMetaByIndex[entry.index].pos : '')
               || '';
             attachFocusChipMenuHandlers(chip, entry.text, {
               onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index}),
-              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, pos),
+              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, normalizeDisplayPos(pos, entry.text)),
               lexinUrl: buildLexinUrl(entry.text),
               naobUrl: buildNaobUrl(entry.text),
               forvoUrl: buildForvoUrl(entry.text, true)
@@ -5015,6 +5061,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         }
         focusAnalysisList.appendChild(chip);
       });
+
+      applyPendingSentenceTranslation();
 
       const llmSuggested = Array.isArray(focusHelperState.llmSuggested) ? focusHelperState.llmSuggested : [];
       const llmConfirm = focusHelperState.llmConfirm && typeof focusHelperState.llmConfirm === 'object' ? focusHelperState.llmConfirm : null;
@@ -5098,6 +5146,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperSlot.appendChild(aiTutorContainer);
       }
       const status = focusHelperState.aiTutorStatus;
+      if(focusHelperSlot && status !== 'idle'){
+        focusHelperSlot.classList.remove('hidden');
+      }
       let html = '';
       if(status === 'loading'){
         html = `<div class="ai-tutor-status">${escapeHtml(aiStrings.aiTutorLoading || 'AI is analysing the sentence...')}</div>`;
@@ -15834,6 +15885,21 @@ Rules:
       }
     }
 
+    function applyPendingSentenceTranslation(){
+      const text = normalizeWhitespace($('#uFront')?.value || '');
+      if(!text){
+        return;
+      }
+      const pending = (focusHelperState.aiTutorSentenceTranslation || '').trim();
+      if(pending){
+        upsertSentenceTranslationRow(text, pending);
+        const local = $('#uTransLocal');
+        if(local && (!local.value || !local.value.trim())){
+          local.value = pending;
+        }
+      }
+    }
+
     /**
      * Setup event handler for analyse button (sentence analysis only, no error checking)
      */
@@ -15851,7 +15917,7 @@ Rules:
           clearTimeout(analyseBtnFeedbackTimer);
           analyseBtnFeedbackTimer = null;
         }
-        analyseBtn.classList.remove('is-done', 'is-error');
+        analyseBtn.classList.remove('is-error');
 
         analyseBtn.disabled = true;
         analyseBtn.classList.add('is-loading');
@@ -15866,6 +15932,7 @@ Rules:
           focusHelperState.activeExpressionIndex = null;
           focusHelperState.expressionRequestText = '';
           focusHelperState.pendingSentenceAnalysis = null;
+          focusHelperState.aiTutorSentenceTranslation = '';
 
           // Use interface language for explanations, NOT learning language
           const language = currentInterfaceLang || 'en';
@@ -15915,12 +15982,13 @@ Rules:
           analyseBtn.disabled = false;
           analyseBtn.classList.remove('is-loading');
           analyseBtn.removeAttribute('aria-busy');
-          if (ok) {
+          const currentText = normalizeWhitespace($('#uFront').value);
+          if (ok && currentText === text) {
+            focusHelperState.lastAnalysedText = text;
             analyseBtn.classList.add('is-done');
-            analyseBtnFeedbackTimer = setTimeout(() => {
-              analyseBtn.classList.remove('is-done');
-              analyseBtnFeedbackTimer = null;
-            }, 1200);
+            analyseBtn.classList.remove('is-error');
+          } else if (ok) {
+            analyseBtn.classList.remove('is-done');
           } else {
             analyseBtn.classList.add('is-error');
             analyseBtnFeedbackTimer = setTimeout(() => {
