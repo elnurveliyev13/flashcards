@@ -6112,6 +6112,53 @@ if (!empty($ordbokene_debug)) {
         echo json_encode(['ok' => true, 'data' => $data]);
         break;
 
+    case 'ai_sentence_explain':
+        $raw = file_get_contents('php://input');
+        $payload = json_decode($raw, true);
+        if (!is_array($payload)) {
+            throw new invalid_parameter_exception('Invalid payload');
+        }
+        $text = trim($payload['text'] ?? '');
+        if ($text === '') {
+            throw new invalid_parameter_exception('Missing text');
+        }
+        $uiLang = clean_param($payload['uiLang'] ?? 'en', PARAM_ALPHANUMEXT);
+        $uiLangName = 'English';
+        if ($uiLang === 'ru') {
+            $uiLangName = 'Russian';
+        } else if ($uiLang === 'uk') {
+            $uiLangName = 'Ukrainian';
+        } else if ($uiLang === 'pl') {
+            $uiLangName = 'Polish';
+        }
+        $system = "You are an expert Norwegian (Bokmål) tutor. Write in {$uiLangName}. Return ONLY valid JSON, no extra text.";
+        $schema = <<<JSON
+{
+  "analysis": "short structured explanation in {$uiLangName} (markdown allowed)",
+  "sentenceTranslation": "translation of the full sentence",
+  "expressions": [
+    {
+      "expression": "expression in Norwegian (grunnform if possible)",
+      "translation": "short translation",
+      "note": "very short meaning note (optional)"
+    }
+  ]
+}
+JSON;
+        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) Explain the sentence in {$uiLangName} (grammar, meaning, key nuances). Keep it concise.\n2) Give a natural translation of the whole sentence.\n3) Extract multiword expressions (2+ words, idioms/collocations) that appear here. Normalize reflexives to \"seg\" and infinitives to base form if needed.\n\nReturn JSON EXACTLY in this schema:\n{$schema}\nRules:\n- Do NOT include single words.\n- If no expressions, use an empty array.";
+        $chatPayload = [
+            'model' => 'gpt-5-nano',
+            'messages' => [
+                ['role' => 'system', 'content' => $system],
+                ['role' => 'user', 'content' => $userPrompt],
+            ],
+            'reasoning_effort' => 'minimal',
+        ];
+        $helper = new \mod_flashcards\local\ai_helper();
+        $resp = $helper->explain_sentence($userid, $text, ['payload' => $chatPayload, 'debug_ai' => is_siteadmin()]);
+        echo json_encode(['ok' => true, 'data' => $resp]);
+        break;
+
     case 'ai_question':
         $raw = file_get_contents('php://input');
         $payload = json_decode($raw, true);

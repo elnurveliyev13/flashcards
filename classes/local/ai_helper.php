@@ -498,6 +498,25 @@ USERPROMPT;
         return $result;
     }
 
+    /**
+     * Run a tutor-style sentence explanation (structured JSON).
+     *
+     * @param int $userid
+     * @param string $text
+     * @param array $options
+     * @return array
+     * @throws moodle_exception
+     */
+    public function explain_sentence(int $userid, string $text, array $options = []): array {
+        if (!$this->openai->is_enabled()) {
+            throw new moodle_exception('ai_disabled', 'mod_flashcards');
+        }
+        // Payload should already contain prompt/messages on caller side; here we just pass through to OpenAI.
+        $payload = $options['payload'] ?? [];
+        $debugAi = !empty($options['debug_ai']);
+        return $this->openai->chat($userid, $payload, $debugAi);
+    }
+
     public function answer_question(int $userid, string $fronttext, string $question, array $options = []): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');

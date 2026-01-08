@@ -810,6 +810,142 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         add_example: 'Add',
         https_permissions_hint: 'Open via HTTPS for camera/mic permissions.',
       },
+      nb: {
+        app_title: 'MyMemory',
+        analyse_text: 'Analyser',
+        interface_language_label: 'Grensesnittspråk',
+        font_scale_label: 'Skriftstørrelse',
+        gestures_heading: 'Gestkontroller',
+        gestures_enabled: 'Aktiver sveipegester',
+        gesture_tap_reveal: 'Sveip ned for å vise tekst',
+        gesture_long_press: 'Hold inne for meny',
+        gesture_double_tap: 'Dobbelttrykk for å spille av lyd på nytt',
+        tab_quickinput: 'Opprett',
+        tab_study: 'Øv',
+        tab_dashboard: 'Dashbord',
+        quick_audio: 'Ta opp lyd',
+        quick_photo: 'Ta bilde',
+        choosefile: 'Velg fil',
+        chooseaudiofile: 'Velg lydfil',
+        tts_voice: 'Stemme',
+        tts_voice_hint: 'Velg en stemme før du ber AI-hjelperen generere lyd.',
+        front: 'Tekst',
+        front_translation_toggle_show: 'Vis oversettelse',
+        front_translation_toggle_hide: 'Skjul oversettelse',
+        front_translation_mode_label: 'Oversettelsesretning',
+        front_translation_mode_hint: 'Trykk for å bytte inndata-/utdataspråk.',
+        front_translation_status_idle: 'Oversettelse klar',
+        front_translation_copy: 'Kopier oversettelse',
+        focus_translation_label: 'Fokusbetydning',
+        fokus: 'Fokusord/-uttrykk',
+        focus_baseform: 'Grunnform',
+        focus_baseform_ph: '_ _ _',
+        ai_helper_label: 'AI fokus-hjelper',
+        ai_click_hint: 'Trykk på et ord over for å finne faste uttrykk',
+        ai_no_text: 'Skriv en setning for å aktivere hjelperen',
+        choose_focus_word: 'Velg fokusord',
+        ai_question_label: 'Spør AI',
+        ai_question_placeholder: 'Skriv et spørsmål om denne setningen...',
+        ai_question_button: 'Spør',
+        ai_chat_empty: '  AI      / ',
+        ai_chat_user: 'Du',
+        ai_chat_assistant: 'AI',
+        ai_chat_error: 'AI kunne ikke svare på spørsmålet.',
+        ai_chat_loading: 'Tenker...',
+        explanation: 'Forklaring',
+        back: 'Oversettelse',
+        back_en: 'Oversettelse (engelsk)',
+        save: 'Lagre',
+        cancel: 'Avbryt',
+        show_advanced: 'Vis avansert ',
+        hide_advanced: 'Skjul avansert ^',
+        empty: 'Ingenting planlagt i dag',
+        transcription: 'Transkripsjon',
+        pos: 'Ordklasse',
+        gender: 'Kjønn',
+        noun_forms: 'Substantivbøyning',
+        verb_forms: 'Verbformer',
+        adj_forms: 'Adjektivformer',
+        collocations: 'Vanlige kollokasjoner',
+        examples: 'Eksempelsetninger',
+        antonyms: 'Antonymer',
+        cognates: 'Beslektede ord',
+        sayings: 'Vanlige uttrykk',
+        fill_field: 'Vennligst fyll ut: {$a}',
+        update: 'Oppdater',
+        createnew: 'Opprett',
+        audio: 'Lyd',
+        order_audio_word: 'Fokuslyd',
+        order_audio_text: 'Lyd',
+        image: 'Bilde',
+        order: 'Rekkefølge (trykk i rekkefølge)',
+        easy: 'Lett',
+        normal: 'Normal',
+        hard: 'Vanskelig',
+        btnHardHint: 'Repeter dette kortet i dag',
+        btnNormalHint: 'Neste repetisjon i morgen',
+        btnEasyHint: 'Gå til neste nivå',
+        dashboard_total_cards: 'Totalt antall kort',
+        dashboard_active_vocab: 'Aktivt vokabular',
+        dashboard_streak: 'Nåværende streak (dager)',
+        dashboard_stage_chart: 'Fordeling av kortnivåer',
+        dashboard_activity_chart: 'Repetisjonsaktivitet (siste 7 dager)',
+        dashboard_achievements: 'Prestasjoner',
+        achievement_week_warrior: 'Ukekriger (7-dagers streak)',
+        achievement_level_a0: 'Nivå A0 - Nybegynner',
+        achievement_level_a1: 'Nivå A1 - Elementær',
+        achievement_level_a2: 'Nivå A2 - Lavere mellomnivå',
+        achievement_level_b1: 'Nivå B1 - Mellomnivå',
+        achievement_level_b2: 'Nivå B2 - Øvre mellomnivå',
+        skip: 'Hopp over',
+        showmore: 'Vis mer',
+        front_audio_badge: 'Lyd',
+        focus_audio_badge: 'Fokuslyd',
+        front_placeholder: '_ _ _',
+        ai_click_hint: 'Trykk på et ord over for å finne faste uttrykk',
+        translation_en_placeholder: '_ _ _',
+        translation_placeholder: '_ _ _',
+        explanation_placeholder: '_ _ _',
+        focus_placeholder: '_ _ _',
+        collocations_placeholder: '_ _ _',
+        examples_placeholder: '_ _ _',
+        antonyms_placeholder: '_ _ _',
+        cognates_placeholder: '_ _ _',
+        sayings_placeholder: '_ _ _',
+        transcription_placeholder: '_ _ _',
+        one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Grammatikk- og betydningsanalyse',
+        analysis_empty: '',
+        check_text: 'Sjekk',
+        checking_text: 'Sjekker tekst...',
+        no_errors_found: 'Ingen feil funnet!',
+        errors_found: 'Feil funnet!',
+        corrected_version: 'Korrigert versjon:',
+        apply_corrections: 'Bruk rettelser',
+        keep_as_is: 'Behold som det er',
+        error_checking_failed: 'Tekstsjekk feilet',
+        naturalness_suggestion: 'Mer naturlig alternativ:',
+        ask_ai_about_correction: 'Spør AI',
+        ai_sure: 'Er du sikker?',
+        ai_explain_more: 'Forklar i detalj',
+        ai_more_examples: 'Eksempler:',
+        ai_thinking: 'Tenker...',
+        ai_corrected: 'Korrigert',
+        ai_alternative: 'Alternativ',
+        translation_lang_current: 'Nåværende oversettelsesspråk',
+        translation_lang_select: 'Velg nytt oversettelsesspråk',
+        translation_lang_current_marker: '(nåværende)',
+        translation_lang_prompt: 'Skriv et tall (1-{$a}) eller avbryt for å beholde nåværende:',
+        translation_lang_changed: 'Oversettelsesspråk endret til {$a}.\n\nNye kort opprettes med {$a}-oversettelser.\nEksisterende kort viser {$a}-oversettelser hvis tilgjengelig.',
+        confirm_reset: 'Nullstille?',
+        confirm_delete_card: 'Slette dette kortet?',
+        prompt_profile_name: 'Profilnavn:',
+        expression_edit: 'Rediger uttrykk',
+        expression_edit_prompt: 'Rediger uttrykksteksten',
+        reset_order: 'Tilbakestill rekkefølge',
+        add_example: 'Legg til',
+        https_permissions_hint: 'Åpne via HTTPS for kamera/mikrofon-tillatelser.',
+      },
       uk: {
         app_title: 'MyMemory',
         analyse_text: 'Аналіз',
@@ -2875,6 +3011,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusHelperSlot = root.querySelector('.focus-helper-slot');
+    let aiTutorContainer = null;
+    renderAiTutorBlock();
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusSpacyEl = document.getElementById('focusHelperSpacy');
     const focusAnalysisList = document.getElementById('focusAnalysisList');
@@ -2894,6 +3032,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       spacySourceText: '',
       sentenceAnalysis: [],
       pendingSentenceAnalysis: null,
+      aiTutor: null,
+      aiTutorStatus: 'idle',
+      aiTutorDebug: null,
+      aiTutorExpressions: [],
+      aiTutorSeq: 0,
       llmSuggested: [],
       llmConfirm: null,
       aiDebug: null,
@@ -3421,6 +3564,50 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'Rolle'
         }
       },
+      nb: {
+        pos: {
+          NOUN: 'Substantiv',
+          PROPN: 'Egennavn',
+          VERB: 'Verb',
+          AUX: 'Hjelpeverb',
+          ADJ: 'Adjektiv',
+          ADV: 'Adverb',
+          PRON: 'Pronomen',
+          DET: 'Determinator',
+          ADP: 'Preposisjon',
+          CONJ: 'Konjunksjon',
+          CCONJ: 'Koordinerende konjunksjon',
+          SCONJ: 'Underordnende konjunksjon',
+          PART: 'Partikkel',
+          NUM: 'Tallord',
+          INTJ: 'Interjeksjon',
+          X: 'Annet'
+        },
+        dep: {
+          nsubj: 'Subjekt',
+          csubj: 'Sats-subjekt',
+          obj: 'Objekt',
+          iobj: 'Indirekte objekt',
+          obl: 'Oblikv',
+          advmod: 'Adverbialt ledd',
+          amod: 'Adjektivmodifikator',
+          nmod: 'Substantivmodifikator',
+          det: 'Determinator',
+          appos: 'Apposisjon',
+          aux: 'Hjelpeverb',
+          cop: 'Kopula',
+          compound: 'Sammensetning',
+          mark: 'Markør',
+          case: 'Kasus',
+          xcomp: 'Åpent satskomplement',
+          ccomp: 'Satskomplement',
+          acl: 'Satsmodifikator',
+          root: 'Rot'
+        },
+        meta: {
+          role: 'rolle'
+        }
+      },
       fr: {
         pos: {
           NOUN: 'Nom',
@@ -3738,6 +3925,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     async function fetchSentenceElements(text, options = {}){
       const normalized = (text || '').trim();
+      const {force = false, enrich = true, skipSentenceTranslation = false} = options || {};
       if(!normalized){
         focusHelperState.wordMetaByIndex = {};
         focusHelperState.wordMetaSourceText = '';
@@ -3761,10 +3949,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const payload = {text: normalized};
         payload.debug = true;
         payload.debug_ai = true;
-        if(options && options.enrich){
+        if(enrich){
           payload.enrich = true;
           payload.language = options.language || currentInterfaceLang || 'en';
-          if(options.skipSentenceTranslation){
+          if(skipSentenceTranslation){
             payload.skip_sentence_translation = true;
           }
         }
@@ -3822,6 +4010,42 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(sentenceElementsAbortController === controller){
           sentenceElementsAbortController = null;
         }
+      }
+    }
+
+    async function fetchAiSentenceExplain(text, uiLang){
+      const normalized = (text || '').trim();
+      if(!normalized){
+        focusHelperState.aiTutor = null;
+        focusHelperState.aiTutorExpressions = [];
+        focusHelperState.aiTutorDebug = null;
+        focusHelperState.aiTutorStatus = 'idle';
+        renderAiTutorBlock();
+        return;
+      }
+      const seq = ++focusHelperState.aiTutorSeq;
+      focusHelperState.aiTutorStatus = 'loading';
+      renderAiTutorBlock();
+      try{
+        const payload = {text: normalized, uiLang: uiLang || currentInterfaceLang || 'en'};
+        const resp = await api('ai_sentence_explain', {}, 'POST', payload);
+        if(seq !== focusHelperState.aiTutorSeq){
+          return;
+        }
+        updateUsageFromResponse(resp);
+        const data = resp && resp.data ? resp.data : resp;
+        focusHelperState.aiTutor = data || {};
+        focusHelperState.aiTutorExpressions = Array.isArray(data?.expressions) ? data.expressions : [];
+        focusHelperState.aiTutorDebug = isAdmin ? (data?.ai_debug || null) : null;
+        focusHelperState.aiTutorStatus = 'success';
+        renderAiTutorBlock();
+      }catch(err){
+        if(seq !== focusHelperState.aiTutorSeq){
+          return;
+        }
+        focusHelperState.aiTutorStatus = 'error';
+        focusHelperState.aiTutor = {error: err?.message || aiStrings.error || 'Error'};
+        renderAiTutorBlock();
       }
     }
 
@@ -4844,6 +5068,54 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         focusAnalysisList.appendChild(aiDetails);
       }
+    }
+
+    function renderAiTutorBlock(){
+      if(!focusHelperSlot){
+        return;
+      }
+      if(!aiTutorContainer){
+        aiTutorContainer = document.createElement('div');
+        aiTutorContainer.className = 'ai-tutor-block hidden';
+        focusHelperSlot.appendChild(aiTutorContainer);
+      }
+      const status = focusHelperState.aiTutorStatus;
+      let html = '';
+      if(status === 'loading'){
+        html = `<div class="ai-tutor-status">${escapeHtml(aiStrings.aiTutorLoading || 'AI is analysing the sentence...')}</div>`;
+      } else if(status === 'error'){
+        const msg = focusHelperState.aiTutor && focusHelperState.aiTutor.error ? String(focusHelperState.aiTutor.error) : (aiStrings.error || 'Error');
+        html = `<div class="ai-tutor-status ai-tutor-status--error">${escapeHtml(msg)}</div>`;
+      } else if(status === 'success' && focusHelperState.aiTutor){
+        const data = focusHelperState.aiTutor;
+        html += `<details class="ai-tutor-details" open><summary>${escapeHtml(aiStrings.aiTutorTitle || 'AI explanation')}</summary>`;
+        if(data.sentenceTranslation){
+          html += `<div class="ai-tutor-translation">${escapeHtml(data.sentenceTranslation)}</div>`;
+        }
+        if(data.analysis){
+          const formatted = escapeHtml(String(data.analysis)).replace(/\n/g, '<br>');
+          html += `<div class="ai-tutor-analysis">${formatted}</div>`;
+        }
+        const exprs = Array.isArray(focusHelperState.aiTutorExpressions) ? focusHelperState.aiTutorExpressions : [];
+        if(exprs.length){
+          html += `<div class="ai-tutor-expressions"><div class="ai-tutor-subtitle">${escapeHtml(aiStrings.aiTutorExprs || 'AI expressions')}</div><ul>`;
+          exprs.forEach(ex=>{
+            const expr = escapeHtml(ex.expression || '');
+            const tr = ex.translation ? ` — ${escapeHtml(ex.translation)}` : '';
+            const note = ex.note ? ` <span class="ai-tutor-note">${escapeHtml(ex.note)}</span>` : '';
+            if(expr){
+              html += `<li><strong>${expr}</strong>${tr}${note}</li>`;
+            }
+          });
+          html += '</ul></div>';
+        }
+        if(isAdmin && focusHelperState.aiTutorDebug){
+          html += `<details class="analysis-ai"><summary>${escapeHtml(aiStrings.analysisAiDebug || 'AI debug')}</summary><pre class="analysis-ai__pre">${escapeHtml(JSON.stringify(focusHelperState.aiTutorDebug, null, 2))}</pre></details>`;
+        }
+        html += '</details>';
+      }
+      aiTutorContainer.innerHTML = html;
+      aiTutorContainer.classList.toggle('hidden', html === '');
     }
 
     function renderOrdbokeneBlock(info){
@@ -5975,8 +6247,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.spacyTokens = [];
         focusHelperState.spacySourceText = '';
         focusHelperState.sentenceAnalysis = [];
+        focusHelperState.aiTutor = null;
+        focusHelperState.aiTutorStatus = 'idle';
+        focusHelperState.aiTutorExpressions = [];
+        focusHelperState.aiTutorDebug = null;
         setFocusExpressionSuggestions([], '');
         renderSentenceAnalysis([]);
+        renderAiTutorBlock();
         if(focusHelperState.abortController){
           focusHelperState.abortController.abort();
           focusHelperState.abortController = null;
@@ -15589,6 +15866,9 @@ Rules:
               upsertSentenceTranslationRow(text, translated);
             })
             .catch(()=>{});
+
+          // Fire AI tutor explanation in parallel (best effort, no await).
+          fetchAiSentenceExplain(text, language).catch(()=>{});
 
           // Avoid duplicating the full-sentence translation: we already requested it via runTranslationHelper above.
           // Keep llm_enrich for phrase translations/notes only.
