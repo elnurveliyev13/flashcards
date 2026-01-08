@@ -768,7 +768,13 @@ function mod_flashcards_expression_candidates_from_words(array $words, array $le
         if ($lemma === '') {
             $lemma = $surface;
         }
-        $lemmaForExpr[$i] = core_text::strtolower($lemma);
+        $lemma = core_text::strtolower($lemma);
+        // Normalize verb lemmas to infinitive so expression candidates hit Ordbokene
+        // (e.g. "skilte" -> "skille").
+        if (in_array('VERB', $posSets[$i], true) || in_array('AUX', $posSets[$i], true)) {
+            $lemma = mod_flashcards_normalize_infinitive($lemma);
+        }
+        $lemmaForExpr[$i] = $lemma;
     }
 
     $rules = [
