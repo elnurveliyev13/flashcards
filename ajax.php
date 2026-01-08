@@ -3873,7 +3873,29 @@ switch ($action) {
                 continue;
             }
             $seenCand[$key] = true;
+            // Build a lemma-normalized variant for lookup (helps "skilte seg ut" -> "skille seg ut").
+            $lemmaVariant = '';
+            if ($startIdx !== null && $endIdx !== null) {
+                $lemmaParts = [];
+                for ($i = $startIdx; $i <= $endIdx; $i++) {
+                    $lem = $exprLemmaMap[$i] ?? '';
+                    if ($lem === '') {
+                        continue;
+                    }
+                    $lower = core_text::strtolower($lem);
+                    if (in_array($lower, ['meg','deg','oss','dere','dem'], true)) {
+                        $lem = 'seg';
+                    }
+                    $lemmaParts[] = $lem;
+                }
+                if (!empty($lemmaParts)) {
+                    $lemmaVariant = mod_flashcards_normalize_infinitive(trim(implode(' ', $lemmaParts)));
+                }
+            }
             $variants = [];
+            if ($lemmaVariant !== '') {
+                $variants[] = $lemmaVariant;
+            }
             if ($expr !== '') {
                 $variants = array_merge($variants, mod_flashcards_expand_expression_variants($expr));
                 $variants[] = $expr;
