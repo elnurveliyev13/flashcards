@@ -77,7 +77,7 @@
             <span class="header-stat-icon">&#128483;&#65038;</span>
             <span id="headerActiveVocab">0</span>
           </span>
-          <span class="header-stat" title="Current Streak">
+          <span class="header-stat" title="{{#str}} dashboard_streak, mod_flashcards {{/str}}" data-i18n-title="dashboard_streak">
             <span class="header-stat-icon">&#128293;</span>
             <span id="headerStreak">0</span>
           </span>
@@ -173,7 +173,7 @@
                     <div class="pref-card-body pref-card-install-body">
                       <button type="button" id="showIosInstallHint" class="pref-link-button" aria-expanded="false">{{#str}} install_app, mod_flashcards {{/str}}</button>
                       <div id="iosInstallHint" class="ios-hint hidden" role="note">
-                        <button id="iosHintClose" class="ios-hint-close" title="Close" aria-label="Close">&times;</button>
+                        <button id="iosHintClose" class="ios-hint-close" title="{{#str}} close, mod_flashcards {{/str}}" aria-label="{{#str}} close, mod_flashcards {{/str}}">&times;</button>
                         <div class="ios-hint-title">📱 {{#str}} ios_install_title, mod_flashcards {{/str}}</div>
                         <div class="ios-hint-steps">
                           <div class="ios-hint-line">
@@ -270,10 +270,10 @@
               </div>
               <div class="slot-head-extra">
                 <span class="status-chip translation-status" id="mediaStatusIndicator">Status</span>
-                <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
-                  <span aria-hidden="true">&#8634;</span>
-                  <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
-                </button>
+                  <button type="button" id="btnQuickFormReset" class="ghost icon-only translation-reset translation-reset-small" title="{{#str}} resetform, mod_flashcards {{/str}}" aria-label="{{#str}} resetform, mod_flashcards {{/str}}" hidden>
+                    <span aria-hidden="true">&#8634;</span>
+                    <span class="sr-only">{{#str}} resetform, mod_flashcards {{/str}}</span>
+                  </button>
               </div>
             </div>
           </div>
@@ -286,7 +286,7 @@
                 <span class="translation-mode-label" id="translationModeForward">Norsk > English</span>
               </button>
             </div>
-            <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder" autofocus></textarea>
+            <textarea id="uFront" class="autogrow" placeholder="{{#str}} front_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="front_placeholder" autofocus></textarea>
           </div>
             <div class="front-text-actions">
               <div class="front-text-actions-left">
@@ -308,7 +308,7 @@
               <span class="tag" id="tag_trans_local" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</span>
             </div>
           </div>
-          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
+          <textarea id="uTransLocal" class="autogrow" placeholder="{{#str}} translation_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="translation_placeholder"></textarea>
               <div class="translation-actions">
                 <div class="translation-mode translation-mode-inline">
                   <button type="button" class="translation-mode-btn" data-dir="user-no" data-translation-btn>
@@ -333,8 +333,8 @@
                       </div>
                     </div>
                     <div class="rec-lock-label">
-                      <div class="rec-lock-label-title">Slide down to lock</div>
-                      <div class="rec-lock-label-sub">Hold to start</div>
+                    <div class="rec-lock-label-title" data-i18n="slide_down_to_lock">Slide down to lock</div>
+                    <div class="rec-lock-label-sub" data-i18n="hold_to_start">Hold to start</div>
                     </div>
                   </div>
                 </div>
@@ -354,7 +354,7 @@
                 <div class="focus-helper-analysis">
                   <div class="analysis-header">
                     <span class="tag" data-i18n="sentence_analysis">{{#str}} sentence_analysis, mod_flashcards {{/str}}</span>
-                    <div class="focus-helper-subhead">Choose focus word/phrase:</div>
+              <div class="focus-helper-subhead"><span data-i18n="choose_focus_word">{{#str}} choose_focus_word, mod_flashcards {{/str}}</span>:</div>
                   </div>
                   <div id="focusWordList" class="focus-word-list"></div>
                   <div id="focusAnalysisList" class="analysis-list" aria-live="polite"></div>
@@ -365,7 +365,7 @@
             <div class="slot">
               <span class="tag" data-i18n="fokus">{{#str}} fokus, mod_flashcards {{/str}}</span>
               <div class="fokus-input-wrap">
-                <textarea id="uFokus" class="autogrow" placeholder="Fokus word/phrase..." data-i18n-placeholder="focus_placeholder"></textarea>
+                <textarea id="uFokus" class="autogrow" placeholder="{{#str}} focus_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="focus_placeholder"></textarea>
                 <div id="fokusSuggest" class="fokus-suggest front-suggest" data-front-suggest></div>
               </div>
             </div>
@@ -375,16 +375,16 @@
             </div>
 
             <div class="slot" id="slot_compound_parts">
-              <span class="tag" data-i18n="compound_parts">Ledd</span>
+              <span class="tag" data-i18n="compound_parts">Parts</span>
               <div id="compoundParts" class="ledd-parts" aria-live="polite"></div>
             </div>
             <div class="slot" id="slot_forms_preview">
-              <span class="tag" data-i18n="forms_preview">Ordformer</span>
+              <span class="tag" data-i18n="forms_preview">Word forms</span>
               <div id="formsPreview" class="forms-preview" aria-live="polite"></div>
             </div>
             <div class="slot">
               <span class="tag" data-i18n="transcription">{{#str}} transcription, mod_flashcards {{/str}}</span>
-              <textarea id="uTranscription" class="autogrow" placeholder="[IPA e.g. /hu:s/]" data-i18n-placeholder="transcription_placeholder"></textarea>
+              <textarea id="uTranscription" class="autogrow" placeholder="{{#str}} transcription_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="transcription_placeholder"></textarea>
             </div>
             <div class="translation-media-tts">
               <div class="fc-media-badges">
@@ -397,7 +397,7 @@
                       data-media-kind="front">
                   <span class="icon">&#127897;&#65039;</span>
                   <span id="audName" class="media-name"></span>
-                  <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+                  <button id="btnClearAud" class="iconbtn" title="{{#str}} resetform, mod_flashcards {{/str}}">&times;</button>
                 </span>
                 <span id="focusAudBadge" class="media-pill hidden"
                       role="button"
@@ -408,12 +408,12 @@
                       data-media-kind="focus">
                   <span class="icon">&#128266;</span>
                   <span id="focusAudName" class="media-name"></span>
-                  <button id="btnClearFocusAud" class="iconbtn" title="Clear">&times;</button>
+                  <button id="btnClearFocusAud" class="iconbtn" title="{{#str}} resetform, mod_flashcards {{/str}}">&times;</button>
                 </span>
                 <span id="imgBadge" class="media-pill hidden">
                   <span class="icon">&#128247;</span>
                   <span id="imgName" class="media-name"></span>
-                  <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
+                  <button id="btnClearImg" class="iconbtn" title="{{#str}} resetform, mod_flashcards {{/str}}">&times;</button>
                 </span>
               </div>
               <div class="translation-audio-previews">
@@ -428,7 +428,7 @@
               <span class="tag" data-i18n="examples">{{#str}} examples, mod_flashcards {{/str}}</span>
               <div id="examplesListQuick" style="display: flex; flex-direction: column; gap: 12px;"></div>
               <div style="margin-top: 8px; display: flex;">
-                <button type="button" id="btnAddExampleQuick" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+                <button type="button" id="btnAddExampleQuick" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;" data-i18n="add_example">+ Add</button>
               </div>
               <textarea id="uExamples" class="hidden" aria-hidden="true" style="display:none"></textarea>
             </div>
@@ -452,12 +452,12 @@
 
             <div id="editorAdvancedFields" class="fc-quick-advanced hidden">
               <div class="slot" id="slot_translation_en">
-                <span class="tag" data-i18n="back_en">Translation (English)</span>
-                <textarea id="uTransEn" class="autogrow" placeholder="Translation (English)..." data-i18n-placeholder="translation_en_placeholder"></textarea>
+                <span class="tag" data-i18n="back_en">{{#str}} back_en, mod_flashcards {{/str}}</span>
+                <textarea id="uTransEn" class="autogrow" placeholder="{{#str}} translation_en_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="translation_en_placeholder"></textarea>
               </div>
             <div class="slot">
               <span class="tag" id="t_explanationText" data-i18n="explanation">{{#str}} explanation, mod_flashcards {{/str}}</span>
-              <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
+              <textarea id="uExplanation" class="autogrow" placeholder="{{#str}} explanation_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="explanation_placeholder"></textarea>
             </div>
             <div class="slot">
               <span class="tag" data-i18n="focus_baseform">{{#str}} focus_baseform, mod_flashcards {{/str}}</span>
@@ -541,7 +541,7 @@
                   <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
                   <button class="chip" data-kind="text"         id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
                   <button class="chip" data-kind="translation"  id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
-                  <button class="chip chip-reset" id="chip_reset" title="Reset order">&#8634;</button>
+                  <button class="chip chip-reset" id="chip_reset" title="Reset order" data-i18n-title="reset_order">&#8634;</button>
                 </div>
                 <div class="small" id="orderPreview">{{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
               </div>
@@ -604,7 +604,7 @@
         </div>
         <div class="card-form-content" id="cardCreationForm">
           <div class="actionTop">
-            <button id="btnFormReset" class="iconbtn ghost" title="Clear form"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="Cancel" data-i18n-title="cancel">&times;</button>
+            <button id="btnFormReset" class="iconbtn ghost" title="{{#str}} resetform, mod_flashcards {{/str}}"><span class="rot">&#8634;</span></button><button id="btnCancelEdit" class="iconbtn cross" title="{{#str}} cancel, mod_flashcards {{/str}}" data-i18n-title="cancel">&times;</button>
           </div>
           <div class="slot">
             <span class="tag" id="t_addOwn">{{#str}} addown, mod_flashcards {{/str}}</span>
@@ -614,7 +614,7 @@
           <div class="previewRow">
             <input id="uAudio" type="file" accept="audio/*" class="hidden">
             <button id="btnChooseAud" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="audName" class="fileName"></span>
-            <button id="btnClearAud" class="iconbtn" title="Clear">&times;</button>
+            <button id="btnClearAud" class="iconbtn" title="{{#str}} resetform, mod_flashcards {{/str}}">&times;</button>
             <div class="rec-wrap">
               <div class="rec-control rec-control-inline">
                 <span id="recTimer" class="rec-timer hidden" aria-live="polite" role="status">00:00</span>
@@ -633,7 +633,7 @@
           <div class="previewRow">
             <input id="uImage" type="file" accept="image/*" class="hidden">
             <button id="btnChooseImg" class="btnFile">{{#str}} choosefile, mod_flashcards {{/str}}</button><span id="imgName" class="fileName"></span>
-            <button id="btnClearImg" class="iconbtn" title="Clear">&times;</button>
+            <button id="btnClearImg" class="iconbtn" title="{{#str}} resetform, mod_flashcards {{/str}}">&times;</button>
             <!-- Camera controls positioned near image picker -->
             <button id="btnOpenCam" class="iconbtn" title="{{#str}} title_camera, mod_flashcards {{/str}}">&#128247;</button>
             <button id="btnShot" class="iconbtn hidden" title="{{#str}} title_take, mod_flashcards {{/str}}">&#128248;</button>
@@ -644,21 +644,21 @@
         <div class="slot">
           <span class="tag" id="t_frontText" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</span>
           <div class="fokus-input-wrap front-input-wrap">
-            <textarea id="uFront" class="autogrow" placeholder="Front..." data-i18n-placeholder="front_placeholder"></textarea>
+            <textarea id="uFront" class="autogrow" placeholder="{{#str}} front_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="front_placeholder"></textarea>
           </div>
         </div>
         <div class="slot">
           <span class="tag" id="t_explanationText">{{#str}} explanation, mod_flashcards {{/str}}</span>
-          <textarea id="uExplanation" class="autogrow" placeholder="Explanation..." data-i18n-placeholder="explanation_placeholder"></textarea>
+          <textarea id="uExplanation" class="autogrow" placeholder="{{#str}} explanation_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="explanation_placeholder"></textarea>
         </div>
         <!-- Language-aware translation fields -->
         <div class="slot" id="slot_translation_local">
-          <span class="tag" id="tag_trans_local">Translation (?)</span>
-          <textarea id="uTransLocal" class="autogrow" placeholder="Translation..." data-i18n-placeholder="translation_placeholder"></textarea>
+          <span class="tag" id="tag_trans_local">{{#str}} back, mod_flashcards {{/str}}</span>
+          <textarea id="uTransLocal" class="autogrow" placeholder="{{#str}} translation_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="translation_placeholder"></textarea>
         </div>
         <div class="slot" id="slot_translation_en">
           <span class="tag" data-i18n="back_en">{{#str}} back_en, mod_flashcards {{/str}}</span>
-          <textarea id="uTransEn" class="autogrow" placeholder="I love you" data-i18n-placeholder="translation_en_placeholder"></textarea>
+          <textarea id="uTransEn" class="autogrow" placeholder="{{#str}} translation_en_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="translation_en_placeholder"></textarea>
         </div>
         <!-- Linguistic enrichment fields -->
         <div class="slot">
@@ -719,7 +719,7 @@
         <div class="slot">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span class="tag">{{#str}} collocations, mod_flashcards {{/str}}</span>
-            <button type="button" id="btnAddCollocation" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+            <button type="button" id="btnAddCollocation" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;" data-i18n="add_example">+ Add</button>
           </div>
           <div id="collocationsList" style="display: flex; flex-direction: column; gap: 12px;"></div>
         </div>
@@ -727,23 +727,23 @@
           <span class="tag">{{#str}} examples, mod_flashcards {{/str}}</span>
           <div id="examplesList" style="display: flex; flex-direction: column; gap: 12px;"></div>
           <div style="margin-top: 8px; display: flex;">
-            <button type="button" id="btnAddExample" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;">+ Add</button>
+            <button type="button" id="btnAddExample" class="fc-link-btn" style="font-size: 0.85em; padding: 4px 8px;" data-i18n="add_example">+ Add</button>
           </div>
         </div>
         <div class="slot">
           <span class="tag">{{#str}} antonyms, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uAntonyms" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
+            <textarea id="uAntonyms" class="autogrow" placeholder="{{#str}} one_per_line_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
           <span class="tag" data-i18n="cognates">{{#str}} cognates, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uCognates" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
+            <textarea id="uCognates" class="autogrow" placeholder="{{#str}} one_per_line_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
           <span class="tag" data-i18n="sayings">{{#str}} sayings, mod_flashcards {{/str}}</span>
           <div class="row has-action">
-            <textarea id="uSayings" class="autogrow" placeholder="one per line..." data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
+            <textarea id="uSayings" class="autogrow" placeholder="{{#str}} one_per_line_placeholder, mod_flashcards {{/str}}" data-i18n-placeholder="one_per_line_placeholder"></textarea>\n          </div>
         </div>
         <div class="slot">
           <span class="tag" id="t_order" data-i18n="order">{{#str}} order, mod_flashcards {{/str}}</span>
@@ -753,12 +753,12 @@
             <button class="chip" data-kind="audio"        id="chip_audio" data-i18n="order_audio_text">{{#str}} order_audio_text, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="text"         id="chip_text" data-i18n="front">{{#str}} front, mod_flashcards {{/str}}</button>
             <button class="chip" data-kind="translation"  id="chip_translation" data-i18n="back">{{#str}} back, mod_flashcards {{/str}}</button>
-            <button class="chip chip-reset" id="chip_reset" title="Reset order">&#8634;</button>
+            <button class="chip chip-reset" id="chip_reset" title="Reset order" data-i18n-title="reset_order">&#8634;</button>
           </div>
           <div class="small" id="orderPreview">{{#str}} order_audio_word, mod_flashcards {{/str}} → {{#str}} transcription, mod_flashcards {{/str}} → {{#str}} order_audio_text, mod_flashcards {{/str}} → {{#str}} front, mod_flashcards {{/str}} → {{#str}} back, mod_flashcards {{/str}}</div>
         </div>
         <div class="mono" id="status"></div>
-        <div class="small" id="hintPerms">Open via HTTPS for camera/mic permissions.</div>
+        <div class="small" id="hintPerms" data-i18n="https_permissions_hint">Open via HTTPS for camera/mic permissions.</div>
         </div>
       </div>
     </div>

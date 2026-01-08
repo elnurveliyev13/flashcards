@@ -772,10 +772,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Ask AI',
         ai_sure: 'Are you sure?',
         ai_explain_more: 'Explain in detail',
-        ai_more_examples: 'Examples:',
+        ai_more_examples: 'More examples',
         ai_thinking: 'Thinking...',
         ai_corrected: 'Corrected',
         ai_alternative: 'Alternative',
+        ai_examples_title: 'Examples:',
+        ai_expressions_title: 'Expressions:',
+        ai_no_expressions: 'No fixed expressions found.',
+        ordbokene_block_label: 'Ordbøkene',
+        compound_parts: 'Parts',
+        forms_preview: 'Word forms',
+        report_issue: 'Report issue',
+        ordbokene_empty: 'Dictionary info appears here after lookup.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Other meanings',
+        error_check_collapse_label: 'Hide the error check panel',
+        title_play: 'Play',
+        press_hold_to_record: 'Press and hold to record',
+        release_when_finished: 'Release when you finish',
+        slide_down_to_lock: 'Slide down to lock',
+        hold_to_start: 'Hold to start',
+        release_to_lock: 'Release to lock',
+        keep_dragging: 'Keep dragging...',
+        rec_locked_tap_stop: 'Recording locked',
+        tap_stop: 'Tap stop to finish',
+        translation_lang_current: 'Current translation language',
+        translation_lang_select: 'Select new translation language',
+        translation_lang_current_marker: '(current)',
+        translation_lang_prompt: 'Enter number (1-{$a}) or cancel to keep current:',
+        translation_lang_changed: 'Translation language changed to {$a}.\n\nNew cards will be created with {$a} translations.\nExisting cards will show {$a} translations if available.',
+        confirm_reset: 'Reset?',
+        confirm_delete_card: 'Delete this card?',
+        prompt_profile_name: 'Profile name:',
+        expression_edit: 'Edit expression',
+        expression_edit_prompt: 'Edit the expression text',
+        reset_order: 'Reset order',
+        add_example: 'Add',
+        https_permissions_hint: 'Open via HTTPS for camera/mic permissions.',
       },
       uk: {
         app_title: 'MyMemory',
@@ -797,8 +830,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         tts_voice: '\u0413\u043e\u043b\u043e\u0441',
         tts_voice_hint: '\u0412\u0438\u0431\u0435\u0440\u0456\u0442\u044c \u0433\u043e\u043b\u043e\u0441 \u043f\u0435\u0440\u0435\u0434 \u0442\u0438\u043c, \u044f\u043a \u043f\u043e\u043f\u0440\u043e\u0441\u0438\u0442\u0438 AI \u043f\u043e\u043c\u0456\u0447\u043d\u0438\u043a\u0430 \u0437\u0433\u0435\u043d\u0435\u0440\u0443\u0432\u0430\u0442\u0438 \u0430\u0443\u0434\u0456\u043e.',
         front: '\u0422\u0435\u043a\u0441\u0442',
-        front_translation_toggle_show: 'Show translation',
-        front_translation_toggle_hide: 'Hide translation',
+        front_translation_toggle_show: 'Показати переклад',
+        front_translation_toggle_hide: 'Приховати переклад',
         front_translation_mode_label: '\u041d\u0430\u043f\u0440\u044f\u043c\u043e\u043a \u043f\u0435\u0440\u0435\u043a\u043b\u0430\u0434\u0443',
         front_translation_mode_hint: '\u041d\u0430\u0442\u0438\u0441\u043d\u0456\u0442\u044c, \u0449\u043e\u0431 \u0437\u043c\u0456\u043d\u0438\u0442\u0438 \u043c\u043e\u0432\u0438 \u0432\u0432\u0435\u0434\u0435\u043d\u043d\u044f/\u0432\u0438\u0432\u0435\u0434\u0435\u043d\u043d\u044f.',
         front_translation_status_idle: '\u041f\u0435\u0440\u0435\u043a\u043b\u0430\u0434 \u0433\u043e\u0442\u043e\u0432\u0438\u0439',
@@ -896,8 +929,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Запитати AI',
         ai_sure: 'Ти впевнений?',
         ai_explain_more: 'Поясни детальніше',
-        ai_more_examples: '????????:',
+        ai_more_examples: 'Більше прикладів',
         ai_thinking: 'Думаю...',
+        ai_corrected: 'Виправлено',
+        ai_alternative: 'Альтернатива',
+        ai_examples_title: 'Приклади:',
+        ai_expressions_title: 'Вирази:',
+        ai_no_expressions: 'Стійких виразів не знайдено.',
+        ordbokene_block_label: 'Ordbøkene',
+        compound_parts: 'Складники',
+        forms_preview: 'Форми слова',
+        report_issue: 'Повідомити про проблему',
+        ordbokene_empty: 'Інформація зі словника зʼявиться тут після пошуку.',
+        ordbokene_citation: '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Інші значення',
+        error_check_collapse_label: 'Сховати панель перевірки помилок',
+        title_play: 'Відтворити',
+        press_hold_to_record: 'Натисніть і утримуйте для запису',
+        release_when_finished: 'Відпустіть, коли закінчите',
+        slide_down_to_lock: 'Проведіть вниз, щоб зафіксувати',
+        hold_to_start: 'Утримуйте, щоб почати',
+        release_to_lock: 'Відпустіть, щоб зафіксувати',
+        keep_dragging: 'Тягніть далі...',
+        rec_locked_tap_stop: 'Запис зафіксовано',
+        tap_stop: 'Натисніть «Стоп», щоб завершити',
+        translation_lang_current: 'Поточна мова перекладу',
+        translation_lang_select: 'Виберіть нову мову перекладу',
+        translation_lang_current_marker: '(поточна)',
+        translation_lang_prompt: 'Введіть номер (1-{$a}) або скасуйте, щоб залишити поточну:',
+        translation_lang_changed: 'Мову перекладу змінено на {$a}.\n\nНові картки будуть створюватися з перекладом {$a}.\nІснуючі картки показуватимуть переклад {$a}, якщо він доступний.',
+        confirm_reset: 'Скинути?',
+        confirm_delete_card: 'Видалити цю картку?',
+        prompt_profile_name: 'Назва профілю:',
+        expression_edit: 'Редагувати вираз',
+        expression_edit_prompt: 'Відредагуйте текст виразу',
+        reset_order: 'Скинути порядок',
+        add_example: 'Додати',
+        https_permissions_hint: 'Відкрийте через HTTPS для дозволів камери/мікрофона.',
       },
       ru: {
         app_title: 'MyMemory',
@@ -919,8 +987,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         tts_voice: '\u0413\u043e\u043b\u043e\u0441',
         tts_voice_hint: '\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0433\u043e\u043b\u043e\u0441 \u043f\u0435\u0440\u0435\u0434 \u0442\u0435\u043c, \u043a\u0430\u043a \u043f\u043e\u043f\u0440\u043e\u0441\u0438\u0442\u044c AI \u043f\u043e\u043c\u043e\u0449\u043d\u0438\u043a\u0430 \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0430\u0443\u0434\u0438\u043e.',
         front: '\u0422\u0435\u043a\u0441\u0442',
-        front_translation_toggle_show: 'Show translation',
-        front_translation_toggle_hide: 'Hide translation',
+        front_translation_toggle_show: 'Показать перевод',
+        front_translation_toggle_hide: 'Скрыть перевод',
         front_translation_mode_label: '\u041d\u0430\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0430',
         front_translation_mode_hint: '\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0438\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u044f\u0437\u044b\u043a\u0438 \u0432\u0432\u043e\u0434\u0430/\u0432\u044b\u0432\u043e\u0434\u0430.',
         front_translation_status_idle: '\u041f\u0435\u0440\u0435\u0432\u043e\u0434 \u0433\u043e\u0442\u043e\u0432',
@@ -936,7 +1004,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_question_label: '\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u044c \u0418\u0418',
         ai_question_placeholder: '\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0412\u0430\u0448 \u0432\u043e\u043f\u0440\u043e\u0441...',
         ai_question_button: '\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u044c',
-        ai_chat_empty: '\u041f\u043e\u0441\u0442\u0430\u0432\u0442\u0435 \u0437\u0430\u043f\u0438\u0442\u0430\u043d\u043d\u044f AI \u0441\u0442\u043e\u0441\u043e\u0432\u043d\u043e \u0412\u0430\u0448\u043e\u0433\u043e \u0442\u0435\u043a\u0441\u0442\u0443 \u0430\u0431\u043e \u0444\u043e\u043a\u0443\u0441\u043d\u043e\u0433\u043e \u0441\u043b\u043e\u0432\u0430/ \u0444\u0440\u0430\u0437\u044b',
+        ai_chat_empty: 'Задайте вопрос AI о вашем тексте или фокусном слове/фразе',
         ai_chat_user: '\u0412\u044b',
         ai_chat_assistant: '\u0418\u0418',
         ai_chat_error: '\u0418\u0418 \u043d\u0435 \u0441\u043c\u043e\u0433 \u043e\u0442\u0432\u0435\u0442\u0438\u0442\u044c \u043d\u0430 \u044d\u0442\u043e\u0442 \u0432\u043e\u043f\u0440\u043e\u0441.',
@@ -1018,8 +1086,43 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ask_ai_about_correction: 'Спросить AI',
         ai_sure: 'Ты уверен?',
         ai_explain_more: 'Объясни подробнее',
-        ai_more_examples: '????????:',
+        ai_more_examples: 'Больше примеров',
         ai_thinking: 'Думаю...',
+        ai_corrected: 'Исправлено',
+        ai_alternative: 'Альтернатива',
+        ai_examples_title: 'Примеры:',
+        ai_expressions_title: 'Выражения:',
+        ai_no_expressions: 'Устойчивых выражений не найдено.',
+        ordbokene_block_label: 'Ordbøkene',
+        compound_parts: 'Составные части',
+        forms_preview: 'Формы слова',
+        report_issue: 'Сообщить о проблеме',
+        ordbokene_empty: 'Информация из словаря появится здесь после поиска.',
+        ordbokene_citation: '«Korleis». I: Nynorskordboka. Språkrådet og Universitetet i Bergen. https://ordbøkene.no (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Другие значения',
+        error_check_collapse_label: 'Скрыть блок проверки ошибок',
+        title_play: 'Воспроизвести',
+        press_hold_to_record: 'Нажмите и удерживайте для записи',
+        release_when_finished: 'Отпустите, когда закончите',
+        slide_down_to_lock: 'Проведите вниз, чтобы зафиксировать',
+        hold_to_start: 'Удерживайте, чтобы начать',
+        release_to_lock: 'Отпустите, чтобы зафиксировать',
+        keep_dragging: 'Тяните дальше...',
+        rec_locked_tap_stop: 'Запись зафиксирована',
+        tap_stop: 'Нажмите «Стоп», чтобы завершить',
+        translation_lang_current: 'Текущий язык перевода',
+        translation_lang_select: 'Выберите новый язык перевода',
+        translation_lang_current_marker: '(текущий)',
+        translation_lang_prompt: 'Введите номер (1-{$a}) или отмените, чтобы оставить текущий:',
+        translation_lang_changed: 'Язык перевода изменён на {$a}.\n\nНовые карточки будут создаваться с переводом на {$a}.\nСуществующие карточки покажут перевод на {$a}, если он доступен.',
+        confirm_reset: 'Сбросить?',
+        confirm_delete_card: 'Удалить эту карточку?',
+        prompt_profile_name: 'Название профиля:',
+        expression_edit: 'Редактировать выражение',
+        expression_edit_prompt: 'Отредактируйте текст выражения',
+        reset_order: 'Сбросить порядок',
+        add_example: 'Добавить',
+        https_permissions_hint: 'Откройте через HTTPS для разрешений камеры/микрофона.',
       },
       fr: {
         app_title: 'MyMemory',
@@ -1125,6 +1228,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Analyse grammaire et sens',
+        analysis_empty: '',
+        analyse_text: 'Analyser',
+        check_text: 'Verifier le texte',
+        checking_text: 'Verification du texte...',
+        no_errors_found: 'Aucune erreur trouvee !',
+        errors_found: 'Erreurs trouvees !',
+        corrected_version: 'Version corrigee:',
+        apply_corrections: 'Appliquer les corrections',
+        keep_as_is: 'Garder tel quel',
+        error_checking_failed: 'Echec de la verification',
+        naturalness_suggestion: 'Alternative plus naturelle:',
+        ask_ai_about_correction: 'Demander a l\'IA',
+        ai_sure: 'Etes-vous sur?',
+        ai_explain_more: 'Expliquer en detail',
+        ai_more_examples: 'Plus d\'exemples',
+        ai_thinking: 'Je reflechis...',
+        ai_corrected: 'Corrige',
+        ai_alternative: 'Alternative',
+        ai_examples_title: 'Exemples:',
+        ai_expressions_title: 'Expressions:',
+        ai_no_expressions: 'Aucune expression figee trouvee.',
+        ordbokene_block_label: 'Ordbokene',
+        compound_parts: 'Elements',
+        forms_preview: 'Formes du mot',
+        report_issue: 'Signaler un probleme',
+        ordbokene_empty: 'Les infos du dictionnaire apparaitront ici apres la recherche.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Autres sens',
+        error_check_collapse_label: 'Masquer le panneau de verification des erreurs',
+        title_play: 'Lire',
+        press_hold_to_record: 'Appuyez et maintenez pour enregistrer',
+        release_when_finished: 'Relachez quand vous avez termine',
+        slide_down_to_lock: 'Glissez vers le bas pour verrouiller',
+        hold_to_start: 'Maintenez pour demarrer',
+        release_to_lock: 'Relachez pour verrouiller',
+        keep_dragging: 'Continuez a glisser...',
+        rec_locked_tap_stop: 'Enregistrement verrouille',
+        tap_stop: 'Appuyez sur stop pour terminer',
+        translation_lang_current: 'Langue de traduction actuelle',
+        translation_lang_select: 'Selectionnez une nouvelle langue de traduction',
+        translation_lang_current_marker: '(actuelle)',
+        translation_lang_prompt: 'Entrez un numero (1-{$a}) ou annulez pour garder la langue actuelle:',
+        translation_lang_changed: 'Langue de traduction changee en {$a}.\n\nLes nouvelles cartes seront creees avec des traductions {$a}.\nLes cartes existantes afficheront des traductions {$a} si disponibles.',
+        confirm_reset: 'Reinitialiser?',
+        confirm_delete_card: 'Supprimer cette carte?',
+        prompt_profile_name: 'Nom du profil:',
+        expression_edit: 'Modifier l\'expression',
+        expression_edit_prompt: 'Modifiez le texte de l\'expression',
+        reset_order: 'Reinitialiser l\'ordre',
+        add_example: 'Ajouter',
+        https_permissions_hint: 'Ouvrez via HTTPS pour les autorisations camera/micro.',
       },
       es: {
         app_title: 'MyMemory',
@@ -1230,6 +1385,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Gramatica y significado',
+        analysis_empty: '',
+        analyse_text: 'Analizar',
+        check_text: 'Revisar texto',
+        checking_text: 'Revisando texto...',
+        no_errors_found: 'No se encontraron errores!',
+        errors_found: 'Errores encontrados!',
+        corrected_version: 'Version corregida:',
+        apply_corrections: 'Aplicar correcciones',
+        keep_as_is: 'Mantener como esta',
+        error_checking_failed: 'Fallo la revision',
+        naturalness_suggestion: 'Alternativa mas natural:',
+        ask_ai_about_correction: 'Preguntar a la IA',
+        ai_sure: 'Estas seguro?',
+        ai_explain_more: 'Explicar en detalle',
+        ai_more_examples: 'Mas ejemplos',
+        ai_thinking: 'Pensando...',
+        ai_corrected: 'Corregido',
+        ai_alternative: 'Alternativa',
+        ai_examples_title: 'Ejemplos:',
+        ai_expressions_title: 'Expresiones:',
+        ai_no_expressions: 'No se encontraron expresiones fijas.',
+        ordbokene_block_label: 'Ordbokene',
+        compound_parts: 'Partes',
+        forms_preview: 'Formas de la palabra',
+        report_issue: 'Reportar problema',
+        ordbokene_empty: 'La informacion del diccionario aparecera aqui despues de la busqueda.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Otros significados',
+        error_check_collapse_label: 'Ocultar el panel de revision de errores',
+        title_play: 'Reproducir',
+        press_hold_to_record: 'Presiona y manten para grabar',
+        release_when_finished: 'Suelta cuando termines',
+        slide_down_to_lock: 'Desliza hacia abajo para bloquear',
+        hold_to_start: 'Manten para empezar',
+        release_to_lock: 'Suelta para bloquear',
+        keep_dragging: 'Sigue deslizando...',
+        rec_locked_tap_stop: 'Grabacion bloqueada',
+        tap_stop: 'Toca detener para terminar',
+        translation_lang_current: 'Idioma de traduccion actual',
+        translation_lang_select: 'Selecciona un nuevo idioma de traduccion',
+        translation_lang_current_marker: '(actual)',
+        translation_lang_prompt: 'Ingresa un numero (1-{$a}) o cancela para mantener el idioma actual:',
+        translation_lang_changed: 'El idioma de traduccion se cambio a {$a}.\n\nLas nuevas tarjetas se crearan con traducciones en {$a}.\nLas tarjetas existentes mostraran traducciones en {$a} si estan disponibles.',
+        confirm_reset: 'Restablecer?',
+        confirm_delete_card: 'Eliminar esta tarjeta?',
+        prompt_profile_name: 'Nombre del perfil:',
+        expression_edit: 'Editar expresion',
+        expression_edit_prompt: 'Edita el texto de la expresion',
+        reset_order: 'Restablecer orden',
+        add_example: 'Agregar',
+        https_permissions_hint: 'Abre via HTTPS para permisos de camara/microfono.',
       },
       pl: {
         app_title: 'MyMemory',
@@ -1352,6 +1559,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         ai_explain_more: 'Wyjaśnij szczegółowo',
         ai_more_examples: 'Daj więcej przykładów',
         ai_thinking: 'Myślę...',
+        ai_corrected: 'Poprawione',
+        ai_alternative: 'Alternatywa',
+        ai_examples_title: 'Przyklady:',
+        ai_expressions_title: 'Wyrazenia:',
+        ai_no_expressions: 'Nie znaleziono stalych wyrazen.',
+        ordbokene_block_label: 'Ordbokene',
+        compound_parts: 'Czesci',
+        forms_preview: 'Formy slowa',
+        report_issue: 'Zglos problem',
+        ordbokene_empty: 'Informacje ze slownika pojawia sie tutaj po wyszukaniu.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Inne znaczenia',
+        error_check_collapse_label: 'Ukryj panel sprawdzania bledow',
+        title_play: 'Odtworz',
+        press_hold_to_record: 'Nacisnij i przytrzymaj, aby nagrac',
+        release_when_finished: 'Pusc, gdy skonczysz',
+        slide_down_to_lock: 'Przesun w dol, aby zablokowac',
+        hold_to_start: 'Przytrzymaj, aby zaczac',
+        release_to_lock: 'Pusc, aby zablokowac',
+        keep_dragging: 'Ciagnij dalej...',
+        rec_locked_tap_stop: 'Nagrywanie zablokowane',
+        tap_stop: 'Dotknij stop, aby zakonczyc',
+        translation_lang_current: 'Aktualny jezyk tlumaczenia',
+        translation_lang_select: 'Wybierz nowy jezyk tlumaczenia',
+        translation_lang_current_marker: '(aktualny)',
+        translation_lang_prompt: 'Wpisz numer (1-{$a}) lub anuluj, aby zachowac aktualny:',
+        translation_lang_changed: 'Jezyk tlumaczenia zmieniono na {$a}.\n\nNowe fiszki beda tworzone z tlumaczeniem {$a}.\nIstniejace fiszki pokaza tlumaczenie {$a}, jesli jest dostepne.',
+        confirm_reset: 'Zresetowac?',
+        confirm_delete_card: 'Usunac ta karte?',
+        prompt_profile_name: 'Nazwa profilu:',
+        expression_edit: 'Edytuj wyrazenie',
+        expression_edit_prompt: 'Edytuj tekst wyrazenia',
+        reset_order: 'Zresetuj kolejnosc',
+        add_example: 'Dodaj',
+        https_permissions_hint: 'Otworz przez HTTPS dla uprawnien kamery/mikrofonu.',
       },
       it: {
         app_title: 'MyMemory',
@@ -1457,6 +1699,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Grammatica e significato',
+        analysis_empty: '',
+        analyse_text: 'Analizza',
+        check_text: 'Controlla testo',
+        checking_text: 'Controllo del testo...',
+        no_errors_found: 'Nessun errore trovato!',
+        errors_found: 'Errori trovati!',
+        corrected_version: 'Versione corretta:',
+        apply_corrections: 'Applica correzioni',
+        keep_as_is: 'Lascia com\'e',
+        error_checking_failed: 'Errore di controllo',
+        naturalness_suggestion: 'Alternativa piu naturale:',
+        ask_ai_about_correction: 'Chiedi all\'AI',
+        ai_sure: 'Sei sicuro?',
+        ai_explain_more: 'Spiega in dettaglio',
+        ai_more_examples: 'Piu esempi',
+        ai_thinking: 'Sto pensando...',
+        ai_corrected: 'Corretto',
+        ai_alternative: 'Alternativa',
+        ai_examples_title: 'Esempi:',
+        ai_expressions_title: 'Espressioni:',
+        ai_no_expressions: 'Nessuna espressione fissa trovata.',
+        ordbokene_block_label: 'Ordbokene',
+        compound_parts: 'Parti',
+        forms_preview: 'Forme della parola',
+        report_issue: 'Segnala un problema',
+        ordbokene_empty: 'Le info del dizionario appariranno qui dopo la ricerca.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Altri significati',
+        error_check_collapse_label: 'Nascondi il pannello di controllo errori',
+        title_play: 'Riproduci',
+        press_hold_to_record: 'Premi e tieni premuto per registrare',
+        release_when_finished: 'Rilascia quando hai finito',
+        slide_down_to_lock: 'Scorri verso il basso per bloccare',
+        hold_to_start: 'Tieni premuto per iniziare',
+        release_to_lock: 'Rilascia per bloccare',
+        keep_dragging: 'Continua a trascinare...',
+        rec_locked_tap_stop: 'Registrazione bloccata',
+        tap_stop: 'Tocca stop per finire',
+        translation_lang_current: 'Lingua di traduzione attuale',
+        translation_lang_select: 'Seleziona una nuova lingua di traduzione',
+        translation_lang_current_marker: '(attuale)',
+        translation_lang_prompt: 'Inserisci un numero (1-{$a}) o annulla per mantenere la lingua attuale:',
+        translation_lang_changed: 'La lingua di traduzione e stata cambiata in {$a}.\n\nLe nuove carte verranno create con traduzioni in {$a}.\nLe carte esistenti mostreranno traduzioni in {$a} se disponibili.',
+        confirm_reset: 'Reimpostare?',
+        confirm_delete_card: 'Eliminare questa scheda?',
+        prompt_profile_name: 'Nome profilo:',
+        expression_edit: 'Modifica espressione',
+        expression_edit_prompt: 'Modifica il testo dell\'espressione',
+        reset_order: 'Reimposta ordine',
+        add_example: 'Aggiungi',
+        https_permissions_hint: 'Apri via HTTPS per i permessi di fotocamera/microfono.',
       },
       de: {
         app_title: 'MyMemory',
@@ -1562,6 +1856,58 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         sayings_placeholder: '_ _ _',
         transcription_placeholder: '_ _ _',
         one_per_line_placeholder: '_ _ _',
+        sentence_analysis: 'Grammatik und Bedeutung',
+        analysis_empty: '',
+        analyse_text: 'Analyse',
+        check_text: 'Text prufen',
+        checking_text: 'Text wird gepruft...',
+        no_errors_found: 'Keine Fehler gefunden!',
+        errors_found: 'Fehler gefunden!',
+        corrected_version: 'Korrigierte Version:',
+        apply_corrections: 'Korrekturen anwenden',
+        keep_as_is: 'So lassen',
+        error_checking_failed: 'Fehlerprufung fehlgeschlagen',
+        naturalness_suggestion: 'Naturlichere Alternative:',
+        ask_ai_about_correction: 'KI fragen',
+        ai_sure: 'Bist du sicher?',
+        ai_explain_more: 'Detailliert erklaren',
+        ai_more_examples: 'Mehr Beispiele',
+        ai_thinking: 'Denke...',
+        ai_corrected: 'Korrigiert',
+        ai_alternative: 'Alternative',
+        ai_examples_title: 'Beispiele:',
+        ai_expressions_title: 'Ausdrucke:',
+        ai_no_expressions: 'Keine festen Ausdrucke gefunden.',
+        ordbokene_block_label: 'Ordbokene',
+        compound_parts: 'Teile',
+        forms_preview: 'Wortformen',
+        report_issue: 'Problem melden',
+        ordbokene_empty: 'Worterbuchinfos erscheinen hier nach der Suche.',
+        ordbokene_citation: '«Korleis». I: Bokmålsordboka og Nynorskordboka. Språkrådet og Universitetet i Bergen. <https://ordbokene.no/> (henta 25.1.2022).',
+        ordbokene_more_meanings: 'Andere Bedeutungen',
+        error_check_collapse_label: 'Fehlerprufung ausblenden',
+        title_play: 'Abspielen',
+        press_hold_to_record: 'Drucken und halten zum Aufnehmen',
+        release_when_finished: 'Loslassen, wenn fertig',
+        slide_down_to_lock: 'Nach unten ziehen zum Sperren',
+        hold_to_start: 'Halten zum Starten',
+        release_to_lock: 'Loslassen zum Sperren',
+        keep_dragging: 'Weiter ziehen...',
+        rec_locked_tap_stop: 'Aufnahme gesperrt',
+        tap_stop: 'Tippen Sie auf Stopp zum Beenden',
+        translation_lang_current: 'Aktuelle Ubersetzungssprache',
+        translation_lang_select: 'Neue Ubersetzungssprache auswahlen',
+        translation_lang_current_marker: '(aktuell)',
+        translation_lang_prompt: 'Nummer eingeben (1-{$a}) oder abbrechen, um die aktuelle beizubehalten:',
+        translation_lang_changed: 'Ubersetzungssprache wurde auf {$a} geandert.\n\nNeue Karten werden mit {$a}-Ubersetzungen erstellt.\nBestehende Karten zeigen {$a}-Ubersetzungen, falls verfugbar.',
+        confirm_reset: 'Zurucksetzen?',
+        confirm_delete_card: 'Diese Karte loschen?',
+        prompt_profile_name: 'Profilname:',
+        expression_edit: 'Ausdruck bearbeiten',
+        expression_edit_prompt: 'Bearbeiten Sie den Ausdruckstext',
+        reset_order: 'Reihenfolge zurucksetzen',
+        add_example: 'Hinzufugen',
+        https_permissions_hint: 'Offnen Sie uber HTTPS fur Kamera/Mikro-Berechtigungen.',
       }
     };
     let currentInterfaceLang = null;
@@ -1782,10 +2128,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }));
 
       const currentLang = userLang2;
-      const msg = `Current translation language: ${languageName(currentLang)}\n\nSelect new translation language:\n\n` +
-        languages.map((l, i) => `${i+1}. ${l.name} ${l.code === currentLang ? '(current)' : ''}`).join('\n');
+      const currentLabel = t('translation_lang_current') || 'Current translation language';
+      const selectLabel = t('translation_lang_select') || 'Select new translation language';
+      const currentMarker = t('translation_lang_current_marker') || '(current)';
+      const promptLabel = (t('translation_lang_prompt') || 'Enter number (1-{$a}) or cancel to keep current:')
+        .replaceAll('{$a}', String(languages.length));
+      const msg = `${currentLabel}: ${languageName(currentLang)}\n\n${selectLabel}:\n\n` +
+        languages.map((l, i) => `${i+1}. ${l.name} ${l.code === currentLang ? currentMarker : ''}`).join('\n');
 
-      const choice = prompt(msg + '\n\nEnter number (1-' + languages.length + ') or cancel to keep current:');
+      const choice = prompt(msg + '\n\n' + promptLabel);
 
       if(choice){
         const index = parseInt(choice, 10) - 1;
@@ -1795,7 +2146,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             userLang2 = newLang;
             saveTransLang(newLang);
             updateTranslationLangUI();
-            alert(`Translation language changed to ${languages[index].name}.\n\nNew cards will be created with ${languages[index].name} translations.\nExisting cards will show ${languages[index].name} translations if available.`);
+            const changedMsg = (t('translation_lang_changed') || 'Translation language changed to {$a}.').replaceAll('{$a}', languages[index].name);
+            alert(changedMsg);
           }
         }
       }
@@ -2932,13 +3284,325 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           ccomp: 'Clausal complement',
           acl: 'Clause modifier',
           root: 'Root'
+        },
+        meta: {
+          role: 'role'
+        }
+      },
+      ru: {
+        pos: {
+          NOUN: 'Существительное',
+          PROPN: 'Имя собственное',
+          VERB: 'Глагол',
+          AUX: 'Вспомогательный глагол',
+          ADJ: 'Прилагательное',
+          ADV: 'Наречие',
+          PRON: 'Местоимение',
+          DET: 'Определитель',
+          ADP: 'Предлог',
+          CONJ: 'Союз',
+          CCONJ: 'Сочинительный союз',
+          SCONJ: 'Подчинительный союз',
+          PART: 'Частица',
+          NUM: 'Числительное',
+          INTJ: 'Междометие',
+          X: 'Другое'
+        },
+        dep: {
+          nsubj: 'Подлежащее',
+          csubj: 'Клаузальное подлежащее',
+          obj: 'Дополнение',
+          iobj: 'Косвенное дополнение',
+          obl: 'Обстоятельство',
+          advmod: 'Обстоятельственный модификатор',
+          amod: 'Определение',
+          nmod: 'Именной модификатор',
+          det: 'Определитель',
+          appos: 'Приложение',
+          aux: 'Вспомогательный',
+          cop: 'Связка',
+          compound: 'Составное слово',
+          mark: 'Маркер',
+          case: 'Падеж',
+          xcomp: 'Открытое клаузальное дополнение',
+          ccomp: 'Клаузальное дополнение',
+          acl: 'Модификатор клаузы',
+          root: 'Корень'
+        },
+        meta: {
+          role: 'роль'
+        }
+      },
+      uk: {
+        pos: {
+          NOUN: 'Іменник',
+          PROPN: 'Власна назва',
+          VERB: 'Дієслово',
+          AUX: 'Допоміжне дієслово',
+          ADJ: 'Прикметник',
+          ADV: 'Прислівник',
+          PRON: 'Займенник',
+          DET: 'Визначник',
+          ADP: 'Прийменник',
+          CONJ: 'Сполучник',
+          CCONJ: 'Сурядний сполучник',
+          SCONJ: 'Підрядний сполучник',
+          PART: 'Частка',
+          NUM: 'Числівник',
+          INTJ: 'Вигук',
+          X: 'Інше'
+        },
+        dep: {
+          nsubj: 'Підмет',
+          csubj: 'Клаузальний підмет',
+          obj: 'Додаток',
+          iobj: 'Непрямий додаток',
+          obl: 'Обставина',
+          advmod: 'Обставинний модифікатор',
+          amod: 'Означення',
+          nmod: 'Іменниковий модифікатор',
+          det: 'Визначник',
+          appos: 'Прикладка',
+          aux: 'Допоміжне',
+          cop: 'Зв’язка',
+          compound: 'Складене слово',
+          mark: 'Маркер',
+          case: 'Відмінок',
+          xcomp: 'Відкрите клаузальне доповнення',
+          ccomp: 'Клаузальне доповнення',
+          acl: 'Модифікатор клаузи',
+          root: 'Корінь'
+        },
+        meta: {
+          role: 'роль'
+        }
+      },
+      de: {
+        pos: {
+          NOUN: 'Substantiv',
+          PROPN: 'Eigenname',
+          VERB: 'Verb',
+          AUX: 'Hilfsverb',
+          ADJ: 'Adjektiv',
+          ADV: 'Adverb',
+          PRON: 'Pronomen',
+          DET: 'Determinativ',
+          ADP: 'Präposition',
+          CONJ: 'Konjunktion',
+          CCONJ: 'Koordinierende Konjunktion',
+          SCONJ: 'Subordinierende Konjunktion',
+          PART: 'Partikel',
+          NUM: 'Zahlwort',
+          INTJ: 'Interjektion',
+          X: 'Andere'
+        },
+        dep: {
+          nsubj: 'Subjekt',
+          csubj: 'Satzsubjekt',
+          obj: 'Objekt',
+          iobj: 'Indirektes Objekt',
+          obl: 'Schrägobjekt',
+          advmod: 'Adverbiale Modifikation',
+          amod: 'Adjektivische Modifikation',
+          nmod: 'Nominale Modifikation',
+          det: 'Determinativ',
+          appos: 'Apposition',
+          aux: 'Hilfsverb',
+          cop: 'Kopula',
+          compound: 'Kompositum',
+          mark: 'Marker',
+          case: 'Kasus',
+          xcomp: 'Offenes Satzkomplement',
+          ccomp: 'Satzkomplement',
+          acl: 'Satzmodifikation',
+          root: 'Wurzel'
+        },
+        meta: {
+          role: 'Rolle'
+        }
+      },
+      fr: {
+        pos: {
+          NOUN: 'Nom',
+          PROPN: 'Nom propre',
+          VERB: 'Verbe',
+          AUX: 'Verbe auxiliaire',
+          ADJ: 'Adjectif',
+          ADV: 'Adverbe',
+          PRON: 'Pronom',
+          DET: 'Déterminant',
+          ADP: 'Préposition',
+          CONJ: 'Conjonction',
+          CCONJ: 'Conjonction de coordination',
+          SCONJ: 'Conjonction de subordination',
+          PART: 'Particule',
+          NUM: 'Numéral',
+          INTJ: 'Interjection',
+          X: 'Autre'
+        },
+        dep: {
+          nsubj: 'Sujet',
+          csubj: 'Sujet de proposition',
+          obj: 'Objet',
+          iobj: 'Objet indirect',
+          obl: 'Complément oblique',
+          advmod: 'Modificateur adverbial',
+          amod: 'Modificateur adjectival',
+          nmod: 'Modificateur nominal',
+          det: 'Déterminant',
+          appos: 'Apposition',
+          aux: 'Auxiliaire',
+          cop: 'Copule',
+          compound: 'Composé',
+          mark: 'Marqueur',
+          case: 'Cas',
+          xcomp: 'Complément propositionnel ouvert',
+          ccomp: 'Complément propositionnel',
+          acl: 'Modificateur de proposition',
+          root: 'Racine'
+        },
+        meta: {
+          role: 'rôle'
+        }
+      },
+      es: {
+        pos: {
+          NOUN: 'Sustantivo',
+          PROPN: 'Nombre propio',
+          VERB: 'Verbo',
+          AUX: 'Verbo auxiliar',
+          ADJ: 'Adjetivo',
+          ADV: 'Adverbio',
+          PRON: 'Pronombre',
+          DET: 'Determinante',
+          ADP: 'Preposición',
+          CONJ: 'Conjunción',
+          CCONJ: 'Conjunción coordinante',
+          SCONJ: 'Conjunción subordinante',
+          PART: 'Partícula',
+          NUM: 'Numeral',
+          INTJ: 'Interjección',
+          X: 'Otro'
+        },
+        dep: {
+          nsubj: 'Sujeto',
+          csubj: 'Sujeto oracional',
+          obj: 'Objeto',
+          iobj: 'Objeto indirecto',
+          obl: 'Complemento oblicuo',
+          advmod: 'Modificador adverbial',
+          amod: 'Modificador adjetival',
+          nmod: 'Modificador nominal',
+          det: 'Determinante',
+          appos: 'Aposición',
+          aux: 'Auxiliar',
+          cop: 'Cópula',
+          compound: 'Compuesto',
+          mark: 'Marcador',
+          case: 'Caso',
+          xcomp: 'Complemento oracional abierto',
+          ccomp: 'Complemento oracional',
+          acl: 'Modificador de cláusula',
+          root: 'Raíz'
+        },
+        meta: {
+          role: 'rol'
+        }
+      },
+      it: {
+        pos: {
+          NOUN: 'Nome',
+          PROPN: 'Nome proprio',
+          VERB: 'Verbo',
+          AUX: 'Verbo ausiliare',
+          ADJ: 'Aggettivo',
+          ADV: 'Avverbio',
+          PRON: 'Pronome',
+          DET: 'Determinante',
+          ADP: 'Preposizione',
+          CONJ: 'Congiunzione',
+          CCONJ: 'Congiunzione coordinante',
+          SCONJ: 'Congiunzione subordinante',
+          PART: 'Particella',
+          NUM: 'Numerale',
+          INTJ: 'Interiezione',
+          X: 'Altro'
+        },
+        dep: {
+          nsubj: 'Soggetto',
+          csubj: 'Soggetto frasale',
+          obj: 'Oggetto',
+          iobj: 'Oggetto indiretto',
+          obl: 'Complemento obliquo',
+          advmod: 'Modificatore avverbiale',
+          amod: 'Modificatore aggettivale',
+          nmod: 'Modificatore nominale',
+          det: 'Determinante',
+          appos: 'Apposizione',
+          aux: 'Ausiliare',
+          cop: 'Copula',
+          compound: 'Composto',
+          mark: 'Marcatore',
+          case: 'Caso',
+          xcomp: 'Complemento frasale aperto',
+          ccomp: 'Complemento frasale',
+          acl: 'Modificatore di clausola',
+          root: 'Radice'
+        },
+        meta: {
+          role: 'ruolo'
+        }
+      },
+      pl: {
+        pos: {
+          NOUN: 'Rzeczownik',
+          PROPN: 'Nazwa własna',
+          VERB: 'Czasownik',
+          AUX: 'Czasownik posiłkowy',
+          ADJ: 'Przymiotnik',
+          ADV: 'Przysłówek',
+          PRON: 'Zaimek',
+          DET: 'Określnik',
+          ADP: 'Przyimek',
+          CONJ: 'Spójnik',
+          CCONJ: 'Spójnik współrzędny',
+          SCONJ: 'Spójnik podrzędny',
+          PART: 'Partykuła',
+          NUM: 'Liczebnik',
+          INTJ: 'Wykrzyknik',
+          X: 'Inne'
+        },
+        dep: {
+          nsubj: 'Podmiot',
+          csubj: 'Podmiot zdaniowy',
+          obj: 'Dopełnienie',
+          iobj: 'Dopełnienie pośrednie',
+          obl: 'Okolicznik',
+          advmod: 'Okolicznikowy modyfikator',
+          amod: 'Przymiotnikowy modyfikator',
+          nmod: 'Rzeczownikowy modyfikator',
+          det: 'Określnik',
+          appos: 'Apozycja',
+          aux: 'Czasownik posiłkowy',
+          cop: 'Kopula',
+          compound: 'Złożenie',
+          mark: 'Marker',
+          case: 'Przypadek',
+          xcomp: 'Otwarte dopełnienie zdaniowe',
+          ccomp: 'Dopełnienie zdaniowe',
+          acl: 'Modyfikator zdania',
+          root: 'Korzeń'
+        },
+        meta: {
+          role: 'rola'
         }
       }
     };
 
     function resolveAnalysisLabel(type, key){
-      const lang = (currentInterfaceLang || 'en').toLowerCase();
-      const pack = ANALYSIS_LABELS[lang] || ANALYSIS_LABELS.en;
+      const rawLang = (currentInterfaceLang || 'en').toLowerCase();
+      const lang = rawLang.split(/[\-_]/)[0] || rawLang;
+      const pack = ANALYSIS_LABELS[rawLang] || ANALYSIS_LABELS[lang] || ANALYSIS_LABELS.en;
       const map = pack && pack[type] ? pack[type] : {};
       if(!key) return '';
       return map[key] || map[key.toUpperCase?.()] || key;
@@ -2976,7 +3640,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const roleDeps = new Set(['nsubj','csubj','obj','iobj']);
       if(roleDeps.has(depKey)){
         const dep = resolveAnalysisLabel('dep', depKey);
-        if(dep) parts.push(`role: ${dep}`);
+        const roleLabel = resolveAnalysisLabel('meta', 'role');
+        if(dep) parts.push(roleLabel ? `${roleLabel}: ${dep}` : dep);
       }
       return parts.join(', ');
     }
@@ -3099,6 +3764,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         if(options && options.enrich){
           payload.enrich = true;
           payload.language = options.language || currentInterfaceLang || 'en';
+          if(options.skipSentenceTranslation){
+            payload.skip_sentence_translation = true;
+          }
         }
         const resp = await api('sentence_elements', {}, 'POST', payload, {signal: controller.signal});
         if(controller.signal.aborted || seq !== sentenceElementsSeq){
@@ -3502,7 +4170,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(options?.onEdit){
         actions.push({
-          label: aiStrings.expressionEdit || 'Edit expression',
+          label: t('expression_edit') || aiStrings.expressionEdit || 'Edit expression',
           handler: options.onEdit
         });
       }
@@ -3567,7 +4235,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function promptExpressionEdit(expressionData, rowIndex){
       const current = (expressionData && expressionData.expression) || '';
-      const next = window.prompt(aiStrings.expressionEditPrompt || aiStrings.expressionEdit || 'Edit expression', current);
+      const next = window.prompt(t('expression_edit_prompt') || t('expression_edit') || aiStrings.expressionEditPrompt || aiStrings.expressionEdit || 'Edit expression', current);
       if(next === null){
         return;
       }
@@ -9748,7 +10416,7 @@ function renderComparisonResult(resultEl, comparison){
       setTimeout(syncBottomBarWidth, 600);
     }catch(_e){}
 
-    var _btnReset=$("#btnReset"); if(_btnReset){ _btnReset.addEventListener("click",()=>{ if(confirm("Reset?")){ state={active:{},decks:{},hidden:{}}; saveState(); buildQueue(); updateBadge(); } }); }
+    var _btnReset=$("#btnReset"); if(_btnReset){ _btnReset.addEventListener("click",()=>{ if(confirm(t('confirm_reset') || "Reset?")){ state={active:{},decks:{},hidden:{}}; saveState(); buildQueue(); updateBadge(); } }); }
     var _btnExport=$("#btnExport"); if(_btnExport){ _btnExport.addEventListener("click",()=>{ const blob=new Blob([JSON.stringify({state,registry},null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="srs_export.json"; a.click(); }); }
     var _btnImport=$("#btnImport"); var _fileImport=$("#fileImport"); if(_btnImport && _fileImport){ _btnImport.addEventListener("click",()=>_fileImport.click()); _fileImport.addEventListener("change",async e=>{const f=e.target.files?.[0]; if(!f)return; try{ const d=JSON.parse(await f.text()); if(d.state)state=d.state; if(d.registry)registry=d.registry; saveState(); saveRegistry(); refreshSelect(); updateBadge(); buildQueue();
       closeEditor();
@@ -9894,7 +10562,7 @@ function renderComparisonResult(resultEl, comparison){
       });
     }
     });
-    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm("Delete this card?")) return; console.log('[DELETE] Deleting card:', card.id, 'from deck:', deckId); try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); console.log('[DELETE] Card deleted successfully'); } catch(e) { console.error('[DELETE] API error:', e); } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); console.log('[DELETE] Refreshing dashboard...'); await refreshDashboardStats(); console.log('[DELETE] Dashboard refreshed'); });
+    $("#btnDel").addEventListener("click",async()=>{ if(!currentItem) return; const {deckId,card}=currentItem; if(!confirm(t('confirm_delete_card') || "Delete this card?")) return; console.log('[DELETE] Deleting card:', card.id, 'from deck:', deckId); try { await api('delete_card', {deckid:deckId, cardid:card.id}, 'POST'); console.log('[DELETE] Card deleted successfully'); } catch(e) { console.error('[DELETE] API error:', e); } const arr=registry[deckId]?.cards||[]; const ix=arr.findIndex(x=>x.id===card.id); if(ix>=0){arr.splice(ix,1); saveRegistry();} if(state.decks[deckId]) delete state.decks[deckId][card.id]; if(state.hidden && state.hidden[deckId]) delete state.hidden[deckId][card.id]; saveState(); buildQueue(); console.log('[DELETE] Refreshing dashboard...'); await refreshDashboardStats(); console.log('[DELETE] Dashboard refreshed'); });
 
     // removed duplicate var line
     const imagePickerBtn = document.getElementById('btnImagePicker');
@@ -11509,7 +12177,7 @@ function renderComparisonResult(resultEl, comparison){
         del.textContent="\u{1F5D1}";
         del.title="Delete";
         del.onclick=async()=>{
-          if(!confirm("Delete this card?")) return;
+          if(!confirm(t('confirm_delete_card') || "Delete this card?")) return;
           console.log('[DELETE-LIST] Deleting card:', r.id, 'from deck:', r.deckId);
           try {
             await api('delete_card', {deckid:r.deckId, cardid:r.id}, 'POST');
@@ -12469,7 +13137,7 @@ function renderComparisonResult(resultEl, comparison){
     }
     const btnAddProfile = $("#btnAddProfile");
     if(btnAddProfile){
-      btnAddProfile.addEventListener("click",()=>{ const name=prompt("Profile name:",""); if(!name)return; const list=JSON.parse(localStorage.getItem("srs-profiles")||'["Guest"]'); list.push(name); localStorage.setItem("srs-profiles",JSON.stringify([...new Set(list)])); localStorage.setItem(PROFILE_KEY,name); const sel=$("#profileSel"); if(sel){ sel.innerHTML=""; JSON.parse(localStorage.getItem("srs-profiles")).forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;sel.appendChild(o);}); sel.value=name; } loadState(); refreshSelect(); updateBadge(); buildQueue(); });
+    btnAddProfile.addEventListener("click",()=>{ const name=prompt(t('prompt_profile_name') || "Profile name:",""); if(!name)return; const list=JSON.parse(localStorage.getItem("srs-profiles")||'["Guest"]'); list.push(name); localStorage.setItem("srs-profiles",JSON.stringify([...new Set(list)])); localStorage.setItem(PROFILE_KEY,name); const sel=$("#profileSel"); if(sel){ sel.innerHTML=""; JSON.parse(localStorage.getItem("srs-profiles")).forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;sel.appendChild(o);}); sel.value=name; } loadState(); refreshSelect(); updateBadge(); buildQueue(); });
     }
 
     // Initialize form: disable Update button by default
@@ -13409,7 +14077,7 @@ function renderComparisonResult(resultEl, comparison){
           const emptyEl = $('#emptyMessage');
           if(emptyEl){
             const oldText = emptyEl.textContent;
-            emptyEl.textContent = 'Interface language: ' + langName;
+            emptyEl.textContent = (t('interface_language_label') || 'Interface language') + ': ' + langName;
             setTimeout(function(){ emptyEl.textContent = oldText || t('empty'); }, 2000);
           }
         });
@@ -14353,7 +15021,7 @@ Regeln:
         }).join('');
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">Examples:</div>
+            <div class="ai-answer-title">${t('ai_examples_title') || 'Examples:'}</div>
             <ul class="ai-answer-list">${list}</ul>
           </div>
         `);
@@ -14391,7 +15059,7 @@ Regeln:
         }).join('');
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">Expressions:</div>
+            <div class="ai-answer-title">${t('ai_expressions_title') || 'Expressions:'}</div>
             <ul class="ai-mwe-list">${list}</ul>
           </div>
         `);
@@ -14405,7 +15073,7 @@ Regeln:
           'No fixed expressions found.';
         sections.push(`
           <div class="ai-answer-section">
-            <div class="ai-answer-title">Expressions:</div>
+            <div class="ai-answer-title">${t('ai_expressions_title') || 'Expressions:'}</div>
             <div class="ai-answer-note">${escapeHtml(noExpressionNote)}</div>
           </div>
         `);
@@ -14922,7 +15590,9 @@ Rules:
             })
             .catch(()=>{});
 
-          await fetchSentenceElements(text, {enrich: true, language});
+          // Avoid duplicating the full-sentence translation: we already requested it via runTranslationHelper above.
+          // Keep llm_enrich for phrase translations/notes only.
+          await fetchSentenceElements(text, {enrich: true, language, skipSentenceTranslation: true});
 
           // sentence_elements re-renders the analysis list; ensure the instant translation row survives.
           if (normalizeWhitespace($('#uFront').value) === text) {

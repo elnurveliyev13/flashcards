@@ -224,7 +224,7 @@ class ai_helper {
      * @param bool $debugAi When true, include debug info (prompts + raw model output)
      * @return array{sentenceTranslation:string,elements:array<int,array<string,mixed>>,usage?:array}
      */
-    public function enrich_sentence_elements(string $text, array $words, array $expressions, string $language, int $userid, bool $debugAi = false): array {
+    public function enrich_sentence_elements(string $text, array $words, array $expressions, string $language, int $userid, bool $debugAi = false, array $options = []): array {
         if (!$this->openai->is_enabled()) {
             throw new moodle_exception('ai_disabled', 'mod_flashcards');
         }
@@ -239,6 +239,8 @@ class ai_helper {
         if ($text === '') {
             return ['sentenceTranslation' => '', 'elements' => []];
         }
+
+        $skipSentenceTranslation = !empty($options['skip_sentence_translation']);
 
         // Keep llm_enrich lightweight: sentence-level translation + multiword expressions only.
         // Word-by-word "gloss" tends to be misleading in context (e.g. "i dag" -> "dag=day"),
@@ -269,8 +271,12 @@ All translations and notes must be in $langname.
 SYSTEMPROMPT;
 
         $elementJson = json_encode($elements, JSON_UNESCAPED_UNICODE);
+        $translationLine = $skipSentenceTranslation
+            ? '- Set "sentenceTranslation" to an empty string (do NOT translate the full sentence).'
+            : '- Provide a natural translation of the full sentence in "sentenceTranslation".';
+
         $userprompt = <<<"USERPROMPT"
-Translate the Norwegian sentence and (if present) the listed multiword expressions.
+Translate the Norwegian sentence (optional) and (if present) the listed multiword expressions.
 
 Sentence:
 "$text"
@@ -294,6 +300,7 @@ Return ONLY valid JSON in this schema:
 Rules:
 - Keep the SAME order as provided.
 - Only output the provided phrases in "elements".
+$translationLine
 - If unsure, use an empty string.
 USERPROMPT;
 

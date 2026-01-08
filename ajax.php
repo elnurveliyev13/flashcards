@@ -3559,6 +3559,7 @@ switch ($action) {
         $debugAi = !empty($payload['debug_ai']) && is_siteadmin();
         $aiDebug = [];
         $enrich = !empty($payload['enrich']) || !empty($payload['useLlm']) || !empty($payload['llm']);
+        $skipSentenceTranslation = !empty($payload['skip_sentence_translation']);
         $language = clean_param($payload['language'] ?? 'en', PARAM_ALPHANUMEXT);
         $overallstart = microtime(true);
         $timing = [];
@@ -4302,7 +4303,15 @@ switch ($action) {
             try {
                 $helper = new \mod_flashcards\local\ai_helper();
                 $t0 = microtime(true);
-                $enrichment = $helper->enrich_sentence_elements($text, $words, $resolved, $language, $userid, $debugAi);
+                $enrichment = $helper->enrich_sentence_elements(
+                    $text,
+                    $words,
+                    $resolved,
+                    $language,
+                    $userid,
+                    $debugAi,
+                    ['skip_sentence_translation' => $skipSentenceTranslation]
+                );
                 if ($debugAi && !empty($enrichment['_debug']) && is_array($enrichment['_debug'])) {
                     $aiDebug['llm_enrich'] = $enrichment['_debug'];
                     unset($enrichment['_debug']);
