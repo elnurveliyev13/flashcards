@@ -3845,17 +3845,32 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return (value || '').toString().trim().toLowerCase();
     }
 
-    function computeDisplayLemma(surfaceText, lemma, pos){
+    function computeDisplayLemma(surfaceText, lemma, pos, gender){
       const surface = (surfaceText || '').toString();
       const cleanLemma = (lemma || '').toString().trim();
       if(!cleanLemma || !shouldShowLemma(pos)){
         return '';
       }
-      // Hide lemma when it's effectively the same (case-insensitive), e.g. "Hva" vs "hva".
-      if(normalizeForLemmaCompare(surface) === normalizeForLemmaCompare(cleanLemma)){
+      const posKey = (pos || '').toString().trim().toUpperCase();
+      const baseSame = (normalizeForLemmaCompare(surface) === normalizeForLemmaCompare(cleanLemma));
+
+      let decorated = cleanLemma;
+      if(posKey === 'VERB' || posKey === 'AUX'){
+        if(!/^\s*å\s+/i.test(cleanLemma)){
+          decorated = `å ${cleanLemma}`.trim();
+        }
+      } else if(posKey === 'NOUN'){
+        const article = mapGenderToArticle((gender || '').toString().trim());
+        if(article && !/^\s*(en|ei|et)\s+/i.test(cleanLemma)){
+          decorated = `${article} ${cleanLemma}`.trim();
+        }
+      }
+
+      // Hide lemma when it's effectively the same (case-insensitive), unless we added a prefix.
+      if(baseSame && decorated === cleanLemma){
         return '';
       }
-      return cleanLemma;
+      return decorated;
     }
 
     function formatTokenAnalysis(item){
@@ -3881,7 +3896,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender);
         list.push({
           text: w.text,
           lemmaText,
@@ -3928,7 +3943,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const translation = (enriched?.translation || '').toString().trim();
         const grammar = formatTokenAnalysis(w);
         const combined = translation ? (grammar ? `${translation} - ${grammar}` : translation) : grammar;
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender);
         list.push({
           text: w.text,
           lemmaText,
@@ -4021,7 +4036,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const pos = (w?.pos || '').toString().trim();
           const lemma = (w?.lemma || '').toString().trim();
           const dep = (w?.dep || '').toString().trim();
-          wordMeta[idx] = {pos, lemma, dep};
+          const gender = (w?.gender || '').toString().trim();
+          wordMeta[idx] = {pos, lemma, dep, gender};
         });
         focusHelperState.wordMetaByIndex = wordMeta;
         focusHelperState.wordMetaSourceText = normalized;

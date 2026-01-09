@@ -3603,6 +3603,39 @@ switch ($action) {
                 'dep' => $depMap[$i] ?? '',
             ];
         }
+        $genderMap = [];
+        $ordbankGenderCache = [];
+        foreach ($words as $i => $w) {
+            $pos = core_text::strtoupper((string)($posMap[$i] ?? ''));
+            if ($pos !== 'NOUN') {
+                continue;
+            }
+            $token = mod_flashcards_normalize_token((string)($lemmaMap[$i] ?? $w['text'] ?? ''));
+            if ($token === '') {
+                continue;
+            }
+            if (!array_key_exists($token, $ordbankGenderCache)) {
+                $context = [];
+                $prev = $words[$i - 1]['text'] ?? '';
+                $next = $words[$i + 1]['text'] ?? '';
+                $prev = mod_flashcards_normalize_token((string)$prev);
+                $next = mod_flashcards_normalize_token((string)$next);
+                if ($prev !== '') {
+                    $context['prev'] = $prev;
+                }
+                if ($next !== '') {
+                    $context['next'] = $next;
+                }
+                $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($token, $context);
+                $ordbankGenderCache[$token] = $analysis['gender'] ?? '';
+            }
+            $genderMap[$i] = $ordbankGenderCache[$token] ?? '';
+        }
+        if (!empty($genderMap)) {
+            foreach ($words as $i => $w) {
+                $words[$i]['gender'] = $genderMap[$i] ?? '';
+            }
+        }
         $posCandidatesMap = [];
         $verbPrepsMap = [];
         $verbAnyPrepMap = [];
