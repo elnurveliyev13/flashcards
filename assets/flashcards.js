@@ -3471,8 +3471,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'role',
-          noun_sg_only: 'singular only',
-          noun_pl_only: 'plural only',
+          noun_sg_only: 'used only in singular',
+          noun_pl_only: 'used only in plural',
         }
       },
       ru: {
@@ -3609,8 +3609,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'Rolle',
-          noun_sg_only: 'nur Singular',
-          noun_pl_only: 'nur Plural',
+          noun_sg_only: 'nur im Singular verwendet',
+          noun_pl_only: 'nur im Plural verwendet',
         }
       },
       nb: {
@@ -3655,8 +3655,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rolle',
-          noun_sg_only: 'bare entall',
-          noun_pl_only: 'bare flertall',
+          noun_sg_only: 'brukes bare i entall',
+          noun_pl_only: 'brukes bare i flertall',
         }
       },
       fr: {
@@ -3701,8 +3701,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rôle',
-          noun_sg_only: 'singulier uniquement',
-          noun_pl_only: 'pluriel uniquement',
+          noun_sg_only: 'utilisé uniquement au singulier',
+          noun_pl_only: 'utilisé uniquement au pluriel',
         }
       },
       es: {
@@ -3747,8 +3747,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rol',
-          noun_sg_only: 'solo singular',
-          noun_pl_only: 'solo plural',
+          noun_sg_only: 'se usa solo en singular',
+          noun_pl_only: 'se usa solo en plural',
         }
       },
       it: {
@@ -3793,8 +3793,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'ruolo',
-          noun_sg_only: 'solo singolare',
-          noun_pl_only: 'solo plurale',
+          noun_sg_only: 'usato solo al singolare',
+          noun_pl_only: 'usato solo al plurale',
         }
       },
       pl: {
@@ -3839,8 +3839,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rola',
-          noun_sg_only: 'tylko liczba pojedyncza',
-          noun_pl_only: 'tylko liczba mnoga',
+          noun_sg_only: 'używane tylko w liczbie pojedynczej',
+          noun_pl_only: 'używane tylko w liczbie mnogiej',
         }
       }
     };
@@ -3871,7 +3871,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return SUBJECT_DEPS.has(key);
     }
 
-    function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false){
+    function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false, nounNumber = ''){
       const surface = (surfaceText || '').toString();
       const cleanLemma = (lemma || '').toString().trim();
       if(!cleanLemma || !shouldShowLemma(pos)){
@@ -3886,7 +3886,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           decorated = `å ${cleanLemma}`.trim();
         }
       } else if(posKey === 'NOUN'){
-        if(genderAmbiguous){
+        if((nounNumber || '').toString().trim().toLowerCase() === 'pl_only'){
+          decorated = cleanLemma;
+        } else if(genderAmbiguous){
           if(!/^\s*\?/i.test(cleanLemma)){
             decorated = `? ${cleanLemma}`.trim();
           }
@@ -3936,7 +3938,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       wordItems.forEach(w => {
         if(!w || !w.text) return;
         const isSubject = isSubjectDep(w.dep);
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
+      const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous, w.nounNumber);
         list.push({
           text: w.text,
           lemmaText,
@@ -3993,7 +3995,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const translation = (enriched?.translation || '').toString().trim();
         const grammar = formatTokenAnalysis(w);
         const combined = translation ? (grammar ? `${translation} - ${grammar}` : translation) : grammar;
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous, w.nounNumber);
         list.push({
           text: w.text,
           lemmaText,
