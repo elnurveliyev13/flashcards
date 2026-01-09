@@ -637,12 +637,13 @@ USERPROMPT;
         }
         $exprs = [];
         $exprStop = array_fill_keys([
-            'å', 'en', 'ei', 'et', 'den', 'det', 'de',
+            'en', 'ei', 'et', 'den', 'det', 'de',
             'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
+            'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem', 'seg',
         ], true);
         $seenExpr = [];
         foreach ($breakdown as $item) {
-            $expr = $item['no'] ?? '';
+            $expr = trim((string)($item['no'] ?? ''));
             if ($expr === '') {
                 continue;
             }
@@ -654,6 +655,10 @@ USERPROMPT;
             if (count($tokens) < 2) {
                 continue;
             }
+            // Allow expressions that start with infinitive marker "å" by stripping it.
+            if ($tokens[0] === 'å' && count($tokens) >= 3) {
+                array_shift($tokens);
+            }
             $hasStop = false;
             foreach ($tokens as $t) {
                 if (isset($exprStop[$t])) {
@@ -664,13 +669,17 @@ USERPROMPT;
             if ($hasStop) {
                 continue;
             }
-            $key = core_text::strtolower($expr);
+            $exprNormalized = implode(' ', $tokens);
+            if ($exprNormalized === '') {
+                continue;
+            }
+            $key = core_text::strtolower($exprNormalized);
             if (isset($seenExpr[$key])) {
                 continue;
             }
             $seenExpr[$key] = true;
             $exprs[] = [
-                'expression' => $expr,
+                'expression' => $exprNormalized,
                 'translation' => $item['tr'] ?? '',
                 'note' => '',
                 'breakdown' => [],
