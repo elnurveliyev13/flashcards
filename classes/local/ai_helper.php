@@ -638,34 +638,74 @@ USERPROMPT;
         }
         $exprs = [];
         $explicitExprs = [];
-        foreach ($breakdown as $item) {
-            if (($item['kind'] ?? '') !== 'expr') {
-                continue;
+        if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
+            foreach ($raw['expressions'] as $ex) {
+                if (!is_array($ex)) {
+                    continue;
+                }
+                $expr = trim((string)($ex['expression'] ?? $ex['text'] ?? ''));
+                if ($expr === '') {
+                    continue;
+                }
+                $expr = $this->normalize_reflexive_expression($expr);
+                if ($expr === '') {
+                    continue;
+                }
+                $explicitExprs[] = [
+                    'expression' => $expr,
+                    'translation' => trim((string)($ex['translation'] ?? '')),
+                    'note' => '',
+                    'breakdown' => [],
+                    'examples' => [],
+                ];
             }
-            $expr = trim((string)($item['no'] ?? ''));
-            if ($expr === '') {
-                continue;
-            }
-            $explicitExprs[] = [
-                'expression' => $expr,
-                'translation' => $item['tr'] ?? '',
-                'note' => '',
-                'breakdown' => [],
-                'examples' => [],
-            ];
         }
         if (!empty($explicitExprs)) {
             $exprs = $explicitExprs;
+        } else {
+            foreach ($breakdown as $item) {
+                if (($item['kind'] ?? '') !== 'expr') {
+                    continue;
+                }
+                $expr = trim((string)($item['no'] ?? ''));
+                if ($expr === '') {
+                    continue;
+                }
+                $expr = $this->normalize_reflexive_expression($expr);
+                if ($expr === '') {
+                    continue;
+                }
+                $explicitExprs[] = [
+                    'expression' => $expr,
+                    'translation' => $item['tr'] ?? '',
+                    'note' => '',
+                    'breakdown' => [],
+                    'examples' => [],
+                ];
+            }
+            if (!empty($explicitExprs)) {
+                $exprs = $explicitExprs;
+            }
         }
 
-        if (empty($exprs)) {
+        $fallbackLimit = 2;
         $exprStop = array_fill_keys([
             'en', 'ei', 'et', 'den', 'det', 'de',
             'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
             'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem', 'seg',
         ], true);
         $seenExpr = [];
+        $existingKeys = [];
+        foreach ($exprs as $existing) {
+            $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase((string)($existing['expression'] ?? ''));
+            if ($key !== '') {
+                $existingKeys[$key] = true;
+            }
+        }
         foreach ($breakdown as $item) {
+            if (count($exprs) >= (count($explicitExprs) + $fallbackLimit)) {
+                break;
+            }
             $expr = trim((string)($item['no'] ?? ''));
             if ($expr === '') {
                 continue;
@@ -696,11 +736,15 @@ USERPROMPT;
             if ($exprNormalized === '') {
                 continue;
             }
-            $key = core_text::strtolower($exprNormalized);
-            if (isset($seenExpr[$key])) {
+            $exprNormalized = $this->normalize_reflexive_expression($exprNormalized);
+            if ($exprNormalized === '') {
                 continue;
             }
-            $seenExpr[$key] = true;
+            $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($exprNormalized);
+            if ($key === '' || isset($existingKeys[$key])) {
+                continue;
+            }
+            $existingKeys[$key] = true;
             $exprs[] = [
                 'expression' => $exprNormalized,
                 'translation' => $item['tr'] ?? '',
@@ -708,10 +752,6 @@ USERPROMPT;
                 'breakdown' => [],
                 'examples' => [],
             ];
-            if (count($exprs) >= 3) {
-                break;
-            }
-        }
         }
         $result = [
             'analysis' => $analysis,
@@ -2669,6 +2709,18 @@ If NO constructions found, return empty constructions array.";
             return null;
         }
         return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * Normalize reflexive pronouns in an expression to "seg".
+     */
+    private function normalize_reflexive_expression(string $expr): string {
+        $expr = trim(preg_replace('/\s+/u', ' ', $expr));
+        if ($expr === '') {
+            return '';
+        }
+        $expr = preg_replace('/\b(meg|deg|oss|dere|dem)\b/iu', 'seg', $expr);
+        return trim(preg_replace('/\s+/u', ' ', $expr));
     }
 
     /**

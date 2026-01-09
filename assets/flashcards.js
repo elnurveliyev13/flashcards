@@ -3041,6 +3041,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     const focusBaseInput = document.getElementById('uFocusBase');
     const focusWordList = document.getElementById('focusWordList');
     const focusHelperSlot = root.querySelector('.focus-helper-slot');
+    const focusHelperAnalysis = focusHelperSlot
+      ? focusHelperSlot.querySelector('.focus-helper-analysis')
+      : null;
     let aiTutorContainer = null;
     const focusStatusEl = document.getElementById('focusHelperStatus');
     const focusSpacyEl = document.getElementById('focusHelperSpacy');
@@ -5179,6 +5182,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if(!aiTutorContainer){
         aiTutorContainer = document.createElement('div');
         aiTutorContainer.className = 'ai-tutor-block hidden';
+      }
+      if(focusHelperAnalysis && focusHelperSlot.contains(focusHelperAnalysis)){
+        if(aiTutorContainer !== focusHelperAnalysis.previousSibling){
+          focusHelperSlot.insertBefore(aiTutorContainer, focusHelperAnalysis);
+        }
+      } else if(!focusHelperSlot.contains(aiTutorContainer)) {
         focusHelperSlot.appendChild(aiTutorContainer);
       }
       const status = focusHelperState.aiTutorStatus;

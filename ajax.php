@@ -6186,10 +6186,16 @@ if (!empty($ordbokene_debug)) {
       "tr": "short meaning in {$uiLangName}",
       "kind": "expr|part"
     }
+  ],
+  "expressions": [
+    {
+      "expression": "expression in Norwegian (grunnform if possible)",
+      "translation": "short translation in {$uiLangName}"
+    }
   ]
 }
 JSON;
-        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in {$uiLangName}.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression / collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive/base form if possible).\n   - Use ONLY {$uiLangName} in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{$schema}";
+        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in {$uiLangName}.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression / collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive/base form if possible).\n   - Use ONLY {$uiLangName} in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions / collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in {$uiLangName}.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{$schema}";
         $config = get_config('mod_flashcards');
         $model = trim((string)($config->ai_sentence_explain_model ?? ''));
         if ($model === '') {
@@ -6243,7 +6249,7 @@ JSON;
             $chatPayload['max_tokens'] = $maxTokens;
         }
         $helper = new \mod_flashcards\local\ai_helper();
-        $cachekey = sha1('ai_sentence_explain:v8:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
+        $cachekey = sha1('ai_sentence_explain:v9:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
         $resp = $helper->explain_sentence($userid, $text, [
             'payload' => $chatPayload,
             'debug_ai' => is_siteadmin(),
