@@ -7,7 +7,6 @@ use core_text;
 use moodle_exception;
 use Throwable;
 use mod_flashcards\local\ordbank_helper;
-use mod_flashcards\local\ordbank_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -23,11 +22,6 @@ class ai_helper {
     public function __construct(?openai_client $openai = null, ?tts_service $tts = null) {
         $this->openai = $openai ?? new openai_client();
         $this->tts = $tts ?? new tts_service();
-    }
-
-    private function cache_disabled(): bool {
-        global $CFG;
-        return !empty($CFG->mod_flashcards_disable_cache);
     }
 
     private function cache_disabled(): bool {
