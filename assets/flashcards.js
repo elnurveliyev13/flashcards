@@ -636,22 +636,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     // ========== INTERFACE LANGUAGE SYSTEM ==========
-    const NATIVE_LANG_STORAGE_KEY = 'flashcards_native_lang';
-    const ACTIVE_VOCAB_THRESHOLD = 600;
-    const NORWEGIAN_INTERFACE_LANG = 'nb';
-
-    function getSavedNativeLang(){
+    // Load saved interface language preference (separate from translation language)
+    function getSavedInterfaceLang(){
       try{
-        return localStorage.getItem(NATIVE_LANG_STORAGE_KEY) || localStorage.getItem('flashcards_interface_lang') || null;
+        return localStorage.getItem('flashcards_interface_lang') || null;
       }catch(_e){
         return null;
       }
     }
 
-    function saveNativeLang(lang){
-      if(!lang) return;
+    function saveInterfaceLang(lang){
       try{
-        localStorage.setItem(NATIVE_LANG_STORAGE_KEY, lang);
         localStorage.setItem('flashcards_interface_lang', lang);
       }catch(_e){}
     }
@@ -2081,42 +2076,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         https_permissions_hint: 'Offnen Sie uber HTTPS fur Kamera/Mikro-Berechtigungen.',
       }
     };
-    let currentNativeLang = DEFAULT_INTERFACE_FALLBACK;
-    let currentInterfaceLang = DEFAULT_INTERFACE_FALLBACK;
-    let currentActiveVocab = 0;
-    let langSelEl = null;
-    let userLang2 = DEFAULT_INTERFACE_FALLBACK;
-
-    function computeEffectiveInterfaceLang(nativeLang){
-      const base = ((nativeLang || DEFAULT_INTERFACE_FALLBACK) || '').toString().toLowerCase();
-      const normalized = base.split(/[\-_]/)[0] || base || DEFAULT_INTERFACE_FALLBACK;
-      const candidate = currentActiveVocab >= ACTIVE_VOCAB_THRESHOLD ? NORWEGIAN_INTERFACE_LANG : normalized;
-      if(interfaceTranslations[candidate]){
-        return candidate;
-      }
-      if(interfaceTranslations[normalized]){
-        return normalized;
-      }
-      return DEFAULT_INTERFACE_FALLBACK;
-    }
-
-    function updateInterfaceLangState(){
-      const desired = computeEffectiveInterfaceLang(currentNativeLang);
-      if(desired === currentInterfaceLang){
-        return;
-      }
-      currentInterfaceLang = desired;
-      updateInterfaceTexts();
-    }
-
-    function setActiveVocab(value){
-      const next = Number.isFinite(value) ? value : 0;
-      if(next === currentActiveVocab){
-        return;
-      }
-      currentActiveVocab = next;
-      updateInterfaceLangState();
-    }
+    let currentInterfaceLang = null;
 
     // Get interface string in current interface language
     
@@ -2222,38 +2182,18 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         saveBarAdd.textContent = t('createnew');
       }
     }
-    function setNativeLanguage(lang, {persist = true} = {}){
-      if(!lang){
-        return;
-      }
-      const normalized = lang.toLowerCase();
-      currentNativeLang = normalized;
-      userLang2 = normalized;
-      if(langSelEl){
-        langSelEl.value = normalized;
-      }
-      if(persist){
-        saveNativeLang(normalized);
-      }
-      updateInterfaceLangState();
-      updateTranslationLangUI();
-      if(typeof renderExamples === 'function'){
-        renderExamples();
-      }
-    }
     // ========== END INTERFACE LANGUAGE SYSTEM ==========
 
-    const savedNativeLang = getSavedNativeLang();
+    const savedInterfaceLang = getSavedInterfaceLang();
     const savedTransLang = getSavedTransLang();
     const moodleLang = (window.M && M.cfg && M.cfg.lang) || pageLang();
     const fallbackLang = DEFAULT_INTERFACE_FALLBACK;
-    const rawLang = savedNativeLang || savedTransLang || moodleLang || (navigator.language || fallbackLang);
+    const rawLang = savedInterfaceLang || savedTransLang || moodleLang || (navigator.language || fallbackLang);
     const userLang = (rawLang || fallbackLang).toLowerCase();
-    const normalizedUserLang = userLang.split(/[\-_]/)[0] || fallbackLang;
+    let userLang2 = userLang.split(/[\-_]/)[0] || fallbackLang;
 
-    currentNativeLang = savedNativeLang || normalizedUserLang;
-    userLang2 = currentNativeLang;
-    setNativeLanguage(currentNativeLang, {persist: false});
+    // Initialize interface language (use saved interface lang or fallback to computed language)
+    currentInterfaceLang = savedInterfaceLang || userLang2;
 
     const voiceSelectEl = document.getElementById('ttsVoice');
     const voiceSlotEl = document.getElementById('slot_ttsVoice');
