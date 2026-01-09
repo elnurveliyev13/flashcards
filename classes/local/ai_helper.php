@@ -592,6 +592,37 @@ USERPROMPT;
             }
         }
 
+        $breakdownTitle = trim((string)($raw['breakdownTitle'] ?? ''));
+        $breakdown = [];
+        if (!empty($raw['breakdown']) && is_array($raw['breakdown'])) {
+            foreach ($raw['breakdown'] as $item) {
+                if (!is_array($item)) {
+                    continue;
+                }
+                $no = trim((string)($item['no'] ?? ''));
+                $tr = trim((string)($item['tr'] ?? ''));
+                if ($no === '' || $tr === '') {
+                    continue;
+                }
+                $breakdown[] = ['no' => $no, 'tr' => $tr];
+                if (count($breakdown) >= 12) {
+                    break;
+                }
+            }
+        }
+
+        if (empty($sections) && !empty($breakdown)) {
+            $title = $breakdownTitle !== '' ? $breakdownTitle : 'Breakdown';
+            $bullets = [];
+            foreach ($breakdown as $item) {
+                $bullets[] = $item['no'] . ' — ' . $item['tr'];
+            }
+            $sections[] = [
+                'title' => $title,
+                'bullets' => array_slice($bullets, 0, 12),
+            ];
+        }
+
         if ($analysis === '' && !empty($sections)) {
             $parts = [];
             foreach ($sections as $s) {
@@ -605,74 +636,55 @@ USERPROMPT;
             $analysis = trim(implode("\n\n", $parts));
         }
         $exprs = [];
-        if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
-            $breakdownStop = array_fill_keys([
-                'å', 'i', 'på', 'til', 'og', 'som', 'ikke',
-                'en', 'ei', 'et', 'den', 'det', 'de', 'der',
-                'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de',
-            ], true);
-            foreach ($raw['expressions'] as $ex) {
-                $expr = trim((string)($ex['expression'] ?? $ex['text'] ?? ''));
-                if ($expr === '') {
-                    continue;
+        $exprStop = array_fill_keys([
+            'å', 'en', 'ei', 'et', 'den', 'det', 'de',
+            'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
+        ], true);
+        $seenExpr = [];
+        foreach ($breakdown as $item) {
+            $expr = $item['no'] ?? '';
+            if ($expr === '') {
+                continue;
+            }
+            $tokens = [];
+            if (preg_match_all('/[\\p{L}\\p{M}]+/u', core_text::strtolower($expr), $m)) {
+                $tokens = $m[0] ?? [];
+            }
+            $tokens = array_values(array_filter(array_map('trim', $tokens)));
+            if (count($tokens) < 2) {
+                continue;
+            }
+            $hasStop = false;
+            foreach ($tokens as $t) {
+                if (isset($exprStop[$t])) {
+                    $hasStop = true;
+                    break;
                 }
-                $breakdown = [];
-                if (!empty($ex['breakdown']) && is_array($ex['breakdown'])) {
-                    foreach ($ex['breakdown'] as $part) {
-                        if (!is_array($part)) {
-                            continue;
-                        }
-                        $no = trim((string)($part['no'] ?? ''));
-                        $tr = trim((string)($part['tr'] ?? ''));
-                        if ($no === '' && $tr === '') {
-                            continue;
-                        }
-                        $nokey = core_text::strtolower($no);
-                        if ($nokey !== '' && isset($breakdownStop[$nokey])) {
-                            continue;
-                        }
-                        if ($tr === '') {
-                            continue;
-                        }
-                        $breakdown[] = ['no' => $no, 'tr' => $tr];
-                        if (count($breakdown) >= 6) {
-                            break;
-                        }
-                    }
-                }
-                $examples = [];
-                if (!empty($ex['examples']) && is_array($ex['examples'])) {
-                    foreach ($ex['examples'] as $example) {
-                        if (!is_array($example)) {
-                            continue;
-                        }
-                        $no = trim((string)($example['no'] ?? ''));
-                        $tr = trim((string)($example['tr'] ?? ''));
-                        if ($no === '' && $tr === '') {
-                            continue;
-                        }
-                        if ($no === '') {
-                            continue;
-                        }
-                        $examples[] = ['no' => $no, 'tr' => $tr];
-                        if (count($examples) >= 6) {
-                            break;
-                        }
-                    }
-                }
-                $exprs[] = [
-                    'expression' => $expr,
-                    'translation' => trim((string)($ex['translation'] ?? '')),
-                    'note' => trim((string)($ex['note'] ?? '')),
-                    'breakdown' => $breakdown,
-                    'examples' => $examples,
-                ];
+            }
+            if ($hasStop) {
+                continue;
+            }
+            $key = core_text::strtolower($expr);
+            if (isset($seenExpr[$key])) {
+                continue;
+            }
+            $seenExpr[$key] = true;
+            $exprs[] = [
+                'expression' => $expr,
+                'translation' => $item['tr'] ?? '',
+                'note' => '',
+                'breakdown' => [],
+                'examples' => [],
+            ];
+            if (count($exprs) >= 3) {
+                break;
             }
         }
         $result = [
             'analysis' => $analysis,
             'sections' => $sections,
             'sentenceTranslation' => $sentenceTranslation,
+            'breakdown' => $breakdown,
             'expressions' => $exprs,
         ];
         if (!empty($raw['usage'])) {

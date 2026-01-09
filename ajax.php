@@ -6179,28 +6179,13 @@ if (!empty($ordbokene_debug)) {
         $schema = <<<JSON
 {
   "sentenceTranslation": "natural translation of the full sentence in {$uiLangName}",
-  "sections": [
-    {
-      "title": "short section title in {$uiLangName}",
-      "bullets": ["short bullet 1", "short bullet 2"]
-    }
-  ],
-  "expressions": [
-    {
-      "expression": "expression in Norwegian (grunnform if possible)",
-      "translation": "short translation in {$uiLangName}",
-      "note": "very short meaning note in {$uiLangName} (optional)",
-      "breakdown": [
-        { "no": "meaningful part", "tr": "meaning in {$uiLangName}" }
-      ],
-      "examples": [
-        { "no": "short Norwegian example", "tr": "translation in {$uiLangName}" }
-      ]
-    }
+  "breakdownTitle": "short title in {$uiLangName}",
+  "breakdown": [
+    { "no": "Norwegian chunk (2-6 words)", "tr": "short meaning in {$uiLangName}" }
   ]
 }
 JSON;
-        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) sections: explain like a good tutor (ChatGPT-style), with simple structure.\n   Use EXACTLY these section titles (translated to {$uiLangName}):\n   - \"Grammar structure\"\n   - \"Translation\"\n   - \"Key expression\"\n   - \"Nuance / usage\"\n   Rules for sections:\n   - 3-5 bullets per section, short and clear.\n   - In \"Grammar structure\": explain the role of the main parts (subject/verb/infinitive phrase/object) in plain words.\n   - In \"Translation\": include 1 natural translation + (optional) 1 literal hint.\n   - In \"Key expression\": explain meaning + when used; keep it short.\n   - In \"Nuance / usage\": 2-4 bullets max.\n\n3) expressions: extract 0-2 multiword expressions (2+ words) that are FIXED collocations/idioms used in this sentence.\n   - Be strict: do NOT include normal grammar fragments.\n   - Prefer the base collocation (avoid adding objects if the base collocation already captures the meaning).\n   - Include verb + particle/preposition if it belongs to the expression.\n   - breakdown: ONLY for meaningful/content parts. Do NOT include function words like \"å\", \"i\", articles, conjunctions.\n\nHard language rules:\n- ALL titles/bullets/notes/translations MUST be in {$uiLangName}.\n- Do NOT use Norwegian words in sections/bullets/notes/translations.\n- Norwegian is allowed ONLY inside expressions[].expression and examples[].no.\n\nOutput constraints:\n- Keep it compact.\n- If unsure, use an empty string.\n\nReturn JSON EXACTLY in this schema:\n{$schema}";
+        $userPrompt = "Sentence:\n\"{$text}\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in {$uiLangName}.\n   - Use ONLY {$uiLangName} in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n\nRules for breakdown chunks:\n- Use meaningful parts only (no single function words).\n- Avoid chunks that include articles (en/ei/et), numerals (ett/to/tre/...), or the infinitive marker \"å\".\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{$schema}";
         $config = get_config('mod_flashcards');
         $model = trim((string)($config->ai_sentence_explain_model ?? ''));
         if ($model === '') {
@@ -6249,7 +6234,7 @@ JSON;
             $chatPayload['max_tokens'] = $maxTokens;
         }
         $helper = new \mod_flashcards\local\ai_helper();
-        $cachekey = sha1('ai_sentence_explain:v5:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
+        $cachekey = sha1('ai_sentence_explain:v6:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
         $resp = $helper->explain_sentence($userid, $text, [
             'payload' => $chatPayload,
             'debug_ai' => is_siteadmin(),
