@@ -112,6 +112,7 @@ class ordbank_helper {
         if ($gender === '' && !$genderambiguous) {
             $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
         }
+        $nounnumber = self::detect_noun_number_restriction($selected, $forms);
 
         return [
             'token' => $token,
@@ -122,6 +123,7 @@ class ordbank_helper {
             'forms' => $forms,
             'gender' => $gender,
             'gender_ambiguous' => $genderambiguous,
+            'noun_number' => $nounnumber,
             'ambiguous' => $originalcount > 1,
         ];
     }
@@ -1016,5 +1018,45 @@ class ordbank_helper {
             'gender' => $gender,
             'ambiguous' => $ambiguous,
         ];
+    }
+
+    /**
+     * Detect noun number restriction (singular-only or plural-only).
+     *
+     * @param array<string,mixed> $selected
+     * @param array<string,mixed> $forms
+     * @return string
+     */
+    protected static function detect_noun_number_restriction(array $selected, array $forms): string {
+        $nounforms = $forms['noun'] ?? [];
+        $hasSg = !empty($nounforms['indef_sg']) || !empty($nounforms['def_sg']);
+        $hasPl = !empty($nounforms['indef_pl']) || !empty($nounforms['def_pl']);
+        if ($hasSg && !$hasPl) {
+            return 'sg_only';
+        }
+        if ($hasPl && !$hasSg) {
+            return 'pl_only';
+        }
+
+        $details = (string)($selected['ordklasse_utdyping'] ?? '');
+        if ($details === '') {
+            $details = (string)($selected['boy_group'] ?? ($selected['boy_gruppe'] ?? ''));
+        }
+        if ($details === '') {
+            $details = (string)($selected['tag'] ?? '');
+        }
+        if ($details === '') {
+            return '';
+        }
+        $lower = core_text::strtolower($details);
+        $hasFl = preg_match('/(^|[^a-z])fl([^a-z]|$)/u', $lower) === 1;
+        $hasEnt = preg_match('/(^|[^a-z])ent([^a-z]|$)/u', $lower) === 1;
+        if ($hasFl && !$hasEnt) {
+            return 'pl_only';
+        }
+        if ($hasEnt && !$hasFl) {
+            return 'sg_only';
+        }
+        return '';
     }
 }

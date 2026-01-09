@@ -4966,8 +4966,10 @@ body.cropper-open #editActionsBar{
   box-shadow:0 0 0 2px rgba(59,130,246,0.4);
 }
 .focus-chip--subject {
-  border-color:rgba(34,197,94,0.6);
-  box-shadow:0 0 0 2px rgba(34,197,94,0.2);
+  text-decoration:underline;
+  text-decoration-thickness:2px;
+  text-decoration-color:rgba(34,197,94,0.9);
+  text-underline-offset:6px;
 }
 .focus-expression-menu {
   position:absolute;
@@ -5118,15 +5120,11 @@ body.cropper-open #editActionsBar{
   border-color:rgba(16,185,129,0.45);
   background:linear-gradient(135deg, rgba(16,185,129,0.18), rgba(14,116,144,0.12));
 }
-.analysis-item--subject {
-  border-color:rgba(34,197,94,0.55);
-  background:rgba(34,197,94,0.12);
-}
 .analysis-subject {
   text-decoration:underline;
   text-decoration-thickness:2px;
   text-decoration-color:rgba(34,197,94,0.9);
-  text-underline-offset:4px;
+  text-underline-offset:6px;
 }
 .analysis-item--clickable {
   cursor:pointer;

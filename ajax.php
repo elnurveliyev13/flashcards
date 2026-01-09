@@ -3632,15 +3632,19 @@ switch ($action) {
                 $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($token, $context);
                 $ordbankGenderCache[$token] = $analysis['gender'] ?? '';
                 $ordbankGenderAmbiguousCache[$token] = !empty($analysis['gender_ambiguous']);
-                $nounforms = $analysis['forms']['noun'] ?? [];
-                $hasSg = !empty($nounforms['indef_sg']) || !empty($nounforms['def_sg']);
-                $hasPl = !empty($nounforms['indef_pl']) || !empty($nounforms['def_pl']);
-                if ($hasSg && !$hasPl) {
-                    $ordbankNumberCache[$token] = 'sg_only';
-                } else if ($hasPl && !$hasSg) {
-                    $ordbankNumberCache[$token] = 'pl_only';
+                if (!empty($analysis['noun_number'])) {
+                    $ordbankNumberCache[$token] = $analysis['noun_number'];
                 } else {
-                    $ordbankNumberCache[$token] = '';
+                    $nounforms = $analysis['forms']['noun'] ?? [];
+                    $hasSg = !empty($nounforms['indef_sg']) || !empty($nounforms['def_sg']);
+                    $hasPl = !empty($nounforms['indef_pl']) || !empty($nounforms['def_pl']);
+                    if ($hasSg && !$hasPl) {
+                        $ordbankNumberCache[$token] = 'sg_only';
+                    } else if ($hasPl && !$hasSg) {
+                        $ordbankNumberCache[$token] = 'pl_only';
+                    } else {
+                        $ordbankNumberCache[$token] = '';
+                    }
                 }
             }
             $genderMap[$i] = $ordbankGenderCache[$token] ?? '';

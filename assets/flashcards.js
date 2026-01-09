@@ -5076,9 +5076,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         } else if(kind === 'expression'){
           chip.classList.add('analysis-item--expression');
         }
-        if(entry.isSubject){
-          chip.classList.add('analysis-item--subject');
-        }
         if(kind === 'word' || kind === 'expression'){
           chip.classList.add('analysis-item--clickable');
         }
@@ -5114,6 +5111,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         } else if(lemmaText){
           const surfaceSpan = document.createElement('span');
           surfaceSpan.className = 'analysis-surface';
+          if(entry.isSubject && kind === 'word'){
+            surfaceSpan.classList.add('analysis-subject');
+          }
           surfaceSpan.textContent = surfaceText;
           const lemmaSpan = document.createElement('span');
           lemmaSpan.className = 'analysis-lemma';
@@ -5122,7 +5122,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           textEl.appendChild(surfaceSpan);
           textEl.appendChild(lemmaSpan);
         } else {
-          textEl.textContent = surfaceText;
+          if(entry.isSubject && kind === 'word'){
+            const surfaceSpan = document.createElement('span');
+            surfaceSpan.className = 'analysis-subject';
+            surfaceSpan.textContent = surfaceText;
+            textEl.textContent = '';
+            textEl.appendChild(surfaceSpan);
+          } else {
+            textEl.textContent = surfaceText;
+          }
         }
         chip.appendChild(textEl);
         if(entry.translation){
