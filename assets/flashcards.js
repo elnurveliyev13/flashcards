@@ -3470,7 +3470,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Root'
         },
         meta: {
-          role: 'role'
+          role: 'role',
           noun_sg_only: 'singular only',
           noun_pl_only: 'plural only',
         }
@@ -3516,7 +3516,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Корень'
         },
         meta: {
-          role: 'роль'
+          role: 'роль',
           noun_sg_only: '?????? ??. ?????',
           noun_pl_only: '?????? ??. ?????',
         }
@@ -3562,7 +3562,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Корінь'
         },
         meta: {
-          role: 'роль'
+          role: 'роль',
           noun_sg_only: '???? ???. ?????',
           noun_pl_only: '???? ??. ?????',
         }
@@ -3608,7 +3608,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Wurzel'
         },
         meta: {
-          role: 'Rolle'
+          role: 'Rolle',
           noun_sg_only: 'nur Singular',
           noun_pl_only: 'nur Plural',
         }
@@ -3654,7 +3654,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Rot'
         },
         meta: {
-          role: 'rolle'
+          role: 'rolle',
           noun_sg_only: 'bare entall',
           noun_pl_only: 'bare flertall',
         }
@@ -3700,7 +3700,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Racine'
         },
         meta: {
-          role: 'rôle'
+          role: 'rôle',
           noun_sg_only: 'singulier uniquement',
           noun_pl_only: 'pluriel uniquement',
         }
@@ -3746,7 +3746,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Raíz'
         },
         meta: {
-          role: 'rol'
+          role: 'rol',
           noun_sg_only: 'solo singular',
           noun_pl_only: 'solo plural',
         }
@@ -3792,7 +3792,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Radice'
         },
         meta: {
-          role: 'ruolo'
+          role: 'ruolo',
           noun_sg_only: 'solo singolare',
           noun_pl_only: 'solo plurale',
         }
@@ -3838,7 +3838,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           root: 'Korzeń'
         },
         meta: {
-          role: 'rola'
+          role: 'rola',
           noun_sg_only: 'tylko liczba pojedyncza',
           noun_pl_only: 'tylko liczba mnoga',
         }
