@@ -601,10 +601,11 @@ USERPROMPT;
                 }
                 $no = trim((string)($item['no'] ?? ''));
                 $tr = trim((string)($item['tr'] ?? ''));
+                $kind = trim((string)($item['kind'] ?? ''));
                 if ($no === '' || $tr === '') {
                     continue;
                 }
-                $breakdown[] = ['no' => $no, 'tr' => $tr];
+                $breakdown[] = ['no' => $no, 'tr' => $tr, 'kind' => $kind];
                 if (count($breakdown) >= 12) {
                     break;
                 }
@@ -636,6 +637,28 @@ USERPROMPT;
             $analysis = trim(implode("\n\n", $parts));
         }
         $exprs = [];
+        $explicitExprs = [];
+        foreach ($breakdown as $item) {
+            if (($item['kind'] ?? '') !== 'expr') {
+                continue;
+            }
+            $expr = trim((string)($item['no'] ?? ''));
+            if ($expr === '') {
+                continue;
+            }
+            $explicitExprs[] = [
+                'expression' => $expr,
+                'translation' => $item['tr'] ?? '',
+                'note' => '',
+                'breakdown' => [],
+                'examples' => [],
+            ];
+        }
+        if (!empty($explicitExprs)) {
+            $exprs = $explicitExprs;
+        }
+
+        if (empty($exprs)) {
         $exprStop = array_fill_keys([
             'en', 'ei', 'et', 'den', 'det', 'de',
             'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
@@ -688,6 +711,7 @@ USERPROMPT;
             if (count($exprs) >= 3) {
                 break;
             }
+        }
         }
         $result = [
             'analysis' => $analysis,
