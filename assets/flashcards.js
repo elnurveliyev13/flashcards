@@ -3060,6 +3060,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       expressionRequestText: '',
       wordMetaByIndex: {},
       wordMetaSourceText: '',
+      subjectIndices: [],
+      subjectSourceText: '',
       spacyTokens: [],
       spacySourceText: '',
       sentenceAnalysis: [],
@@ -3835,6 +3837,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     }
 
     const HIDE_LEMMA_POS = new Set(['ADP','CONJ','CCONJ','SCONJ','PART','INTJ']);
+    const SUBJECT_DEPS = new Set(['nsubj','csubj']);
 
     function shouldShowLemma(pos){
       const key = (pos || '').toString().trim().toUpperCase();
@@ -3843,6 +3846,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     function normalizeForLemmaCompare(value){
       return (value || '').toString().trim().toLowerCase();
+    }
+
+    function isSubjectDep(dep){
+      const key = (dep || '').toString().trim().toLowerCase();
+      return SUBJECT_DEPS.has(key);
     }
 
     function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false){
@@ -3902,12 +3910,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
-      const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
+        const isSubject = isSubjectDep(w.dep);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
         list.push({
           text: w.text,
           lemmaText,
           translation: formatTokenAnalysis(w),
           kind: 'word',
+          isSubject,
           index: Number.isInteger(w.index) ? w.index : null
         });
       });
@@ -3925,7 +3935,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const list = [];
       const sentenceTranslation = (enrichment?.sentenceTranslation || '').toString().trim();
       if(sentenceTranslation){
-        list.push({text: sentenceText, translation: sentenceTranslation, kind:'sentence'});
+        const subjectIndices = Array.isArray(words)
+          ? words.filter(w => isSubjectDep(w?.dep)).map(w => w.index).filter(Number.isInteger)
+          : [];
+        list.push({
+          text: sentenceText,
+          translation: sentenceTranslation,
+          kind:'sentence',
+          subjectIndices
+        });
       }
       const items = Array.isArray(enrichment?.elements) ? enrichment.elements : [];
       const enrichWordsByIndex = {};
@@ -3955,6 +3973,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           lemmaText,
           translation: combined,
           kind:'word',
+          isSubject: isSubjectDep(w.dep),
           index: idx
         });
       });
@@ -3987,6 +4006,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       if(!normalized && focusHelperState.wordMetaSourceText){
         focusHelperState.wordMetaByIndex = {};
+        focusHelperState.subjectIndices = [];
+        focusHelperState.subjectSourceText = '';
         focusHelperState.wordMetaSourceText = '';
       }
     }
@@ -3996,6 +4017,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const {force = false, enrich = true, skipSentenceTranslation = false} = options || {};
       if(!normalized){
         focusHelperState.wordMetaByIndex = {};
+        focusHelperState.subjectIndices = [];
+        focusHelperState.subjectSourceText = '';
         focusHelperState.wordMetaSourceText = '';
         focusHelperState.spacyTokens = [];
         focusHelperState.spacySourceText = '';
@@ -4033,6 +4056,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         setSpaCyStatus(spacyDebug);
         const spacyTokens = Array.isArray(spacyDebug?.tokens) ? spacyDebug.tokens : [];
         const wordMeta = {};
+        const subjectIndices = [];
         const words = Array.isArray(data?.words) ? data.words : [];
         words.forEach(w=>{
           const idx = Number.isInteger(w?.index) ? w.index : null;
@@ -4044,9 +4068,14 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           const dep = (w?.dep || '').toString().trim();
           const gender = (w?.gender || '').toString().trim();
           wordMeta[idx] = {pos, lemma, dep, gender};
+          if(isSubjectDep(dep)){
+            subjectIndices.push(idx);
+          }
         });
         focusHelperState.wordMetaByIndex = wordMeta;
         focusHelperState.wordMetaSourceText = normalized;
+        focusHelperState.subjectIndices = subjectIndices;
+        focusHelperState.subjectSourceText = normalized;
         focusHelperState.spacyTokens = spacyTokens;
         focusHelperState.spacySourceText = normalized;
 
@@ -4943,6 +4972,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             if(meta.lemma && shouldShowLemma(meta.pos)) titleParts.push(meta.lemma);
             btn.title = titleParts.join(' · ');
           }
+          if(meta && isSubjectDep(meta.dep)){
+            btn.classList.add('focus-chip--subject');
+          }
           attachFocusChipMenuHandlers(btn, token.text, {
             onCreate: ()=>createCardFromToken(token),
             ordbokeneUrl: buildOrdbokeneTokenUrl(token.text, meta ? meta.pos : ''),
@@ -4976,6 +5008,26 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       updateChipActiveState();
     }
 
+    function buildSubjectFragment(sentenceText, subjectIndices){
+      const fragment = document.createDocumentFragment();
+      const tokens = extractFocusTokens(sentenceText || '');
+      tokens.forEach(token => {
+        if(!token.isWord){
+          fragment.appendChild(document.createTextNode(token.text || ''));
+          return;
+        }
+        if(Array.isArray(subjectIndices) && subjectIndices.includes(token.index)){
+          const span = document.createElement('span');
+          span.className = 'analysis-subject';
+          span.textContent = token.text || '';
+          fragment.appendChild(span);
+        } else {
+          fragment.appendChild(document.createTextNode(token.text || ''));
+        }
+      });
+      return fragment;
+    }
+
     function renderSentenceAnalysis(items){
       if(!focusAnalysisList) return;
       focusAnalysisList.innerHTML = '';
@@ -4996,6 +5048,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           chip.classList.add('analysis-item--sentence');
         } else if(kind === 'expression'){
           chip.classList.add('analysis-item--expression');
+        }
+        if(entry.isSubject){
+          chip.classList.add('analysis-item--subject');
         }
         if(kind === 'word' || kind === 'expression'){
           chip.classList.add('analysis-item--clickable');
@@ -5026,7 +5081,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         textEl.className = 'analysis-text';
         const surfaceText = entry.text || entry.token || '';
         const lemmaText = (entry.lemmaText || '').toString().trim();
-        if(lemmaText){
+        if(kind === 'sentence' && Array.isArray(entry.subjectIndices) && entry.subjectIndices.length){
+          textEl.textContent = '';
+          textEl.appendChild(buildSubjectFragment(surfaceText, entry.subjectIndices));
+        } else if(lemmaText){
           const surfaceSpan = document.createElement('span');
           surfaceSpan.className = 'analysis-surface';
           surfaceSpan.textContent = surfaceText;
@@ -6478,6 +6536,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.pendingSentenceAnalysis = null;
         focusHelperState.wordMetaByIndex = {};
         focusHelperState.wordMetaSourceText = '';
+        focusHelperState.subjectIndices = [];
+        focusHelperState.subjectSourceText = '';
         focusHelperState.spacyTokens = [];
         focusHelperState.spacySourceText = '';
         focusHelperState.sentenceAnalysis = [];
@@ -16028,10 +16088,18 @@ Rules:
         row = document.createElement('div');
         row.className = 'analysis-item analysis-item--sentence';
         row.dataset.sentenceText = cleanText;
-        const textEl = document.createElement('span');
-        textEl.className = 'analysis-text';
+      const textEl = document.createElement('span');
+      textEl.className = 'analysis-text';
+      textEl.textContent = '';
+      const subjectsReady = Array.isArray(focusHelperState.subjectIndices)
+        && focusHelperState.subjectIndices.length
+        && focusHelperState.subjectSourceText === cleanText;
+      if(subjectsReady){
+        textEl.appendChild(buildSubjectFragment(cleanText, focusHelperState.subjectIndices));
+      } else {
         textEl.textContent = cleanText;
-        row.appendChild(textEl);
+      }
+      row.appendChild(textEl);
         focusAnalysisList.insertBefore(row, focusAnalysisList.firstChild || null);
       }else if(row && row.dataset.sentenceText !== cleanText){
         row.dataset.sentenceText = cleanText;

@@ -1,55 +1,54 @@
 {
     "ok": true,
     "data": {
-        "analysis": "Meaningful parts\n- Dette gj\u00f8res \u2014 This is done \/ This is being done\n- i henhold til \u2014 in accordance with \/ according to\n- reglene \u2014 the rules",
+        "analysis": "Sentence breakdown\n- N\u00e5 og da \u2014 occasionally \/ from time to time\n- g\u00e5r jeg \u2014 I go\n- p\u00e5 tur \u2014 for a walk \/ on an outing",
         "sections": [
             {
-                "title": "Meaningful parts",
+                "title": "Sentence breakdown",
                 "bullets": [
-                    "Dette gj\u00f8res \u2014 This is done \/ This is being done",
-                    "i henhold til \u2014 in accordance with \/ according to",
-                    "reglene \u2014 the rules"
+                    "N\u00e5 og da \u2014 occasionally \/ from time to time",
+                    "g\u00e5r jeg \u2014 I go",
+                    "p\u00e5 tur \u2014 for a walk \/ on an outing"
                 ]
             }
         ],
-        "sentenceTranslation": "This is done in accordance with the rules.",
+        "sentenceTranslation": "From time to time I go for a walk",
         "breakdown": [
             {
-                "no": "Dette gj\u00f8res",
-                "tr": "This is done \/ This is being done",
-                "kind": "part"
+                "no": "N\u00e5 og da",
+                "tr": "occasionally \/ from time to time"
             },
             {
-                "no": "i henhold til",
-                "tr": "in accordance with \/ according to",
-                "kind": "expr"
+                "no": "g\u00e5r jeg",
+                "tr": "I go"
             },
             {
-                "no": "reglene",
-                "tr": "the rules",
-                "kind": "part"
+                "no": "p\u00e5 tur",
+                "tr": "for a walk \/ on an outing"
             }
         ],
         "expressions": [
             {
-                "expression": "i henhold til",
-                "translation": "in accordance with \/ according to",
+                "expression": "N\u00e5 og da",
+                "translation": "occasionally \/ from time to time",
                 "note": "",
                 "breakdown": [],
-                "examples": []
-            },
-            {
-                "expression": "dette gj\u00f8res",
-                "translation": "This is done \/ This is being done",
-                "note": "",
-                "breakdown": [],
-                "examples": []
+                "examples": [
+                    {
+                        "no": "N\u00e5 og da leser jeg en bok.",
+                        "tr": "From time to time I read a book."
+                    },
+                    {
+                        "no": "Hun bes\u00f8ker oss n\u00e5 og da.",
+                        "tr": "She visits us occasionally."
+                    }
+                ]
             }
         ],
         "usage": {
-            "prompt_tokens": 393,
-            "completion_tokens": 173,
-            "total_tokens": 566,
+            "prompt_tokens": 378,
+            "completion_tokens": 218,
+            "total_tokens": 596,
             "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
@@ -64,7 +63,7 @@
         "ai_debug": {
             "task": "chat",
             "system": "You are an expert Norwegian (Bokm\u00e5l) tutor.\nWrite ONLY in English.\nNorwegian is allowed ONLY inside: expressions[].expression and expressions[].examples[].no.\nReturn ONLY valid JSON (no markdown fences, no extra text).\nStyle: very simple, learner-friendly, short sections and bullets. No heavy linguistics.",
-            "user": "Sentence:\n\"Dette gj\u00f8res i henhold til reglene.\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression \/ collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive\/base form if possible).\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\",\n      \"kind\": \"expr|part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\"\n    }\n  ]\n}",
+            "user": "Sentence:\n\"N\u00e5 og da g\u00e5r jeg p\u00e5 tur\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}",
             "payload": {
                 "model": "gpt-5-mini",
                 "messages": [
@@ -74,7 +73,7 @@
                     },
                     {
                         "role": "user",
-                        "content": "Sentence:\n\"Dette gj\u00f8res i henhold til reglene.\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression \/ collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive\/base form if possible).\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\",\n      \"kind\": \"expr|part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\"\n    }\n  ]\n}"
+                        "content": "Sentence:\n\"N\u00e5 og da g\u00e5r jeg p\u00e5 tur\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}"
                     }
                 ],
                 "response_format": {
@@ -83,11 +82,11 @@
                 "reasoning_effort": "minimal",
                 "max_completion_tokens": 520
             },
-            "raw": "{\n  \"sentenceTranslation\": \"This is done in accordance with the rules.\",\n  \"breakdownTitle\": \"Meaningful parts\",\n  \"breakdown\": [\n    {\n      \"no\": \"Dette gj\u00f8res\",\n      \"tr\": \"This is done \/ This is being done\",\n      \"kind\": \"part\"\n    },\n    {\n      \"no\": \"i henhold til\",\n      \"tr\": \"in accordance with \/ according to\",\n      \"kind\": \"expr\"\n    },\n    {\n      \"no\": \"reglene\",\n      \"tr\": \"the rules\",\n      \"kind\": \"part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"i henhold til\",\n      \"translation\": \"in accordance with \/ according to\"\n    }\n  ]\n}",
+            "raw": "{\n  \"sentenceTranslation\": \"From time to time I go for a walk\",\n  \"breakdownTitle\": \"Sentence breakdown\",\n  \"breakdown\": [\n    {\n      \"no\": \"N\u00e5 og da\",\n      \"tr\": \"occasionally \/ from time to time\"\n    },\n    {\n      \"no\": \"g\u00e5r jeg\",\n      \"tr\": \"I go\"\n    },\n    {\n      \"no\": \"p\u00e5 tur\",\n      \"tr\": \"for a walk \/ on an outing\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"n\u00e5 og da\",\n      \"translation\": \"occasionally \/ from time to time\",\n      \"examples\": [\n        {\n          \"no\": \"N\u00e5 og da leser jeg en bok.\",\n          \"tr\": \"From time to time I read a book.\"\n        },\n        {\n          \"no\": \"Hun bes\u00f8ker oss n\u00e5 og da.\",\n          \"tr\": \"She visits us occasionally.\"\n        }\n      ]\n    }\n  ]\n}",
             "usage": {
-                "prompt_tokens": 393,
-                "completion_tokens": 173,
-                "total_tokens": 566,
+                "prompt_tokens": 378,
+                "completion_tokens": 218,
+                "total_tokens": 596,
                 "prompt_tokens_details": {
                     "cached_tokens": 0,
                     "audio_tokens": 0
