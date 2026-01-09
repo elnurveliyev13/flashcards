@@ -3845,7 +3845,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return (value || '').toString().trim().toLowerCase();
     }
 
-    function computeDisplayLemma(surfaceText, lemma, pos, gender){
+    function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false){
       const surface = (surfaceText || '').toString();
       const cleanLemma = (lemma || '').toString().trim();
       if(!cleanLemma || !shouldShowLemma(pos)){
@@ -3860,9 +3860,15 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           decorated = `å ${cleanLemma}`.trim();
         }
       } else if(posKey === 'NOUN'){
-        const article = mapGenderToArticle((gender || '').toString().trim());
-        if(article && !/^\s*(en|ei|et)\s+/i.test(cleanLemma)){
-          decorated = `${article} ${cleanLemma}`.trim();
+        if(genderAmbiguous){
+          if(!/^\s*\?/i.test(cleanLemma)){
+            decorated = `? ${cleanLemma}`.trim();
+          }
+        } else {
+          const article = mapGenderToArticle((gender || '').toString().trim());
+          if(article && !/^\s*(en|ei|et)\s+/i.test(cleanLemma)){
+            decorated = `${article} ${cleanLemma}`.trim();
+          }
         }
       }
 
@@ -3896,7 +3902,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender);
+      const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
         list.push({
           text: w.text,
           lemmaText,
@@ -3943,7 +3949,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const translation = (enriched?.translation || '').toString().trim();
         const grammar = formatTokenAnalysis(w);
         const combined = translation ? (grammar ? `${translation} - ${grammar}` : translation) : grammar;
-        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous);
         list.push({
           text: w.text,
           lemmaText,
@@ -4603,6 +4609,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       hannkjonn: 'en',
       hankjonn: 'en',
       hankjønn: 'en',
+      'en/ei': 'ei/en',
+      'ei/en': 'ei/en',
+      'm/f': 'ei/en',
+      'mf': 'ei/en',
       female: 'ei',
       feminine: 'ei',
       hunnkjonn: 'ei',

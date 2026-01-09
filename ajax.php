@@ -3605,6 +3605,7 @@ switch ($action) {
         }
         $genderMap = [];
         $ordbankGenderCache = [];
+        $ordbankGenderAmbiguousCache = [];
         foreach ($words as $i => $w) {
             $pos = core_text::strtoupper((string)($posMap[$i] ?? ''));
             if ($pos !== 'NOUN') {
@@ -3628,12 +3629,15 @@ switch ($action) {
                 }
                 $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($token, $context);
                 $ordbankGenderCache[$token] = $analysis['gender'] ?? '';
+                $ordbankGenderAmbiguousCache[$token] = !empty($analysis['gender_ambiguous']);
             }
             $genderMap[$i] = $ordbankGenderCache[$token] ?? '';
         }
         if (!empty($genderMap)) {
             foreach ($words as $i => $w) {
                 $words[$i]['gender'] = $genderMap[$i] ?? '';
+                $token = mod_flashcards_normalize_token((string)($lemmaMap[$i] ?? $w['text'] ?? ''));
+                $words[$i]['genderAmbiguous'] = !empty($ordbankGenderAmbiguousCache[$token] ?? false);
             }
         }
         $posCandidatesMap = [];

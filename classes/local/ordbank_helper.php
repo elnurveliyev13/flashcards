@@ -106,7 +106,12 @@ class ordbank_helper {
 
         $parts = self::split_compound($selected['lemma_id'] ?? null, $selected['baseform'] ?? $selected['wordform'] ?? $token);
         $forms = self::fetch_forms($selected['lemma_id'] ?? 0, $selected['tag'] ?? '');
-        $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
+        $genderprofile = self::detect_gender_profile($selected['tag'] ?? '', $forms);
+        $gender = $genderprofile['gender'] ?? '';
+        $genderambiguous = !empty($genderprofile['ambiguous']);
+        if ($gender === '' && !$genderambiguous) {
+            $gender = self::detect_gender_from_tag($selected['tag'] ?? '');
+        }
 
         return [
             'token' => $token,
@@ -116,6 +121,7 @@ class ordbank_helper {
             'parts' => $parts,
             'forms' => $forms,
             'gender' => $gender,
+            'gender_ambiguous' => $genderambiguous,
             'ambiguous' => $originalcount > 1,
         ];
     }
@@ -944,7 +950,7 @@ class ordbank_helper {
         $hasfem = str_contains($t, 'fem');
         $hasneut = str_contains($t, 'nøy') || str_contains($t, 'noy');
         if ($hasmask && $hasfem) {
-            return 'en/ei';
+            return 'ei/en';
         }
         if ($hasmask) {
             return 'en';
@@ -956,5 +962,59 @@ class ordbank_helper {
             return 'et';
         }
         return '';
+    }
+
+    /**
+     * Detect gender/article hints from paradigm data when available.
+     *
+     * @param string $tag Ordbank tag.
+     * @param array $forms Forms array from fetch_forms().
+     * @return array{gender:string, ambiguous:bool}
+     */
+    protected static function detect_gender_profile(string $tag, array $forms): array {
+        $has = [
+            'hankjonn' => false,
+            'hunkjonn' => false,
+            'intetkjonn' => false,
+        ];
+        $bygender = $forms['noun']['by_gender'] ?? null;
+        if (is_array($bygender) && !empty($bygender)) {
+            foreach ($has as $key => $_) {
+                if (!empty($bygender[$key])) {
+                    $has[$key] = true;
+                }
+            }
+        } else {
+            $t = core_text::strtolower($tag);
+            if (str_contains($t, 'mask')) {
+                $has['hankjonn'] = true;
+            }
+            if (str_contains($t, 'fem')) {
+                $has['hunkjonn'] = true;
+            }
+            if (str_contains($t, 'nƒñy') || str_contains($t, 'noy') || str_contains($t, 'neut')) {
+                $has['intetkjonn'] = true;
+            }
+        }
+        $hasmasc = $has['hankjonn'];
+        $hasfem = $has['hunkjonn'];
+        $hasneut = $has['intetkjonn'];
+        $ambiguous = $hasneut && ($hasmasc || $hasfem);
+        $gender = '';
+        if (!$ambiguous) {
+            if ($hasmasc && $hasfem) {
+                $gender = 'ei/en';
+            } elseif ($hasmasc) {
+                $gender = 'en';
+            } elseif ($hasfem) {
+                $gender = 'ei';
+            } elseif ($hasneut) {
+                $gender = 'et';
+            }
+        }
+        return [
+            'gender' => $gender,
+            'ambiguous' => $ambiguous,
+        ];
     }
 }
