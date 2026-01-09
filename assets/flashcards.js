@@ -2077,6 +2077,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
     };
     let currentInterfaceLang = null;
+    let translationForwardLabel = null;
+    let translationReverseLabel = null;
+    let translationModeHint = null;
 
     // Get interface string in current interface language
     
@@ -3092,9 +3095,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     // frontTranslationToggle removed - button no longer exists
     translationInputLocal = document.getElementById('uTransLocal');
     translationInputEn = document.getElementById('uTransEn');
-    const translationForwardLabel = document.getElementById('translationModeForward');
-    const translationReverseLabel = document.getElementById('translationModeReverse');
-    const translationModeHint = document.getElementById('translationModeHint');
+    translationForwardLabel = document.getElementById('translationModeForward');
+    translationReverseLabel = document.getElementById('translationModeReverse');
+    translationModeHint = document.getElementById('translationModeHint');
     const translationButtons = Array.from(root.querySelectorAll('[data-translation-btn]'));
     const mediaStatusIndicator = document.getElementById('mediaStatusIndicator');
     if(mediaStatusIndicator){

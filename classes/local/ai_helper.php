@@ -7,6 +7,7 @@ use core_text;
 use moodle_exception;
 use Throwable;
 use mod_flashcards\local\ordbank_helper;
+use mod_flashcards\local\ordbank_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -22,6 +23,11 @@ class ai_helper {
     public function __construct(?openai_client $openai = null, ?tts_service $tts = null) {
         $this->openai = $openai ?? new openai_client();
         $this->tts = $tts ?? new tts_service();
+    }
+
+    private function cache_disabled(): bool {
+        global $CFG;
+        return !empty($CFG->mod_flashcards_disable_cache);
     }
 
     private function cache_disabled(): bool {
@@ -197,6 +203,7 @@ class ai_helper {
         $direction = trim((string)($options['direction'] ?? ''));
         $cachekey = sha1('ai_translate:v1:' . $source . ':' . $target . ':' . $direction . ':' . $textnorm);
         if (!$this->cache_disabled()) {
+        if (!$this->cache_disabled()) {
             try {
                 $cache = \cache::make('mod_flashcards', 'ai_translate');
                 $cached = $cache->get($cachekey);
@@ -207,6 +214,7 @@ class ai_helper {
             } catch (\Throwable $e) {
                 // Ignore cache failures.
             }
+        }
         }
 
         $translation = $this->openai->translate_text($userid, $text, $source, $target, $options);
@@ -222,12 +230,14 @@ class ai_helper {
         }
 
         if (!$this->cache_disabled()) {
+        if (!$this->cache_disabled()) {
             try {
                 $cache = \cache::make('mod_flashcards', 'ai_translate');
                 $cache->set($cachekey, $result);
             } catch (\Throwable $e) {
                 // Ignore cache failures.
             }
+        }
         }
 
         return $result;
@@ -611,11 +621,15 @@ USERPROMPT;
                 }
                 $no = trim((string)($item['no'] ?? ''));
                 $tr = trim((string)($item['tr'] ?? ''));
-                $kind = trim((string)($item['kind'] ?? ''));
                 if ($no === '' || $tr === '') {
                     continue;
                 }
-                $breakdown[] = ['no' => $no, 'tr' => $tr, 'kind' => $kind];
+                $entry = ['no' => $no, 'tr' => $tr];
+                $kind = trim((string)($item['kind'] ?? ''));
+                if ($kind !== '') {
+                    $entry['kind'] = $kind;
+                }
+                $breakdown[] = $entry;
                 if (count($breakdown) >= 12) {
                     break;
                 }
@@ -647,7 +661,6 @@ USERPROMPT;
             $analysis = trim(implode("\n\n", $parts));
         }
         $exprs = [];
-        $explicitExprs = [];
         if (!empty($raw['expressions']) && is_array($raw['expressions'])) {
             foreach ($raw['expressions'] as $ex) {
                 if (!is_array($ex)) {
@@ -663,118 +676,14 @@ USERPROMPT;
                 }
                 $expr = $this->lemmatize_expression_verbs($expr);
                 $expr = $this->recase_expression_from_sentence($expr, $text);
-                $explicitExprs[] = [
+                $exprs[] = [
                     'expression' => $expr,
                     'translation' => trim((string)($ex['translation'] ?? '')),
                     'note' => '',
                     'breakdown' => [],
-                    'examples' => [],
+                    'examples' => $this->normalize_expression_examples($ex['examples'] ?? []),
                 ];
             }
-        }
-        if (!empty($explicitExprs)) {
-            $exprs = $explicitExprs;
-        } else {
-            foreach ($breakdown as $item) {
-                if (($item['kind'] ?? '') !== 'expr') {
-                    continue;
-                }
-                $expr = trim((string)($item['no'] ?? ''));
-                if ($expr === '') {
-                    continue;
-                }
-                $expr = $this->normalize_reflexive_expression($expr);
-                if ($expr === '') {
-                    continue;
-                }
-                $expr = $this->lemmatize_expression_verbs($expr);
-                $expr = $this->recase_expression_from_sentence($expr, $text);
-                $explicitExprs[] = [
-                    'expression' => $expr,
-                    'translation' => $item['tr'] ?? '',
-                    'note' => '',
-                    'breakdown' => [],
-                    'examples' => [],
-                ];
-            }
-            if (!empty($explicitExprs)) {
-                $exprs = $explicitExprs;
-            }
-        }
-
-        $fallbackLimit = 2;
-        $exprStop = array_fill_keys([
-            'en', 'ei', 'et', 'den', 'det', 'de',
-            'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
-            'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem', 'seg',
-        ], true);
-        $pronounLeaders = ['jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem'];
-        $seenExpr = [];
-        $existingKeys = [];
-        foreach ($exprs as $existing) {
-            $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase((string)($existing['expression'] ?? ''));
-            if ($key !== '') {
-                $existingKeys[$key] = true;
-            }
-        }
-        foreach ($breakdown as $item) {
-            if (count($exprs) >= (count($explicitExprs) + $fallbackLimit)) {
-                break;
-            }
-            $expr = trim((string)($item['no'] ?? ''));
-            if ($expr === '') {
-                continue;
-            }
-            $tokens = [];
-            if (preg_match_all('/[\\p{L}\\p{M}]+/u', core_text::strtolower($expr), $m)) {
-                $tokens = $m[0] ?? [];
-            }
-            $tokens = array_values(array_filter(array_map('trim', $tokens)));
-            if (count($tokens) < 2) {
-                continue;
-            }
-            // Allow expressions that start with infinitive marker "å" by stripping it.
-            if ($tokens[0] === 'å' && count($tokens) >= 3) {
-                array_shift($tokens);
-            }
-            while (count($tokens) > 1 && in_array($tokens[0], $pronounLeaders, true)) {
-                array_shift($tokens);
-            }
-            $hasStop = false;
-            foreach ($tokens as $t) {
-                if (isset($exprStop[$t])) {
-                    $hasStop = true;
-                    break;
-                }
-            }
-            if ($hasStop) {
-                continue;
-            }
-            $exprNormalized = implode(' ', $tokens);
-            if ($exprNormalized === '') {
-                continue;
-            }
-            $exprNormalized = $this->normalize_reflexive_expression($exprNormalized);
-            if ($exprNormalized === '') {
-                continue;
-            }
-            $exprNormalized = $this->lemmatize_expression_verbs($exprNormalized);
-            $exprNormalized = $this->recase_expression_from_sentence($exprNormalized, $text);
-            if ($exprNormalized === '') {
-                continue;
-            }
-            $key = \mod_flashcards\local\expression_translation_repository::normalize_phrase($exprNormalized);
-            if ($key === '' || isset($existingKeys[$key])) {
-                continue;
-            }
-            $existingKeys[$key] = true;
-            $exprs[] = [
-                'expression' => $exprNormalized,
-                'translation' => $item['tr'] ?? '',
-                'note' => '',
-                'breakdown' => [],
-                'examples' => [],
-            ];
         }
         $result = [
             'analysis' => $analysis,
@@ -2827,6 +2736,36 @@ If NO constructions found, return empty constructions array.";
         }
 
         return trim(implode(' ', $out));
+    }
+
+    private function normalize_expression_examples($examples): array {
+        if (!is_array($examples)) {
+            return [];
+        }
+        $out = [];
+        foreach ($examples as $example) {
+            $no = '';
+            $tr = '';
+            if (is_array($example)) {
+                $no = trim((string)($example['no'] ?? ''));
+                $tr = trim((string)($example['tr'] ?? ''));
+            } else {
+                $raw = trim((string)$example);
+                if ($raw !== '') {
+                    $parts = explode('|', $raw, 2);
+                    $no = trim($parts[0] ?? '');
+                    $tr = trim($parts[1] ?? '');
+                }
+            }
+            if ($no === '' && $tr === '') {
+                continue;
+            }
+            $out[] = ['no' => $no, 'tr' => $tr];
+            if (count($out) >= 6) {
+                break;
+            }
+        }
+        return $out;
     }
 
     private function lemmatize_expression_verbs(string $expr): string {
