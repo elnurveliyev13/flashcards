@@ -3471,6 +3471,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'role'
+          noun_sg_only: 'singular only',
+          noun_pl_only: 'plural only',
         }
       },
       ru: {
@@ -3515,6 +3517,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'роль'
+          noun_sg_only: '?????? ??. ?????',
+          noun_pl_only: '?????? ??. ?????',
         }
       },
       uk: {
@@ -3559,6 +3563,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'роль'
+          noun_sg_only: '???? ???. ?????',
+          noun_pl_only: '???? ??. ?????',
         }
       },
       de: {
@@ -3603,6 +3609,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'Rolle'
+          noun_sg_only: 'nur Singular',
+          noun_pl_only: 'nur Plural',
         }
       },
       nb: {
@@ -3647,6 +3655,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rolle'
+          noun_sg_only: 'bare entall',
+          noun_pl_only: 'bare flertall',
         }
       },
       fr: {
@@ -3691,6 +3701,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rôle'
+          noun_sg_only: 'singulier uniquement',
+          noun_pl_only: 'pluriel uniquement',
         }
       },
       es: {
@@ -3735,6 +3747,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rol'
+          noun_sg_only: 'solo singular',
+          noun_pl_only: 'solo plural',
         }
       },
       it: {
@@ -3779,6 +3793,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'ruolo'
+          noun_sg_only: 'solo singolare',
+          noun_pl_only: 'solo plurale',
         }
       },
       pl: {
@@ -3823,6 +3839,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'rola'
+          noun_sg_only: 'tylko liczba pojedyncza',
+          noun_pl_only: 'tylko liczba mnoga',
         }
       }
     };
@@ -3895,6 +3913,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       }
       const pos = resolveAnalysisLabel('pos', posKey || '');
       if(pos) parts.push(pos);
+      if((posKey || '').toString().toUpperCase() === 'NOUN'){
+        const nounNumber = (item.nounNumber || '').toString().trim();
+        if(nounNumber){
+          const nounLabel = resolveAnalysisLabel('meta', nounNumber);
+          if(nounLabel) parts.push(nounLabel);
+        }
+      }
       const depKey = (item.dep || '').toString().toLowerCase();
       const roleDeps = new Set(['nsubj','csubj','obj','iobj']);
       if(roleDeps.has(depKey)){
@@ -3918,6 +3943,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           translation: formatTokenAnalysis(w),
           kind: 'word',
           isSubject,
+          nounNumber: w.nounNumber,
           index: Number.isInteger(w.index) ? w.index : null
         });
       });
@@ -3974,6 +4000,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           translation: combined,
           kind:'word',
           isSubject: isSubjectDep(w.dep),
+          nounNumber: w.nounNumber,
           index: idx
         });
       });

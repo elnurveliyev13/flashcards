@@ -3606,6 +3606,8 @@ switch ($action) {
         $genderMap = [];
         $ordbankGenderCache = [];
         $ordbankGenderAmbiguousCache = [];
+        $nounNumberMap = [];
+        $ordbankNumberCache = [];
         foreach ($words as $i => $w) {
             $pos = core_text::strtoupper((string)($posMap[$i] ?? ''));
             if ($pos !== 'NOUN') {
@@ -3630,14 +3632,30 @@ switch ($action) {
                 $analysis = \mod_flashcards\local\ordbank_helper::analyze_token($token, $context);
                 $ordbankGenderCache[$token] = $analysis['gender'] ?? '';
                 $ordbankGenderAmbiguousCache[$token] = !empty($analysis['gender_ambiguous']);
+                $nounforms = $analysis['forms']['noun'] ?? [];
+                $hasSg = !empty($nounforms['indef_sg']) || !empty($nounforms['def_sg']);
+                $hasPl = !empty($nounforms['indef_pl']) || !empty($nounforms['def_pl']);
+                if ($hasSg && !$hasPl) {
+                    $ordbankNumberCache[$token] = 'sg_only';
+                } else if ($hasPl && !$hasSg) {
+                    $ordbankNumberCache[$token] = 'pl_only';
+                } else {
+                    $ordbankNumberCache[$token] = '';
+                }
             }
             $genderMap[$i] = $ordbankGenderCache[$token] ?? '';
+            $nounNumberMap[$i] = $ordbankNumberCache[$token] ?? '';
         }
         if (!empty($genderMap)) {
             foreach ($words as $i => $w) {
                 $words[$i]['gender'] = $genderMap[$i] ?? '';
                 $token = mod_flashcards_normalize_token((string)($lemmaMap[$i] ?? $w['text'] ?? ''));
                 $words[$i]['genderAmbiguous'] = !empty($ordbankGenderAmbiguousCache[$token] ?? false);
+            }
+        }
+        if (!empty($nounNumberMap)) {
+            foreach ($words as $i => $w) {
+                $words[$i]['nounNumber'] = $nounNumberMap[$i] ?? '';
             }
         }
         $posCandidatesMap = [];
