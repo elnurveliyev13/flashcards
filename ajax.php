@@ -6195,7 +6195,8 @@ JSON;
             $model = 'gpt-4o-mini';
         }
         $reasoning = trim((string)($config->ai_sentence_explain_reasoning_effort ?? 'minimal'));
-        $maxTokens = (int)($config->ai_sentence_explain_max_tokens ?? 520);
+        $maxTokensRaw = trim((string)($config->ai_sentence_explain_max_tokens ?? ''));
+        $maxTokens = ($maxTokensRaw === '') ? 520 : (int)$maxTokensRaw;
         if ($maxTokens < 80) {
             $maxTokens = 80;
         } else if ($maxTokens > 2000) {
@@ -6229,12 +6230,16 @@ JSON;
 
         // Use correct max tokens parameter by model family.
         if ($usesMaxCompletionTokens) {
+            // Ensure reasoning models have enough headroom for visible output.
+            if ($maxTokens < 200) {
+                $maxTokens = 200;
+            }
             $chatPayload['max_completion_tokens'] = $maxTokens;
         } else {
             $chatPayload['max_tokens'] = $maxTokens;
         }
         $helper = new \mod_flashcards\local\ai_helper();
-        $cachekey = sha1('ai_sentence_explain:v6:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
+        $cachekey = sha1('ai_sentence_explain:v7:' . $uiLang . ':' . core_text::strtolower($text) . ':' . $model . ':' . $reasoning . ':' . $maxTokens);
         $resp = $helper->explain_sentence($userid, $text, [
             'payload' => $chatPayload,
             'debug_ai' => is_siteadmin(),
