@@ -695,11 +695,15 @@ USERPROMPT;
         }
 
         if (!$debugAi && $cachekey !== '') {
-            try {
-                $cache = \cache::make('mod_flashcards', 'ai_sentence_explain');
-                $cache->set($cachekey, $result);
-            } catch (\Throwable $e) {
-                // Ignore cache failures.
+            $hasContent = $sentenceTranslation !== '' || $analysis !== '' ||
+                !empty($sections) || !empty($exprs) || !empty($breakdown);
+            if ($hasContent) {
+                try {
+                    $cache = \cache::make('mod_flashcards', 'ai_sentence_explain');
+                    $cache->set($cachekey, $result);
+                } catch (\Throwable $e) {
+                    // Ignore cache failures.
+                }
             }
         }
         return $result;

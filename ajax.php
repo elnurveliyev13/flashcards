@@ -6245,6 +6245,22 @@ JSON;
             'debug_ai' => is_siteadmin(),
             'cache_key' => $cachekey,
         ]);
+        $isEmpty = empty($resp['sentenceTranslation'])
+            && empty($resp['analysis'])
+            && empty($resp['sections'])
+            && empty($resp['breakdown'])
+            && empty($resp['expressions']);
+        if ($isEmpty) {
+            $fallbackPayload = $chatPayload;
+            unset($fallbackPayload['response_format']);
+            unset($fallbackPayload['reasoning_effort']);
+            $fallbackCachekey = $cachekey . ':fallback';
+            $resp = $helper->explain_sentence($userid, $text, [
+                'payload' => $fallbackPayload,
+                'debug_ai' => is_siteadmin(),
+                'cache_key' => $fallbackCachekey,
+            ]);
+        }
         echo json_encode(['ok' => true, 'data' => $resp]);
         break;
 
