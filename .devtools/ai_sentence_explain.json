@@ -1,0 +1,105 @@
+{
+    "ok": true,
+    "data": {
+        "analysis": "Meaningful parts\n- Dette gj\u00f8res \u2014 This is done \/ This is being done\n- i henhold til \u2014 in accordance with \/ according to\n- reglene \u2014 the rules",
+        "sections": [
+            {
+                "title": "Meaningful parts",
+                "bullets": [
+                    "Dette gj\u00f8res \u2014 This is done \/ This is being done",
+                    "i henhold til \u2014 in accordance with \/ according to",
+                    "reglene \u2014 the rules"
+                ]
+            }
+        ],
+        "sentenceTranslation": "This is done in accordance with the rules.",
+        "breakdown": [
+            {
+                "no": "Dette gj\u00f8res",
+                "tr": "This is done \/ This is being done",
+                "kind": "part"
+            },
+            {
+                "no": "i henhold til",
+                "tr": "in accordance with \/ according to",
+                "kind": "expr"
+            },
+            {
+                "no": "reglene",
+                "tr": "the rules",
+                "kind": "part"
+            }
+        ],
+        "expressions": [
+            {
+                "expression": "i henhold til",
+                "translation": "in accordance with \/ according to",
+                "note": "",
+                "breakdown": [],
+                "examples": []
+            },
+            {
+                "expression": "dette gj\u00f8res",
+                "translation": "This is done \/ This is being done",
+                "note": "",
+                "breakdown": [],
+                "examples": []
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 393,
+            "completion_tokens": 173,
+            "total_tokens": 566,
+            "prompt_tokens_details": {
+                "cached_tokens": 0,
+                "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+                "reasoning_tokens": 0,
+                "audio_tokens": 0,
+                "accepted_prediction_tokens": 0,
+                "rejected_prediction_tokens": 0
+            }
+        },
+        "ai_debug": {
+            "task": "chat",
+            "system": "You are an expert Norwegian (Bokm\u00e5l) tutor.\nWrite ONLY in English.\nNorwegian is allowed ONLY inside: expressions[].expression and expressions[].examples[].no.\nReturn ONLY valid JSON (no markdown fences, no extra text).\nStyle: very simple, learner-friendly, short sections and bullets. No heavy linguistics.",
+            "user": "Sentence:\n\"Dette gj\u00f8res i henhold til reglene.\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression \/ collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive\/base form if possible).\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\",\n      \"kind\": \"expr|part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\"\n    }\n  ]\n}",
+            "payload": {
+                "model": "gpt-5-mini",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "You are an expert Norwegian (Bokm\u00e5l) tutor.\nWrite ONLY in English.\nNorwegian is allowed ONLY inside: expressions[].expression and expressions[].examples[].no.\nReturn ONLY valid JSON (no markdown fences, no extra text).\nStyle: very simple, learner-friendly, short sections and bullets. No heavy linguistics."
+                    },
+                    {
+                        "role": "user",
+                        "content": "Sentence:\n\"Dette gj\u00f8res i henhold til reglene.\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Mark each item with kind:\n     - \"expr\" if it is a fixed expression \/ collocation.\n     - \"part\" otherwise.\n   - If kind = \"expr\", set breakdown[].no to the BASE expression only (no subject or object; infinitive\/base form if possible).\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\",\n      \"kind\": \"expr|part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\"\n    }\n  ]\n}"
+                    }
+                ],
+                "response_format": {
+                    "type": "json_object"
+                },
+                "reasoning_effort": "minimal",
+                "max_completion_tokens": 520
+            },
+            "raw": "{\n  \"sentenceTranslation\": \"This is done in accordance with the rules.\",\n  \"breakdownTitle\": \"Meaningful parts\",\n  \"breakdown\": [\n    {\n      \"no\": \"Dette gj\u00f8res\",\n      \"tr\": \"This is done \/ This is being done\",\n      \"kind\": \"part\"\n    },\n    {\n      \"no\": \"i henhold til\",\n      \"tr\": \"in accordance with \/ according to\",\n      \"kind\": \"expr\"\n    },\n    {\n      \"no\": \"reglene\",\n      \"tr\": \"the rules\",\n      \"kind\": \"part\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"i henhold til\",\n      \"translation\": \"in accordance with \/ according to\"\n    }\n  ]\n}",
+            "usage": {
+                "prompt_tokens": 393,
+                "completion_tokens": 173,
+                "total_tokens": 566,
+                "prompt_tokens_details": {
+                    "cached_tokens": 0,
+                    "audio_tokens": 0
+                },
+                "completion_tokens_details": {
+                    "reasoning_tokens": 0,
+                    "audio_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                }
+            },
+            "model": "gpt-5-mini-2025-08-07"
+        }
+    }
+}

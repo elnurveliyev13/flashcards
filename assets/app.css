@@ -5141,6 +5141,14 @@ body.cropper-open #editActionsBar{
   background:transparent;
   color:var(--text-subtle);
 }
+.analysis-confidence-reason {
+  display:block;
+  font-size:0.75rem;
+  color:var(--text-subtle);
+  margin:0.15rem 0 0;
+  letter-spacing:normal;
+  text-transform:none;
+}
 .analysis-variants {
   flex:0 0 100%;
   font-size:0.78rem;

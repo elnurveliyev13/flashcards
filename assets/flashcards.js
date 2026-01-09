@@ -4974,21 +4974,41 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           return;
         }
         updateFocusHelperVisibility({hasTokens, hasAnalysis: true});
-        list.forEach(entry => {
-          const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
-          const chip = document.createElement('div');
-          chip.className = 'analysis-item';
-          if(kind === 'sentence'){
-            chip.classList.add('analysis-item--sentence');
-          } else if(kind === 'expression'){
-            chip.classList.add('analysis-item--expression');
+      list.forEach(entry => {
+        const kind = entry.kind || (entry.meta && entry.meta.expression ? 'expression' : 'word');
+        const entryMeta = entry.meta || {};
+        const chip = document.createElement('div');
+        chip.className = 'analysis-item';
+        if(kind === 'sentence'){
+          chip.classList.add('analysis-item--sentence');
+        } else if(kind === 'expression'){
+          chip.classList.add('analysis-item--expression');
+        }
+        if(kind === 'word' || kind === 'expression'){
+          chip.classList.add('analysis-item--clickable');
+        }
+        if(entry.confidence){
+          chip.dataset.confidence = entry.confidence;
+        }
+        let confidenceReason = '';
+        if(kind === 'expression'){
+          const reasonParts = [];
+          const reasonSource = (entryMeta.source || entry.source || '').toString().trim();
+          if(reasonSource) reasonParts.push(`source=${reasonSource}`);
+          const reasonRule = (entryMeta.rule || entry.rule || '').toString().trim();
+          if(reasonRule) reasonParts.push(`rule=${reasonRule}`);
+          const chosenMeaning = typeof entryMeta.chosenMeaning !== 'undefined'
+            ? entryMeta.chosenMeaning
+            : (typeof entry.chosenMeaning !== 'undefined' ? entry.chosenMeaning : '');
+          if(chosenMeaning !== '' && chosenMeaning !== null && typeof chosenMeaning !== 'undefined'){
+            reasonParts.push(`meaning=${String(chosenMeaning)}`);
           }
-          if(kind === 'word' || kind === 'expression'){
-            chip.classList.add('analysis-item--clickable');
+          const reasonSep = ' \u00B7 ';
+          confidenceReason = reasonParts.filter(Boolean).join(reasonSep);
+          if(confidenceReason){
+            chip.dataset.confidenceReason = confidenceReason;
           }
-          if(entry.confidence){
-            chip.dataset.confidence = entry.confidence;
-          }
+        }
         const textEl = document.createElement('span');
         textEl.className = 'analysis-text';
         const surfaceText = entry.text || entry.token || '';
@@ -5013,16 +5033,23 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
         }
-            if(kind === 'expression' && entry.confidence){
-              const conf = document.createElement('span');
-              conf.className = 'analysis-confidence';
-              const confKey = String(entry.confidence || '').trim().toLowerCase();
-              const starCount = confKey === 'high' ? 3 : (confKey === 'medium' ? 2 : 1);
-              conf.textContent = '*'.repeat(starCount);
-              conf.title = 'Confidence = how sure the app is about this phrase in the sentence.';
-              conf.setAttribute('aria-label', conf.title);
-              chip.appendChild(conf);
-            }
+        if(kind === 'expression' && entry.confidence){
+          const conf = document.createElement('span');
+          conf.className = 'analysis-confidence';
+          const confKey = String(entry.confidence || '').trim().toLowerCase();
+          const starCount = confKey === 'high' ? 3 : (confKey === 'medium' ? 2 : 1);
+          conf.textContent = '*'.repeat(starCount);
+          const baseTitle = 'Confidence = how sure the app is about this phrase in the sentence.';
+          conf.title = baseTitle + (confidenceReason ? ` (${confidenceReason})` : '');
+          conf.setAttribute('aria-label', conf.title);
+          chip.appendChild(conf);
+          if(isAdmin && confidenceReason){
+            const reasonNote = document.createElement('span');
+            reasonNote.className = 'analysis-confidence-reason';
+            reasonNote.textContent = confidenceReason;
+            chip.appendChild(reasonNote);
+          }
+        }
         if(kind === 'expression'){
           const variantsRaw = (entry.meta && entry.meta.variants) || entry.variants || [];
           const baseText = String(entry.text || '').trim().toLowerCase();
@@ -5038,45 +5065,45 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             chip.appendChild(varEl);
           }
         }
-          if(kind === 'word'){
-            const normalizeDisplayPos = (posValue, surfaceText)=>{
-              const raw = (posValue || '').toString().trim();
-              if(!raw) return '';
-              if(raw.toUpperCase() === 'PROPN' && surfaceText && surfaceText[0] === surfaceText[0].toLowerCase()){
-                return 'NOUN';
-              }
-              return raw;
-            };
-            const pos = entry.pos
-              || (entry.meta && entry.meta.pos)
-              || (Number.isInteger(entry.index) && focusHelperState.wordMetaByIndex && focusHelperState.wordMetaByIndex[entry.index] ? focusHelperState.wordMetaByIndex[entry.index].pos : '')
-              || '';
-            attachFocusChipMenuHandlers(chip, entry.text, {
-              onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index}),
-              ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, normalizeDisplayPos(pos, entry.text)),
-              lexinUrl: buildLexinUrl(entry.text),
-              naobUrl: buildNaobUrl(entry.text),
-              forvoUrl: buildForvoUrl(entry.text, true)
-            });
-          }
-          if(kind === 'expression'){
-            const meta = entry.meta || entry || {};
-            const exprText = (meta && meta.expression) ? meta.expression : (entry.text || '');
-            const dictmeta = meta && meta.dictmeta ? meta.dictmeta : (entry.dictmeta || null);
-            attachFocusChipMenuHandlers(chip, entry.text, {
-              onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry),
-              ordbokeneUrl: buildOrdbokeneExpressionUrl(exprText, dictmeta),
-              lexinUrl: buildLexinUrl(exprText),
-              naobUrl: buildNaobUrl(exprText),
-              forvoUrl: buildForvoUrl(exprText, false)
-            });
-          }
-          if(kind === 'word' && Number.isInteger(entry.index)){
-            chip.addEventListener('click', ()=>{
-              const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
-              const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
-              if(!token){
-                return;
+        if(kind === 'word'){
+          const normalizeDisplayPos = (posValue, surfaceText)=>{
+            const raw = (posValue || '').toString().trim();
+            if(!raw) return '';
+            if(raw.toUpperCase() === 'PROPN' && surfaceText && surfaceText[0] === surfaceText[0].toLowerCase()){
+              return 'NOUN';
+            }
+            return raw;
+          };
+          const pos = entry.pos
+            || (entry.meta && entry.meta.pos)
+            || (Number.isInteger(entry.index) && focusHelperState.wordMetaByIndex && focusHelperState.wordMetaByIndex[entry.index] ? focusHelperState.wordMetaByIndex[entry.index].pos : '')
+            || '';
+          attachFocusChipMenuHandlers(chip, entry.text, {
+            onCreate: ()=>createCardFromToken({text: entry.text, index: entry.index}),
+            ordbokeneUrl: buildOrdbokeneTokenUrl(entry.text, normalizeDisplayPos(pos, entry.text)),
+            lexinUrl: buildLexinUrl(entry.text),
+            naobUrl: buildNaobUrl(entry.text),
+            forvoUrl: buildForvoUrl(entry.text, true)
+          });
+        }
+        if(kind === 'expression'){
+          const exprMeta = entry.meta || entry || {};
+          const exprText = exprMeta.expression ? exprMeta.expression : (entry.text || '');
+          const dictmeta = exprMeta.dictmeta ? exprMeta.dictmeta : (entry.dictmeta || null);
+          attachFocusChipMenuHandlers(chip, entry.text, {
+            onCreate: ()=>createCardFromToken(entry.text, entry.meta || entry),
+            ordbokeneUrl: buildOrdbokeneExpressionUrl(exprText, dictmeta),
+            lexinUrl: buildLexinUrl(exprText),
+            naobUrl: buildNaobUrl(exprText),
+            forvoUrl: buildForvoUrl(exprText, false)
+          });
+        }
+        if(kind === 'word' && Number.isInteger(entry.index)){
+          chip.addEventListener('click', ()=>{
+            const fullTokens = extractFocusTokens(frontInput ? (frontInput.value || '') : '');
+            const token = fullTokens.filter(t => t.isWord).find(t => t.index === entry.index);
+            if(!token){
+              return;
             }
             focusHelperState.activeExpressionIndex = null;
             focusHelperState.activeIndex = token.index;
@@ -5089,10 +5116,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             scheduleFocusSuggest();
           });
         }
-          if(kind === 'expression' && entry.meta && entry.meta.expression){
-            chip.addEventListener('click', ()=>{
-              focusHelperState.activeIndex = null;
-              const exprKey = String(entry.meta.expression || '').toLowerCase();
+        if(kind === 'expression' && entry.meta && entry.meta.expression){
+          chip.addEventListener('click', ()=>{
+            focusHelperState.activeIndex = null;
+            const exprKey = String(entry.meta.expression || '').toLowerCase();
             const exprIdx = Array.isArray(focusHelperState.expressionSuggestions)
               ? focusHelperState.expressionSuggestions.findIndex(e => String(e?.expression || '').toLowerCase() === exprKey)
               : -1;

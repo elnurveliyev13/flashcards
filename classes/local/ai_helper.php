@@ -6,6 +6,7 @@ use coding_exception;
 use core_text;
 use moodle_exception;
 use Throwable;
+use mod_flashcards\local\ordbank_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -651,6 +652,8 @@ USERPROMPT;
                 if ($expr === '') {
                     continue;
                 }
+                $expr = $this->lemmatize_expression_verbs($expr);
+                $expr = $this->recase_expression_from_sentence($expr, $text);
                 $explicitExprs[] = [
                     'expression' => $expr,
                     'translation' => trim((string)($ex['translation'] ?? '')),
@@ -675,6 +678,8 @@ USERPROMPT;
                 if ($expr === '') {
                     continue;
                 }
+                $expr = $this->lemmatize_expression_verbs($expr);
+                $expr = $this->recase_expression_from_sentence($expr, $text);
                 $explicitExprs[] = [
                     'expression' => $expr,
                     'translation' => $item['tr'] ?? '',
@@ -737,6 +742,11 @@ USERPROMPT;
                 continue;
             }
             $exprNormalized = $this->normalize_reflexive_expression($exprNormalized);
+            if ($exprNormalized === '') {
+                continue;
+            }
+            $exprNormalized = $this->lemmatize_expression_verbs($exprNormalized);
+            $exprNormalized = $this->recase_expression_from_sentence($exprNormalized, $text);
             if ($exprNormalized === '') {
                 continue;
             }
@@ -2721,6 +2731,148 @@ If NO constructions found, return empty constructions array.";
         }
         $expr = preg_replace('/\b(meg|deg|oss|dere|dem)\b/iu', 'seg', $expr);
         return trim(preg_replace('/\s+/u', ' ', $expr));
+    }
+
+    /**
+     * Best-effort fix for capitalization in expressions, based on the original sentence surface.
+     *
+     * Keeps the original expression tokens (lemmas) but re-applies capitalization for matching
+     * sentence tokens (e.g. "i norge" -> "i Norge"). Does not attempt verb lemmatization.
+     */
+    private function recase_expression_from_sentence(string $expr, string $sentence): string {
+        $expr = trim(preg_replace('/\s+/u', ' ', $expr));
+        $sentence = trim((string)$sentence);
+        if ($expr === '' || $sentence === '') {
+            return $expr;
+        }
+
+        if (!preg_match_all('/[\\p{L}\\p{M}]+/u', $expr, $mExpr)) {
+            return $expr;
+        }
+        if (!preg_match_all('/[\\p{L}\\p{M}]+/u', $sentence, $mSent)) {
+            return $expr;
+        }
+        $exprTokens = array_values(array_filter(array_map('trim', $mExpr[0] ?? [])));
+        $sentTokens = array_values(array_filter(array_map('trim', $mSent[0] ?? [])));
+        if (count($exprTokens) < 1 || count($sentTokens) < 1) {
+            return $expr;
+        }
+
+        $exprLower = array_map(fn($t) => core_text::strtolower($t), $exprTokens);
+        $sentLower = array_map(fn($t) => core_text::strtolower($t), $sentTokens);
+
+        $isReflexiveMatch = function(string $exprTokLower, string $sentTokLower): bool {
+            if ($exprTokLower !== 'seg') {
+                return false;
+            }
+            return in_array($sentTokLower, ['seg', 'meg', 'deg', 'oss', 'dere', 'dem'], true);
+        };
+
+        $start = null;
+        $maxStart = count($sentLower) - count($exprLower);
+        for ($i = 0; $i <= $maxStart; $i++) {
+            $ok = true;
+            for ($j = 0; $j < count($exprLower); $j++) {
+                $e = $exprLower[$j];
+                $s = $sentLower[$i + $j];
+                if ($e === $s || $isReflexiveMatch($e, $s)) {
+                    continue;
+                }
+                $ok = false;
+                break;
+            }
+            if ($ok) {
+                $start = $i;
+                break;
+            }
+        }
+        if ($start === null) {
+            return $expr;
+        }
+
+        $out = [];
+        for ($j = 0; $j < count($exprTokens); $j++) {
+            $orig = $exprTokens[$j];
+            $origLower = $exprLower[$j];
+            $surf = $sentTokens[$start + $j] ?? '';
+            $surfLower = $sentLower[$start + $j] ?? '';
+            if ($origLower === $surfLower) {
+                // If the surface has capitalization and the expression token is fully lowercase, use surface.
+                if ($surf !== '' && $surf !== $surfLower && $orig === $origLower) {
+                    $out[] = $surf;
+                } else {
+                    $out[] = $orig;
+                }
+                continue;
+            }
+            // Reflexive normalized to "seg": keep lemma form.
+            if ($origLower === 'seg' && $isReflexiveMatch($origLower, $surfLower)) {
+                $out[] = $orig;
+                continue;
+            }
+            $out[] = $orig;
+        }
+
+        return trim(implode(' ', $out));
+    }
+
+    private function lemmatize_expression_verbs(string $expr): string {
+        $expr = trim($expr);
+        if ($expr === '') {
+            return '';
+        }
+        if (!preg_match_all('/[\p{L}\p{M}]+/u', $expr, $matches)) {
+            return $expr;
+        }
+        $tokens = array_values(array_filter(array_map('trim', $matches[0] ?? [])));
+        if (empty($tokens)) {
+            return $expr;
+        }
+        $lemmas = [];
+        foreach ($tokens as $token) {
+            $lemma = $this->normalize_expression_token_lemma($token);
+            if ($lemma === '') {
+                continue;
+            }
+            $lemmas[] = $lemma;
+        }
+        if (empty($lemmas)) {
+            return $expr;
+        }
+        return implode(' ', $lemmas);
+    }
+
+    private function normalize_expression_token_lemma(string $token): string {
+        $token = trim($token);
+        if ($token === '') {
+            return '';
+        }
+        $normalized = core_text::strtolower($token);
+        try {
+            $analysis = ordbank_helper::analyze_token($token);
+        } catch (Throwable $ex) {
+            return $normalized;
+        }
+        $selected = $analysis['selected'] ?? null;
+        if (empty($selected) || !is_array($selected)) {
+            return $normalized;
+        }
+        $tag = trim((string)($selected['tag'] ?? ''));
+        if ($this->is_verb_tag($tag)) {
+            $baseform = trim((string)($selected['baseform'] ?? ''));
+            if ($baseform !== '') {
+                return core_text::strtolower($baseform);
+            }
+        }
+        return $normalized;
+    }
+
+    private function is_verb_tag(string $tag): bool {
+        $tag = core_text::strtolower(trim($tag));
+        if ($tag === '') {
+            return false;
+        }
+        return str_contains($tag, 'verb');
     }
 
     /**
