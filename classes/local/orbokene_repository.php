@@ -12,6 +12,10 @@ defined('MOODLE_INTERNAL') || die();
  */
 class orbokene_repository {
     public static function is_enabled(): bool {
+        global $CFG;
+        if (!empty($CFG->mod_flashcards_disable_cache)) {
+            return false;
+        }
         $config = get_config('mod_flashcards');
         return !empty($config->orbokene_enabled);
     }

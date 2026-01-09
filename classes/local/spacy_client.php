@@ -39,18 +39,22 @@ class spacy_client {
         if ($text === '' || !$this->is_enabled()) {
             return [];
         }
+        global $CFG;
+        $cacheDisabled = !empty($CFG->mod_flashcards_disable_cache);
 
         $cachekey = hash('sha256', $text);
         $cache = null;
-        try {
-            $cache = cache::make('mod_flashcards', 'spacy');
-        } catch (\Throwable $e) {
-            $cache = null;
-        }
-        if ($cache) {
-            $cached = $cache->get($cachekey);
-            if (is_array($cached)) {
-                return $cached;
+        if (!$cacheDisabled) {
+            try {
+                $cache = cache::make('mod_flashcards', 'spacy');
+            } catch (\Throwable $e) {
+                $cache = null;
+            }
+            if ($cache) {
+                $cached = $cache->get($cachekey);
+                if (is_array($cached)) {
+                    return $cached;
+                }
             }
         }
 
@@ -86,7 +90,7 @@ class spacy_client {
             $data['sents'] = array_values(array_filter($data['sents'], fn($t) => is_array($t)));
         }
 
-        if ($cache) {
+        if ($cache && !$cacheDisabled) {
             $cache->set($cachekey, $data);
         }
         return $data;

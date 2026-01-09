@@ -24,6 +24,11 @@ class ai_helper {
         $this->tts = $tts ?? new tts_service();
     }
 
+    private function cache_disabled(): bool {
+        global $CFG;
+        return !empty($CFG->mod_flashcards_disable_cache);
+    }
+
     /**
      * Main entry for AJAX handler.
      *
@@ -191,15 +196,17 @@ class ai_helper {
         $textnorm = core_text::strtolower(trim($text));
         $direction = trim((string)($options['direction'] ?? ''));
         $cachekey = sha1('ai_translate:v1:' . $source . ':' . $target . ':' . $direction . ':' . $textnorm);
-        try {
-            $cache = \cache::make('mod_flashcards', 'ai_translate');
-            $cached = $cache->get($cachekey);
-            if (is_array($cached) && isset($cached['translation'])) {
-                $cached['cached'] = true;
-                return $cached;
+        if (!$this->cache_disabled()) {
+            try {
+                $cache = \cache::make('mod_flashcards', 'ai_translate');
+                $cached = $cache->get($cachekey);
+                if (is_array($cached) && isset($cached['translation'])) {
+                    $cached['cached'] = true;
+                    return $cached;
+                }
+            } catch (\Throwable $e) {
+                // Ignore cache failures.
             }
-        } catch (\Throwable $e) {
-            // Ignore cache failures.
         }
 
         $translation = $this->openai->translate_text($userid, $text, $source, $target, $options);
@@ -214,11 +221,13 @@ class ai_helper {
             $result['usage'] = $translation['usage'];
         }
 
-        try {
-            $cache = \cache::make('mod_flashcards', 'ai_translate');
-            $cache->set($cachekey, $result);
-        } catch (\Throwable $e) {
-            // Ignore cache failures.
+        if (!$this->cache_disabled()) {
+            try {
+                $cache = \cache::make('mod_flashcards', 'ai_translate');
+                $cache->set($cachekey, $result);
+            } catch (\Throwable $e) {
+                // Ignore cache failures.
+            }
         }
 
         return $result;
@@ -542,7 +551,7 @@ USERPROMPT;
         }
         $debugAi = !empty($options['debug_ai']);
         $cachekey = trim((string)($options['cache_key'] ?? ''));
-        if (!$debugAi && $cachekey !== '') {
+        if (!$debugAi && $cachekey !== '' && !$this->cache_disabled()) {
             try {
                 $cache = \cache::make('mod_flashcards', 'ai_sentence_explain');
                 $cached = $cache->get($cachekey);
@@ -699,6 +708,7 @@ USERPROMPT;
             'ett', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'syv', 'åtte', 'ni', 'ti',
             'jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem', 'seg',
         ], true);
+        $pronounLeaders = ['jeg', 'du', 'han', 'hun', 'vi', 'dere', 'de', 'meg', 'deg', 'oss', 'dem'];
         $seenExpr = [];
         $existingKeys = [];
         foreach ($exprs as $existing) {
@@ -725,6 +735,9 @@ USERPROMPT;
             }
             // Allow expressions that start with infinitive marker "å" by stripping it.
             if ($tokens[0] === 'å' && count($tokens) >= 3) {
+                array_shift($tokens);
+            }
+            while (count($tokens) > 1 && in_array($tokens[0], $pronounLeaders, true)) {
                 array_shift($tokens);
             }
             $hasStop = false;
@@ -777,7 +790,7 @@ USERPROMPT;
             $result['ai_debug'] = $raw['ai_debug'];
         }
 
-        if (!$debugAi && $cachekey !== '') {
+        if (!$debugAi && $cachekey !== '' && !$this->cache_disabled()) {
             $hasContent = $sentenceTranslation !== '' || $analysis !== '' ||
                 !empty($sections) || !empty($exprs) || !empty($breakdown);
             if ($hasContent) {
