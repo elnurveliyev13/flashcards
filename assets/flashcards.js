@@ -3471,8 +3471,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'role',
-          noun_sg_only: 'used only in singular number',
-          noun_pl_only: 'used only in plural number',
+          noun_sg_only: 'used only in singular',
+          noun_pl_only: 'used only in plural',
           noun_forms: 'forms',
         }
       },

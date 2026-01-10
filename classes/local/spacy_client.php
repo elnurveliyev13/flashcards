@@ -40,7 +40,7 @@ class spacy_client {
             return [];
         }
         global $CFG;
-        $cacheDisabled = !empty($CFG->mod_flashcards_disable_cache);
+        $cacheDisabled = true;
 
         $cachekey = hash('sha256', $text);
         $cache = null;
