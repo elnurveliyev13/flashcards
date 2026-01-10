@@ -3949,8 +3949,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if((posKey || '').toString().toUpperCase() === 'NOUN'){
         const nounNumber = (item.nounNumber || '').toString().trim();
         if(nounNumber){
-          const nounKey = nounNumber === 'pl_only' ? 'noun_pl_only',
-          const nounKey = nounNumber === 'pl_only' ? 'noun_forms: 'forms',
+          const nounKey = nounNumber === 'pl_only'
+            ? 'noun_pl_only'
             : (nounNumber === 'sg_only' ? 'noun_sg_only' : nounNumber);
           const nounLabel = resolveAnalysisLabel('meta', nounKey);
           if(nounLabel) parts.push(nounLabel);
