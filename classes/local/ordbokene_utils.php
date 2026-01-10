@@ -289,33 +289,8 @@ function mod_flashcards_expand_expression_variants(string $expression): array {
         return [];
     }
     // Only generate orthographic variants (no semantic "trimming"/prefixing).
-    // Goal: improve Ordbøkene coverage for spelling/spacing variants like:
-    // "i stedet for" <-> "istedenfor", "i stedet" <-> "isteden".
-    $variants = [$expression];
-
-    // Collapsed form (remove spaces): helps when Ordbøkene stores a single-token variant.
-    if (strpos($expression, ' ') !== false) {
-        $collapsed = preg_replace('/\s+/u', '', $expression);
-        if (is_string($collapsed) && $collapsed !== '') {
-            $variants[] = $collapsed;
-        }
-    }
-
-    // Also try removing spaces around common clitics (very conservative).
-    // Example: "i stedet" -> "istedet".
-    $collapsed2 = preg_replace('/\s+/u', '', $expression);
-    if (is_string($collapsed2) && $collapsed2 !== '' && $collapsed2 !== $expression) {
-        $variants[] = $collapsed2;
-    }
-
-    $cleaned = [];
-    foreach (array_unique($variants) as $variant) {
-        $variant = trim($variant);
-        if ($variant !== '') {
-            $cleaned[] = $variant;
-        }
-    }
-    return $cleaned;
+    // Collapsed forms are intentionally disabled to avoid false positives.
+    return [$expression];
 }
 
 /**
@@ -403,5 +378,4 @@ function mod_flashcards_resolve_ordbokene_expression(string $fronttext, string $
 
     return null;
 }
-
 
