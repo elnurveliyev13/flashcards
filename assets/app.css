@@ -4971,6 +4971,13 @@ body.cropper-open #editActionsBar{
   text-decoration-color:rgba(34,197,94,0.9);
   text-underline-offset:6px;
 }
+.focus-chip--predicate {
+  text-decoration-line:underline;
+  text-decoration-style:double;
+  text-decoration-thickness:2px;
+  text-decoration-color:rgba(59,130,246,0.9);
+  text-underline-offset:6px;
+}
 .focus-expression-menu {
   position:absolute;
   background:var(--surface-2);
@@ -5124,6 +5131,13 @@ body.cropper-open #editActionsBar{
   text-decoration:underline;
   text-decoration-thickness:2px;
   text-decoration-color:rgba(34,197,94,0.9);
+  text-underline-offset:6px;
+}
+.analysis-predicate {
+  text-decoration-line:underline;
+  text-decoration-style:double;
+  text-decoration-thickness:2px;
+  text-decoration-color:rgba(59,130,246,0.9);
   text-underline-offset:6px;
 }
 .analysis-item--clickable {

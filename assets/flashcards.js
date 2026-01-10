@@ -3062,6 +3062,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       wordMetaSourceText: '',
       subjectIndices: [],
       subjectSourceText: '',
+      predicateIndices: [],
+      predicateSourceText: '',
       spacyTokens: [],
       spacySourceText: '',
       sentenceAnalysis: [],
@@ -3865,6 +3867,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
     const HIDE_LEMMA_POS = new Set(['ADP','CONJ','CCONJ','SCONJ','PART','INTJ']);
     const SUBJECT_DEPS = new Set(['nsubj','csubj']);
+    const PREDICATE_DEPS = new Set(['root','cop']);
 
     function shouldShowLemma(pos){
       const key = (pos || '').toString().trim().toUpperCase();
@@ -3878,6 +3881,11 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function isSubjectDep(dep){
       const key = (dep || '').toString().trim().toLowerCase();
       return SUBJECT_DEPS.has(key);
+    }
+
+    function isPredicateDep(dep){
+      const key = (dep || '').toString().trim().toLowerCase();
+      return PREDICATE_DEPS.has(key);
     }
 
     function buildNounFormsCells(nounForms){
@@ -3977,12 +3985,13 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return parts.join(', ');
     }
 
-    function buildSentenceAnalysis(words, expressions){
+    function buildSentenceAnalysis(words, expressions, predicateIndices){
       const list = [];
       const wordItems = Array.isArray(words) ? words : [];
       wordItems.forEach(w => {
         if(!w || !w.text) return;
         const isSubject = isSubjectDep(w.dep);
+        const isPredicate = Array.isArray(predicateIndices) && predicateIndices.includes(w.index);
         const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous, w.nounNumber);
         list.push({
           text: w.text,
@@ -3990,6 +3999,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           translation: formatTokenAnalysis(w),
           kind: 'word',
           isSubject,
+          isPredicate,
           nounNumber: w.nounNumber,
           nounForms: w.nounForms,
           index: Number.isInteger(w.index) ? w.index : null
@@ -4005,18 +4015,20 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return list;
     }
 
-    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText, words, expressions){
+    function buildSentenceAnalysisFromEnrichment(enrichment, sentenceText, words, expressions, predicateIndices){
       const list = [];
       const sentenceTranslation = (enrichment?.sentenceTranslation || '').toString().trim();
       if(sentenceTranslation){
         const subjectIndices = Array.isArray(words)
           ? words.filter(w => isSubjectDep(w?.dep)).map(w => w.index).filter(Number.isInteger)
           : [];
+        const predicateSet = Array.isArray(predicateIndices) ? predicateIndices : [];
         list.push({
           text: sentenceText,
           translation: sentenceTranslation,
           kind:'sentence',
-          subjectIndices
+          subjectIndices,
+          predicateIndices: predicateSet
         });
       }
       const items = Array.isArray(enrichment?.elements) ? enrichment.elements : [];
@@ -4048,6 +4060,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           translation: combined,
           kind:'word',
           isSubject: isSubjectDep(w.dep),
+          isPredicate: Array.isArray(predicateIndices) && predicateIndices.includes(w.index),
           nounNumber: w.nounNumber,
           nounForms: w.nounForms,
           index: idx
@@ -4096,6 +4109,8 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         focusHelperState.subjectIndices = [];
         focusHelperState.subjectSourceText = '';
         focusHelperState.wordMetaSourceText = '';
+        focusHelperState.predicateIndices = [];
+        focusHelperState.predicateSourceText = '';
         focusHelperState.spacyTokens = [];
         focusHelperState.spacySourceText = '';
         focusHelperState.llmSuggested = [];
@@ -4133,6 +4148,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         const spacyTokens = Array.isArray(spacyDebug?.tokens) ? spacyDebug.tokens : [];
         const wordMeta = {};
         const subjectIndices = [];
+        const predicateIndices = [];
         const words = Array.isArray(data?.words) ? data.words : [];
         words.forEach(w=>{
           const idx = Number.isInteger(w?.index) ? w.index : null;
@@ -4147,11 +4163,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(isSubjectDep(dep)){
             subjectIndices.push(idx);
           }
+          if(isPredicateDep(dep)){
+            predicateIndices.push(idx);
+          }
         });
         focusHelperState.wordMetaByIndex = wordMeta;
         focusHelperState.wordMetaSourceText = normalized;
         focusHelperState.subjectIndices = subjectIndices;
         focusHelperState.subjectSourceText = normalized;
+        focusHelperState.predicateIndices = predicateIndices;
+        focusHelperState.predicateSourceText = normalized;
         focusHelperState.spacyTokens = spacyTokens;
         focusHelperState.spacySourceText = normalized;
 
@@ -4170,9 +4191,19 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
 
         const enrichment = data?.enrichment || null;
         if(enrichment && Array.isArray(enrichment.elements) && enrichment.elements.length){
-          focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(enrichment, normalized, words, sortedExpressions);
+          focusHelperState.sentenceAnalysis = buildSentenceAnalysisFromEnrichment(
+            enrichment,
+            normalized,
+            words,
+            sortedExpressions,
+            focusHelperState.predicateIndices
+          );
         } else {
-          focusHelperState.sentenceAnalysis = buildSentenceAnalysis(words, sortedExpressions);
+          focusHelperState.sentenceAnalysis = buildSentenceAnalysis(
+            words,
+            sortedExpressions,
+            focusHelperState.predicateIndices
+          );
         }
         renderSentenceAnalysis(focusHelperState.sentenceAnalysis);
       }catch(err){
@@ -5029,6 +5060,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       const wordTokens = tokens.filter(t => t.isWord);
       const hasWordTokens = wordTokens.length > 0;
       const hasAnalysis = !!(focusAnalysisList && focusAnalysisList.querySelector('.analysis-item'));
+      const predicateReady = focusHelperState.predicateSourceText === text;
       updateFocusHelperVisibility({hasTokens: hasWordTokens, hasAnalysis});
       if(!hasWordTokens){
         return;
@@ -5050,6 +5082,10 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           }
           if(meta && isSubjectDep(meta.dep)){
             btn.classList.add('focus-chip--subject');
+          }
+          if(predicateReady && Array.isArray(focusHelperState.predicateIndices)
+            && focusHelperState.predicateIndices.includes(token.index)){
+            btn.classList.add('focus-chip--predicate');
           }
           attachFocusChipMenuHandlers(btn, token.text, {
             onCreate: ()=>createCardFromToken(token),
@@ -5104,6 +5140,33 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return fragment;
     }
 
+    function buildRoleFragment(sentenceText, subjectIndices, predicateIndices){
+      const fragment = document.createDocumentFragment();
+      const tokens = extractFocusTokens(sentenceText || '');
+      tokens.forEach(token => {
+        if(!token.isWord){
+          fragment.appendChild(document.createTextNode(token.text || ''));
+          return;
+        }
+        if(Array.isArray(subjectIndices) && subjectIndices.includes(token.index)){
+          const span = document.createElement('span');
+          span.className = 'analysis-subject';
+          span.textContent = token.text || '';
+          fragment.appendChild(span);
+          return;
+        }
+        if(Array.isArray(predicateIndices) && predicateIndices.includes(token.index)){
+          const span = document.createElement('span');
+          span.className = 'analysis-predicate';
+          span.textContent = token.text || '';
+          fragment.appendChild(span);
+          return;
+        }
+        fragment.appendChild(document.createTextNode(token.text || ''));
+      });
+      return fragment;
+    }
+
     function renderSentenceAnalysis(items){
       if(!focusAnalysisList) return;
       focusAnalysisList.innerHTML = '';
@@ -5154,14 +5217,17 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         textEl.className = 'analysis-text';
         const surfaceText = entry.text || entry.token || '';
         const lemmaText = (entry.lemmaText || '').toString().trim();
-        if(kind === 'sentence' && Array.isArray(entry.subjectIndices) && entry.subjectIndices.length){
+        if(kind === 'sentence' && (Array.isArray(entry.subjectIndices) || Array.isArray(entry.predicateIndices))){
           textEl.textContent = '';
-          textEl.appendChild(buildSubjectFragment(surfaceText, entry.subjectIndices));
+          textEl.appendChild(buildRoleFragment(surfaceText, entry.subjectIndices, entry.predicateIndices));
         } else if(lemmaText){
           const surfaceSpan = document.createElement('span');
           surfaceSpan.className = 'analysis-surface';
           if(entry.isSubject && kind === 'word'){
             surfaceSpan.classList.add('analysis-subject');
+          }
+          if(entry.isPredicate && kind === 'word'){
+            surfaceSpan.classList.add('analysis-predicate');
           }
           surfaceSpan.textContent = surfaceText;
           const lemmaSpan = document.createElement('span');
@@ -5174,6 +5240,12 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           if(entry.isSubject && kind === 'word'){
             const surfaceSpan = document.createElement('span');
             surfaceSpan.className = 'analysis-subject';
+            surfaceSpan.textContent = surfaceText;
+            textEl.textContent = '';
+            textEl.appendChild(surfaceSpan);
+          } else if(entry.isPredicate && kind === 'word'){
+            const surfaceSpan = document.createElement('span');
+            surfaceSpan.className = 'analysis-predicate';
             surfaceSpan.textContent = surfaceText;
             textEl.textContent = '';
             textEl.appendChild(surfaceSpan);
@@ -16181,8 +16253,15 @@ Rules:
       const subjectsReady = Array.isArray(focusHelperState.subjectIndices)
         && focusHelperState.subjectIndices.length
         && focusHelperState.subjectSourceText === cleanText;
-      if(subjectsReady){
-        textEl.appendChild(buildSubjectFragment(cleanText, focusHelperState.subjectIndices));
+      const predicatesReady = Array.isArray(focusHelperState.predicateIndices)
+        && focusHelperState.predicateIndices.length
+        && focusHelperState.predicateSourceText === cleanText;
+      if(subjectsReady || predicatesReady){
+        textEl.appendChild(buildRoleFragment(
+          cleanText,
+          focusHelperState.subjectIndices,
+          focusHelperState.predicateIndices
+        ));
       } else {
         textEl.textContent = cleanText;
       }
