@@ -3471,9 +3471,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'role',
-          noun_sg_only: 'nur im Singular verwendet',
-          noun_pl_only: 'nur im Plural verwendet',
-          noun_forms: 'Formen',
+          noun_sg_only: 'used only in singular number',
+          noun_pl_only: 'used only in plural number',
+          noun_forms: 'forms',
         }
       },
       ru: {
@@ -3880,26 +3880,37 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       return SUBJECT_DEPS.has(key);
     }
 
-    function summarizeNounForms(nounForms, nounNumber){
-      if(!nounForms || !nounNumber) return '';
-      const collect = values => {
-        if(!values) return [];
+    function buildNounFormsCells(nounForms){
+      const getFirst = values => {
         if(Array.isArray(values)){
-          return values.map(v => (v || '').toString().trim()).filter(Boolean);
+          const found = values.find(v => v && String(v).trim());
+          return found ? String(found).trim() : '';
         }
-        const single = (values || '').toString().trim();
-        return single ? [single] : [];
+        return (values || '').toString().trim();
       };
-      const combined = [];
-      if(nounNumber === 'pl_only'){
-        combined.push(...collect(nounForms.indef_pl));
-        combined.push(...collect(nounForms.def_pl));
-      } else if(nounNumber === 'sg_only'){
-        combined.push(...collect(nounForms.indef_sg));
-        combined.push(...collect(nounForms.def_sg));
-      }
-      const uniq = Array.from(new Set(combined));
-      return uniq.join(', ');
+      const indefSg = getFirst(nounForms?.indef_sg);
+      const defSg = getFirst(nounForms?.def_sg);
+      const indefPl = getFirst(nounForms?.indef_pl);
+      const defPl = getFirst(nounForms?.def_pl);
+      return [
+        indefSg || '—',
+        defSg || '—',
+        indefPl || '—',
+        defPl || '—'
+      ];
+    }
+
+    function renderNounFormsTable(nounForms){
+      const row = document.createElement('div');
+      row.className = 'analysis-forms';
+      const cells = buildNounFormsCells(nounForms || {});
+      cells.forEach(text => {
+        const cell = document.createElement('span');
+        cell.className = 'analysis-forms-cell';
+        cell.textContent = text;
+        row.appendChild(cell);
+      });
+      return row;
     }
 
     function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false, nounNumber = ''){
@@ -3954,11 +3965,6 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
             : (nounNumber === 'sg_only' ? 'noun_sg_only' : nounNumber);
           const nounLabel = resolveAnalysisLabel('meta', nounKey);
           if(nounLabel) parts.push(nounLabel);
-          const formsSummary = summarizeNounForms(item.nounForms, nounNumber);
-          if(formsSummary){
-            const formsLabel = resolveAnalysisLabel('meta', 'noun_forms') || 'forms';
-            parts.push(`${formsLabel}: ${formsSummary}`);
-          }
         }
       }
       const depKey = (item.dep || '').toString().toLowerCase();
@@ -3977,7 +3983,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       wordItems.forEach(w => {
         if(!w || !w.text) return;
         const isSubject = isSubjectDep(w.dep);
-      const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous, w.nounNumber);
+        const lemmaText = computeDisplayLemma(w.text, w.lemma, w.pos, w.gender, w.genderAmbiguous, w.nounNumber);
         list.push({
           text: w.text,
           lemmaText,
@@ -3985,6 +3991,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           kind: 'word',
           isSubject,
           nounNumber: w.nounNumber,
+          nounForms: w.nounForms,
           index: Number.isInteger(w.index) ? w.index : null
         });
       });
@@ -4042,6 +4049,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           kind:'word',
           isSubject: isSubjectDep(w.dep),
           nounNumber: w.nounNumber,
+          nounForms: w.nounForms,
           index: idx
         });
       });
@@ -5179,6 +5187,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           trEl.className = 'analysis-translation';
           trEl.textContent = entry.translation;
           chip.appendChild(trEl);
+        }
+        if(kind === 'word' && entry.nounNumber && entry.nounForms){
+          chip.appendChild(renderNounFormsTable(entry.nounForms));
         }
         if(kind === 'expression' && entry.confidence){
           const conf = document.createElement('span');

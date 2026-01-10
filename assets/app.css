@@ -5145,6 +5145,22 @@ body.cropper-open #editActionsBar{
   font-size:0.85rem;
   color:var(--text-subtle);
 }
+.analysis-forms {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:0.35rem;
+  width:100%;
+  margin-top:0.15rem;
+}
+.analysis-forms-cell {
+  padding:0.2rem 0.45rem;
+  border-radius:8px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:0.78rem;
+  color:var(--text-subtle);
+  text-align:center;
+}
 .analysis-confidence {
   font-size:1.15rem;
   letter-spacing:0.18em;
