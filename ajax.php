@@ -3608,6 +3608,7 @@ switch ($action) {
         $ordbankGenderAmbiguousCache = [];
         $nounNumberMap = [];
         $ordbankNumberCache = [];
+        $ordbankNounFormsCache = [];
         foreach ($words as $i => $w) {
             $pos = core_text::strtoupper((string)($posMap[$i] ?? ''));
             if ($pos !== 'NOUN') {
@@ -3646,6 +3647,9 @@ switch ($action) {
                         $ordbankNumberCache[$token] = '';
                     }
                 }
+                if (!empty($ordbankNumberCache[$token])) {
+                    $ordbankNounFormsCache[$token] = $analysis['forms']['noun'] ?? [];
+                }
             }
             $genderMap[$i] = $ordbankGenderCache[$token] ?? '';
             $nounNumberMap[$i] = $ordbankNumberCache[$token] ?? '';
@@ -3660,6 +3664,10 @@ switch ($action) {
         if (!empty($nounNumberMap)) {
             foreach ($words as $i => $w) {
                 $words[$i]['nounNumber'] = $nounNumberMap[$i] ?? '';
+                $token = mod_flashcards_normalize_token((string)($lemmaMap[$i] ?? $w['text'] ?? ''));
+                if (!empty($ordbankNounFormsCache[$token])) {
+                    $words[$i]['nounForms'] = $ordbankNounFormsCache[$token];
+                }
             }
         }
         $posCandidatesMap = [];

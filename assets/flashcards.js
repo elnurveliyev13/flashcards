@@ -3471,8 +3471,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'role',
-          noun_sg_only: 'used only in singular',
-          noun_pl_only: 'used only in plural',
+          noun_sg_only: 'nur im Singular verwendet',
+          noun_pl_only: 'nur im Plural verwendet',
+          noun_forms: 'Formen',
         }
       },
       ru: {
@@ -3517,8 +3518,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'роль',
-          noun_sg_only: '?????? ??. ?????',
-          noun_pl_only: '?????? ??. ?????',
+          noun_sg_only: 'используется только в единственном числе',
+          noun_pl_only: 'используется только во множественном числе',
+          noun_forms: 'формы',
         }
       },
       uk: {
@@ -3563,8 +3565,9 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
         },
         meta: {
           role: 'роль',
-          noun_sg_only: '???? ???. ?????',
-          noun_pl_only: '???? ??. ?????',
+          noun_sg_only: 'використовується лише в однині',
+          noun_pl_only: 'використовується лише у множині',
+          noun_forms: 'форми',
         }
       },
       de: {
@@ -3611,6 +3614,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'Rolle',
           noun_sg_only: 'nur im Singular verwendet',
           noun_pl_only: 'nur im Plural verwendet',
+          noun_forms: 'Formen',
         }
       },
       nb: {
@@ -3657,6 +3661,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'rolle',
           noun_sg_only: 'brukes bare i entall',
           noun_pl_only: 'brukes bare i flertall',
+          noun_forms: 'former',
         }
       },
       fr: {
@@ -3703,6 +3708,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'rôle',
           noun_sg_only: 'utilisé uniquement au singulier',
           noun_pl_only: 'utilisé uniquement au pluriel',
+          noun_forms: 'formes',
         }
       },
       es: {
@@ -3749,6 +3755,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'rol',
           noun_sg_only: 'se usa solo en singular',
           noun_pl_only: 'se usa solo en plural',
+          noun_forms: 'formas',
         }
       },
       it: {
@@ -3795,6 +3802,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'ruolo',
           noun_sg_only: 'usato solo al singolare',
           noun_pl_only: 'usato solo al plurale',
+          noun_forms: 'forme',
         }
       },
       pl: {
@@ -3841,6 +3849,7 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
           role: 'rola',
           noun_sg_only: 'używane tylko w liczbie pojedynczej',
           noun_pl_only: 'używane tylko w liczbie mnogiej',
+          noun_forms: 'formy',
         }
       }
     };
@@ -3869,6 +3878,28 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
     function isSubjectDep(dep){
       const key = (dep || '').toString().trim().toLowerCase();
       return SUBJECT_DEPS.has(key);
+    }
+
+    function summarizeNounForms(nounForms, nounNumber){
+      if(!nounForms || !nounNumber) return '';
+      const collect = values => {
+        if(!values) return [];
+        if(Array.isArray(values)){
+          return values.map(v => (v || '').toString().trim()).filter(Boolean);
+        }
+        const single = (values || '').toString().trim();
+        return single ? [single] : [];
+      };
+      const combined = [];
+      if(nounNumber === 'pl_only'){
+        combined.push(...collect(nounForms.indef_pl));
+        combined.push(...collect(nounForms.def_pl));
+      } else if(nounNumber === 'sg_only'){
+        combined.push(...collect(nounForms.indef_sg));
+        combined.push(...collect(nounForms.def_sg));
+      }
+      const uniq = Array.from(new Set(combined));
+      return uniq.join(', ');
     }
 
     function computeDisplayLemma(surfaceText, lemma, pos, gender, genderAmbiguous = false, nounNumber = ''){
@@ -3918,8 +3949,16 @@ function flashcardsInit(rootid, baseurl, cmid, instanceid, sesskey, globalMode){
       if((posKey || '').toString().toUpperCase() === 'NOUN'){
         const nounNumber = (item.nounNumber || '').toString().trim();
         if(nounNumber){
-          const nounLabel = resolveAnalysisLabel('meta', nounNumber);
+          const nounKey = nounNumber === 'pl_only' ? 'noun_pl_only',
+          const nounKey = nounNumber === 'pl_only' ? 'noun_forms: 'forms',
+            : (nounNumber === 'sg_only' ? 'noun_sg_only' : nounNumber);
+          const nounLabel = resolveAnalysisLabel('meta', nounKey);
           if(nounLabel) parts.push(nounLabel);
+          const formsSummary = summarizeNounForms(item.nounForms, nounNumber);
+          if(formsSummary){
+            const formsLabel = resolveAnalysisLabel('meta', 'noun_forms') || 'forms';
+            parts.push(`${formsLabel}: ${formsSummary}`);
+          }
         }
       }
       const depKey = (item.dep || '').toString().toLowerCase();

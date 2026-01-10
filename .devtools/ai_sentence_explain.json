@@ -1,54 +1,75 @@
 {
     "ok": true,
     "data": {
-        "analysis": "Sentence breakdown\n- N\u00e5 og da \u2014 occasionally \/ from time to time\n- g\u00e5r jeg \u2014 I go\n- p\u00e5 tur \u2014 for a walk \/ on an outing",
+        "analysis": "Key parts\n- Han \u2014 He\n- pleier \u00e5 \u2014 tends to \/ usually\n- kj\u00f8pe \u2014 to buy\n- mye kl\u00e6r \u2014 a lot of clothes",
         "sections": [
             {
-                "title": "Sentence breakdown",
+                "title": "Key parts",
                 "bullets": [
-                    "N\u00e5 og da \u2014 occasionally \/ from time to time",
-                    "g\u00e5r jeg \u2014 I go",
-                    "p\u00e5 tur \u2014 for a walk \/ on an outing"
+                    "Han \u2014 He",
+                    "pleier \u00e5 \u2014 tends to \/ usually",
+                    "kj\u00f8pe \u2014 to buy",
+                    "mye kl\u00e6r \u2014 a lot of clothes"
                 ]
             }
         ],
-        "sentenceTranslation": "From time to time I go for a walk",
+        "sentenceTranslation": "He tends to buy a lot of clothes",
         "breakdown": [
             {
-                "no": "N\u00e5 og da",
-                "tr": "occasionally \/ from time to time"
+                "no": "Han",
+                "tr": "He"
             },
             {
-                "no": "g\u00e5r jeg",
-                "tr": "I go"
+                "no": "pleier \u00e5",
+                "tr": "tends to \/ usually"
             },
             {
-                "no": "p\u00e5 tur",
-                "tr": "for a walk \/ on an outing"
+                "no": "kj\u00f8pe",
+                "tr": "to buy"
+            },
+            {
+                "no": "mye kl\u00e6r",
+                "tr": "a lot of clothes"
             }
         ],
         "expressions": [
             {
-                "expression": "N\u00e5 og da",
-                "translation": "occasionally \/ from time to time",
+                "expression": "pleier \u00e5",
+                "translation": "tends to \/ usually",
                 "note": "",
                 "breakdown": [],
                 "examples": [
                     {
-                        "no": "N\u00e5 og da leser jeg en bok.",
-                        "tr": "From time to time I read a book."
+                        "no": "Hun pleier \u00e5 trene hver morgen",
+                        "tr": "She tends to exercise every morning"
                     },
                     {
-                        "no": "Hun bes\u00f8ker oss n\u00e5 og da.",
-                        "tr": "She visits us occasionally."
+                        "no": "Vi pleier \u00e5 spise ute p\u00e5 fredager",
+                        "tr": "We usually eat out on Fridays"
+                    }
+                ]
+            },
+            {
+                "expression": "kj\u00f8pe",
+                "translation": "to buy",
+                "note": "",
+                "breakdown": [],
+                "examples": [
+                    {
+                        "no": "Han liker \u00e5 kj\u00f8pe b\u00f8ker",
+                        "tr": "He likes to buy books"
+                    },
+                    {
+                        "no": "hun skal kj\u00f8pe ny bil",
+                        "tr": "she will buy a new car"
                     }
                 ]
             }
         ],
         "usage": {
             "prompt_tokens": 378,
-            "completion_tokens": 218,
-            "total_tokens": 596,
+            "completion_tokens": 300,
+            "total_tokens": 678,
             "prompt_tokens_details": {
                 "cached_tokens": 0,
                 "audio_tokens": 0
@@ -63,9 +84,9 @@
         "ai_debug": {
             "task": "chat",
             "system": "You are an expert Norwegian (Bokm\u00e5l) tutor.\nWrite ONLY in English.\nNorwegian is allowed ONLY inside: expressions[].expression and expressions[].examples[].no.\nReturn ONLY valid JSON (no markdown fences, no extra text).\nStyle: very simple, learner-friendly, short sections and bullets. No heavy linguistics.",
-            "user": "Sentence:\n\"N\u00e5 og da g\u00e5r jeg p\u00e5 tur\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}",
+            "user": "Sentence:\n\"Han pleier \u00e5 kj\u00f8pe mye kl\u00e6r\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}",
             "payload": {
-                "model": "gpt-5-mini",
+                "model": "gpt-5-nano",
                 "messages": [
                     {
                         "role": "system",
@@ -73,7 +94,7 @@
                     },
                     {
                         "role": "user",
-                        "content": "Sentence:\n\"N\u00e5 og da g\u00e5r jeg p\u00e5 tur\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}"
+                        "content": "Sentence:\n\"Han pleier \u00e5 kj\u00f8pe mye kl\u00e6r\"\n\nTask:\n1) sentenceTranslation: give a natural translation.\n2) breakdown: give a short breakdown into meaningful parts.\n   - 3-6 items, short and clear.\n   - Each item: Norwegian chunk (2-6 words) + short meaning in English.\n   - Use ONLY English in meanings and title.\n   - Norwegian is allowed ONLY in breakdown[].no.\n3) expressions: list 0-3 fixed expressions \/ collocations used in the sentence.\n   - Base form if possible.\n   - Short translation in English.\n   - For each expression, add EXACTLY 2 short Norwegian examples with translations in English.\n   - Examples must be different from the original sentence.\n\nRules:\n- Use meaningful parts only (no single function words).\n- Keep it compact.\n\nReturn JSON EXACTLY in this schema:\n{\n  \"sentenceTranslation\": \"natural translation of the full sentence in English\",\n  \"breakdownTitle\": \"short title in English\",\n  \"breakdown\": [\n    {\n      \"no\": \"Norwegian chunk (2-6 words)\",\n      \"tr\": \"short meaning in English\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"expression in Norwegian (grunnform if possible)\",\n      \"translation\": \"short translation in English\",\n      \"examples\": [\n        { \"no\": \"short Norwegian example\", \"tr\": \"translation in English\" }\n      ]\n    }\n  ]\n}"
                     }
                 ],
                 "response_format": {
@@ -82,11 +103,11 @@
                 "reasoning_effort": "minimal",
                 "max_completion_tokens": 520
             },
-            "raw": "{\n  \"sentenceTranslation\": \"From time to time I go for a walk\",\n  \"breakdownTitle\": \"Sentence breakdown\",\n  \"breakdown\": [\n    {\n      \"no\": \"N\u00e5 og da\",\n      \"tr\": \"occasionally \/ from time to time\"\n    },\n    {\n      \"no\": \"g\u00e5r jeg\",\n      \"tr\": \"I go\"\n    },\n    {\n      \"no\": \"p\u00e5 tur\",\n      \"tr\": \"for a walk \/ on an outing\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"n\u00e5 og da\",\n      \"translation\": \"occasionally \/ from time to time\",\n      \"examples\": [\n        {\n          \"no\": \"N\u00e5 og da leser jeg en bok.\",\n          \"tr\": \"From time to time I read a book.\"\n        },\n        {\n          \"no\": \"Hun bes\u00f8ker oss n\u00e5 og da.\",\n          \"tr\": \"She visits us occasionally.\"\n        }\n      ]\n    }\n  ]\n}",
+            "raw": "{\n  \"sentenceTranslation\": \"He tends to buy a lot of clothes\",\n  \"breakdownTitle\": \"Key parts\",\n  \"breakdown\": [\n    {\n      \"no\": \"Han\",\n      \"tr\": \"He\"\n    },\n    {\n      \"no\": \"pleier \u00e5\",\n      \"tr\": \"tends to \/ usually\"\n    },\n    {\n      \"no\": \"kj\u00f8pe\",\n      \"tr\": \"to buy\"\n    },\n    {\n      \"no\": \"mye kl\u00e6r\",\n      \"tr\": \"a lot of clothes\"\n    }\n  ],\n  \"expressions\": [\n    {\n      \"expression\": \"pleier \u00e5\",\n      \"translation\": \"tends to \/ usually\",\n      \"examples\": [\n        { \"no\": \"Hun pleier \u00e5 trene hver morgen\", \"tr\": \"She tends to exercise every morning\" },\n        { \"no\": \"Vi pleier \u00e5 spise ute p\u00e5 fredager\", \"tr\": \"We usually eat out on Fridays\" }\n      ]\n    },\n    {\n      \"expression\": \"kj\u00f8pe\",\n      \"translation\": \"to buy\",\n      \"examples\": [\n        { \"no\": \"Han liker \u00e5 kj\u00f8pe b\u00f8ker\", \"tr\": \"He likes to buy books\" },\n        { \"no\": \" hun skal kj\u00f8pe ny bil\", \"tr\": \"she will buy a new car\" }\n      ]\n    }\n  ]\n}",
             "usage": {
                 "prompt_tokens": 378,
-                "completion_tokens": 218,
-                "total_tokens": 596,
+                "completion_tokens": 300,
+                "total_tokens": 678,
                 "prompt_tokens_details": {
                     "cached_tokens": 0,
                     "audio_tokens": 0
@@ -98,7 +119,7 @@
                     "rejected_prediction_tokens": 0
                 }
             },
-            "model": "gpt-5-mini-2025-08-07"
+            "model": "gpt-5-nano-2025-08-07"
         }
     }
 }
